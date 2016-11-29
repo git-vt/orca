@@ -31,10 +31,18 @@ text \<open>When formalizing C semantics, our first challenge is to find a gener
      \<close>
 
 record ('name, 'val, 'inputs, 'obs, 'bugs) state = 
-  "values"     :: "('name  \<times> ('name list) option) \<Rightarrow> 'val option"
+  allNames     :: "('name  \<times> ('name list) option) list"
+  globalVars   :: "'name list"
+  localVars    :: "'name  \<Rightarrow> ('name list) option"
+  "values"     :: "('name  \<times> ('name list) option) \<Rightarrow> 'val option option"
   inputs       :: "'inputs list"
   observations :: "('name  \<times> ('name list) option) \<Rightarrow> 'obs option"
   bugs         :: "'bugs list"
 
+text \<open>We use double lifting on values type by the option type to specify initialized
+      and non-initialized variables during a declaration.\<close>
 
+subsection\<open>Get local variables\<close>
+abbreviation get_locals where
+ "get_locals \<sigma> \<equiv> (fold (\<lambda>xs ys. the(snd xs)@ys) (varNames \<sigma>) [])"
 end

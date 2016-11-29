@@ -38,12 +38,12 @@ text \<open>Bugs, are captured by the different commands. They represent an abst
       behavior in the system under verification.\<close>
 
 
-datatype vals = Int int|Real real
-datatype inputs = basic|conditional|loop|funDef|decl
+datatype vals = Int int|Real real|Unit unit
+datatype inputs = DeclIni_gVar string  vals|DeclNone_gVar string |basic|conditional|loop|funDef|decl
 datatype obs = abrupts
-datatype bugs = DivByZero
+datatype bugs = DivByZero|SameGlobalVarName|SameFunName|SameLocalVarName
 
-type_synonym stateInst = "(string, vals, inputs, obs, bugs) state"
+type_synonym 'a stateInst = "(string, vals, inputs, obs, bugs, 'a) state_scheme"
 
 
 end
