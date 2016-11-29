@@ -14,11 +14,20 @@ text \<open>When formalizing C semantics, our first challenge is to find a gener
       can be seen as a relation between symbolic names and their content represented by
       the \emph{evaluation} of the different \emph{expressions}. 
       This relation is updated by \emph{commands}. The commands can 
-      update the content symbolic names by new values or provide an \emph{observation} on
-      the evaluation process. When a command update 
-      We  formalize this relation by the field @{term source_code} in the 
-      record @{term source_code}.
-      
+      update the content of symbolic names by new values or provide an \emph{observation}. 
+      When a command update a state it can provide a value for a given
+      symbolic name or an observation. The state of the source code of a program is 
+      represented by a record type. Two main relations characterise the state,
+       @{term values} and @{term observations}.
+      The field @{term inputs} is used to trace the executed commands on the state. This
+      field will be used for testing purposes, where the recorded trace will be used
+      in testing scenarios for the real implementation of the source code. 
+      The field @{term bugs} is used for proofs purposes. Any time a command detect an expression
+      with a bug, \eg, an arithmetic expression with division by zero, the command prepend a
+      bug value on the field @{term bugs}. Bug values are explicitly represented by a datatype
+      enumerating the different bugs covered by our specification. Proving that the verified
+      source code does not contain a given bug is reduced to prove that the field @{term bugs}
+      contains an empty list.
      \<close>
 
 record ('name, 'val, 'inputs, 'obs, 'bugs) state = 
@@ -26,11 +35,6 @@ record ('name, 'val, 'inputs, 'obs, 'bugs) state =
   inputs       :: "'inputs list"
   observations :: "('name  \<times> ('name list) option) \<Rightarrow> 'obs option"
   bugs         :: "'bugs list"
-  
-text \<open>A name is just a concatenation of chars.
-      A value is a result of an \emph{evaluation} of a given \emph{expression}.
-      In our formalization a symbolic state defines a relation between
-      names and, the  \emph{evaluation} of the different
-      expressions, in a source code.\<close>
+
 
 end
