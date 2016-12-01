@@ -20,8 +20,7 @@ text \<open>When formalizing C semantics, our first challenge is to find a gener
       The state of the source code of a program is 
       represented by a record type. Two main relations characterise the state,
        @{term values} functions and @{term observations} functions. The other fields
-      represent information holders.
-     \<close>
+      represent information holders.\<close>
 
 record ('name, 'val, 'inputs, 'obs, 'bugs) state = 
   gVars    :: "'name list"
@@ -76,7 +75,6 @@ text \<open>The type @{typ " ('name, 'val, 'inputs, 'obs, 'bugs) state"} specifi
               then the system under verification is correct with regard the specification;
               if it contains something then one or more properties are not satisfied by the 
               system under verification
-     \end{itemize}   
-     \<close>
+     \end{itemize}\<close>
 
 end
