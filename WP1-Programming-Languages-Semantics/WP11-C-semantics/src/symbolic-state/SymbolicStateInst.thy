@@ -42,7 +42,7 @@ datatype Dvals = Div0Int int|Div0Real real|Nval vals
 datatype inputs = DeclIni_gVar string  vals|DeclNone_gVar string |DeclIni_lVar string string  vals|
                   DeclNone_lVar string string|basic|conditional|loop|funDef|decl
 datatype obs = abrupt|cast
-datatype bugs = DivByZero|SameGlobalVarName|SameFunName|SameLocalVarName
+datatype bugs = DivByZeroG string |SameGlobalVarName string|SameFunName|SameLocalVarName
 
 type_synonym 'a stateInst = "(string, vals, inputs, obs, bugs, 'a) state_scheme"
 
