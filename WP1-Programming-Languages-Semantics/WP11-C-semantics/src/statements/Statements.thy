@@ -32,46 +32,30 @@ text \<open>The constant definition @{term "declIni_gVar"} is a specification fo
                           of @{value "fst(name, None)"} representing the name of a global variable.
                     \item a state @{term "\<sigma>"} of type @{typ "'a stateInst"}
                  \end{itemize}
-      \end{itemize}   
-     \<close>
+      \end{itemize}\<close>
 
-fun declIni_gVar :: "string \<Rightarrow> Dvals \<Rightarrow>  'a statements" where
-  "declIni_gVar name (Div0Int val) = (\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
-                                          then \<sigma>\<lparr>bugs:= DivByZeroG name#bugs \<sigma>\<rparr> 
-                                          else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
-| "declIni_gVar name (Div0Real val) = (\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
-                                           then \<sigma>\<lparr>bugs:= DivByZeroG name#bugs \<sigma>\<rparr> 
-                                           else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
-| "declIni_gVar name (Nval (IntC val)) =(\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
-                                             then
-                                               \<sigma>\<lparr>gVars    := name#gVars \<sigma>,
-                                                gVarsVal := gVarsVal \<sigma>(name \<mapsto> Some (IntC val)),
-                                                inputs   := DeclIni_gVar name (IntC val) #inputs \<sigma>\<rparr>
-                                             else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
-| "declIni_gVar name (Nval (RealC val)) =(\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
-                                              then
-                                                \<sigma>\<lparr>gVars    := name#gVars \<sigma>,
-                                                 gVarsVal := gVarsVal \<sigma>(name \<mapsto> Some (RealC val)),
-                                                 inputs   := DeclIni_gVar name (RealC val) #inputs \<sigma>\<rparr>
-                                              else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
-| "declIni_gVar name (Nval (UnitC val)) =(\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
-                                              then
-                                                \<sigma>\<lparr>gVars    := name#gVars \<sigma>,
-                                                 gVarsVal := gVarsVal \<sigma>(name \<mapsto> Some (UnitC val)),
-                                                 inputs   := DeclIni_gVar name (UnitC val) #inputs \<sigma>\<rparr>
-                                              else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
-
-
-
-definition declIni_gVar' :: 
-  "string \<Rightarrow> Dvals \<Rightarrow>  'a statements" where
-  "declIni_gVar' name val =  
+definition declIni_gCons :: 
+  "string \<Rightarrow> vals \<Rightarrow>  'a statements" where
+  "declIni_gCons name val =  
     (\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
          then
            \<sigma>\<lparr>gVars    := name#gVars \<sigma>,
-            gVarsVal := gVarsVal \<sigma>(name \<mapsto> Some val),
-            inputs   := DeclIni_gVar name val #inputs \<sigma>\<rparr>
-         else \<sigma>\<lparr>bugs:= SameGlobalVarName#bugs \<sigma>\<rparr>)"
+             gVarsVal := gVarsVal \<sigma>(name \<mapsto> Some val),
+             inputs   := DeclIni_gCons name (Some (Some val)) #inputs \<sigma>\<rparr>
+         else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
+
+definition declIni_gVar :: 
+  "string \<Rightarrow> string \<Rightarrow>  'a statements" where
+  "declIni_gVar name name' =  
+    (\<lambda>\<sigma>. if name \<notin> set (gVars \<sigma>) 
+         then
+           if name' \<in> set (gVars \<sigma>)
+           then
+             \<sigma>\<lparr>gVars    := name#gVars \<sigma>,
+               gVarsVal := (gVarsVal \<sigma>)(name := gVarsVal \<sigma> name'),
+               inputs   := DeclIni_gVar name (gVarsVal \<sigma> name') #inputs \<sigma>\<rparr>
+           else  \<sigma>\<lparr>bugs:= NoGlobalVarName name#bugs \<sigma>\<rparr>
+         else \<sigma>\<lparr>bugs:= SameGlobalVarName name#bugs \<sigma>\<rparr>)"
 
 text \<open>The constant definition @{term "declNone_gVar"} is a specification for global variables
       declaration \emph{without} value initialization.
