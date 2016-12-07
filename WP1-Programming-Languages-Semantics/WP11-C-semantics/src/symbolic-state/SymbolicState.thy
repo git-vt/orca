@@ -22,22 +22,28 @@ text \<open>When formalizing C semantics, our first challenge is to find a gener
        @{term values} functions and @{term observations} functions. The other fields
       represent information holders.\<close>
 
-record ('name, 'val, 'inputs, 'obs, 'bugs) state = 
+record ('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state = 
+  gConsts  :: "'name list"
   gVars    :: "'name list"
   gFuns    :: "'name list"
+  gConsVal :: "'name \<Rightarrow> 'val option option"
   gVarsVal :: "'name \<Rightarrow> 'val option option"
   gVarObs  :: "'name \<Rightarrow> 'obs option"
   gFunVal  :: "('name  \<times> ('name list) option) \<Rightarrow> 'val option option"
   gFunObs  :: "'name \<Rightarrow> 'obs option"
   gfunLVars:: "'name  \<Rightarrow> ('name list) option"
+  lConsts  :: "('name  \<times> 'name) list"
+  lConsVal :: "('name  \<times> 'name) \<Rightarrow> 'val option option"
+  lConsFun :: "'name  \<Rightarrow> 'name option"
   lVars    :: "('name  \<times> 'name) list"
   lVarsVal :: "('name  \<times> 'name) \<Rightarrow> 'val option option"
   lVarsObs :: "('name  \<times> 'name) \<Rightarrow> 'obs option"
   lVarFun  :: "'name  \<Rightarrow> 'name option"
   inputs   :: "'inputs list"
-  bugs     :: "'bugs list"
+  synBugs  :: "'synbugs list"(*For syntax errors*)
+  semBugs  :: "'semBugs list"(*For runtime errors*)
 
-text \<open>The type @{typ " ('name, 'val, 'inputs, 'obs, 'bugs) state"} specifies
+text \<open>The type @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"} specifies
       a container for evaluations such as: @{const gVarsVal},  @{const lVarsVal}, 
       @{const gfunLVars} etc. and also a container for stacks to hold needed information from the source
       code such as: @{const gVars} @{const gFuns} @{const lVars} etc.

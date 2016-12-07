@@ -39,10 +39,20 @@ text \<open>Bugs, are captured by the different commands. They represent an abst
 datatype vals = IntC int|RealC real|UnitC unit
 datatype Dvals = Div0Int int|Div0Real real|Nval vals
 
-datatype inputs = DeclIni_gVar string  vals|DeclNone_gVar string |DeclIni_lVar string string  vals|
+datatype inputs = DeclIni_gCons string "vals option option"|
+                  DeclIni_gConsCons string string|
+                  DeclNone_gCons string|
+                  DeclIni_gVar string "vals option option"|
+                  DeclNone_gVar string |DeclIni_lVar string string  vals|
+                  DeclIni_lCons string string "vals option option"|
+                  DeclIni_lConsCons string string string|
+                  DeclNone_lCons string string|
+                  DeclIni_lVarVar string string string| 
                   DeclNone_lVar string string|basic|conditional|loop|funDef|decl
 datatype obs = abrupt|cast
-datatype bugs = DivByZeroG string |SameGlobalVarName string|SameFunName|SameLocalVarName
+datatype bugs = InitIsNotConst string|UndeclGConstName "string"| DivByZeroG string |
+                SameGlobalVarName string|NoGlobalVarName "string"|
+                SameFunName|SameLocalVarName
 
 type_synonym 'a stateInst = "(string, vals, inputs, obs, bugs, 'a) state_scheme"
 
