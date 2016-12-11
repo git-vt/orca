@@ -4,7 +4,8 @@ imports "../symbolic-state/SymbolicStateInst"
 begin
 section \<open>C-statements\<close>
 
-text \<open>Statements are functions that update the state. Since we opt for shallow embedding,
+text \<open>Statements are functions that update the state (\ie, program instructions,program commands). 
+      Since we opt for shallow embedding,
       statements are represented by constant definitions, function definitions with 
       well founded recursions etc. A statement takes \emph{arguments} and a state, 
       and it returns an updated state. The generic type of statements is:\<close>
@@ -211,7 +212,8 @@ definition declArgs_fun ::
             gfunLVars:= (gfunLVars \<sigma>') (Fname:=  Some (Vnames @ the (gfunLVars \<sigma> Fname))),
             lVars    := lVars \<sigma> @ map (\<lambda>x. (Fname, x)) Vnames @ lVars \<sigma>',
             inputs   := (inputs \<sigma>')@(inputs \<sigma>),
-            bugs     := (bugs \<sigma>)@(bugs \<sigma>')\<rparr>)"
+            synBugs  := (synBugs \<sigma>)@(synBugs \<sigma>'),
+            semBugs  := (semBugs \<sigma>)@(semBugs \<sigma>')\<rparr>)"
 
 definition declNoArgs_fun :: 
   "string \<Rightarrow> 'a stateInst \<Rightarrow>  'a statements" where
@@ -222,7 +224,8 @@ definition declNoArgs_fun ::
              gfunLVars:= (gfunLVars \<sigma>') (Fname:=  Some (the (gfunLVars \<sigma> Fname))),
              lVars    := lVars \<sigma> @ lVars \<sigma>',
              inputs   := (inputs \<sigma>')@(inputs \<sigma>),
-             bugs     := (bugs \<sigma>)@(bugs \<sigma>')\<rparr>)"
+            synBugs  := (synBugs \<sigma>)@(synBugs \<sigma>'),
+            semBugs  := (semBugs \<sigma>)@(semBugs \<sigma>')\<rparr>)"
 
 subsection \<open>Statements for local variables declaration\<close>
 
