@@ -6,14 +6,15 @@ imports SymbolicState
 begin
 subsection \<open>Instantiations for the state type\<close>
 text \<open>In this theory we instantiate the arguments of the state type 
-      @{typ "('name, 'val, 'inputs, 'obs, 'bugs)state"} in @{theory SymbolicState} by other types.\<close>
+      @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"} in 
+      @{theory SymbolicState} by other types.\<close>
 
 text \<open>A symbolic name for a variable or a function, is just a concatenation of chars this 
       argument is instantiated by @{typ "string"}.\<close>
 
 text \<open>A value is a result of an evaluation of a given expression.
       For the moment we focus on the basic C types to encode the expressions of C in our 
-      specification. The argument value in @{typ "('name, 'val, 'inputs, 'obs, 'bugs)state"},
+      specification. The argument value in @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"},
       can have the following:
       \begin {itemize}
          \item Basic Types: integer types such as:@{typ "char"},@{term "unsigned char"},
@@ -24,7 +25,7 @@ text \<open>A value is a result of an evaluation of a given expression.
          \item Derived types: pointers type, structures types, array types, functions types.
       \end {itemize}\<close>
 
-text \<open>In @{typ "('name, 'val, 'inputs, 'obs, 'bugs)state"},
+text \<open>In @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"},
       inputs are abstractions on the executed commands. Commands are represented
       by a shallow embedding. Each time a command is executed, it updates the field input by its
       abstraction.\<close> (*For the moment these abstractions are without arguments but it will be changed 
@@ -49,12 +50,15 @@ datatype inputs = DeclIni_gCons string "vals option option"|
                   DeclNone_lCons string string|
                   DeclIni_lVarVar string string string| 
                   DeclNone_lVar string string|basic|conditional|loop|funDef|decl
-datatype obs = abrupt|cast
-datatype bugs = InitIsNotConst string|UndeclGConstName "string"| DivByZeroG string |
-                SameGlobalVarName string|NoGlobalVarName "string"|
-                SameFunName|SameLocalVarName
 
-type_synonym 'a stateInst = "(string, vals, inputs, obs, bugs, 'a) state_scheme"
+datatype obs = abrupt|cast
+
+datatype synBugs = InitIsNotConst string|UndeclGConstName "string"| SameGlobalConsName string|
+                   SamelocalConsName string| UndeclLConstName "string"|
+                   SameGlobalVarName string|NoGlobalVarName "string"|
+                   SameFunName|SameLocalVarName
+
+type_synonym 'a stateInst = "(string, vals, inputs, obs, synBugs, synBugs,'a) state_scheme"
 
 
 end

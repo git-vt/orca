@@ -4,12 +4,17 @@ imports Main
 begin
 section \<open>C-state\<close>
 subsection \<open>Generic type\<close>
-text \<open>When formalizing C semantics, our first challenge is to find a generic type for
-      the state. What is the state of the program? 
-      In our framework we split a program into two part: the symbolic part and the physical part.
-      In the sequel we will talk about the symbolic part.
+text \<open>When formalizing C semantics, our first challenge is to find a state space  for
+      the state. What is the state of the program?
+      Three approaches are distinguished in the literature: 
+      \begin{itemize}
+         \item formalizing the state space as a function.
+         \item formalizing the state space as a tuple.
+         \item formalizing the state space as a records.
+      \end{itemize} 
+      In this framework we choose to formalize the state space as a function.
       Our framework follows the terminology of Glynn Winskel.
-      The symbolic part of the program consists of the state of the program's source code. 
+      In this framework the state space of the program is an abstraction program's source code. 
       The state characterising the source code of the program
       can be seen as a relation between symbolic names and their content. The content
       is represented by an \emph{evaluation} of the a given \emph{expression}.
@@ -43,7 +48,7 @@ record ('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state =
   synBugs  :: "'synbugs list"(*For syntax errors*)
   semBugs  :: "'semBugs list"(*For runtime errors*)
 
-text \<open>The type @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"} specifies
+text \<open>The type @{typ " ('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) state"} specifies
       a container for evaluations such as: @{const gVarsVal},  @{const lVarsVal}, 
       @{const gfunLVars} etc. and also a container for stacks to hold needed information from the source
       code such as: @{const gVars} @{const gFuns} @{const lVars} etc.
@@ -76,11 +81,12 @@ text \<open>The type @{typ "('name, 'val, 'inputs, 'obs, 'synbugs, 'semBugs) sta
               local variable.
         \item field @{const inputs}: This field is a stack of inputs abstracting the executed 
               commands. It main use will be in testing scenarios for the verified program.
-        \item field @{const bugs}: This field is a stack of bugs abstracting the verified
-              property. It main use will be in deductive verification; If this field is empty
+        \item field @{const synBugs}: This field is a stack of syntactic bugs.
+        \item field @{const semBugs}: This field is a stack of bugs abstracting the runtime bugs. 
+              Its main use will be in deductive verification; If this field is empty
               then the system under verification is correct with regard the specification;
               if it contains something then one or more properties are not satisfied by the 
-              system under verification
+              system under verification.
      \end{itemize}\<close>
 
 end
