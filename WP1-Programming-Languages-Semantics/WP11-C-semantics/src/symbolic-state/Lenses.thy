@@ -1024,45 +1024,47 @@ definition plunge :: "'name \<Rightarrow> ( ('name \<Rightarrow> 'val tree) \<Lo
 [lens_defs]: "plunge n = \<lparr>lens_get = 
                          (\<lambda>c. create\<^bsub>fun_lens n\<^esub> c), 
                          lens_put = (\<lambda>c a.  a n)\<rparr>"
-term "get\<^bsub>(plunge ''n'')\<^esub>"
+
 lemma plunge_mwb_len:"wb_lens (plunge x)"
   unfolding plunge_def 
   apply (unfold_locales) 
   apply (simp_all add : lens_create_def fun_lens_def split: tree.split)
   oops
+
 interpretation plunge_len_laws: wb_lens "plunge x"
- using tree_mwb_len
- by fast
+ oops
+
+type_synonym ('val, 'tree) Node = "'val \<times> 'tree option"
+
+type_synonym ('name, 'val, 'tree) Atree = "'name \<Rightarrow> ('val \<times> 'tree option)"
+
+type_synonym ('name, 'val, 'tree) Ctree = "'name \<Rightarrow> ('name, 'val, 'tree) Atree"
 
 
-datatype ('name, 'val) tree' = 
-Lf "'val list" | ND   "'name \<Rightarrow> ('name, 'val) tree'"
-
-type_synonym ('name, 'tree) Atree = "'name \<rightharpoonup> 'tree"
-
-type_synonym ('name, 'tree) Ctree = "'name \<Rightarrow> ('name, 'tree) Atree"
-
-
-definition hoist :: "'name \<Rightarrow> (('name, 'tree) Atree \<Longrightarrow> ('name, 'tree) Ctree )" where
-[lens_defs]: "hoist n = \<lparr>lens_get =  (\<lambda>c. c n), 
+type_synonym 'val node = 'val
+type_synonym 'val edge = "'val \<Rightarrow> 'val"
+type_synonym 'val leaf = "'val"
+definition hoist :: "'name \<Rightarrow> ('tree \<Longrightarrow> 'name \<Rightarrow> 'tree)" where
+[lens_defs]: "hoist n = \<lparr>lens_get = (\<lambda>c. c n), 
                          lens_put = (\<lambda>c a.  fun_upd c n a)\<rparr>"
 
-term " get\<^bsub>(hoist ''Pat'')\<^esub> (c( ''Pat'' := f1(''Phone'':= numP, ''URL'' := URLP ), 
-                              ''Chris'' := f2(''Phone'' := numC, ''URL'' := URLC) ))"
+value "get\<^bsub>(fun_lens ''Pat'')\<^esub>(c(''Pat''   := f1(''Phone'':= numP, ''URL'' := URLP), 
+                              ''Chris'' := f2(''Phone'':= numC, ''URL'' := URLC)))"
 
-value " (get\<^bsub>(hoist ''Pat'')\<^esub> (c( ''Pat'' := f1(''Phone'':= numP, ''URL'' := URLP ), 
-                                  ''Chris'' := f2(''Phone'' := numC, ''URL'' := URLC),  
-                                  ''Phone'':= numP)))"
+value "(get\<^bsub>(hoist ''Phone'')\<^esub>(c(''Phone'':= numP, ''URL'' := URLP)))"
+value"get\<^bsub>fun_lens ''Phone''  ;\<^sub>L (fun_lens ''Pat'' )\<^esub> 
+           (c(''Pat''   := f1(''Phone'':= numP, ''URL'' := URLP), 
+              ''Chris'' := f2(''Phone'':= numC, ''URL'' := URLC)))"
 
-value " (get\<^bsub>(hoist ''Phone'')\<^esub> (c(''Phone'':= numP, ''URL'' := URLP )))"
 lemma tree_mwb_len:"wb_lens (hoist x)"
   unfolding hoist_def
   apply (unfold_locales) 
-  apply (simp_all add : split: tree.split)
+  apply (simp_all add: split: tree.split)
   done
+
 interpretation tree_len_laws: wb_lens "hoist x"
- using tree_mwb_len
- by fast
-term"s\<lparr> a =ff, b = ff \<rparr>"
+  using tree_mwb_len
+  by fast
+
 (*TODO record Lenses*)
 end
