@@ -2,6 +2,7 @@ theory Lenses
 imports Main
         "../../../../../HOL-TestGen-2016/src/SharedMemory"
         "../../../../../HOL-TestGen-2016/src/Monads"
+       
 begin
 section {* Lenses *}
 
@@ -25,8 +26,6 @@ subsection {* Lens composition, plus, unit, and identity *}
 definition lens_comp :: "('a \<Longrightarrow> 'b) \<Rightarrow> ('b \<Longrightarrow> 'c) \<Rightarrow> ('a \<Longrightarrow> 'c)" (infixr ";\<^sub>L" 80) where
 [lens_defs]: "lens_comp X Y = \<lparr> lens_get = lens_get X \<circ> lens_get Y, 
                                 lens_put = (\<lambda> \<sigma> v. lens_put Y \<sigma> (lens_put X (lens_get Y \<sigma>) v)) \<rparr>"
-term"bop X Y = \<lparr> lens_get = (\<lambda> \<sigma>. lens_get Y \<sigma>), 
-                 lens_put = (\<lambda> \<sigma> v. lens_put X \<sigma> v) \<rparr>"
 
 definition lens_plus :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrightarrow> 'c) \<Rightarrow> 'a \<times> 'b \<Longrightarrow> 'c" (infixr "+\<^sub>L" 75) where
 [lens_defs]: "X +\<^sub>L Y = \<lparr> lens_get = (\<lambda> \<sigma>. (lens_get X \<sigma>, lens_get Y \<sigma>))
@@ -1016,55 +1015,5 @@ interpretation monad_len_laws: mwb_lens "monad_lens x"
  by fast
 
 
-datatype 'a tree = E | T  "'a tree" "'a" "'a tree"
 
-
-
-definition plunge :: "'name \<Rightarrow> ( ('name \<Rightarrow> 'val tree) \<Longrightarrow>  'val tree)" where
-[lens_defs]: "plunge n = \<lparr>lens_get = 
-                         (\<lambda>c. create\<^bsub>fun_lens n\<^esub> c), 
-                         lens_put = (\<lambda>c a.  a n)\<rparr>"
-
-lemma plunge_mwb_len:"wb_lens (plunge x)"
-  unfolding plunge_def 
-  apply (unfold_locales) 
-  apply (simp_all add : lens_create_def fun_lens_def split: tree.split)
-  oops
-
-interpretation plunge_len_laws: wb_lens "plunge x"
- oops
-
-type_synonym ('val, 'tree) Node = "'val \<times> 'tree option"
-
-type_synonym ('name, 'val, 'tree) Atree = "'name \<Rightarrow> ('val \<times> 'tree option)"
-
-type_synonym ('name, 'val, 'tree) Ctree = "'name \<Rightarrow> ('name, 'val, 'tree) Atree"
-
-
-type_synonym 'val node = 'val
-type_synonym 'val edge = "'val \<Rightarrow> 'val"
-type_synonym 'val leaf = "'val"
-definition hoist :: "'name \<Rightarrow> ('tree \<Longrightarrow> 'name \<Rightarrow> 'tree)" where
-[lens_defs]: "hoist n = \<lparr>lens_get = (\<lambda>c. c n), 
-                         lens_put = (\<lambda>c a.  fun_upd c n a)\<rparr>"
-
-value "get\<^bsub>(fun_lens ''Pat'')\<^esub>(c(''Pat''   := f1(''Phone'':= numP, ''URL'' := URLP), 
-                              ''Chris'' := f2(''Phone'':= numC, ''URL'' := URLC)))"
-
-value "(get\<^bsub>(hoist ''Phone'')\<^esub>(c(''Phone'':= numP, ''URL'' := URLP)))"
-value"get\<^bsub>fun_lens ''Phone''  ;\<^sub>L (fun_lens ''Pat'' )\<^esub> 
-           (c(''Pat''   := f1(''Phone'':= numP, ''URL'' := URLP), 
-              ''Chris'' := f2(''Phone'':= numC, ''URL'' := URLC)))"
-
-lemma tree_mwb_len:"wb_lens (hoist x)"
-  unfolding hoist_def
-  apply (unfold_locales) 
-  apply (simp_all add: split: tree.split)
-  done
-
-interpretation tree_len_laws: wb_lens "hoist x"
-  using tree_mwb_len
-  by fast
-
-(*TODO record Lenses*)
 end
