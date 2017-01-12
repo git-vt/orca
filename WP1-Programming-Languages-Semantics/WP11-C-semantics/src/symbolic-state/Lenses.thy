@@ -972,8 +972,7 @@ abbreviation (input) "fld_put f \<equiv> (\<lambda> \<sigma> u. f (\<lambda>_. u
 
 syntax "_FLDLENS" :: "id \<Rightarrow> ('a \<Longrightarrow> 'r)"  ("FLDLENS _")
 translations "FLDLENS x" => "\<lparr> lens_get = x, lens_put = CONST fld_put (_update_name x) \<rparr>"
-
-term "FLDLENS x"
+    
 subsection {* Memory lenses *}
 
 text {*In the sequel we prove that the operations @{const lookup} and
@@ -994,14 +993,9 @@ lemma memory_mwb_len:"mwb_lens (memory_lens x)"
 interpretation memory_len_laws: mwb_lens "memory_lens x"
  using memory_mwb_len
  by fast
-find_theorems name:"memory_len_laws"
-
-term" x ;\<^sub>L   y "
-term"memory_lens x +\<^sub>L memory_lens y +\<^sub>L memory_lens z"
-
 
 subsection {* Monad lenses *}
-term"create\<^bsub>fun_lens ''x''\<^esub> (1::int)"
+
 definition monad_lens :: "'\<sigma> \<Rightarrow> (('o \<times> '\<sigma>) \<Longrightarrow> ('o, '\<sigma>) MON\<^sub>S\<^sub>E)" where
 [lens_defs]: "monad_lens x = \<lparr>lens_get = (\<lambda>f. the(f x)), 
                               lens_put = (\<lambda>f y. f(x \<mapsto> y)) \<rparr>"
@@ -1014,6 +1008,20 @@ interpretation monad_len_laws: mwb_lens "monad_lens x"
  using monad_mwb_len
  by fast
 
+(*A specification of updates*)
 
+term"put\<^bsub>X\<^esub> \<sigma> ( get\<^bsub>X\<^esub> \<sigma> + 1)"
+
+(*A specification about things that do not change using lenses.
+  Such a specification is crucial when reasoning about global variables*)
+
+term"\<forall> X Y. \<not>(X \<approx>\<^sub>L Y) \<longrightarrow> get\<^bsub>X\<^esub> \<sigma> = get\<^bsub>X\<^esub> \<sigma>'"
+
+(*Another advantage of Lenses is also the theory contains the operator  \<bowtie>, expressing
+  Lens independence. Such operator help to check dependencies on global variables in a 
+  given state space*)
+
+
+term"\<forall> X Y. \<not> (X \<bowtie> Y) \<longrightarrow> put\<^bsub>X\<^esub> \<sigma> val = put\<^bsub>Y\<^esub> \<sigma> val"
 
 end
