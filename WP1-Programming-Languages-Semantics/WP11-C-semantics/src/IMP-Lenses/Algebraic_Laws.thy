@@ -1,6 +1,6 @@
 chapter "Shallow small-step semantics"
 
-theory Small_step
+theory Algebraic_Laws
 imports Commands
 
 begin

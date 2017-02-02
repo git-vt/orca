@@ -5,10 +5,6 @@ theory Substitution imports Lenses Unrest  "~~/src/HOL/Eisbach/Eisbach"
 
 begin
 
-(*Yakoub to  Bu: the next section contains the definition of substitution by Simon foster.
-  He defined a substitution as a transformation from a state space to another state space.
-  Since a variable is a lens this means that he is replacing the put function of a variable
-  by another put function.*)
 subsection {* Substitution definitions *}
 
 text {* We introduce a polymorphic constant that will be used to represent application of
@@ -33,7 +29,7 @@ text {* Update the value of a variable to an expression in a substitution *}
 
 consts subst_upd :: "('\<alpha>,'\<beta>) pstates \<Rightarrow> 'v \<Rightarrow> ('\<tau> , '\<alpha>) expr \<Rightarrow> ('\<alpha>,'\<beta>) pstates"
 
-(*Yakoub to  Bu: subst_upd_uvar ... I used this to define assignment where \<sigma> is an id substitution*)
+
 definition subst_upd_var :: "('\<alpha>,'\<beta>) pstates \<Rightarrow> ('\<tau> , '\<beta> ) var \<Rightarrow> ('\<tau>, '\<alpha>) expr \<Rightarrow> ('\<alpha>,'\<beta>) pstates" where
 "subst_upd_var \<sigma> x v = (\<lambda> s. put\<^bsub>x\<^esub> (\<sigma> s) (v s))"
 

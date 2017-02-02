@@ -1,6 +1,6 @@
 theory Lenses
 imports Main
-        "../../../../../HOL-TestGen-2016/src/SharedMemory"       
+        (*../../../../../HOL-TestGen-2016/src/SharedMemory" *)      
 begin
 section {* Lenses *}
 
@@ -973,15 +973,15 @@ translations "FLDLENS x" => "\<lparr> lens_get = x, lens_put = CONST fld_put (_u
 
 subsection {* Memory lenses *}
 
-text {*In the sequel we prove that the operations @{const lookup} and
-       @{const update} forms together a mainly well behaved lense since
-       together they preserve the following lense laws:
+text {*In the sequel we prove that the operations @{text lookup} and
+       @{text update} forms together a mainly well behaved lens since
+       together they preserve the following lens laws:
        \begin{itemize}
           \item Put Get
           \item Put Put
        \end{itemize}*}
 
-definition memory_lens :: "'\<alpha> \<Rightarrow> ('\<beta> \<Longrightarrow> ('\<alpha>, '\<beta>) memory)" where
+(*definition memory_lens :: "'\<alpha> \<Rightarrow> ('\<beta> \<Longrightarrow> ('\<alpha>, '\<beta>) memory)" where
 [lens_defs]: "memory_lens x = \<lparr> lens_get = (\<lambda>\<sigma>. \<sigma> $ x), lens_put = (\<lambda>\<sigma> v. (\<sigma>(x :=\<^sub>$ v))) \<rparr>"
 
 lemma memory_mwb_len:"mwb_lens (memory_lens x)"
@@ -990,7 +990,7 @@ lemma memory_mwb_len:"mwb_lens (memory_lens x)"
  
 interpretation memory_len_laws: mwb_lens "memory_lens x"
  using memory_mwb_len
- by fast
+ by fast*)
 
 (*A specification of updates*)
 
