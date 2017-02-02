@@ -1,8 +1,6 @@
 theory Lenses
 imports Main
-        "../../../../../HOL-TestGen-2016/src/SharedMemory"
-        "../../../../../HOL-TestGen-2016/src/Monads"
-       
+        "../../../../../HOL-TestGen-2016/src/SharedMemory"       
 begin
 section {* Lenses *}
 
@@ -972,7 +970,7 @@ abbreviation (input) "fld_put f \<equiv> (\<lambda> \<sigma> u. f (\<lambda>_. u
 
 syntax "_FLDLENS" :: "id \<Rightarrow> ('a \<Longrightarrow> 'r)"  ("FLDLENS _")
 translations "FLDLENS x" => "\<lparr> lens_get = x, lens_put = CONST fld_put (_update_name x) \<rparr>"
-    
+
 subsection {* Memory lenses *}
 
 text {*In the sequel we prove that the operations @{const lookup} and
@@ -992,20 +990,6 @@ lemma memory_mwb_len:"mwb_lens (memory_lens x)"
  
 interpretation memory_len_laws: mwb_lens "memory_lens x"
  using memory_mwb_len
- by fast
-
-subsection {* Monad lenses *}
-
-definition monad_lens :: "'\<sigma> \<Rightarrow> (('o \<times> '\<sigma>) \<Longrightarrow> ('o, '\<sigma>) MON\<^sub>S\<^sub>E)" where
-[lens_defs]: "monad_lens x = \<lparr>lens_get = (\<lambda>f. the(f x)), 
-                              lens_put = (\<lambda>f y. f(x \<mapsto> y)) \<rparr>"
-
-lemma monad_mwb_len:"mwb_lens (monad_lens x)"
-  unfolding monad_lens_def
-  by (unfold_locales, simp_all)
- 
-interpretation monad_len_laws: mwb_lens "monad_lens x"
- using monad_mwb_len
  by fast
 
 (*A specification of updates*)
