@@ -1,3 +1,8 @@
+
+(*This theory is inspired by the theory of Simon foster*)
+chapter "Lenses"
+
+
 theory Lenses
 imports Main
         (*../../../../../HOL-TestGen-2016/src/SharedMemory" *)      

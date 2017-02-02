@@ -1,9 +1,9 @@
-chapter "Shallow Commands"
+chapter "Shallow IMP"
 
 theory Commands imports Substitution
 
 begin
-
+section{*Commands*}
 text{*Instead of using a deep-embedding for the abstract syntax we use shallow embedding.
       To do so we need an explicit notion of substitution and variables.
       We use abbreviation in order that we do not hide the core theory behind

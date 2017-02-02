@@ -1,5 +1,5 @@
 
-chapter "Syntax of Commands"
+section {*expressions*}
 
 theory Expressions imports Lenses "~~/src/Tools/Adhoc_Overloading" 
 

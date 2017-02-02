@@ -1,5 +1,3 @@
-chapter "Shallow small-step semantics"
-
 theory Algebraic_Laws
 imports Commands
 

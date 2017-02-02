@@ -1,11 +1,11 @@
 
-chapter "Syntax of Commands"
+section "Substitution"
 
 theory Substitution imports Lenses Unrest  "~~/src/HOL/Eisbach/Eisbach"
 
 begin
 
-subsection {* Substitution definitions *}
+subsection {*Substitution definitions *}
 
 text {* We introduce a polymorphic constant that will be used to represent application of
         a substitution, and also a set of theorems to represent laws. *}

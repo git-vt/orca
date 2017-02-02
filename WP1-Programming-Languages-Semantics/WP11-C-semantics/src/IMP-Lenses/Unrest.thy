@@ -1,3 +1,4 @@
+(*This theory is inspired by the theory of Simon foster*)
 chapter{*Meta-logical Operators*}
 theory Unrest
 imports Expressions
