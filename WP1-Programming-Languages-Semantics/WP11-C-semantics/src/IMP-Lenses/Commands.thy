@@ -4,10 +4,18 @@ theory Commands imports Substitution
 
 begin
 section{*Commands*}
+(*
+datatype
+  ('\<alpha>, '\<beta>) com = SKIP                    
+      | Assign "('\<alpha>, '\<beta>) var" "'\<alpha> aexp"         ("_ :== _ " [80, 80] 70)
+      | Semi   "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"          ("_; _"     [61, 60] 60)
+      | Cond   "'\<alpha> bexp" "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"     ("IF (_)/ THEN (_) ELSE (_)"  70)
+      | While  "'\<alpha> bexp" "('\<alpha>, '\<beta>) com"         ("WHILE (_) DO /(_) OD"  70)*)
+
 text{*Instead of using a deep-embedding for the abstract syntax we use shallow embedding.
       To do so we need an explicit notion of substitution and variables.
       We use abbreviation in order that we do not hide the core theory behind
-      another definition layer. Which make it more suited for exploitation by simp, auto, etc*}
+      another definition layer. Which makes it more suited for exploitation by simp, auto, etc*}
 
 abbreviation "SKIP \<equiv> id" (* in other words Skip is the id substitution.. it means (id \<dagger> id)*)
 
@@ -45,23 +53,10 @@ where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else 
 abbreviation While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
 "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" (*emm...*)
 
-(*inductive whilep::"('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> \<Rightarrow> bool" where
-  "bexp \<sigma> \<Longrightarrow> res = body; res' \<Longrightarrow> body \<sigma> = \<sigma>'\<Longrightarrow>  whilep bexp body res' \<sigma>' \<Longrightarrow> whilep bexp body res \<sigma>"|
-  "\<not> bexp \<sigma> \<Longrightarrow> res = SKIP \<Longrightarrow> whilep bexp body res \<sigma>"
-
-abbreviation While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
-"While bexp body \<equiv> SOME C. whilep bexp body C "*)
 notation (latex)
   SKIP  ("\<SKIP>") and
   Cond  ("\<IF> _ \<THEN> _ \<ELSE> _"  60) and
   While  ("\<WHILE> _ \<DO> _ \<OD>"  60)
 
-(*
-datatype
-  ('\<alpha>, '\<beta>) com = SKIP                    
-      | Assign "('\<alpha>, '\<beta>) var" "'\<alpha> aexp"         ("_ :== _ " [80, 80] 70)
-      | Semi   "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"          ("_; _"     [61, 60] 60)
-      | Cond   "'\<alpha> bexp" "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"     ("IF (_)/ THEN (_) ELSE (_)"  70)
-      | While  "'\<alpha> bexp" "('\<alpha>, '\<beta>) com"         ("WHILE (_) DO /(_) OD"  70)*)
 
 end

@@ -1,4 +1,4 @@
-
+(*This theory is inspired by the theory of Simon foster*)
 section "Substitution"
 
 theory Substitution imports Lenses Unrest  "~~/src/HOL/Eisbach/Eisbach"
@@ -20,7 +20,7 @@ text {* A substitution is simply a transformation on the alphabet; it shows how 
 
 type_synonym ('\<alpha>,'\<beta>) pstates = "'\<alpha> \<Rightarrow> '\<beta>"
 
-type_synonym '\<alpha> states = "'\<alpha> \<Rightarrow> '\<alpha>"
+type_synonym '\<alpha> states = "('\<alpha>,'\<alpha>) pstates"
 
 lift_definition subst :: "('\<alpha>, '\<beta>) pstates \<Rightarrow> ('\<tau> , '\<beta>) expr \<Rightarrow> ('\<tau> , '\<alpha>) expr" (infixr "\<dagger>" 80) is
 "\<lambda> \<sigma> e s. e (\<sigma> s)" .
@@ -28,7 +28,6 @@ lift_definition subst :: "('\<alpha>, '\<beta>) pstates \<Rightarrow> ('\<tau> ,
 text {* Update the value of a variable to an expression in a substitution *}
 
 consts subst_upd :: "('\<alpha>,'\<beta>) pstates \<Rightarrow> 'v \<Rightarrow> ('\<tau> , '\<alpha>) expr \<Rightarrow> ('\<alpha>,'\<beta>) pstates"
-
 
 definition subst_upd_var :: "('\<alpha>,'\<beta>) pstates \<Rightarrow> ('\<tau> , '\<beta> ) var \<Rightarrow> ('\<tau>, '\<alpha>) expr \<Rightarrow> ('\<alpha>,'\<beta>) pstates" where
 "subst_upd_var \<sigma> x v = (\<lambda> s. put\<^bsub>x\<^esub> (\<sigma> s) (v s))"

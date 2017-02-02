@@ -75,7 +75,6 @@ lemma unrest_id [unrest]:
   using 1
   by (transfer, auto)
 
-
 lemma eq_lift_expr_eq:
   "(x \<sharp> (bop (op =) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> = v \<sigma>))"
   by (transfer, auto)
@@ -143,7 +142,7 @@ lemma unrest_times [unrest]:
   using 1 2
   by transfer auto
 
-lemma times_devide_expr_eq: 
+lemma devide_lift_expr_eq: 
   "(x \<sharp> (bop (op /) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> / v \<sigma>))"
   by transfer auto
 
@@ -160,7 +159,7 @@ lemma unrest_ulambda [unrest]:
   using 1
   by (transfer, simp)
 
-lemma times_mod_expr_eq: 
+lemma mod_lift_expr_eq: 
   "(x \<sharp> (bop (op mod) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> mod v \<sigma>))"
   by transfer auto
 
@@ -171,7 +170,7 @@ lemma unrest_mod [unrest]:
   using 1 2
   by transfer auto
 
-lemma times_div_expr_eq: 
+lemma div_lift_expr_eq: 
   "(x \<sharp> (bop (op div) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> div v \<sigma>))"
   by transfer auto
 

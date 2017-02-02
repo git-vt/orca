@@ -5,7 +5,7 @@ begin
 
 section {*Algebraic laws of programming*}
 text{*In this section we introduce the semantic rules related to the different
-      statement of IMP. In the literature this also known as the algebraic laws of programming.*}
+      statements of IMP. In the literature this also known as the algebraic laws of programming.*}
 
 named_theorems small_step
 
@@ -32,13 +32,11 @@ lemma ASN_test:
   by transfer auto
 
 lemma ASN0[small_step]:
-  "(var:== exp ; C) = C o [var \<mapsto>\<^sub>s exp]"
-  by  auto
+  "(var:== exp ; C) = C o [var \<mapsto>\<^sub>s exp]" ..
 
 lemma ASN1[small_step]: 
   "(var:== exp ; C) \<dagger> P = [var \<mapsto>\<^sub>s exp] \<dagger> (C \<dagger> P)"
   by transfer simp
-
  
 lemma ASN2[small_step]: 
   "(var:== exp ; C) = [var \<mapsto>\<^sub>s exp] \<dagger> C"
@@ -250,7 +248,6 @@ lemma SEQ5[small_step]:
   "(bot ; C) = bot" 
 oops
 
-term "\<sigma>::'\<alpha>::bot"
 (*Seq unit 3*)
 lemma SEQ6[small_step]: 
   "(C ; bot) = bot"
@@ -274,30 +271,31 @@ assumes "mwb_lens x" shows
 oops
 
 
-subsection {*While laws Laws*}
+subsection {*While laws*}
 text{*In this section we introduce the algebraic laws of programming related to the while
       statement.*}
-
 
 lemma WHILE2:
   assumes 1:"b"
   shows "(WHILE \<guillemotleft>b\<guillemotright> DO C OD) = (C; WHILE  \<guillemotleft>b\<guillemotright> DO C OD)"
-  sorry
+ oops
 
 lemma WHILE3:
   shows "(WHILE uop Not b DO C OD) = SKIP"
-  sorry
+  oops
 
 lemma W_mono: "mono (W b r)"
-by (unfold W_def mono_def) auto
+  unfolding W_def mono_def
+  by auto
 
 lemma WHILE1:
  "(WHILE b DO C OD) = (IF b THEN C; WHILE b DO C OD ELSE SKIP)"
  proof-
   let ?w = "WHILE b DO C OD" let ?f = "W  b (Rel (WHILE b DO C OD))"
-  have "Rel ?w = lfp ?f" unfolding Rel_def RelInv_def sorry 
+  have "Rel ?w = lfp ?f" unfolding Rel_def RelInv_def oops 
   also have "\<dots> = ?f (lfp ?f)" by(rule lfp_unfold [OF W_mono])
-  also have "\<dots> = Rel (IF b THEN C; ?w ELSE SKIP)" sorry
+  also have "\<dots> = Rel (IF b THEN C; ?w ELSE SKIP)" oops
   finally show ?thesis unfolding Rel_def by auto
 qed
+  
 end
