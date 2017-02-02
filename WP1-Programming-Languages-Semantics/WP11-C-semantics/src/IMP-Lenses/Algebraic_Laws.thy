@@ -5,8 +5,8 @@ imports Commands
 
 begin
 
-section {*Small-step semantics*}
-text{*In this section we introduce the small-step semantics  related to the different
+section {*Algebraic laws of programming*}
+text{*In this section we introduce the semantic rules related to the different
       statement of IMP. In the literature this also known as the algebraic laws of programming.*}
 
 named_theorems small_step
