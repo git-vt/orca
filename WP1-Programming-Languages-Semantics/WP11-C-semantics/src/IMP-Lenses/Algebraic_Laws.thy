@@ -240,7 +240,7 @@ lemma SEQ3[small_step]:
 lemma SEQ4[small_step]: 
   "(bot ; C) = (C ; bot)"
   unfolding subst_upd_var_def unit_lens_def
-  by transfer auto
+ oops
 
 (*Seq unit 2*)
 
@@ -275,27 +275,117 @@ subsection {*While laws*}
 text{*In this section we introduce the algebraic laws of programming related to the while
       statement.*}
 
-lemma WHILE2:
-  assumes 1:"b"
-  shows "(WHILE \<guillemotleft>b\<guillemotright> DO C OD) = (C; WHILE  \<guillemotleft>b\<guillemotright> DO C OD)"
- oops
-
-lemma WHILE3:
-  shows "(WHILE uop Not b DO C OD) = SKIP"
-  oops
-
 lemma W_mono: "mono (W b r)"
   unfolding W_def mono_def
   by auto
 
+lemma WHILE3:
+  assumes 1:" \<not> b s"
+  shows "(WHILE b DO C OD) s = SKIP s"
+  using 1  apply transfer apply auto
+  oops
+
+
+lemma D_While_If:
+  "D(WHILE b DO c) = D(IF b THEN c;;WHILE b DO c ELSE SKIP)"
+proof-
+  let ?w = "WHILE b DO c" let ?f = "W (bval b) (D c)"
+  have "D ?w = lfp ?f" by simp
+  also have "\<dots> = ?f (lfp ?f)" by(rule lfp_unfold [OF W_mono])
+  also have "\<dots> = D(IF b THEN c;;?w ELSE SKIP)" by (simp add: W_def)
+  finally show ?thesis .
+qed
+
+
+lemma IF_D1:
+  "(Rel (IF b THEN c1 ELSE c2)) = 
+   {(s,t). if b s then (s,t) \<in> (Rel c1) else (s,t) \<in> (Rel c2)}"
+  by (auto simp add: Rel_def)
+
+lemma WHILE_D1:
+    "RelInv(Rel (WHILE b DO C OD)) = RelInv (lfp (W b (Rel C)))"
+  by (simp add: Rel_def RelInv_def)
+
+lemma WHILE1:
+  "(WHILE b DO C OD) = (IF b THEN C; WHILE b DO C OD ELSE SKIP)"
+proof-
+  let ?w = "WHILE b DO C OD" let ?f = "RelInv(Rel(W  b (Rel C)))"
+  have "?w = RelInv (lfp ?f)" .. 
+  also have "\<dots> = RelInv (?f  (lfp ?f))" by (metis W_mono def_lfp_unfold) 
+  also have "\<dots> = (IF b THEN C; ?w ELSE SKIP)" apply (simp add:  W_def )
+      
+(*proof -
+           { fix aa :: 'a
+             { assume "\<not> b aa"
+               then have "(WHILE b DO C OD) aa = aa \<and> \<not> b aa"
+                 using ff1 by metis (* failed *)
+               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by force }
+             moreover
+             { assume "b aa"
+               then have "(WHILE b DO C OD) aa = (WHILE b DO C OD) (C aa) \<and> b aa"
+                 using ff1 sorry (* > 1.0 s, timed out *)
+               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by fastforce }
+             ultimately have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+               by blast }
+           then show ?thesis
+             by (metis (no_types))
+         qed*)
+       
+  finally show ?thesis
+  by (simp add: \<open>RelInv (W b (Rel C) (lfp (W b (Rel C)))) = IF b THEN C; WHILE b DO C OD ELSE SKIP\<close> \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close>) 
+qed
+
 lemma WHILE1:
  "(WHILE b DO C OD) = (IF b THEN C; WHILE b DO C OD ELSE SKIP)"
  proof-
-  let ?w = "WHILE b DO C OD" let ?f = "W  b (Rel (WHILE b DO C OD))"
-  have "Rel ?w = lfp ?f" unfolding Rel_def RelInv_def oops 
-  also have "\<dots> = ?f (lfp ?f)" by(rule lfp_unfold [OF W_mono])
-  also have "\<dots> = Rel (IF b THEN C; ?w ELSE SKIP)" oops
-  finally show ?thesis unfolding Rel_def by auto
+  let ?w = "WHILE b DO C OD" let ?f = "W  b (Rel C)"
+  have "?w = RelInv (lfp ?f)" .. 
+  also have "\<dots> = RelInv (?f  (lfp ?f))" by (metis W_mono def_lfp_unfold) 
+  also have "\<dots> = (IF b THEN C; ?w ELSE SKIP)" apply (simp add:  W_def )
+         (*proof -
+           { fix aa :: 'a
+             { assume "\<not> b aa"
+               then have "(WHILE b DO C OD) aa = aa \<and> \<not> b aa"
+                 using ff1 by metis (* failed *)
+               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by force }
+             moreover
+             { assume "b aa"
+               then have "(WHILE b DO C OD) aa = (WHILE b DO C OD) (C aa) \<and> b aa"
+                 using ff1 sorry (* > 1.0 s, timed out *)
+               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by fastforce }
+             ultimately have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
+               by blast }
+           then show ?thesis
+             by (metis (no_types))
+         qed*)
+       
+  finally show ?thesis
+  by (simp add: \<open>RelInv (W b (Rel C) (lfp (W b (Rel C)))) = IF b THEN C; WHILE b DO C OD ELSE SKIP\<close> \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close>) 
 qed
   
+
+lemma WHILE2:
+  assumes 1:"b = \<guillemotleft>True\<guillemotright>"
+  shows "(WHILE b DO C OD) = (C; WHILE  b DO C OD)"
+proof -
+  have f1: "\<forall>A f. (bot (A::'a set)::'a set) = f (bot A::'a set)"
+    by (metis (no_types) SEQ4 SEQ6 comp_apply)
+  then have f2: "\<forall>f. _type_constraint_ = inv f; f"
+    by auto
+  obtain aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
+    f3: "\<forall>f fa fb A. f = fb \<or> (fa; f) (aa fa A f fb) \<noteq> (fa; fb) (aa fa A f fb)"
+    using f1 by blast
+  have "\<forall>c ca. c = ca"
+    using f2 by (metis K_record_comp) (* > 1.0 s, timed out *)
+  then show ?thesis
+    using f3 sorry (* > 1.0 s, timed out *)
+qed
+  
+
+
+
 end
