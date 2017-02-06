@@ -170,6 +170,15 @@ theorem ASN14:
   using assms unfolding unrest_usubst_def subst_upd_var_def   
   by transfer auto 
 
+theorem ASN15:
+  assumes "mwb_lens x" and "x \<sharp>\<sharp> \<guillemotleft>bot\<guillemotright>"
+  shows
+  "((IF b THEN x :== E ELSE \<guillemotleft>bot\<guillemotright>); 
+    (IF (uop c (VAR x)) THEN (x :== (uop F (VAR x))) ELSE \<guillemotleft>bot\<guillemotright> )) = 
+    (IF (trop If b (uop c  E) \<guillemotleft>False\<guillemotright>) THEN x :== (uop F E) ELSE \<guillemotleft>bot\<guillemotright>)"
+  using assms unfolding unrest_usubst_def subst_upd_var_def   
+  by transfer auto
+
 subsection {*Conditional Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the conditional
       statement.*}

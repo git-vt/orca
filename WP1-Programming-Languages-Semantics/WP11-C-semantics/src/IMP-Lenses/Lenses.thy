@@ -505,111 +505,188 @@ definition lens_equiv :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrigh
 [lens_defs]: "lens_equiv X Y = (X \<subseteq>\<^sub>L Y \<and> Y \<subseteq>\<^sub>L X)"
 
 lemma lens_equivI [intro]:
-  "\<lbrakk> X \<subseteq>\<^sub>L Y; Y \<subseteq>\<^sub>L X \<rbrakk> \<Longrightarrow> X \<approx>\<^sub>L Y"
-  by (simp add: lens_equiv_def) 
+  assumes 1:"X \<subseteq>\<^sub>L Y" and 2:"Y \<subseteq>\<^sub>L X"
+  shows "X \<approx>\<^sub>L Y"
+  using 1 2 unfolding lens_equiv_def
+  by simp
 
 lemma lens_equiv_refl:
   "X \<approx>\<^sub>L X"
-  by (simp add: lens_equiv_def sublens_refl)
+  unfolding lens_equiv_def using sublens_refl
+  by simp
 
 lemma lens_equiv_sym:
-  "X \<approx>\<^sub>L Y \<Longrightarrow> Y \<approx>\<^sub>L X"
-  by (simp add: lens_equiv_def)
+  assumes 1: "X \<approx>\<^sub>L Y"
+  shows  "Y \<approx>\<^sub>L X"
+  using 1 unfolding lens_equiv_def
+  by simp
 
 lemma lens_equiv_trans:
-  "\<lbrakk> X \<approx>\<^sub>L Y; Y \<approx>\<^sub>L Z \<rbrakk> \<Longrightarrow> X \<approx>\<^sub>L Z"
-  by (auto intro: sublens_trans simp add: lens_equiv_def)
+  assumes 1: "X \<approx>\<^sub>L Y" and 2:"Y \<approx>\<^sub>L Z" 
+  shows"X \<approx>\<^sub>L Z"
+  using 1 2 unfolding lens_equiv_def
+  using sublens_trans sublens_trans 
+  by auto 
 
 lemma unit_lens_indep: "0\<^sub>L \<bowtie> X"
-  by (auto simp add: unit_lens_def lens_indep_def lens_equiv_def)
+  unfolding unit_lens_def lens_indep_def lens_equiv_def
+  by simp 
 
 lemma fst_snd_id_lens: "fst\<^sub>L +\<^sub>L snd\<^sub>L = 1\<^sub>L"
-  by (auto simp add: lens_plus_def fst_lens_def snd_lens_def id_lens_def)
+  unfolding lens_plus_def fst_lens_def snd_lens_def id_lens_def
+  by auto
 
 lemma sublens_pres_indep:
-  "\<lbrakk> X \<subseteq>\<^sub>L Y; Y \<bowtie> Z \<rbrakk> \<Longrightarrow> X \<bowtie> Z" 
-  apply (auto intro!:lens_indepI simp add: sublens_def lens_comp_def lens_indep_comm)
-  apply (simp add: lens_indep_sym)
-done
+  assumes 1:"X \<subseteq>\<^sub>L Y" and 2: "Y \<bowtie> Z"
+  shows"X \<bowtie> Z"
+  using 1 2 unfolding lens_indep_def sublens_def lens_comp_def
+  by auto
 
-lemma plus_pres_lens_indep: "\<lbrakk> X \<bowtie> Z; Y \<bowtie> Z \<rbrakk> \<Longrightarrow> (X +\<^sub>L Y) \<bowtie> Z"
-  apply (rule lens_indepI)
-  apply (simp_all add: lens_plus_def prod.case_eq_if)
-  apply (simp add: lens_indep_comm)
-  apply (simp add: lens_indep_sym)
-done
+lemma plus_pres_lens_indep: 
+  assumes 1:"X \<bowtie> Z" and 2:"Y \<bowtie> Z" 
+  shows "(X +\<^sub>L Y) \<bowtie> Z"
+  using 1 2 unfolding lens_indep_def lens_plus_def
+  by auto
 
 lemma lens_comp_indep_cong_left:
-  "\<lbrakk> mwb_lens Z; X ;\<^sub>L Z \<bowtie> Y ;\<^sub>L Z \<rbrakk> \<Longrightarrow> X \<bowtie> Y"
-  apply (rule lens_indepI)
-  apply (rename_tac u v \<sigma>)
-  apply (drule_tac u=u and v=v and \<sigma>="create\<^bsub>Z\<^esub> \<sigma>" in lens_indep_comm)
-  apply (simp add: lens_comp_def)
-  apply (meson mwb_lens_weak weak_lens.view_determination)
-  apply (rename_tac v \<sigma>)
-  apply (drule_tac v=v and \<sigma>="create\<^bsub>Z\<^esub> \<sigma>" in lens_indep_get)
-  apply (simp add: lens_comp_def)
-  apply (drule lens_indep_sym)
-  apply (rename_tac u \<sigma>)
-  apply (drule_tac v=u and \<sigma>="create\<^bsub>Z\<^esub> \<sigma>" in lens_indep_get)
-  apply (simp add: lens_comp_def)
-done
+  assumes 1:"mwb_lens Z"
+  and     2:"X ;\<^sub>L Z \<bowtie> Y ;\<^sub>L Z"
+  shows "X \<bowtie> Y"
+  using 1 2 unfolding lens_indep_def lens_comp_def
+proof (auto)
+  fix u :: 'c and v :: 'd and \<sigma> :: 'a
+  assume a1: "mwb_lens Z"
+  assume a2: "\<forall>u v \<sigma>. put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) u) = 
+              put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) v) \<and> get\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) = 
+              get\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) \<and> get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) = get\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>)"
+  have "weak_lens Z"
+    using a1 by (metis mwb_lens_weak)
+  then show "put\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> \<sigma> v) u = put\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<sigma> u) v"
+    using weak_lens.put_get a2 by metis 
+next
+  fix v :: 'd and \<sigma> :: 'a
+  assume a1:"mwb_lens Z "
+  assume a2:"\<forall>u v \<sigma>.
+              put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) u) =
+              put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) v) \<and>
+              get\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) = get\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) \<and>
+              get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) = get\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>)"
+  show "get\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> \<sigma> v) = get\<^bsub>X\<^esub> \<sigma>"
+  using a1 a2 mwb_lens_weak weak_lens.put_get by metis 
+next 
+  fix \<sigma>::'a and u::'c
+  assume a1:"mwb_lens Z"
+  assume a2:" \<forall>u v \<sigma>.
+              put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) u) =
+              put\<^bsub>Z\<^esub> \<sigma> (put\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) v) \<and>
+              get\<^bsub>X\<^esub> (put\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) v) = get\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) \<and>
+              get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (get\<^bsub>Z\<^esub> \<sigma>) u) = get\<^bsub>Y\<^esub> (get\<^bsub>Z\<^esub> \<sigma>)"
+  show "get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<sigma> u) = get\<^bsub>Y\<^esub> \<sigma>"
+  using a1 a2 mwb_lens_weak weak_lens.put_get by (metis (full_types))
+qed
   
 lemma lens_comp_indep_cong:
-  "\<lbrakk> mwb_lens x; mwb_lens y; mwb_lens z \<rbrakk> \<Longrightarrow> (x ;\<^sub>L z) \<bowtie> (y ;\<^sub>L z) \<longleftrightarrow> x \<bowtie> y"
-  using lens_comp_indep_cong_left lens_indep_left_comp by blast
+  assumes 1:"mwb_lens x" and 2:"mwb_lens y" and 3:"mwb_lens z"
+  shows "(x ;\<^sub>L z) \<bowtie> (y ;\<^sub>L z) \<longleftrightarrow> x \<bowtie> y"
+  using 1 2 3 lens_comp_indep_cong_left lens_indep_left_comp by blast
 
 lemma lens_quotient_mwb:
-  "\<lbrakk> mwb_lens Y; X \<subseteq>\<^sub>L Y \<rbrakk> \<Longrightarrow> mwb_lens (X /\<^sub>L Y)"
-  by (unfold_locales, auto simp add: lens_quotient_def lens_create_def sublens_def lens_comp_def comp_def)  
+  assumes 1:"mwb_lens Y" and 2:"X \<subseteq>\<^sub>L Y" 
+  shows"mwb_lens (X /\<^sub>L Y)"
+  using 1 2 unfolding lens_quotient_def lens_create_def sublens_def lens_comp_def comp_def
+  by (unfold_locales, auto)  
 
 subsection {* Lens algebraic laws *}
 
 lemma plus_lens_distr: 
   assumes 1:"mwb_lens Z"
   shows "(X +\<^sub>L Y) ;\<^sub>L Z = (X ;\<^sub>L Z) +\<^sub>L (Y ;\<^sub>L Z)"
-  using 1
-  by (auto simp add: lens_comp_def lens_plus_def comp_def)
+  using 1 unfolding lens_comp_def lens_plus_def comp_def
+  by auto 
 
 text {* This law explains the behaviour of lens quotient. *}
 
 lemma lens_quotient_comp:
-  "\<lbrakk> weak_lens Y; X \<subseteq>\<^sub>L Y \<rbrakk> \<Longrightarrow> (X /\<^sub>L Y) ;\<^sub>L Y = X"
-  by (auto simp add: lens_quotient_def lens_comp_def comp_def sublens_def)
+  assumes 1:"weak_lens Y" and 2:"X \<subseteq>\<^sub>L Y"  
+  shows "(X /\<^sub>L Y) ;\<^sub>L Y = X"
+  using 1 2 unfolding lens_quotient_def lens_comp_def comp_def sublens_def 
+  by auto
 
 lemma lens_comp_quotient:
-  "weak_lens Y \<Longrightarrow> (X ;\<^sub>L Y) /\<^sub>L Y = X"
-  by (simp add: lens_quotient_def lens_comp_def)
+  assumes 1:"weak_lens Y"
+  shows "(X ;\<^sub>L Y) /\<^sub>L Y = X"
+  using 1 unfolding lens_quotient_def lens_comp_def
+  by simp 
 
-lemma lens_quotient_id: "weak_lens X \<Longrightarrow> (X /\<^sub>L X) = 1\<^sub>L"
-  by (force simp add: lens_quotient_def id_lens_def)
+lemma lens_quotient_id: 
+  assumes 1:"weak_lens X"
+  shows "(X /\<^sub>L X) = 1\<^sub>L"
+  using 1 unfolding lens_quotient_def id_lens_def
+  by force
 
 lemma lens_quotient_id_denom: "X /\<^sub>L 1\<^sub>L = X"
-  by (simp add: lens_quotient_def id_lens_def lens_create_def)
+  unfolding  lens_quotient_def id_lens_def lens_create_def
+  by simp 
  
-lemma lens_quotient_unit: "weak_lens X \<Longrightarrow> (0\<^sub>L /\<^sub>L X) = 0\<^sub>L"
-  by (simp add: lens_quotient_def unit_lens_def)
+lemma lens_quotient_unit: 
+  assumes 1:"weak_lens X" 
+  shows "(0\<^sub>L /\<^sub>L X) = 0\<^sub>L"
+  using 1 unfolding lens_quotient_def unit_lens_def
+  by simp
 
 lemma lens_quotient_plus:
-  "\<lbrakk> mwb_lens Z; X \<subseteq>\<^sub>L Z; Y \<subseteq>\<^sub>L Z \<rbrakk> \<Longrightarrow> (X +\<^sub>L Y) /\<^sub>L Z = (X /\<^sub>L Z) +\<^sub>L (Y /\<^sub>L Z)"
-  apply (auto simp add: lens_quotient_def lens_plus_def sublens_def lens_comp_def comp_def)
-  apply (rule ext)
-  apply (rule ext)
+  assumes 1:"mwb_lens Z" and 2:"X \<subseteq>\<^sub>L Z" 
+  shows" (X +\<^sub>L Y) /\<^sub>L Z = (X /\<^sub>L Z) +\<^sub>L (Y /\<^sub>L Z)"
+  using 1 2 unfolding lens_quotient_def lens_plus_def sublens_def lens_comp_def comp_def
+  apply (auto simp add: )
+  apply (rule ext)+
   apply (simp add: prod.case_eq_if)
 done
 
-lemma plus_pred_sublens: "\<lbrakk> mwb_lens Z; X \<subseteq>\<^sub>L Z; Y \<subseteq>\<^sub>L Z; X \<bowtie> Y \<rbrakk> \<Longrightarrow> (X +\<^sub>L Y) \<subseteq>\<^sub>L Z"
-  apply (auto simp add: sublens_def)
-  apply (rename_tac Z\<^sub>1 Z\<^sub>2)
-  apply (rule_tac x="Z\<^sub>1 +\<^sub>L Z\<^sub>2" in exI)
-  apply (auto intro!: plus_wb_lens)
-  apply (simp add: lens_comp_indep_cong_left plus_vwb_lens)
-  apply (simp add: plus_lens_distr)
-done
+lemma plus_pred_sublens: 
+  assumes 1: "mwb_lens Z" and 2:"X \<subseteq>\<^sub>L Z" and 3:"Y \<subseteq>\<^sub>L Z" and 4:"X \<bowtie> Y" 
+  shows "(X +\<^sub>L Y) \<subseteq>\<^sub>L Z"
+  using 1 2 3 4
+proof -
+  have "\<forall>l la. (\<not> (l::'c \<Longrightarrow> 'b) \<subseteq>\<^sub>L (la::'a \<Longrightarrow> _) \<or> (\<exists>lb. vwb_lens lb \<and> lb ;\<^sub>L la = l)) \<and> ((\<forall>lb. \<not> vwb_lens lb \<or> lb ;\<^sub>L la \<noteq> l) \<or> l \<subseteq>\<^sub>L la)"
+    by (metis sublens_def)
+  then obtain ll :: "('c \<Longrightarrow> 'b) \<Rightarrow> ('a \<Longrightarrow> 'b) \<Rightarrow> 'c \<Longrightarrow> 'a" where
+    f1: "\<forall>l la. (\<not> l \<subseteq>\<^sub>L la \<or> vwb_lens (ll l la) \<and> ll l la ;\<^sub>L la = l) \<and> ((\<forall>lb. \<not> vwb_lens lb \<or> lb ;\<^sub>L la \<noteq> l) \<or> l \<subseteq>\<^sub>L la)"
+    by moura
+  obtain lla :: "('d \<Longrightarrow> 'b) \<Rightarrow> ('a \<Longrightarrow> 'b) \<Rightarrow> 'd \<Longrightarrow> 'a" where
+    f2: "\<forall>l la. (\<not> l \<subseteq>\<^sub>L la \<or> vwb_lens (lla l la) \<and> lla l la ;\<^sub>L la = l) \<and> ((\<forall>lb. \<not> vwb_lens lb \<or> lb ;\<^sub>L la \<noteq> l) \<or> l \<subseteq>\<^sub>L la)"
+    by (metis sublens_def)
+  have f3: "ll X Z ;\<^sub>L Z = X"
+    using f1 by (metis "2") (* > 1.0 s, timed out *)
+  have f4: "lla Y Z ;\<^sub>L Z = Y"
+    using f2 by (metis "3") (* > 1.0 s, timed out *)
+  have f5: "\<forall>l la. \<not> (l::'c \<Longrightarrow> 'a) ;\<^sub>L Z \<bowtie> (la::'d \<Longrightarrow> 'a) ;\<^sub>L Z \<or> l \<bowtie> la"
+    by (metis "1" lens_comp_indep_cong_left) (* > 1.0 s, timed out *)
+  have f6: "\<forall>l la. ((l::'c \<Longrightarrow> 'a) +\<^sub>L (la::'d \<Longrightarrow> 'a)) ;\<^sub>L Z = l ;\<^sub>L Z +\<^sub>L la ;\<^sub>L Z"
+    by (metis "1" plus_lens_distr) (* > 1.0 s, timed out *)
+  have "\<not> X \<bowtie> Y \<or> ll X Z \<bowtie> lla Y Z"
+    using f5 f4 f3 by presburger
+  then have "ll X Z \<bowtie> lla Y Z"
+    by (metis "4") (* > 1.0 s, timed out *)
+  then have "vwb_lens (ll X Z +\<^sub>L lla Y Z) \<or> \<not> vwb_lens (ll X Z) \<or> \<not> Y \<subseteq>\<^sub>L Z"
+    using f2 plus_vwb_lens by blast
+  then have "\<not> vwb_lens (ll X Z) \<or> vwb_lens (ll X Z +\<^sub>L lla Y Z)"
+    by (metis "3") (* > 1.0 s, timed out *)
+  then have "vwb_lens (ll X Z +\<^sub>L lla Y Z) \<or> \<not> X \<subseteq>\<^sub>L Z"
+    using f1 by meson
+  then have "vwb_lens (ll X Z +\<^sub>L lla Y Z)"
+    by (metis "2") (* > 1.0 s, timed out *)
+  then have f7: "\<forall>l la. la \<subseteq>\<^sub>L (l::'a \<Longrightarrow> 'b) \<or> (ll X Z +\<^sub>L lla Y Z) ;\<^sub>L l \<noteq> la"
+    using sublens_def by blast
+  have "X +\<^sub>L Y = X +\<^sub>L lla Y Z ;\<^sub>L Z"
+    using f4 by metis
+  then show ?thesis
+    using f7 f6 f3 by (metis (full_types))
+qed 
 
 lemma lens_plus_sub_assoc_1:
-  "\<lbrakk> X \<bowtie> Y; Y \<bowtie> Z; X \<bowtie> Z \<rbrakk> \<Longrightarrow> X +\<^sub>L Y +\<^sub>L Z \<subseteq>\<^sub>L (X +\<^sub>L Y) +\<^sub>L Z"
-  apply (simp add: sublens_def)
+   "X +\<^sub>L Y +\<^sub>L Z \<subseteq>\<^sub>L (X +\<^sub>L Y) +\<^sub>L Z"
+  unfolding sublens_def
   apply (rule_tac x="(fst\<^sub>L ;\<^sub>L fst\<^sub>L) +\<^sub>L (snd\<^sub>L ;\<^sub>L fst\<^sub>L) +\<^sub>L snd\<^sub>L" in exI)
   apply (auto)
   apply (rule plus_vwb_lens)
@@ -626,7 +703,7 @@ lemma lens_plus_sub_assoc_1:
 done
 
 lemma lens_plus_sub_assoc_2:
-  "\<lbrakk> X \<bowtie> Y; Y \<bowtie> Z; X \<bowtie> Z \<rbrakk> \<Longrightarrow> (X +\<^sub>L Y) +\<^sub>L Z \<subseteq>\<^sub>L X +\<^sub>L Y +\<^sub>L Z"
+  "(X +\<^sub>L Y) +\<^sub>L Z \<subseteq>\<^sub>L X +\<^sub>L Y +\<^sub>L Z"
   apply (simp add: sublens_def)
   apply (rule_tac x="(fst\<^sub>L +\<^sub>L (fst\<^sub>L ;\<^sub>L snd\<^sub>L)) +\<^sub>L (snd\<^sub>L ;\<^sub>L snd\<^sub>L)" in exI)
   apply (auto)
@@ -645,14 +722,20 @@ lemma lens_plus_sub_assoc_2:
 done
 
 lemma lens_plus_assoc:
-  "\<lbrakk> X \<bowtie> Y; Y \<bowtie> Z; X \<bowtie> Z \<rbrakk> \<Longrightarrow> (X +\<^sub>L Y) +\<^sub>L Z \<approx>\<^sub>L X +\<^sub>L Y +\<^sub>L Z"
-  by (simp add: lens_equivI lens_plus_sub_assoc_1 lens_plus_sub_assoc_2)
+  "(X +\<^sub>L Y) +\<^sub>L Z \<approx>\<^sub>L X +\<^sub>L Y +\<^sub>L Z"
+  unfolding lens_equiv_def
+  by (simp add: lens_plus_sub_assoc_1 lens_plus_sub_assoc_2)
 
 lemma lens_plus_swap:
-  "X \<bowtie> Y \<Longrightarrow> (snd\<^sub>L +\<^sub>L fst\<^sub>L) ;\<^sub>L (X +\<^sub>L Y) = (Y +\<^sub>L X)"
-  by (auto simp add: lens_plus_def fst_lens_def snd_lens_def id_lens_def lens_comp_def lens_indep_comm)
+  assumes 1:"X \<bowtie> Y" 
+  shows "(snd\<^sub>L +\<^sub>L fst\<^sub>L) ;\<^sub>L (X +\<^sub>L Y) = (Y +\<^sub>L X)"
+  using 1 unfolding lens_plus_def fst_lens_def snd_lens_def id_lens_def lens_comp_def
+  by (auto simp add: lens_indep_comm)
 
-lemma lens_plus_sub_comm: "X \<bowtie> Y \<Longrightarrow> X +\<^sub>L Y \<subseteq>\<^sub>L Y +\<^sub>L X"
+lemma lens_plus_sub_comm: 
+  assumes 1:"X \<bowtie> Y"
+  shows "X +\<^sub>L Y \<subseteq>\<^sub>L Y +\<^sub>L X"
+  using 1
   apply (simp add: sublens_def)
   apply (rule_tac x="snd\<^sub>L +\<^sub>L fst\<^sub>L" in exI)
   apply (auto)
@@ -660,14 +743,22 @@ lemma lens_plus_sub_comm: "X \<bowtie> Y \<Longrightarrow> X +\<^sub>L Y \<subse
   apply (simp add: lens_indep_sym lens_plus_swap)
 done
   
-lemma lens_plus_comm: "X \<bowtie> Y \<Longrightarrow> X +\<^sub>L Y \<approx>\<^sub>L Y +\<^sub>L X"
+lemma lens_plus_comm: 
+  assumes 1:"X \<bowtie> Y" 
+  shows   "X +\<^sub>L Y \<approx>\<^sub>L Y +\<^sub>L X"
+  using 1
   by (simp add: lens_equivI lens_indep_sym lens_plus_sub_comm)
 
-lemma lens_plus_ub: "wb_lens Y \<Longrightarrow> X \<subseteq>\<^sub>L X +\<^sub>L Y"
-  by (metis fst_lens_plus fst_vwb_lens sublens_def vwb_lens_wb)
+lemma lens_plus_ub: 
+  assumes 1: "wb_lens Y"
+  shows"X \<subseteq>\<^sub>L X +\<^sub>L Y"
+  using 1 sublens_def fst_lens_plus fst_vwb_lens
+  by metis
 
 lemma lens_plus_right_sublens:
-  "\<lbrakk> vwb_lens Y; Y \<bowtie> Z; X \<subseteq>\<^sub>L Z \<rbrakk> \<Longrightarrow> X \<subseteq>\<^sub>L Y +\<^sub>L Z"
+  assumes 1:"vwb_lens Y" and 2:"Y \<bowtie> Z" and 3:"X \<subseteq>\<^sub>L Z" 
+  shows"X \<subseteq>\<^sub>L Y +\<^sub>L Z"
+  using 1 2 3
   apply (auto simp add: sublens_def)
   apply (rename_tac Z')
   apply (rule_tac x="Z' ;\<^sub>L snd\<^sub>L" in exI)
@@ -676,8 +767,11 @@ lemma lens_plus_right_sublens:
   apply (simp add: lens_comp_assoc snd_lens_prod)
 done
 
-lemma lens_comp_lb: "vwb_lens X \<Longrightarrow> X ;\<^sub>L Y \<subseteq>\<^sub>L Y"
-  by (auto simp add: sublens_def)
+lemma lens_comp_lb: 
+  assumes 1:"vwb_lens X" 
+  shows  "X ;\<^sub>L Y \<subseteq>\<^sub>L Y"
+  using 1 unfolding sublens_def
+  by auto 
 
 lemma lens_unit_plus_sublens_1: "X \<subseteq>\<^sub>L 0\<^sub>L +\<^sub>L X"
   by (metis lens_comp_lb snd_lens_prod snd_vwb_lens unit_lens_indep unit_wb_lens)
@@ -703,17 +797,19 @@ lemma lens_plus_right_unit: "X +\<^sub>L 0\<^sub>L \<approx>\<^sub>L X"
   using lens_equiv_trans lens_indep_sym lens_plus_comm lens_plus_left_unit unit_lens_indep by blast
 
 lemma bij_lens_inv_left:
-  "bij_lens X \<Longrightarrow> lens_inv X ;\<^sub>L X = 1\<^sub>L"
-  by (auto simp add: lens_inv_def lens_comp_def comp_def id_lens_def, rule ext, auto)
+  assumes 1:"bij_lens X"
+  shows "lens_inv X ;\<^sub>L X = 1\<^sub>L"
+  by (auto simp add: 1 lens_inv_def lens_comp_def comp_def id_lens_def, rule ext, auto)
 
 lemma bij_lens_inv_right:
-  "bij_lens X \<Longrightarrow> X ;\<^sub>L lens_inv X = 1\<^sub>L"
-  by (auto simp add: lens_inv_def lens_comp_def comp_def id_lens_def, rule ext, auto)
+  assumes 1:"bij_lens X" 
+  shows "X ;\<^sub>L lens_inv X = 1\<^sub>L"
+  by (auto simp add: 1 lens_inv_def lens_comp_def comp_def id_lens_def, rule ext, auto)
 
 text {* Bijective lenses are precisely those that are equivalent to identity *}
 
 lemma bij_lens_equiv_id:
-  "bij_lens X \<longleftrightarrow> X \<approx>\<^sub>L 1\<^sub>L"
+  "bij_lens X = X \<approx>\<^sub>L 1\<^sub>L"
   apply (auto)
   apply (rule lens_equivI)
   apply (simp_all add: sublens_def)
@@ -727,20 +823,27 @@ lemma bij_lens_equiv_id:
 done
 
 lemma bij_lens_equiv:
-  "\<lbrakk> bij_lens X; X \<approx>\<^sub>L Y \<rbrakk> \<Longrightarrow> bij_lens Y"
+  assumes 1:"bij_lens X" and 2:"X \<approx>\<^sub>L Y" 
+  shows "bij_lens Y"
+  using 1 2
   by (meson bij_lens_equiv_id lens_equiv_def sublens_trans)
 
 lemma lens_id_unique:
-  "weak_lens Y \<Longrightarrow> Y = X ;\<^sub>L Y \<Longrightarrow> X = 1\<^sub>L"
-  apply (cases Y)
-  apply (cases X)
-  apply (auto simp add: lens_comp_def comp_def id_lens_def fun_eq_iff)
-  apply (metis select_convs(1) weak_lens.create_get)
-  apply (metis select_convs(1) select_convs(2) weak_lens.put_get)
-done
+  assumes 1:"weak_lens Y" and 2:"Y = X ;\<^sub>L Y"
+  shows"X = 1\<^sub>L"
+proof -
+  have f1: "\<forall>l. ((l::'a \<Longrightarrow> 'a) ;\<^sub>L Y) /\<^sub>L Y = l"
+    by (metis "1" lens_comp_quotient)
+  then have "Y /\<^sub>L Y = X"
+    by (metis "2") 
+  then show ?thesis
+    using f1 by (metis (no_types) lens_comp_left_id)
+qed
 
 lemma bij_lens_via_comp_id_left:
-  "\<lbrakk> wb_lens X; wb_lens Y; X ;\<^sub>L Y = 1\<^sub>L \<rbrakk> \<Longrightarrow> bij_lens X"
+  assumes 1:"wb_lens X" and 2:"wb_lens Y" and 3: "X ;\<^sub>L Y = 1\<^sub>L" 
+  shows "bij_lens X"
+  using 1 2 3
   apply (cases Y)
   apply (cases X)
   apply (auto simp add: lens_comp_def comp_def id_lens_def fun_eq_iff)
@@ -751,15 +854,23 @@ lemma bij_lens_via_comp_id_left:
 done
 
 lemma bij_lens_via_comp_id_right:
-  "\<lbrakk> wb_lens X; wb_lens Y; X ;\<^sub>L Y = 1\<^sub>L \<rbrakk> \<Longrightarrow> bij_lens Y"
-  apply (cases Y)
-  apply (cases X)
-  apply (auto simp add: lens_comp_def comp_def id_lens_def fun_eq_iff)
-  apply (unfold_locales)
-  apply (simp_all)
-  using vwb_lens_wb wb_lens_weak weak_lens.put_get apply fastforce
-  apply (metis select_convs(1) select_convs(2) wb_lens_weak weak_lens.put_get)
-done
+  assumes 1:"wb_lens X" and 2:"wb_lens Y" and 3:"X ;\<^sub>L Y = 1\<^sub>L" 
+  shows  "bij_lens Y"
+proof -
+  have "\<forall>l. \<not> wb_lens (l::'b \<Longrightarrow> 'a) \<or> weak_lens l"
+    by (metis wb_lens_weak)
+  then have f1: "weak_lens Y"
+    by (metis "2") 
+  have f2: "\<forall>l la. \<not> wb_lens (l::'b \<Longrightarrow> 'a) \<or> \<not> wb_lens la \<or> l ;\<^sub>L la \<noteq> 1\<^sub>L \<or> bij_lens l"
+    by (meson bij_lens_via_comp_id_left)
+  have "Y = Y ;\<^sub>L X ;\<^sub>L Y"
+    by (metis "3" lens_comp_right_id) 
+  then have "Y ;\<^sub>L X = 1\<^sub>L"
+    using f1 by (simp add: lens_comp_assoc lens_id_unique)
+  then show ?thesis
+    using f2 "1" "2" by auto
+qed
+
 
 text {* An equivalence can be proved by demonstrating a suitable bijective lens *}
 
@@ -767,17 +878,19 @@ lemma lens_equiv_via_bij:
   assumes "bij_lens Z" "X = Z ;\<^sub>L Y"
   shows "X \<approx>\<^sub>L Y"
   using assms
-  apply (auto simp add: lens_equiv_def sublens_def)
-  using bij_lens_vwb apply blast
-  apply (rule_tac x="lens_inv Z" in exI)
-  apply (auto simp add: lens_comp_assoc bij_lens_inv_left)
-  using bij_lens_vwb lens_inv_bij apply blast
-  apply (simp add: bij_lens_inv_left lens_comp_assoc[THEN sym])
-done
+proof -
+  have "bij_lens (lens_inv Z)"
+    using assms(1)
+    by (metis lens_inv_bij)
+  then show ?thesis
+    using assms
+    by (metis (no_types) bij_lens_inv_left bij_lens_vwb lens_comp_assoc lens_comp_lb 
+              lens_comp_left_id lens_equivI)
+qed
 
 lemma lens_equiv_iff_bij:
   assumes "weak_lens Y"
-  shows "X \<approx>\<^sub>L Y \<longleftrightarrow> (\<exists> Z. bij_lens Z \<and> X = Z ;\<^sub>L Y)"
+  shows "X \<approx>\<^sub>L Y = (\<exists> Z. bij_lens Z \<and> X = Z ;\<^sub>L Y)"
   apply (rule iffI)
   apply (auto simp add: lens_equiv_def sublens_def lens_id_unique)[1]
   apply (rename_tac Z\<^sub>1 Z\<^sub>2)
@@ -816,7 +929,9 @@ proof -
 *)
 
 lemma lens_override_plus:
-  "X \<bowtie> Y \<Longrightarrow> S\<^sub>1 \<oplus>\<^sub>L S\<^sub>2 on (X +\<^sub>L Y) = (S\<^sub>1 \<oplus>\<^sub>L S\<^sub>2 on X) \<oplus>\<^sub>L S\<^sub>2 on Y"
+  assumes 1:"X \<bowtie> Y" 
+  shows"S\<^sub>1 \<oplus>\<^sub>L S\<^sub>2 on (X +\<^sub>L Y) = (S\<^sub>1 \<oplus>\<^sub>L S\<^sub>2 on X) \<oplus>\<^sub>L S\<^sub>2 on Y"
+  using 1
   by (simp add: lens_indep_comm lens_override_def lens_plus_def)
 
 subsection {* Lens implementations *}
@@ -828,26 +943,37 @@ definition prod_lens :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longright
                               , lens_put = \<lambda> (u, v) (x, y). (put\<^bsub>X\<^esub> u x, put\<^bsub>Y\<^esub> v y) \<rparr>"
 
 lemma prod_mwb_lens:
-  "\<lbrakk> mwb_lens X; mwb_lens Y \<rbrakk> \<Longrightarrow> mwb_lens (X \<times>\<^sub>L Y)"
+  assumes 1:"mwb_lens X" and 2:"mwb_lens Y" 
+  shows "mwb_lens (X \<times>\<^sub>L Y)"
+  using 1 2
   by (unfold_locales, simp_all add: prod_lens_def prod.case_eq_if)
 
 lemma prod_wb_lens:
-  "\<lbrakk> wb_lens X; wb_lens Y \<rbrakk> \<Longrightarrow> wb_lens (X \<times>\<^sub>L Y)"
+  assumes 1:"wb_lens X" and 2:"wb_lens Y" 
+  shows "wb_lens (X \<times>\<^sub>L Y)"
+  using 1 2
   by (unfold_locales, simp_all add: prod_lens_def prod.case_eq_if)
 
 lemma prod_vwb_lens:
-  "\<lbrakk> vwb_lens X; vwb_lens Y \<rbrakk> \<Longrightarrow> vwb_lens (X \<times>\<^sub>L Y)"
+  assumes 1:"vwb_lens X" and 2:"vwb_lens Y"
+  shows "vwb_lens (X \<times>\<^sub>L Y)"
+  using 1 2
   by (unfold_locales, simp_all add: prod_lens_def prod.case_eq_if)
 
 lemma prod_bij_lens:
-  "\<lbrakk> bij_lens X; bij_lens Y \<rbrakk> \<Longrightarrow> bij_lens (X \<times>\<^sub>L Y)"
+  assumes 1:"bij_lens X" and 2:"bij_lens Y" 
+  shows"bij_lens (X \<times>\<^sub>L Y)"
+  using 1 2
   by (unfold_locales, simp_all add: prod_lens_def prod.case_eq_if)
 
 lemma prod_as_plus: "X \<times>\<^sub>L Y = X ;\<^sub>L fst\<^sub>L +\<^sub>L Y ;\<^sub>L snd\<^sub>L"
-  by (auto simp add: prod_lens_def fst_lens_def snd_lens_def lens_comp_def lens_plus_def)
+  unfolding prod_lens_def fst_lens_def snd_lens_def lens_comp_def lens_plus_def
+  by auto
 
 lemma prod_lens_sublens_cong:
-  "\<lbrakk> X\<^sub>1 \<subseteq>\<^sub>L X\<^sub>2; Y\<^sub>1 \<subseteq>\<^sub>L Y\<^sub>2 \<rbrakk> \<Longrightarrow> (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1) \<subseteq>\<^sub>L (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2)"
+  assumes 1:"X\<^sub>1 \<subseteq>\<^sub>L X\<^sub>2" and 2: "Y\<^sub>1 \<subseteq>\<^sub>L Y\<^sub>2" 
+  shows "(X\<^sub>1 \<times>\<^sub>L Y\<^sub>1) \<subseteq>\<^sub>L (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2)"
+  using 1 2
   apply (auto simp add: sublens_def)
   apply (rename_tac Z\<^sub>1 Z\<^sub>2)
   apply (rule_tac x="Z\<^sub>1 \<times>\<^sub>L Z\<^sub>2" in exI)
@@ -859,7 +985,9 @@ lemma prod_lens_sublens_cong:
 done
 
 lemma prod_lens_equiv_cong:
-  "\<lbrakk> X\<^sub>1 \<approx>\<^sub>L X\<^sub>2; Y\<^sub>1 \<approx>\<^sub>L Y\<^sub>2 \<rbrakk> \<Longrightarrow> (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1) \<approx>\<^sub>L (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2)"
+  assumes 1:"X\<^sub>1 \<approx>\<^sub>L X\<^sub>2" and 2:"Y\<^sub>1 \<approx>\<^sub>L Y\<^sub>2" 
+  shows"(X\<^sub>1 \<times>\<^sub>L Y\<^sub>1) \<approx>\<^sub>L (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2)"
+  using 1 2
   by (simp add: lens_equiv_def prod_lens_sublens_cong)
 
 lemma prod_lens_id_equiv:
@@ -867,11 +995,109 @@ lemma prod_lens_id_equiv:
   by (auto simp add: prod_lens_def id_lens_def)
 
 lemma lens_indep_prod:
-  "\<lbrakk> X\<^sub>1 \<bowtie> X\<^sub>2; Y\<^sub>1 \<bowtie> Y\<^sub>2 \<rbrakk> \<Longrightarrow> X\<^sub>1 \<times>\<^sub>L Y\<^sub>1 \<bowtie> X\<^sub>2 \<times>\<^sub>L Y\<^sub>2"
-  apply (rule lens_indepI)
-  apply (auto simp add: prod_lens_def prod.case_eq_if lens_indep_comm map_prod_def)
-  apply (simp_all add: lens_indep_sym)
-done
+  assumes 1:"X\<^sub>1 \<bowtie> X\<^sub>2" and 2:" Y\<^sub>1 \<bowtie> Y\<^sub>2" 
+  shows" X\<^sub>1 \<times>\<^sub>L Y\<^sub>1 \<bowtie> X\<^sub>2 \<times>\<^sub>L Y\<^sub>2"
+proof -
+  obtain pp :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'b \<times> 'e"
+     and ppa :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'a \<times> 'd" where
+    "\<forall>x0 x1. (\<exists>v2 v3. get\<^bsub>x0\<^esub> (put\<^bsub>x1\<^esub> v3 v2) \<noteq> get\<^bsub>x0\<^esub> v3) = (get\<^bsub>x0\<^esub> (put\<^bsub>x1\<^esub> (pp x0 x1) (ppa x0 x1)) \<noteq> get\<^bsub>x0\<^esub> (pp x0 x1))"
+    by moura
+  then obtain ppb :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'b \<times> 'e" and 
+              ppc :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'c \<times> 'f" and
+              ppd :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'b \<times> 'e" and 
+              ppe :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'c \<times> 'f" and 
+              ppf :: "('c \<times> 'f \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> ('a \<times> 'd \<Longrightarrow> 'b \<times> 'e) \<Rightarrow> 'a \<times> 'd" where
+    f1: "\<forall>l la. ((\<exists>p pa pb. put\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> pb pa) p \<noteq> put\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> pb p) pa) \<or> 
+                 (\<exists>p pa. get\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> pa p) \<noteq> get\<^bsub>la\<^esub> pa) \<or>
+                 (\<exists>p pa. get\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> pa p) \<noteq> get\<^bsub>l\<^esub> pa)) = 
+                 (put\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> (ppd l la) (ppe l la)) (ppf l la) \<noteq> 
+                  put\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (ppd l la) (ppf l la)) (ppe l la) \<or> 
+                  get\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> (ppb l la) (ppc l la)) \<noteq> get\<^bsub>la\<^esub> (ppb l la) \<or> 
+                  get\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (pp l la) (ppa l la)) \<noteq> get\<^bsub>l\<^esub> (pp l la))"
+    by moura
+  have f2: "put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> = (\<lambda>(b, e) (a, d). (put\<^bsub>X\<^sub>1\<^esub> b a, put\<^bsub>Y\<^sub>1\<^esub> e d))"
+    by (simp add: prod_lens_def)
+  have "\<forall>l la. \<not> (l::'a \<Longrightarrow> 'b) \<bowtie> (la::'c \<Longrightarrow> _) \<or> la \<bowtie> l"
+    using lens_indep_sym by blast
+  then have f3: "X\<^sub>2 \<bowtie> X\<^sub>1"
+    by (metis "1")
+  have "\<forall>l la. \<not> (l::'d \<Longrightarrow> 'e) \<bowtie> (la::'f \<Longrightarrow> _) \<or> la \<bowtie> l"
+    using lens_indep_sym by blast
+  then have "Y\<^sub>2 \<bowtie> Y\<^sub>1"
+    by (metis "2")
+  then have "get\<^bsub>Y\<^sub>2\<^esub> (put\<^bsub>Y\<^sub>1\<^esub> (snd (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) (snd (ppa (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) = 
+             get\<^bsub>Y\<^sub>2\<^esub> (snd (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (meson lens_indep_get)
+  then have "get\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppa (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+             (get\<^bsub>X\<^sub>2\<^esub> (fst (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))), get\<^bsub>Y\<^sub>2\<^esub> (snd (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))))"
+    using f3 by (simp add: prod_lens_def split_beta)
+  then have f4: "get\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppa (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                 get\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (pp (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))"
+    by (metis (no_types) map_prod_simp prod.collapse prod_lens_def select_convs(1))
+  have "\<forall>l la b c a. \<not> l \<bowtie> la \<or> put\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (b::'b) (c::'c)) (a::'a) = put\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> b a) c"
+    using lens_indep_comm by fastforce
+  then have "put\<^bsub>X\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2\<^esub> (fst (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                             (fst (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) 
+                             (fst (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                             put\<^bsub>X\<^sub>2\<^esub> (put\<^bsub>X\<^sub>1\<^esub> (fst (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                                             (fst (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) 
+                                     (fst (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (metis "1") 
+  then have f5: "put\<^bsub>X\<^sub>2\<^esub> (fst (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) 
+                         (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) (fst (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                 put\<^bsub>X\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2\<^esub> (fst (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                         (fst (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) (fst (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    using f2 by (simp add: split_beta)
+  have f6: "put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> = (\<lambda>(b, e) (c, f). (put\<^bsub>X\<^sub>2\<^esub> b c, put\<^bsub>Y\<^sub>2\<^esub> e f))"
+    by (simp add: prod_lens_def)
+  then have f7: "put\<^bsub>X\<^sub>2\<^esub> (fst (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) (fst (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                 fst (put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) \<and> 
+                      put\<^bsub>Y\<^sub>2\<^esub> (snd (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) (snd (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                 snd (put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (simp add: split_beta)
+  have "\<forall>l la e f d. \<not> l \<bowtie> la \<or> put\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (e::'e) (f::'f)) (d::'d) =
+         put\<^bsub>la\<^esub> (put\<^bsub>l\<^esub> e d) f"
+    using lens_indep_comm by fastforce
+  then have "put\<^bsub>Y\<^sub>1\<^esub> (put\<^bsub>Y\<^sub>2\<^esub> (snd (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                     (snd (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) (snd (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+             put\<^bsub>Y\<^sub>2\<^esub> (put\<^bsub>Y\<^sub>1\<^esub> (snd (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) (snd (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) 
+                     (snd (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (metis "2")
+  then have f8: "put\<^bsub>Y\<^sub>2\<^esub> (snd (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) 
+                         (snd (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+                 put\<^bsub>Y\<^sub>1\<^esub> (put\<^bsub>Y\<^sub>2\<^esub> (snd (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                         (snd (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) (snd (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    using f2 by (simp add: split_beta)
+  have "put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+        (\<lambda>(c, f). (put\<^bsub>X\<^sub>2\<^esub> (fst (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) 
+        (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) c, put\<^bsub>Y\<^sub>2\<^esub> (snd (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) 
+        (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) f))"
+    using f6 by (simp add: split_beta)
+  then have f9: "put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                 (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) = 
+                  put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (put\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppd (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppf (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                 (ppe (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))"
+    using f8 f7 f5 f2 by (simp add: split_beta)
+  have "\<forall>l la b c. \<not> l \<bowtie> la \<or> get\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (b::'b) (c::'c)) = (get\<^bsub>l\<^esub> b::'a)"
+    by (meson lens_indep_get)
+  then have f10: "get\<^bsub>X\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2\<^esub> (fst (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) 
+                  (fst (ppc (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) = get\<^bsub>X\<^sub>1\<^esub> (fst (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (metis "1")
+  have "\<forall>l la e f. \<not> l \<bowtie> la \<or> get\<^bsub>l\<^esub> (put\<^bsub>la\<^esub> (e::'e) (f::'f)) = (get\<^bsub>l\<^esub> e::'d)"
+    by (meson lens_indep_get)
+  then have "get\<^bsub>Y\<^sub>1\<^esub> (put\<^bsub>Y\<^sub>2\<^esub> (snd (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) (snd (ppc (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))) = 
+             get\<^bsub>Y\<^sub>1\<^esub> (snd (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)))"
+    by (metis "2")
+  then have "get\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppc (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+            (get\<^bsub>X\<^sub>1\<^esub> (fst (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))), get\<^bsub>Y\<^sub>1\<^esub> (snd (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))))"
+    using f10 by (simp add: prod_lens_def split_beta)
+  then have "get\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (put\<^bsub>X\<^sub>2 \<times>\<^sub>L Y\<^sub>2\<^esub> (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1)) (ppc (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))) = 
+             get\<^bsub>X\<^sub>1 \<times>\<^sub>L Y\<^sub>1\<^esub> (ppb (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2) (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1))"
+    by (metis (no_types) map_prod_simp prod.collapse prod_lens_def select_convs(1))
+  then show ?thesis
+    using f9 f4 f1 by (meson lens_indepI)
+qed
+
 
 lemma lens_plus_prod_exchange:
   "(X\<^sub>1 +\<^sub>L X\<^sub>2) \<times>\<^sub>L (Y\<^sub>1 +\<^sub>L Y\<^sub>2) \<approx>\<^sub>L (X\<^sub>1 \<times>\<^sub>L Y\<^sub>1) +\<^sub>L (X\<^sub>2 \<times>\<^sub>L Y\<^sub>2)"
@@ -915,13 +1141,22 @@ definition fun_ran_lens :: "('c \<Longrightarrow> 'b) \<Rightarrow> (('a \<Right
 [lens_defs]: "fun_ran_lens X Y = \<lparr> lens_get = \<lambda> s. get\<^bsub>X\<^esub> \<circ> get\<^bsub>Y\<^esub> s
                                  , lens_put = \<lambda> s v. put\<^bsub>Y\<^esub> s (\<lambda> x::'a. put\<^bsub>X\<^esub> (get\<^bsub>Y\<^esub> s x) (v x)) \<rparr>"
 
-lemma fun_ran_mwb_lens: "\<lbrakk> mwb_lens X; mwb_lens Y \<rbrakk> \<Longrightarrow> mwb_lens (fun_ran_lens X Y)"
+lemma fun_ran_mwb_lens: 
+  assumes 1:"mwb_lens X" and 2:"mwb_lens Y" 
+  shows "mwb_lens (fun_ran_lens X Y)"
+  using 1 2
   by (unfold_locales, auto simp add: fun_ran_lens_def)
 
-lemma fun_ran_wb_lens: "\<lbrakk> wb_lens X; wb_lens Y \<rbrakk> \<Longrightarrow> wb_lens (fun_ran_lens X Y)"
+lemma fun_ran_wb_lens: 
+  assumes 1:"wb_lens X" and 2:"wb_lens Y" 
+  shows "wb_lens (fun_ran_lens X Y)"
+  using 1 2
   by (unfold_locales, auto simp add: fun_ran_lens_def)
 
-lemma fun_ran_vwb_lens: "\<lbrakk> vwb_lens X; vwb_lens Y \<rbrakk> \<Longrightarrow> vwb_lens (fun_ran_lens X Y)"
+lemma fun_ran_vwb_lens: 
+  assumes 1:"vwb_lens X" and 2:"vwb_lens Y" 
+  shows  "vwb_lens (fun_ran_lens X Y)"
+  using 1 2
   by (unfold_locales, auto simp add: fun_ran_lens_def)
 
 definition map_lens :: "'a \<Rightarrow> ('b \<Longrightarrow> ('a \<rightharpoonup> 'b))" where
@@ -939,16 +1174,22 @@ definition list_augment :: "'a list \<Rightarrow> nat \<Rightarrow> 'a \<Rightar
 definition nth' :: "'a list \<Rightarrow> nat \<Rightarrow> 'a" where
 "nth' xs i = (if (length xs > i) then xs ! i else undefined)"
 
-lemma list_update_append_lemma1: "i < length xs \<Longrightarrow> xs[i := v] @ ys = (xs @ ys)[i := v]"
+lemma list_update_append_lemma1: 
+  assumes 1:"i < length xs" 
+  shows"xs[i := v] @ ys = (xs @ ys)[i := v]"
+  using 1
   by (simp add: list_update_append)
 
-lemma list_update_append_lemma2: "i < length ys \<Longrightarrow> xs @ ys[i := v] = (xs @ ys)[i + length xs := v]"
+lemma list_update_append_lemma2: (* this lemma do not need the assumes 1:"i < length ys"*) 
+  "xs @ ys[i := v] = (xs @ ys)[i + length xs := v]"
   by (simp add: list_update_append)
 
-lemma nth'_0 [simp]: "nth' (x # xs) 0 = x"
+lemma nth'_0 [simp]: 
+  "nth' (x # xs) 0 = x"
   by (simp add: nth'_def)
 
-lemma nth'_Suc [simp]: "nth' (x # xs) (Suc n) = nth' xs n"
+lemma nth'_Suc [simp]: 
+  "nth' (x # xs) (Suc n) = nth' xs n"
   by (simp add: nth'_def)
 
 lemma list_augment_0 [simp]:
@@ -966,19 +1207,27 @@ lemma list_augment_twice:
 done
 
 lemma list_augment_commute:
-  "i \<noteq> j \<Longrightarrow> list_augment (list_augment \<sigma> j v) i u = list_augment (list_augment \<sigma> i u) j v"
+  assumes 1:"i \<noteq> j" 
+  shows "list_augment (list_augment \<sigma> j v) i u = list_augment (list_augment \<sigma> i u) j v"
+  using 1
   by (simp add: list_augment_twice list_update_swap max.commute)
 
-lemma nth_list_augment: "list_augment xs k v ! k = v"
+lemma nth_list_augment: 
+  "list_augment xs k v ! k = v"
   by (simp add: list_augment_def list_pad_out_def)
 
-lemma nth'_list_augment: "nth' (list_augment xs k v) k = v"
+lemma nth'_list_augment: 
+  "nth' (list_augment xs k v) k = v"
   by (auto simp add: nth'_def nth_list_augment list_augment_def list_pad_out_def)
 
-lemma list_augment_same_twice: "list_augment (list_augment xs k u) k v = list_augment xs k v"
+lemma list_augment_same_twice: 
+  "list_augment (list_augment xs k u) k v = list_augment xs k v"
   by (simp add: list_augment_def list_pad_out_def)
 
-lemma nth'_list_augment_diff: "i \<noteq> j \<Longrightarrow> nth' (list_augment \<sigma> i v) j = nth' \<sigma> j"
+lemma nth'_list_augment_diff: 
+  assumes 1:"i \<noteq> j" 
+  shows"nth' (list_augment \<sigma> i v) j = nth' \<sigma> j"
+  using 1
   by (auto simp add: list_augment_def list_pad_out_def nth_append nth'_def)
 
 definition list_lens :: "nat \<Rightarrow> ('a \<Longrightarrow> 'a list)" where
@@ -991,15 +1240,19 @@ definition tl_lens :: "'a list \<Longrightarrow> 'a list" where
 [lens_defs]: "tl_lens = \<lparr> lens_get = (\<lambda> xs. tl xs)
                         , lens_put = (\<lambda> xs xs'. hd xs # xs') \<rparr>"
 
-lemma list_mwb_lens: "mwb_lens (list_lens x)"
-  by (unfold_locales, simp_all add: list_lens_def nth'_list_augment list_augment_same_twice)
+lemma list_mwb_lens: 
+  "mwb_lens (list_lens x)"
+  by (unfold_locales, simp_all add: list_lens_def 
+      nth'_list_augment list_augment_same_twice)
 
 lemma tail_lens_mwb: 
   "mwb_lens tl_lens"
   by (unfold_locales, simp_all add: tl_lens_def)
 
 lemma list_lens_indep:
-  "i \<noteq> j \<Longrightarrow> list_lens i \<bowtie> list_lens j"
+  assumes 1:"i \<noteq> j" 
+  shows "list_lens i \<bowtie> list_lens j"
+  using 1
   by (simp add: list_lens_def lens_indep_def list_augment_commute nth'_list_augment_diff)
 
 lemma hd_tl_lens_indep [simp]:
