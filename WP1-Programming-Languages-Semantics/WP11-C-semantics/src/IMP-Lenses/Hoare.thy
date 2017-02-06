@@ -159,15 +159,6 @@ lemma Hoare_ASN_bop5:
   using 1 2 unfolding subst_upd_var_def hoare_def lens_indep_def 
   by transfer auto
 
-lemma Hoare_ASN_bop6:
-  assumes 1:"weak_lens X" and 3:"X \<sharp> exp2"
-  shows "\<lbrace>P\<rbrace>
-          X:== exp2
-         \<lbrace>bop Q (VAR X) exp2 \<rbrace>" 
-  using 1 2 3 unfolding subst_upd_var_def hoare_def lens_indep_def unrest_def
-  apply transfer apply (rule ext) apply auto
-oops
-
 lemma Hoare_ASN_trop1:
   assumes 1:"weak_lens X"  and 2:"X \<sharp> exp2" and 3:"X \<sharp> exp3"
   shows "\<lbrace>trop P exp1 exp2 exp3\<rbrace>

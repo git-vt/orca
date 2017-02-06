@@ -160,6 +160,16 @@ lemma ASN13[small_step]:
   using 1 unfolding subst_upd_var_def 
   by transfer auto
 
+
+theorem ASN14:
+  assumes "mwb_lens x" and "x \<sharp>\<sharp> \<guillemotleft>SOME \<sigma>. True\<guillemotright>"
+  shows
+  "((IF b THEN x :== E ELSE \<guillemotleft>SOME \<sigma>. True\<guillemotright>); 
+    (IF (uop c (VAR x)) THEN (x :== (uop F (VAR x))) ELSE \<guillemotleft>SOME \<sigma>. True\<guillemotright> )) = 
+    (IF (trop If b (uop c  E) \<guillemotleft>False\<guillemotright>) THEN x :== (uop F E) ELSE \<guillemotleft>SOME \<sigma>. True\<guillemotright>)"
+  using assms unfolding unrest_usubst_def subst_upd_var_def   
+  by transfer auto 
+
 subsection {*Conditional Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the conditional
       statement.*}
@@ -261,17 +271,6 @@ lemma SEQ7[small_step]:
    (IF bexp THEN (C1 ; C3) ELSE (C2 ; C3))"
    by transfer auto 
 
-theorem 
-  assumes "mwb_lens x" 
-  shows
-"((IF b THEN x :== E ELSE (0\<^sub>L :== VAR 0\<^sub>L)); 
-  (IF (uop c (VAR x)) THEN (x :== (uop F (VAR x))) ELSE (0\<^sub>L :== VAR 0\<^sub>L) )) = 
-   (IF (trop If b (uop c  E) \<guillemotleft>False\<guillemotright>) THEN x :== (uop F E) ELSE (0\<^sub>L :== VAR 0\<^sub>L))"
-  using assms unfolding subst_upd_var_def unit_lens_def  apply transfer  apply (rule ext)
-     apply auto 
-oops
-
-
 subsection {*While laws*}
 text{*In this section we introduce the algebraic laws of programming related to the while
       statement.*}
@@ -286,7 +285,6 @@ lemma WHILE3:
   using 1  apply transfer apply auto
   oops
 
-
 lemma D_While_If:
   "D(WHILE b DO c) = D(IF b THEN c;;WHILE b DO c ELSE SKIP)"
 proof-
@@ -296,7 +294,6 @@ proof-
   also have "\<dots> = D(IF b THEN c;;?w ELSE SKIP)" by (simp add: W_def)
   finally show ?thesis .
 qed
-
 
 lemma IF_D1:
   "(Rel (IF b THEN c1 ELSE c2)) = 

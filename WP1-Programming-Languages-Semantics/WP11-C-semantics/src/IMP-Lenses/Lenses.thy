@@ -60,13 +60,16 @@ definition id_lens :: "'a \<Longrightarrow> 'a" ("1\<^sub>L") where
 [lens_defs]: "1\<^sub>L = \<lparr> lens_get = id, lens_put = (\<lambda> _. id) \<rparr>"
 
 lemma lens_comp_assoc: "(X ;\<^sub>L Y) ;\<^sub>L Z = X ;\<^sub>L (Y ;\<^sub>L Z)"
-  by (auto simp add: lens_comp_def)
+  unfolding  lens_comp_def
+  by auto
 
 lemma lens_comp_left_id [simp]: "1\<^sub>L ;\<^sub>L X = X"
-  by (simp add: id_lens_def lens_comp_def)
+  unfolding id_lens_def lens_comp_def
+  by simp
 
 lemma lens_comp_right_id [simp]: "X ;\<^sub>L 1\<^sub>L = X"
-  by (simp add: id_lens_def lens_comp_def)
+  unfolding id_lens_def lens_comp_def
+  by simp 
 
 definition lens_override :: "'a \<Rightarrow> 'a \<Rightarrow> ('b \<Longrightarrow> 'a) \<Rightarrow> 'a" ("_ \<oplus>\<^sub>L _ on _" [95,0,96] 95) where
 "S\<^sub>1 \<oplus>\<^sub>L S\<^sub>2 on X = put\<^bsub>X\<^esub> S\<^sub>1 (get\<^bsub>X\<^esub> S\<^sub>2)"
@@ -79,16 +82,29 @@ locale weak_lens =
 begin
 
   lemma create_get: "get (create v) = v"
-    by (simp add: lens_create_def put_get)
+    unfolding lens_create_def put_get
+    by simp
 
   lemma create_inj: "inj create"
-    by (metis create_get injI)
+  proof -
+    { fix g1 :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a" and g2 :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a"
+      { assume "\<not> inj create \<and> g1 create \<noteq> g2 create"
+        have "\<exists>f. inj create \<or> g1 f = g2 f \<or> \<not> inj f \<and> f (g1 f) \<noteq> f (g2 f)"
+          by (metis (full_types) lens_create_def put_get) }
+      then have "\<exists>f. inj create \<or> g1 f = g2 f \<or> \<not> inj f \<and> f (g1 f) \<noteq> f (g2 f)"
+        by metis }
+    then have "\<exists>f. \<forall>g1 g2. inj create \<or> (g1::'a) = g2 \<or> \<not> inj f \<and> (f g1::'b) \<noteq> f g2"
+      by metis
+    then show ?thesis
+  by (meson injI)
+  qed
 
   definition update :: "('a \<Rightarrow> 'a) \<Rightarrow> ('b \<Rightarrow> 'b)" where
   [lens_defs]: "update f \<sigma> = put \<sigma> (f (get \<sigma>))"
 
   lemma get_update: "get (update f \<sigma>) = f (get \<sigma>)"
-    by (simp add: put_get update_def)
+    unfolding put_get update_def
+    by simp
 
   lemma view_determination: "put \<sigma> u = put \<rho> v \<Longrightarrow> u = v"
     by (metis put_get)
@@ -122,8 +138,8 @@ declare wb_lens.get_put [simp]
 lemma wb_lens_weak [simp]: 
  assumes 1: "wb_lens x"
  shows "weak_lens x"
- using 1
- by (simp_all add: wb_lens_def) 
+ using 1 unfolding wb_lens_def
+ by simp 
 
 lemma id_wb_lens: "wb_lens id_lens"
   by (unfold_locales, simp_all add: id_lens_def)
@@ -135,8 +151,8 @@ lemma comp_wb_lens:
   assumes 1:"wb_lens x"
   and     2:" wb_lens y" 
   shows "wb_lens (x ;\<^sub>L y)"
-  using 1 2 
-  by (unfold_locales, simp_all add: lens_comp_def)
+  using 1 2  unfolding lens_comp_def
+  by (unfold_locales, simp_all)
 
 subsection {* Mainly well-behaved lenses *}
 
@@ -144,7 +160,8 @@ locale mwb_lens = weak_lens +
   assumes put_put: "put (put \<sigma> v) u = put \<sigma> u"
 begin
   lemma update_comp: "update f (update g \<sigma>) = update (f \<circ> g) \<sigma>"
-    by (simp add: put_get put_put update_def)
+    unfolding put_get put_put update_def
+    by simp 
 end
 
 declare mwb_lens.put_put [simp]
@@ -152,15 +169,15 @@ declare mwb_lens.put_put [simp]
 lemma mwb_lens_weak [simp]:
   assumes 1: "mwb_lens x"
   shows "weak_lens x"
-  using 1
-  by (simp add: mwb_lens_def)
+  using 1 unfolding mwb_lens_def
+  by simp 
 
 lemma comp_mwb_lens: 
   assumes 1:"mwb_lens x"
   and     2:" mwb_lens y"
   shows "mwb_lens (x ;\<^sub>L y)"
-  using 1 2
-  by (unfold_locales, simp_all add: lens_comp_def)
+  using 1 2 unfolding lens_comp_def
+  by (unfold_locales, simp_all)
 
 subsection {* Very well-behaved lenses *}
 
@@ -170,47 +187,49 @@ begin
     assumes 1:"get \<sigma> = get \<rho>"
     and     2:"put \<sigma> v = put \<rho> v"
     shows "\<sigma> = \<rho>"
-    using 1 2
-    by (metis get_put put_put)
+    using 1 2 get_put put_put
+    by metis 
 
   lemma put_eq: 
     assumes 1:"get \<sigma> = k" 
     and     2:"put \<sigma> u = put \<rho> v" 
     shows "put \<rho> k = \<sigma>"
-    using 1 2
-    by (metis get_put put_put)   
+    using 1 2 get_put put_put
+    by metis    
 end
 
 lemma vwb_lens_wb [simp]: 
   assumes 1:"vwb_lens x"
   shows "wb_lens x"
-  using 1
-  by (simp_all add: vwb_lens_def)
+  using 1 unfolding vwb_lens_def
+  by simp
 
 lemma vwb_lens_mwb [simp]: 
   assumes 1:"vwb_lens x"
   shows "mwb_lens x"
-  using 1
-  by (simp_all add: vwb_lens_def)
+  using 1 unfolding vwb_lens_def
+  by simp
 
 lemma id_vwb_lens: "vwb_lens 1\<^sub>L"
-  by (unfold_locales, simp_all add: id_lens_def)
+  unfolding id_lens_def
+  by (unfold_locales, simp_all)
 
 lemma unit_vwb_lens: "vwb_lens 0\<^sub>L"
-  by (unfold_locales, simp_all add: unit_lens_def)
+  unfolding unit_lens_def
+  by (unfold_locales, simp_all)
 
 lemma comp_vwb_lens: 
   assumes 1:"vwb_lens x"
   and     2:" vwb_lens y" 
   shows "vwb_lens (x ;\<^sub>L y)"
-  using 1 2
-  by (unfold_locales, simp_all add: lens_comp_def)
+  using 1 2 unfolding lens_comp_def
+  by (unfold_locales, simp_all)
 
 lemma lens_comp_anhil [simp]: 
   assumes 1:"wb_lens x"
   shows "0\<^sub>L ;\<^sub>L x = 0\<^sub>L"
-  using 1
-  by (simp add: unit_lens_def lens_comp_def comp_def)
+  using 1 unfolding unit_lens_def lens_comp_def comp_def
+  by simp 
 
 subsection {* Ineffectual lenses *}
 
@@ -248,21 +267,24 @@ definition lens_indep :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrigh
                     \<and> lens_get y (lens_put x \<sigma> u) = lens_get y \<sigma>)"
 
 lemma lens_indepI:
-  "\<lbrakk> \<And> u v \<sigma>. lens_put x (lens_put y \<sigma> v) u = lens_put y (lens_put x \<sigma> u) v;
-     \<And> v \<sigma>. lens_get x (lens_put y \<sigma> v) = lens_get x \<sigma>;
-     \<And> u \<sigma>. lens_get y (lens_put x \<sigma> u) = lens_get y \<sigma> \<rbrakk> \<Longrightarrow> x \<bowtie> y"
-  by (simp add: lens_indep_def)
+  assumes 1:"\<forall> u v \<sigma>. lens_put x (lens_put y \<sigma> v) u = lens_put y (lens_put x \<sigma> u) v"
+  and     2:"\<forall> v \<sigma>. lens_get x (lens_put y \<sigma> v) = lens_get x \<sigma>"
+  and     3:"\<forall> u \<sigma>. lens_get y (lens_put x \<sigma> u) = lens_get y \<sigma>"
+  shows " x \<bowtie> y"
+  using 1 2 3 unfolding lens_indep_def
+  by simp
 
 text {* Independence is irreflexive for effectual lenses *}
 
 lemma lens_indep_sym:  "x \<bowtie> y \<Longrightarrow> y \<bowtie> x"
-  by (simp add: lens_indep_def)
+  unfolding lens_indep_def
+  by simp
 
 lemma lens_indep_comm:
   assumes 1: "x \<bowtie> y"
   shows "lens_put x (lens_put y \<sigma> v) u = lens_put y (lens_put x \<sigma> u) v"
-  using 1
-  by (simp add: lens_indep_def)
+  using 1 unfolding lens_indep_def
+  by simp
 
 lemma lens_indep_get [simp]:
   assumes 1:"x \<bowtie> y"
@@ -272,19 +294,20 @@ lemma lens_indep_get [simp]:
 lemma plus_wb_lens:
   assumes 1:"wb_lens x" and 2:"wb_lens y" and 3:"x \<bowtie> y"
   shows "wb_lens (x +\<^sub>L y)"
-  using 1 2 3
-  by (unfold_locales, simp_all add: lens_plus_def lens_indep_sym prod.case_eq_if)
+  using 1 2 3 unfolding lens_plus_def  
+  by (unfold_locales, simp_all add: lens_indep_sym prod.case_eq_if)
 
 
 lemma fst_lens_plus:
   assumes 1:"wb_lens y"
   shows "fst\<^sub>L ;\<^sub>L (x +\<^sub>L y) = x"
-  using 1
-  by (simp add: fst_lens_def lens_plus_def lens_comp_def comp_def)
+  using 1 unfolding fst_lens_def lens_plus_def lens_comp_def comp_def
+  by simp
 
 lemma fst_snd_lens_indep:
   "fst\<^sub>L \<bowtie> snd\<^sub>L"
-  by (simp add: lens_indep_def fst_lens_def snd_lens_def)
+  unfolding lens_indep_def fst_lens_def snd_lens_def
+  by simp 
 
 text {* The second law requires independence as we have to apply x first, before y *}
 
@@ -292,69 +315,63 @@ lemma snd_lens_prod:
   assumes 1:"wb_lens x" 
   and     2:"x \<bowtie> y"
   shows "snd\<^sub>L ;\<^sub>L (x +\<^sub>L y) = y"
-  using 1 2
-  apply (simp add: snd_lens_def lens_plus_def lens_comp_def comp_def)
-  apply (subst lens_indep_comm)
-  apply (simp_all)
-done
+  using 1 2 unfolding  snd_lens_def lens_plus_def lens_comp_def comp_def
+  by (simp_all add: lens_indep_comm)
 
 lemma plus_mwb_lens:
   assumes 1:"mwb_lens x" and 2:"mwb_lens y" and 3:"x \<bowtie> y"
   shows "mwb_lens (x +\<^sub>L y)"
-  using 1 2 3
-  apply (unfold_locales)
-  apply (simp_all add: lens_plus_def prod.case_eq_if lens_indep_sym)
-  apply (simp add: lens_indep_comm)
-done
+  using 1 2 3 unfolding lens_plus_def 
+  by (unfold_locales) (simp_all add: lens_indep_comm Product_Type.split_beta)
 
 lemma lens_indep_quasi_irrefl: 
   assumes 1:"wb_lens x"
   and     2:"eff_lens x"
   shows   " \<not> (x \<bowtie> x)"
-  using 1 2
-  apply (auto simp add: lens_indep_def ief_lens_def ief_lens_axioms_def)
-  apply (rule_tac x="get\<^bsub>x\<^esub> \<sigma>" in exI)
-  apply (rule_tac x="v" in exI)
-  apply (rule_tac x="put\<^bsub>x\<^esub> \<sigma> v" in exI)
-  apply (auto)
-done
+  using 1 2 unfolding lens_indep_def ief_lens_def ief_lens_axioms_def
+proof (auto)
+  fix \<sigma> :: 'b and v :: 'a
+  assume "put\<^bsub>x\<^esub> \<sigma> v \<noteq> \<sigma>"
+  then have "\<exists>b. put\<^bsub>x\<^esub> b v \<noteq> b"
+    by metis
+  then have "\<exists>b. wb_lens x \<and> put\<^bsub>x\<^esub> b v \<noteq> b"
+    by (metis "1") (* failed *)
+  then show "\<exists>a aa b. aa = get\<^bsub>x\<^esub> b \<longrightarrow> put\<^bsub>x\<^esub> b a = put\<^bsub>x\<^esub> (put\<^bsub>x\<^esub> b a) (get\<^bsub>x\<^esub> b) \<longrightarrow> a \<noteq> get\<^bsub>x\<^esub> b"
+    by (metis (full_types) wb_lens.get_put)
+qed
 
 lemma lens_indep_left_comp:
-  "\<lbrakk> mwb_lens z; x \<bowtie> y \<rbrakk> \<Longrightarrow> (x ;\<^sub>L z) \<bowtie> (y ;\<^sub>L z)"
-  apply (rule lens_indepI)
-  apply (auto simp add: lens_comp_def)
-  apply (simp add: lens_indep_comm)
-  apply (simp add: lens_indep_sym)
-done
+  assumes 1:"mwb_lens z"
+  and     2:"x \<bowtie> y"
+  shows"(x ;\<^sub>L z) \<bowtie> (y ;\<^sub>L z)"
+  using 1 2 unfolding lens_comp_def lens_indep_def
+  by auto
 
 lemma lens_indep_right_comp:
-  "y \<bowtie> z \<Longrightarrow> (x ;\<^sub>L y) \<bowtie> (x ;\<^sub>L z)"
-  apply (auto intro!: lens_indepI simp add: lens_comp_def)
-  using lens_indep_comm lens_indep_sym apply fastforce
-  apply (simp add: lens_indep_sym)
-done
-  
+  assumes 1:"y \<bowtie> z"
+  shows "(x ;\<^sub>L y) \<bowtie> (x ;\<^sub>L z)"
+  using 1 unfolding lens_indep_def lens_comp_def
+  by auto
+
 lemma lens_indep_left_ext:
-  "y \<bowtie> z \<Longrightarrow> (x ;\<^sub>L y) \<bowtie> z" 
-  apply (auto intro!: lens_indepI simp add: lens_comp_def)
-  apply (simp add: lens_indep_comm)
-  apply (simp add: lens_indep_sym)
-done
+  assumes 1:"y \<bowtie> z" 
+  shows"(x ;\<^sub>L y) \<bowtie> z" 
+  using 1 unfolding lens_indep_def lens_comp_def
+  by auto
 
 lemma plus_vwb_lens:
   assumes "vwb_lens x" "vwb_lens y" "x \<bowtie> y"
   shows "vwb_lens (x +\<^sub>L y)"
-  using assms
-  apply (unfold_locales, simp_all add: lens_plus_def)
-  apply (simp add: lens_indep_sym prod.case_eq_if)
-  apply (simp add: lens_indep_comm prod.case_eq_if)
-done
+  using assms unfolding lens_indep_def lens_plus_def
+  by (unfold_locales) (simp_all add: lens_indep_sym prod.case_eq_if)
 
 lemma fst_vwb_lens: "vwb_lens fst\<^sub>L"
-  by (unfold_locales, simp_all add: fst_lens_def prod.case_eq_if)
+  unfolding fst_lens_def
+  by (unfold_locales, simp_all add:  prod.case_eq_if)
 
 lemma snd_vwb_lens: "vwb_lens snd\<^sub>L"
-  by (unfold_locales, simp_all add: snd_lens_def prod.case_eq_if)
+  unfolding snd_lens_def
+  by (unfold_locales, simp_all add: prod.case_eq_if)
 
 subsection {* Bijective lenses *}
 
@@ -391,23 +408,33 @@ declare bij_lens.strong_get_put [simp]
 declare bij_lens.get_create [simp]
 
 lemma bij_lens_weak [simp]: 
-  "bij_lens x \<Longrightarrow> weak_lens x"
-  by (simp_all add: bij_lens_def)
+ assumes 1:"bij_lens x"
+ shows "weak_lens x"
+ using 1 bij_lens.axioms(1)
+ by auto
 
-lemma bij_lens_vwb [simp]: "bij_lens x \<Longrightarrow> vwb_lens x"
+lemma bij_lens_vwb [simp]: 
+  assumes 1:"bij_lens x"
+  shows "vwb_lens x"
+  using 1
   by (unfold_locales, simp_all add: bij_lens.put_is_create)
 
 definition lens_inv :: "('a \<Longrightarrow> 'b) \<Rightarrow> ('b \<Longrightarrow> 'a)" where
 [lens_defs]: "lens_inv x = \<lparr> lens_get = create\<^bsub>x\<^esub>, lens_put = \<lambda> \<sigma>. get\<^bsub>x\<^esub> \<rparr>"
 
 lemma id_bij_lens: "bij_lens 1\<^sub>L"
-  by (unfold_locales, simp_all add: id_lens_def)
+  unfolding id_lens_def
+  by (unfold_locales, simp_all)
 
 lemma inv_id_lens: "lens_inv 1\<^sub>L = 1\<^sub>L"
-  by (auto simp add: lens_inv_def id_lens_def lens_create_def)
+  unfolding lens_inv_def id_lens_def 
+  by (auto simp add: lens_create_def)
 
-lemma lens_inv_bij: "bij_lens X \<Longrightarrow> bij_lens (lens_inv X)"
-  by (unfold_locales, simp_all add: lens_inv_def lens_create_def)
+lemma lens_inv_bij: 
+  assumes 1:"bij_lens X"
+  shows "bij_lens (lens_inv X)"
+  using 1 unfolding lens_inv_def
+  by (unfold_locales, simp_all add:lens_create_def)
 
 subsection {* Order and equivalence on lenses *}
 
@@ -418,23 +445,31 @@ definition sublens :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrightar
 [lens_defs]: "sublens X Y = (\<exists> Z :: ('a, 'b) lens. vwb_lens Z \<and> X = Z ;\<^sub>L Y)"
 
 lemma sublens_pres_mwb:
-  "\<lbrakk> mwb_lens Y; X \<subseteq>\<^sub>L Y \<rbrakk> \<Longrightarrow> mwb_lens X"
-  by (unfold_locales, auto simp add: sublens_def lens_comp_def)
+  assumes 1:"mwb_lens Y" and 2:"X \<subseteq>\<^sub>L Y"
+  shows  "mwb_lens X"
+  using 1 2 unfolding sublens_def lens_comp_def
+  by (unfold_locales, auto)
 
 lemma sublens_pres_wb:
-  "\<lbrakk> wb_lens Y; X \<subseteq>\<^sub>L Y \<rbrakk> \<Longrightarrow> wb_lens X"
-  by (unfold_locales, auto simp add: sublens_def lens_comp_def)
+  assumes 1:"wb_lens Y" and 2:"X \<subseteq>\<^sub>L Y"
+  shows "wb_lens X"
+  using 1 2 unfolding sublens_def lens_comp_def
+  by (unfold_locales, auto)
 
 lemma sublens_pres_vwb:
-  "\<lbrakk> vwb_lens Y; X \<subseteq>\<^sub>L Y \<rbrakk> \<Longrightarrow> vwb_lens X"
-  by (unfold_locales, auto simp add: sublens_def lens_comp_def)
+  assumes 1: "vwb_lens Y" and 2:"X \<subseteq>\<^sub>L Y"
+  shows "vwb_lens X"
+  using 1 2 unfolding sublens_def lens_comp_def
+  by (unfold_locales, auto)
 
 lemma sublens_refl:
   "X \<subseteq>\<^sub>L X"
   using id_vwb_lens sublens_def by force
 
 lemma sublens_trans:
-  "\<lbrakk> X \<subseteq>\<^sub>L Y; Y \<subseteq>\<^sub>L Z \<rbrakk> \<Longrightarrow> X \<subseteq>\<^sub>L Z"
+  assumes 1:"X \<subseteq>\<^sub>L Y" and 2 :"Y \<subseteq>\<^sub>L Z"
+  shows "X \<subseteq>\<^sub>L Z"
+  using 1 2 
   apply (auto simp add: sublens_def lens_comp_assoc)
   apply (rename_tac Z\<^sub>1 Z\<^sub>2)
   apply (rule_tac x="Z\<^sub>1 ;\<^sub>L Z\<^sub>2" in exI)
@@ -442,19 +477,29 @@ lemma sublens_trans:
   using comp_vwb_lens apply blast
 done
 
-lemma sublens_least: "wb_lens X \<Longrightarrow> 0\<^sub>L \<subseteq>\<^sub>L X"
-  using sublens_def unit_vwb_lens by fastforce
+lemma sublens_least: 
+  assumes 1:"wb_lens X"
+  shows "0\<^sub>L \<subseteq>\<^sub>L X"
+  using 1 sublens_def unit_vwb_lens by fastforce
 
-lemma sublens_greatest: "vwb_lens X \<Longrightarrow> X \<subseteq>\<^sub>L 1\<^sub>L"
-  by (simp add: sublens_def)
+lemma sublens_greatest: 
+  assumes 1: "vwb_lens X"
+  shows "X \<subseteq>\<^sub>L 1\<^sub>L"
+  using 1 unfolding sublens_def
+  by simp
 
 lemma sublens_put_put:
-  "\<lbrakk> mwb_lens X; Y \<subseteq>\<^sub>L X \<rbrakk> \<Longrightarrow> lens_put X (lens_put Y \<sigma> v) u = lens_put X \<sigma> u"
-  by (auto simp add: sublens_def lens_comp_def)
+  assumes 1:"mwb_lens X"
+  and     2:"Y \<subseteq>\<^sub>L X"
+  shows "lens_put X (lens_put Y \<sigma> v) u = lens_put X \<sigma> u"
+  using 1 2 unfolding sublens_def lens_comp_def 
+  by auto
 
 lemma sublens_obs_get:
-  "\<lbrakk> mwb_lens X; Y \<subseteq>\<^sub>L X \<rbrakk> \<Longrightarrow>  get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<sigma> v) = get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<rho> v)"
-  by (auto simp add: sublens_def lens_comp_def)
+  assumes 1:"mwb_lens X" and 2:" Y \<subseteq>\<^sub>L X"
+  shows "get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<sigma> v) = get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> \<rho> v)"
+  using 1 2 unfolding sublens_def lens_comp_def
+  by auto
 
 definition lens_equiv :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrightarrow> 'c) \<Rightarrow> bool" (infix "\<approx>\<^sub>L" 51) where
 [lens_defs]: "lens_equiv X Y = (X \<subseteq>\<^sub>L Y \<and> Y \<subseteq>\<^sub>L X)"
