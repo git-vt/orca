@@ -18,6 +18,12 @@ named_theorems unrest
 lift_definition unrest :: "('\<tau>, '\<alpha>) var \<Rightarrow> ('exp, '\<alpha>) expr \<Rightarrow> bool" (infix "\<sharp>" 20)
 is "\<lambda>var exp. \<forall> \<sigma> v. exp (put\<^bsub>var\<^esub> \<sigma> v) = exp \<sigma>" .
 
+lemma undep_unrest[unrest]:
+  assumes 1:"X \<bowtie> Y"
+  shows     "X \<sharp> (VAR Y)" and "Y \<sharp> (VAR X)"
+  using 1 unfolding unrest_def lens_indep_def
+  by (simp_all add: imp_var.transfer)
+ 
 lemma unrest_var_comp [unrest]:
   assumes 1: "x \<sharp> P"
   and     2: "y \<sharp> P"

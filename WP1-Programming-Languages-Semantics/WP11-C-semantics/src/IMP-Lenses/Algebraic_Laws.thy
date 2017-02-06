@@ -262,12 +262,13 @@ lemma SEQ7[small_step]:
    by transfer auto 
 
 theorem 
-assumes "mwb_lens x" shows
-"((IF b THEN x :== E ELSE bot); 
-  (IF (uop c (VAR x)) THEN (x :== (uop F (VAR x))) ELSE bot )) = 
-   (IF (trop If b (uop c  E) \<guillemotleft>False\<guillemotright>) THEN x :== (uop F E) ELSE bot)"
-  using assms unfolding subst_upd_var_def id_lens_def id_def apply transfer  
-  apply (rule ext)   apply auto
+  assumes "mwb_lens x" 
+  shows
+"((IF b THEN x :== E ELSE (0\<^sub>L :== VAR 0\<^sub>L)); 
+  (IF (uop c (VAR x)) THEN (x :== (uop F (VAR x))) ELSE (0\<^sub>L :== VAR 0\<^sub>L) )) = 
+   (IF (trop If b (uop c  E) \<guillemotleft>False\<guillemotright>) THEN x :== (uop F E) ELSE (0\<^sub>L :== VAR 0\<^sub>L))"
+  using assms unfolding subst_upd_var_def unit_lens_def  apply transfer  apply (rule ext)
+     apply auto 
 oops
 
 

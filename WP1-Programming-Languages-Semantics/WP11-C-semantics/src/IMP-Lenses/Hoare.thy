@@ -19,7 +19,7 @@ lemma Hoare_test1:
   by transfer  auto
 
 lemma Hoare_test2:
-  assumes 1:"weak_lens Y" and     2:"X \<bowtie> Y"
+  assumes 1:"weak_lens Y" and 2:"X \<bowtie> Y"
   shows"( (bop implies ((bop (op =) (VAR X) \<guillemotleft>1::int\<guillemotright>)) 
                      ((Y :== (VAR X))\<dagger> bop (op =) (VAR Y) \<guillemotleft>2::int\<guillemotright>)) 
           ) = \<guillemotleft>True\<guillemotright>"
@@ -29,7 +29,7 @@ lemma Hoare_test2:
 
 lemma Hoare_test3:
   assumes 1:"vwb_lens Y" and  2:"vwb_lens X" and 3:"vwb_lens R"
-  and     4:"X \<bowtie> Y" and     5:"X \<bowtie> R" and     6:"Y\<bowtie> R"
+  and     4:"X \<bowtie> Y"     and  5:"X \<bowtie> R"     and 6:"Y\<bowtie> R"
   shows "bop implies (bop conj (bop (op =) (VAR X) \<guillemotleft>1::int\<guillemotright>) (bop (op =) (VAR Y) \<guillemotleft>2::int\<guillemotright>))
                      ((R:== (VAR X) ; X :== (VAR Y); Y:== (VAR R))\<dagger>(bop conj (bop (op =) (VAR X) \<guillemotleft>2::int\<guillemotright>) (bop (op =) (VAR Y) \<guillemotleft>1::int\<guillemotright>))) = 
          \<guillemotleft>True\<guillemotright>"
@@ -37,8 +37,8 @@ lemma Hoare_test3:
   by transfer auto 
 
 lemma Hoare_test4:
-  assumes 1:"weak_lens Y" and  2:"weak_lens X" and 3:"weak_lens R"
-  and     4:"X \<bowtie> Y" and  5:"X \<bowtie> R" and  6:"Y\<bowtie> R"
+  assumes 1:"weak_lens Y" and 2:"weak_lens X" and 3:"weak_lens R"
+  and     4:"X \<bowtie> Y" and 5:"X \<bowtie> R" and 6:"Y\<bowtie> R"
   shows "bop implies (bop conj (bop (op =) (VAR X) \<guillemotleft>x\<guillemotright>) (bop (op =) (VAR Y) \<guillemotleft>y\<guillemotright>))
                      ((R:== (VAR X) ; X :== (VAR Y); Y:== (VAR R))\<dagger>(bop conj (bop (op =) (VAR X) \<guillemotleft>y\<guillemotright>) (bop (op =) (VAR Y) \<guillemotleft>x\<guillemotright>))) = 
          \<guillemotleft>True\<guillemotright>"
@@ -47,13 +47,18 @@ lemma Hoare_test4:
 
 section {*Hoare triple definition*}
 text {*A Hoare triple is represented by a pre-condition @{text P} a post-condition @{text Q}
-       and a program @{text C}. It says whenever the pre-condition holds then the post-condition
-       must hold.*}
+       and a program @{text C}. It says whenever the pre-condition @{text P} holds then the post-condition
+       @{text Q} must hold after the execution of the program @{text C}.*}
+
 definition hoare :: "(bool ,  '\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> (bool ,  '\<alpha>) expr \<Rightarrow>  bool" ("\<lbrace>(1_)\<rbrace>/ (_)/\<lbrace>(1_)\<rbrace>") where
 "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace> = ((bop implies P (C \<dagger> Q)) = \<guillemotleft>True\<guillemotright>)"
 
-(*definition hoare_valid :: "(bool ,  '\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> (bool ,  '\<alpha>) expr \<Rightarrow> bool" ("\<Turnstile> {(1_)}/ (_)/ {(1_)}" 50) where
-"\<Turnstile>{P}C{Q} = ((bop implies P (C \<dagger> Q)) = \<guillemotleft>True\<guillemotright>)"*)
+lift_definition hoare_valid :: "(bool ,  '\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> (bool ,  '\<alpha>) expr \<Rightarrow> bool" ("\<Turnstile> {(1_)}/ (_)/ {(1_)}" 50) is
+"\<lambda>P C Q. (\<forall> \<sigma> \<sigma>'. P \<sigma> \<and> C \<sigma> = \<sigma>' \<longrightarrow> Q \<sigma>')" .
+
+lemma Hoare_eq:"\<Turnstile> {P}C{Q} = \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>"
+    unfolding hoare_def  
+    by transfer (auto, meson)
 
 lemma Hoare_True [hoare]: "\<lbrace>P\<rbrace>C\<lbrace>\<guillemotleft>True\<guillemotright>\<rbrace>"
   unfolding hoare_def 
@@ -76,16 +81,15 @@ lemma Hoare_ASN:
    unfolding subst_upd_var_def hoare_def 
   by transfer auto
 
-
 lemma  Hoare_ASN_bop_test:
   assumes 1:"weak_lens Y"  
   shows "\<lbrace>bop (op =) (VAR X) \<guillemotleft>1\<guillemotright>\<rbrace>
           Y:== (VAR X)
-         \<lbrace>bop (op =) (VAR Y) (\<guillemotleft>1\<guillemotright>)\<rbrace>"
+         \<lbrace>bop (op =) (VAR Y) \<guillemotleft>1\<guillemotright>\<rbrace>"
   using 1 unfolding subst_upd_var_def hoare_def 
   by transfer auto 
-  
-lemma Hoare_ASN_uop:
+
+lemma Hoare_ASN_uop1:
   assumes 1:"weak_lens X"  
   shows "\<lbrace>uop P exp\<rbrace>
           X:== exp
@@ -93,9 +97,30 @@ lemma Hoare_ASN_uop:
   using 1 unfolding subst_upd_var_def hoare_def   
   by transfer auto
 
+lemma Hoare_ASN_uop2:
+  assumes 1:"weak_lens X"  and 2:"X \<sharp> exp"
+  shows "\<lbrace>uop P exp\<rbrace>
+          X:== exp
+         \<lbrace>uop P exp\<rbrace>" 
+  using 1 2 unfolding subst_upd_var_def hoare_def unrest_def
+  by transfer auto
+
+lemma Hoare_ASN_uop3:
+  assumes 1:"weak_lens X"
+  shows "\<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>
+          X:== \<guillemotleft>exp\<guillemotright>
+         \<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>" 
+  using 1 unfolding subst_upd_var_def hoare_def unrest_def
+  by transfer auto
+
+lemma Hoare_Const_test:
+  assumes 1:"weak_lens X" and 2:"X \<bowtie> Y"
+  shows "\<lbrace>bop (op =) (VAR Y) \<guillemotleft>2\<guillemotright>\<rbrace>X:== \<guillemotleft>2::int\<guillemotright>\<lbrace>bop (op =) (VAR Y) (VAR X)\<rbrace>" 
+  using 1 2 unfolding hoare_def subst_upd_var_def lens_indep_def
+  by transfer auto
 
 lemma Hoare_ASN_bop1:
-  assumes 1:"weak_lens X"  and 2:"X \<sharp> exp2"
+  assumes 1:"weak_lens X" and 2:"X \<sharp> exp2"
   shows "\<lbrace>bop P exp1 exp2\<rbrace>
           X:== exp1
          \<lbrace>bop P (VAR X) exp2\<rbrace>" 
@@ -103,7 +128,7 @@ lemma Hoare_ASN_bop1:
   by transfer auto
 
 lemma Hoare_ASN_bop2:
-  assumes 1:"weak_lens X"  and 2:"X \<sharp> exp1"
+  assumes 1:"weak_lens X" and 2:"X \<sharp> exp1"
   shows "\<lbrace>bop P exp1 exp2\<rbrace>
           X:== exp2
          \<lbrace>bop P exp1 (VAR X)\<rbrace>" 
@@ -125,6 +150,23 @@ lemma Hoare_ASN_bop4:
          \<lbrace>bop P \<guillemotleft>exp1\<guillemotright> (VAR X)\<rbrace>" 
   using 1 unfolding subst_upd_var_def hoare_def  
   by transfer auto
+
+lemma Hoare_ASN_bop5:
+  assumes 1:"weak_lens X" and 2:"X \<bowtie> Y"
+  shows "\<lbrace>bop P (VAR Y) exp2\<rbrace>
+          X:== exp2
+         \<lbrace>bop P (VAR Y) (VAR X)\<rbrace>" 
+  using 1 2 unfolding subst_upd_var_def hoare_def lens_indep_def 
+  by transfer auto
+
+lemma Hoare_ASN_bop6:
+  assumes 1:"weak_lens X" and 3:"X \<sharp> exp2"
+  shows "\<lbrace>P\<rbrace>
+          X:== exp2
+         \<lbrace>bop Q (VAR X) exp2 \<rbrace>" 
+  using 1 2 3 unfolding subst_upd_var_def hoare_def lens_indep_def unrest_def
+  apply transfer apply (rule ext) apply auto
+oops
 
 lemma Hoare_ASN_trop1:
   assumes 1:"weak_lens X"  and 2:"X \<sharp> exp2" and 3:"X \<sharp> exp3"
@@ -232,7 +274,7 @@ lemma Hoare_ASN_qtop7:
 
 section {*Hoare for Sequential Composition*}
 
-lemma Hoare_SEQ_uop:
+lemma Hoare_SEQ:
   assumes 1:"\<lbrace>P\<rbrace>C1\<lbrace>Q\<rbrace>"  
   and     2:"\<lbrace>Q\<rbrace>C2\<lbrace>R\<rbrace>"
   shows "\<lbrace>P\<rbrace>C1;C2\<lbrace>R\<rbrace>" 
@@ -241,7 +283,7 @@ lemma Hoare_SEQ_uop:
 
 section {*Hoare for Conditional*}
 
-lemma Hoare_COND_uop:
+lemma Hoare_COND:
   assumes 1:"\<lbrace>bop conj P b\<rbrace>C1\<lbrace>Q\<rbrace>"  
   and     2:"\<lbrace>bop conj P (uop Not b)\<rbrace>C2\<lbrace>Q\<rbrace>"
   shows "\<lbrace>P\<rbrace>IF b THEN C1 ELSE C2\<lbrace>Q\<rbrace>" 
@@ -254,19 +296,16 @@ lemma Hoare_CONSEQ:
   assumes 1:"(bop implies P' P) = \<guillemotleft>True\<guillemotright>"  
   and     2:"(bop implies Q Q') = \<guillemotleft>True\<guillemotright>"
   shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace> \<longrightarrow> \<lbrace>P'\<rbrace>C\<lbrace>Q'\<rbrace>" 
-  using 1 2  unfolding hoare_def
+  using 1 2 unfolding hoare_def
   by transfer meson 
 
 section {*Hoare for While-loop*}
 
-lemma Hoare_COND_uop:
+lemma Hoare_WHILE:
   assumes 1:"\<lbrace>bop conj P b\<rbrace>C\<lbrace>P\<rbrace>"  
   shows "\<lbrace>P\<rbrace>WHILE b DO C OD\<lbrace>bop conj P (uop Not b)\<rbrace>" 
   using 1 unfolding hoare_def RelInv_def Rel_def W_def
 oops  
 
-
-
- 
 
 end
