@@ -37,7 +37,7 @@ lemma unrest_const [unrest]: "x \<sharp> \<guillemotleft>v\<guillemotright>"
 lemma unrest_var [unrest]: 
   assumes 1: "vwb_lens x"
   and     2: "x \<bowtie> y"
-  shows "y \<sharp> imp_var x"
+  shows "y \<sharp> VAR x"
   using 1 2
   by (transfer, auto)
 
@@ -82,14 +82,14 @@ lemma unrest_id [unrest]:
   by (transfer, auto)
 
 lemma eq_lift_expr_eq:
-  "(x \<sharp> (bop (op =) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> = v \<sigma>))"
-  by (transfer, auto)
+  "(x \<sharp>  u =\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> = v \<sigma>))"
+  by (simp, transfer, auto)
 
 lemma unrest_eq [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
-  shows  "x \<sharp> (bop (op =) u v)"
-  using 1 2 by (transfer, auto)
+  shows  "x \<sharp>   u =\<^sub>e v"
+  using 1 2 by (simp, transfer, auto)
 
 lemma unrest_numeral [unrest]: 
   assumes 1: "x \<sharp> n"
@@ -99,54 +99,53 @@ lemma unrest_numeral [unrest]:
 
 lemma unrest_sgn [unrest]:
   assumes 1: "x \<sharp> u"
-  shows "x \<sharp> (\<lambda>\<sigma>. (sgn (u \<sigma>)))"
+  shows "x \<sharp> SGN u"
   using 1
-  by (auto simp: unrest.abs_eq)
+  by (simp, transfer, auto)
 
 lemma unrest_abs [unrest]:
   assumes 1: "x \<sharp> u"
-  shows "x \<sharp> (\<lambda>\<sigma>. (abs (u \<sigma>)))"
-  using 1
-  by (auto simp: unrest.abs_eq)
+  shows "x \<sharp> ABS u"
+  using 1  
+  by (simp, transfer, auto)
 
 lemma plus_lift_expr_eq: 
-  "(x \<sharp> (bop (op +) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> + v \<sigma>))"
-  by transfer auto
+  "(x \<sharp> u +\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> + v \<sigma>))"
+  by simp (transfer, auto)
 
 lemma unrest_plus [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
-  shows "(x \<sharp> (bop (op +) u v))"
+  shows "(x \<sharp> u +\<^sub>e v)"
   using assms
-  by transfer auto
+  by simp (transfer, auto)
 
 lemma unrest_uminus [unrest]: 
   assumes 1: "x \<sharp> u"
-  shows "x \<sharp> (\<lambda>\<sigma>. -(u \<sigma>))"    
-  using 1
-  by (auto simp: unrest.abs_eq)
+  shows "x \<sharp> -\<^sub>e u"    
+  using 1 by simp (transfer, auto)
 
 lemma minus_lift_expr_eq: 
-  "(x \<sharp> (bop (op -) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> - v \<sigma>))"
-  by transfer auto
+  "(x \<sharp> u -\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> - v \<sigma>))"
+  by simp (transfer, auto)
 
 lemma unrest_minus [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
-  shows "x \<sharp> (bop (op -) u v)"
+  shows "x \<sharp> u -\<^sub>e v"
   using 1 2
-  by transfer auto
+  by simp (transfer, auto)
 
 lemma times_lift_expr_eq: 
-  "(x \<sharp> (bop (op *) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> * v \<sigma>))"
-  by transfer auto
+  "(x \<sharp>  u *\<^sub>e v)  = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> * v \<sigma>))"
+  by simp (transfer, auto)
 
 lemma unrest_times [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v" 
-  shows "x \<sharp> (bop (op *) u v)"
+  shows "x \<sharp> u *\<^sub>e v"
   using 1 2
-  by transfer auto
+  by simp (transfer, auto)
 
 lemma devide_lift_expr_eq: 
   "(x \<sharp> (bop (op /) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> / v \<sigma>))"
@@ -166,25 +165,25 @@ lemma unrest_ulambda [unrest]:
   by (transfer, simp)
 
 lemma mod_lift_expr_eq: 
-  "(x \<sharp> (bop (op mod) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> mod v \<sigma>))"
-  by transfer auto
+  "(x \<sharp>  u mod\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> mod v \<sigma>))"
+  by simp (transfer, auto)
 
 lemma unrest_mod [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
-  shows "x \<sharp> (bop (op mod) u v)"
+  shows "x \<sharp> u mod\<^sub>e v"
   using 1 2
-  by transfer auto
+  by simp (transfer, auto)
 
 lemma div_lift_expr_eq: 
-  "(x \<sharp> (bop (op div) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> div v \<sigma>))"
-  by transfer auto
+  "(x \<sharp> u div\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> div v \<sigma>))" 
+  by simp (transfer, auto)
 
 lemma unrest_div [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
-  shows "x \<sharp> (bop (op div) u v)"
+  shows "x \<sharp> u div\<^sub>e v"
   using 1 2
-  by transfer auto
+  by simp (transfer, auto)
 
 end

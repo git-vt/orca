@@ -99,7 +99,7 @@ lemma usubst_upd_var_id [states]:
   by transfer (rule ext,auto)
 
 lemma usubst_lookup_upd_indep [states]:
-  assumes "mwb_lens x" "x \<bowtie> y"
+  assumes "mwb_lens x" and "x \<bowtie> y"
   shows "\<langle>\<sigma>(y \<mapsto>\<^sub>s v)\<rangle>\<^sub>s x = \<langle>\<sigma>\<rangle>\<^sub>s x"
   using assms unfolding  subst_upd_var_def
   by (transfer, simp)
@@ -113,7 +113,7 @@ lemma subst_unrest [states]:
 lemma id_subst [states]: "id \<dagger> v = v"
   by (transfer, simp)
 
-lemma subst_var [states]: "\<sigma> \<dagger> imp_var x = \<langle>\<sigma>\<rangle>\<^sub>s x"
+lemma subst_var [states]: "\<sigma> \<dagger> (VAR x) = \<langle>\<sigma>\<rangle>\<^sub>s x"
   by (transfer, simp)
 
 lemma subst_uop [states]: "\<sigma> \<dagger> uop f v = uop f (\<sigma> \<dagger> v) "
@@ -130,29 +130,33 @@ lemma subst_qtop [states]: "\<sigma> \<dagger> qtop f u v w x =
                             qtop f (\<sigma> \<dagger> u) (\<sigma> \<dagger> v) (\<sigma> \<dagger> w) (\<sigma> \<dagger> x)"
   by (transfer, simp)
 
-lemma subst_plus [states]: "\<sigma> \<dagger>  bop (op +) x y = bop (op +) (\<sigma> \<dagger> x)  (\<sigma> \<dagger> y) "
-  by transfer auto
+lemma subst_plus [states]: "\<sigma> \<dagger> (x +\<^sub>e y) = (\<sigma> \<dagger> x) +\<^sub>e (\<sigma> \<dagger> y) "
+  by (simp, transfer, auto)
 
-lemma subst_times [states]: "\<sigma> \<dagger> bop (op *) x y = bop (op *) (\<sigma> \<dagger> x) (\<sigma> \<dagger> y)"
-  by transfer auto
+lemma subst_times [states]: "\<sigma> \<dagger> (x *\<^sub>e y) =  (\<sigma> \<dagger> x) *\<^sub>e (\<sigma> \<dagger> y)"
+  by (simp, transfer, auto)
 
-lemma subst_mod [states]: "\<sigma> \<dagger>  bop (op mod) x y = bop (op mod )(\<sigma> \<dagger> x) (\<sigma> \<dagger> y)"
-  by transfer auto
+lemma subst_minus [states]: "\<sigma> \<dagger> (x -\<^sub>e y) =  (\<sigma> \<dagger> x) -\<^sub>e (\<sigma> \<dagger> y)"
+  by (simp, transfer, auto)
 
-lemma subst_div [states]: "\<sigma> \<dagger> bop (op div) x y = bop (op div) (\<sigma> \<dagger> x) (\<sigma> \<dagger> y)"
-  by transfer auto
+lemma subst_uminus [states]: "\<sigma> \<dagger> (-\<^sub>e x) = -\<^sub>e(\<sigma> \<dagger> x)"
+  by (simp, transfer, auto)
 
-lemma subst_minus [states]: "\<sigma> \<dagger> bop (op -) x y =  bop (op -) (\<sigma> \<dagger> x) (\<sigma> \<dagger> y)"
-  by transfer auto
+lemma subst_mod [states]: "\<sigma> \<dagger> (x mod\<^sub>e y) = (\<sigma> \<dagger> x) mod\<^sub>e (\<sigma> \<dagger> y)"
+  by (simp, transfer, auto)
 
-lemma subst_uminus [states]: "\<sigma> \<dagger> uop (op -) x = uop (op -) (\<sigma> \<dagger> x)"
-  by transfer auto
+lemma subst_div [states]: "\<sigma> \<dagger> (x div\<^sub>e y) = (\<sigma> \<dagger> x) div\<^sub>e (\<sigma> \<dagger> y)"
+  by (simp, transfer, auto)
 
-lemma usubst_sgn [states]: "\<sigma> \<dagger> uop sgn x = uop sgn (\<sigma> \<dagger> x)"
-  by transfer auto
+lemma subst_eq_upred [states]: "\<sigma> \<dagger> (x =\<^sub>e y) = ((\<sigma> \<dagger> x) =\<^sub>e (\<sigma> \<dagger> y))"
+  by (simp, transfer, auto)
 
-lemma usubst_abs [states]: "\<sigma> \<dagger> uop abs x  = uop abs (\<sigma> \<dagger> x)"
-  by transfer auto
+lemma usubst_sgn [states]: "\<sigma> \<dagger> SGN x = SGN (\<sigma> \<dagger> x)"
+  by (simp, transfer, auto)
+
+lemma usubst_abs [states]: "\<sigma> \<dagger> ABS x  = ABS (\<sigma> \<dagger> x)"
+  by (simp, transfer, auto)
+
 
 lemma subst_zero [states]: "\<sigma> \<dagger> \<guillemotleft>0\<guillemotright> = \<guillemotleft>0\<guillemotright>"
   by transfer auto
@@ -160,8 +164,6 @@ lemma subst_zero [states]: "\<sigma> \<dagger> \<guillemotleft>0\<guillemotright
 lemma subst_one [states]: "\<sigma> \<dagger> \<guillemotleft>1\<guillemotright> = \<guillemotleft>1\<guillemotright>"
   by transfer auto
 
-lemma subst_eq_upred [states]: "\<sigma> \<dagger> bop (op =) x y = bop (op =) (\<sigma> \<dagger> x) (\<sigma> \<dagger> y)"
-  by transfer auto
 
 lemma subst_subst [states]: "\<sigma> \<dagger> \<rho> \<dagger> e = (\<rho> \<circ> \<sigma>) \<dagger> e"
   by (transfer, simp)
