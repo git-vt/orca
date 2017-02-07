@@ -66,11 +66,12 @@ where [simp]:"abs_expr x = uop abs x"
 definition Not_expr :: "(bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr"("\<not>\<^sub>e _" [40] 40)
 where [simp]:"Not_expr bexp = uop Not bexp "
 
-definition All_expr :: "('a \<Rightarrow> bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr"(binder "\<forall>\<^sub>e" 10)
-where [simp]:"All_expr P = uop All P"
 
-definition Ex_expr :: "('a \<Rightarrow> bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr"(binder "\<exists>\<^sub>e" 10)
-where [simp]:"Ex_expr P = uop Ex P"
+lift_definition Ex_expr :: "('a, '\<alpha>) var \<Rightarrow> (bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr" ("\<exists>\<^sub>e _ . _" [0, 10] 10)is
+"\<lambda> x P b. (\<exists> v. P(put\<^bsub>x\<^esub> b v))" .
+
+lift_definition All_expr ::"('a, '\<alpha>) var \<Rightarrow> (bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr" ("\<forall>\<^sub>e _ . _" [0, 10] 10)is
+"\<lambda> x P b. (\<forall> v. P(put\<^bsub>x\<^esub> b v))" .
 
 definition Ex1_expr :: "('a \<Rightarrow> bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr"(binder "\<exists>!\<^sub>e" 10)
 where [simp]:"Ex1_expr P = uop Ex1 P"

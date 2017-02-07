@@ -1,10 +1,12 @@
-chapter {*Hoare Logic*}
+section{*Hoare Logic*}
 
 theory Hoare
 imports Algebraic_Laws
 
 begin
-section {*Examples*}
+
+subsection {*Examples*}
+
 text {*In this section we introduce small examples showing how can use the tools from the lens 
        theory to represent a Hoare triple*}
 
@@ -45,7 +47,7 @@ lemma Hoare_test4:
   using assms unfolding subst_upd_var_def id_def lens_indep_def 
   by transfer auto
 
-section {*Hoare triple definition*}
+subsection {*Hoare triple definition*}
 text {*A Hoare triple is represented by a pre-condition @{text P} a post-condition @{text Q}
        and a program @{text C}. It says whenever the pre-condition @{text P} holds then the post-condition
        @{text Q} must hold after the execution of the program @{text C}.*}
@@ -65,25 +67,82 @@ lemma Hoare_True [hoare]: "\<lbrace>P\<rbrace>C\<lbrace>TRUE\<rbrace>"
 lemma Hoare_False [hoare]: "\<lbrace>FALSE\<rbrace>C\<lbrace>Q\<rbrace>"
   by simp (transfer, auto)
 
-section {*Hoare for SKIP*}
+subsection {*Hoare for Consequence*}
+
+lemma Hoare_CONSEQ:
+  assumes 1:"\<lceil>P' \<longrightarrow>\<^sub>e P\<rceil>"  
+  and     2:"\<lceil>Q \<longrightarrow>\<^sub>e Q'\<rceil>"
+  shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace> \<longrightarrow> \<lbrace>P'\<rbrace>C\<lbrace>Q'\<rbrace>" 
+  using 1 2
+  by simp (transfer, meson) 
+
+subsection {*Precondition strengthening*}
+
+lemma Hoare_Pre_Str:
+  assumes 1:"\<lceil>P \<longrightarrow>\<^sub>e P'\<rceil>"  
+  and     2:"\<lbrace>P'\<rbrace>C\<lbrace>Q\<rbrace>"
+  shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>" 
+  using 1 2 
+  by (simp, transfer, auto)
+
+subsection {*Postcondition weakening*}
+
+lemma Hoare_Post_weak:
+  assumes 1:"\<lbrace>P\<rbrace>C\<lbrace>Q'\<rbrace>"  
+  and     2:"\<lceil>Q'\<longrightarrow>\<^sub>e Q\<rceil>"
+  shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>" 
+  using 1 2 
+  by (simp, transfer, auto)
+
+subsection {*Hoare and assertion logic*}
+
+lemma Hoare_conjI:
+  assumes 1:"\<lbrace>P1\<rbrace>C\<lbrace>Q1\<rbrace>"  
+  and     2:"\<lbrace>P2\<rbrace>C\<lbrace>Q2\<rbrace>"
+  shows "\<lbrace>P1 \<and>\<^sub>e P2\<rbrace>C\<lbrace>Q1 \<and>\<^sub>e Q2\<rbrace>" 
+  using 1 2 
+  by (simp, transfer, auto)
+
+lemma Hoare_disjI:
+  assumes 1:"\<lbrace>P1\<rbrace>C\<lbrace>Q1\<rbrace>"  
+  and     2:"\<lbrace>P2\<rbrace>C\<lbrace>Q2\<rbrace>"
+  shows "\<lbrace>P1 \<or>\<^sub>e P2\<rbrace>C\<lbrace>Q1 \<or>\<^sub>e Q2\<rbrace>" 
+  using 1 2 
+  by (simp, transfer, auto)
+ 
+
+subsection {*Hoare for SKIP*}
 
 lemma Hoare_SKIP [hoare]: "\<lbrace>P\<rbrace>SKIP\<lbrace>P\<rbrace>"
    by simp (transfer, auto)
 
-section {*Hoare for assignment*}
+subsection {*Hoare for assignment*}
 
 lemma Hoare_ASN: "\<lbrace>[X \<mapsto>\<^sub>s exp] \<dagger> P\<rbrace>X:== exp\<lbrace>P\<rbrace>" 
   unfolding subst_upd_var_def 
   by simp (transfer, auto)
 
+lemma Floyd_ASN: 
+  assumes 1:"mwb_lens X" and 2:"mwb_lens v" and 3:"X \<bowtie> v" and 4:"v \<sharp> P" and 5:"v \<sharp> exp" 
+  shows "\<lbrace>P\<rbrace>X:== exp\<lbrace>\<exists>\<^sub>e v . ((VAR X) =\<^sub>e([X \<mapsto>\<^sub>s (VAR v)]\<dagger> exp)) \<and>\<^sub>e ([X \<mapsto>\<^sub>s (VAR v)]\<dagger> P)\<rbrace>" 
+  using assms unfolding subst_upd_var_def  lens_indep_def
+  apply simp  apply transfer apply auto oops
+
+lemma Hoare_ASN1:
+  assumes 1:"weak_lens X" and 2:"X\<sharp> E"
+  shows "\<lbrace>TRUE\<rbrace> X:== E \<lbrace>(VAR X) =\<^sub>e E\<rbrace>"
+  using 2 1
+  unfolding subst_upd_var_def unrest_def
+  by simp ( transfer, auto)
+
 lemma  Hoare_ASN_bop_test:
   assumes 1:"weak_lens Y"  
-  shows "\<lbrace>bop (op =) (VAR X) \<guillemotleft>1\<guillemotright>\<rbrace>
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>
           Y:== (VAR X)
-         \<lbrace>bop (op =) (VAR Y) \<guillemotleft>1\<guillemotright>\<rbrace>"
+         \<lbrace>(VAR Y) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
   using 1 unfolding subst_upd_var_def 
   by simp (transfer, auto) 
-
+ 
 lemma Hoare_ASN_uop1:
   assumes 1:"weak_lens X"  
   shows "\<lbrace>uop P exp\<rbrace>
@@ -258,7 +317,7 @@ lemma Hoare_ASN_qtop7:
   using 1 unfolding subst_upd_var_def  
   by simp (transfer, auto)
 
-section {*Hoare for Sequential Composition*}
+subsection {*Hoare for Sequential Composition*}
 
 lemma Hoare_SEQ:
   assumes 1:"\<lbrace>P\<rbrace>C1\<lbrace>Q\<rbrace>"  
@@ -267,7 +326,7 @@ lemma Hoare_SEQ:
   using 1 2 
   by simp (transfer, (metis comp_apply))
 
-section {*Hoare for Conditional*}
+subsection {*Hoare for Conditional*}
 
 lemma Hoare_COND:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C1\<lbrace>Q\<rbrace>"  
@@ -276,16 +335,7 @@ lemma Hoare_COND:
   using 1 2 
   by simp (transfer , metis (full_types, hide_lams))   
 
-section {*Hoare for Consequence*}
-
-lemma Hoare_CONSEQ:
-  assumes 1:"\<lceil>P' \<longrightarrow>\<^sub>e P\<rceil>"  
-  and     2:"\<lceil>Q \<longrightarrow>\<^sub>e Q'\<rceil>"
-  shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace> \<longrightarrow> \<lbrace>P'\<rbrace>C\<lbrace>Q'\<rbrace>" 
-  using 1 2
-  by simp (transfer, meson) 
-
-section {*Hoare for While-loop*}
+subsection {*Hoare for While-loop*}
 
 lemma Hoare_WHILE:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>P\<rbrace>"  
@@ -293,6 +343,7 @@ lemma Hoare_WHILE:
   using 1 unfolding RelInv_def Rel_def W_def
   apply simp apply transfer
 oops  
+
 
 
 end

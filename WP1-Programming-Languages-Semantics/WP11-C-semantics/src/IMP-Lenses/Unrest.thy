@@ -1,8 +1,5 @@
 (*This theory is inspired by the theory of Simon foster*)
 chapter{*Meta-logical Operators*}
-theory Unrest
-imports Expressions
-begin 
 section{*Unrestriction*}
 text {*In this section we define one of the meta-logical operators on lenses. 
        Unrestriction is an operator used to express that the evaluation of a given substitution 
@@ -12,6 +9,11 @@ text {*In this section we define one of the meta-logical operators on lenses.
        that allows to reason about the presence of variables in expressions 
        without being concerned with abstract syntax trees. This is a sufficient
        notion to prove many laws that would ordinarily rely on an \emph{fv} function.*}
+
+theory Unrest
+imports Expressions
+begin 
+
 
 named_theorems unrest
 

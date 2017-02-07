@@ -1,11 +1,11 @@
-theory Algebraic_Laws
-imports Commands
-
-begin
-
 section {*Algebraic laws of programming*}
+
 text{*In this section we introduce the semantic rules related to the different
       statements of IMP. In the literature this also known as the algebraic laws of programming.*}
+
+theory Algebraic_Laws
+imports Commands
+begin
 
 named_theorems small_step
 
@@ -29,6 +29,12 @@ lemma ASN_test:
   assumes 1:"mwb_lens x" 
   shows     "(x :== \<guillemotleft>u\<guillemotright> ; x :== \<guillemotleft>v\<guillemotright>) = (x :== \<guillemotleft>v\<guillemotright>)"
   using 1 unfolding subst_upd_var_def 
+  by transfer auto
+
+lemma ASN_cancel:
+  assumes 1:"weak_lens Var" 
+  shows "(Var :== Expr)\<dagger> (VAR Var) = Expr"
+  using 1 unfolding subst_upd_var_def
   by transfer auto
 
 lemma ASN0[small_step]:

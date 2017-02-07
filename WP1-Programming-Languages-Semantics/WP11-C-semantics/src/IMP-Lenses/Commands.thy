@@ -1,9 +1,14 @@
 chapter "Shallow IMP"
+section{*Commands*}
+text{*Instead of using a deep-embedding for the abstract syntax we use shallow embedding.
+      To do so we need an explicit notion of substitution and variables.
+      We use abbreviation in order that we do not hide the core theory behind
+      another definition layer. Which makes it more suited for exploitation by simp, auto, etc*}
 
 theory Commands imports Substitution
 
 begin
-section{*Commands*}
+
 (*
 datatype
   ('\<alpha>, '\<beta>) com = SKIP                    
@@ -12,12 +17,11 @@ datatype
       | Cond   "'\<alpha> bexp" "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"     ("IF (_)/ THEN (_) ELSE (_)"  70)
       | While  "'\<alpha> bexp" "('\<alpha>, '\<beta>) com"         ("WHILE (_) DO /(_) OD"  70)*)
 
-text{*Instead of using a deep-embedding for the abstract syntax we use shallow embedding.
-      To do so we need an explicit notion of substitution and variables.
-      We use abbreviation in order that we do not hide the core theory behind
-      another definition layer. Which makes it more suited for exploitation by simp, auto, etc*}
+subsection{*SKIP*}
 
 abbreviation "SKIP \<equiv> id" (* in other words Skip is the id substitution.. it means (id \<dagger> id)*)
+
+subsection{*Assign*}
 
 abbreviation Assign :: "('\<tau> , '\<alpha> ) var \<Rightarrow> ('\<tau> ,'\<alpha>) expr \<Rightarrow> '\<alpha> states" ("_ :== _ " [80, 80] 70) where
 "Assign Var Expr \<equiv> (subst_upd_var id Var Expr)" (*in other words an assign is a substitution update
@@ -27,12 +31,17 @@ abbreviation Assign\<^sub>\<sigma> :: " '\<alpha> states \<Rightarrow> ('\<tau> 
 "Assign\<^sub>\<sigma> \<sigma> Var Expr \<equiv> \<sigma>(Var \<mapsto>\<^sub>s \<sigma> \<dagger> Expr)" (*It means transform the state by \<sigma> and then do the 
                                             assignment on the transformed state*)
 
+subsection{*Conditional*}
+
 abbreviation Cond :: "(bool ,'\<alpha>) expr \<Rightarrow>'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("IF (_)/ THEN (_) ELSE (_)"  70) where
 "Cond Bexp C1 C2  \<equiv> (\<lambda> \<sigma>. if Bexp \<sigma> then C1 \<sigma> else C2 \<sigma>)" (*emm...*)
+
+subsection{*Sequential composition*}
 
 abbreviation Seq :: "'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("_; _" [61, 60] 60) where
 "Seq  C1 C2  \<equiv>  C2 o C1 " (*emm... it means (C2 o C1)*)
 
+subsection{*While-loop*}
 text{*In order to specify while loops we need a concept that refers to the result of the execution
       of body of the loop. We call the result of the execution of the body the next state space.
       Rel is a function that takes a substitution on a state and apply it on a given init
