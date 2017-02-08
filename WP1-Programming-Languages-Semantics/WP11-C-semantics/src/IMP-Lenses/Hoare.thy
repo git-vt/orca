@@ -59,13 +59,13 @@ lift_definition hoare_valid :: "(bool ,  '\<alpha>) expr \<Rightarrow> '\<alpha>
 "\<lambda>P C Q. (\<forall> \<sigma> \<sigma>'. P \<sigma> \<and> C \<sigma> = \<sigma>' \<longrightarrow> Q \<sigma>')" .
 
 lemma Hoare_eq:"\<Turnstile> {P}C{Q} = \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_True [hoare]: "\<lbrace>P\<rbrace>C\<lbrace>TRUE\<rbrace>"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_False [hoare]: "\<lbrace>FALSE\<rbrace>C\<lbrace>Q\<rbrace>"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 subsection {*Hoare for Consequence*}
 
@@ -74,7 +74,7 @@ lemma Hoare_CONSEQ:
   and     2:"\<lceil>Q \<longrightarrow>\<^sub>e Q'\<rceil>"
   shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace> \<longrightarrow> \<lbrace>P'\<rbrace>C\<lbrace>Q'\<rbrace>" 
   using 1 2
-  by simp (transfer, meson) 
+  by (transfer, meson) 
 
 subsection {*Precondition strengthening*}
 
@@ -83,7 +83,7 @@ lemma Hoare_Pre_Str:
   and     2:"\<lbrace>P'\<rbrace>C\<lbrace>Q\<rbrace>"
   shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>" 
   using 1 2 
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 subsection {*Postcondition weakening*}
 
@@ -92,7 +92,7 @@ lemma Hoare_Post_weak:
   and     2:"\<lceil>Q'\<longrightarrow>\<^sub>e Q\<rceil>"
   shows "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>" 
   using 1 2 
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 subsection {*Hoare and assertion logic*}
 
@@ -101,26 +101,26 @@ lemma Hoare_conjI:
   and     2:"\<lbrace>P2\<rbrace>C\<lbrace>Q2\<rbrace>"
   shows "\<lbrace>P1 \<and>\<^sub>e P2\<rbrace>C\<lbrace>Q1 \<and>\<^sub>e Q2\<rbrace>" 
   using 1 2 
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_disjI:
   assumes 1:"\<lbrace>P1\<rbrace>C\<lbrace>Q1\<rbrace>"  
   and     2:"\<lbrace>P2\<rbrace>C\<lbrace>Q2\<rbrace>"
   shows "\<lbrace>P1 \<or>\<^sub>e P2\<rbrace>C\<lbrace>Q1 \<or>\<^sub>e Q2\<rbrace>" 
   using 1 2 
-  by (simp, transfer, auto)
+  by (transfer, auto)
  
 
 subsection {*Hoare for SKIP*}
 
 lemma Hoare_SKIP [hoare]: "\<lbrace>P\<rbrace>SKIP\<lbrace>P\<rbrace>"
-   by simp (transfer, auto)
+   by (transfer, auto)
 
 subsection {*Hoare for assignment*}
 
 lemma Hoare_ASN: "\<lbrace>[X \<mapsto>\<^sub>s exp] \<dagger> P\<rbrace>X:== exp\<lbrace>P\<rbrace>" 
   unfolding subst_upd_var_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Floyd_ASN: 
   assumes 1:"mwb_lens X" and 2:"mwb_lens v" and 3:"X \<bowtie> v" and 4:"v \<sharp> P" and 5:"v \<sharp> exp" 
@@ -133,7 +133,7 @@ lemma Hoare_ASN1:
   shows "\<lbrace>TRUE\<rbrace> X:== E \<lbrace>(VAR X) =\<^sub>e E\<rbrace>"
   using 2 1
   unfolding subst_upd_var_def unrest_def
-  by simp ( transfer, auto)
+  by (transfer, auto)
 
 lemma  Hoare_ASN_bop_test:
   assumes 1:"weak_lens Y"  
@@ -141,7 +141,7 @@ lemma  Hoare_ASN_bop_test:
           Y:== (VAR X)
          \<lbrace>(VAR Y) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
   using 1 unfolding subst_upd_var_def 
-  by simp (transfer, auto) 
+  by (transfer, auto) 
  
 lemma Hoare_ASN_uop1:
   assumes 1:"weak_lens X"  
@@ -149,7 +149,7 @@ lemma Hoare_ASN_uop1:
           X:== exp
          \<lbrace>uop P (VAR X)\<rbrace>" 
   using 1 unfolding subst_upd_var_def    
-  by simp (transfer, auto) 
+  by (transfer, auto) 
 
 lemma Hoare_ASN_uop2:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp"
@@ -157,7 +157,7 @@ lemma Hoare_ASN_uop2:
           X:== exp
          \<lbrace>uop P exp\<rbrace>" 
   using 1 2 unfolding subst_upd_var_def unrest_def
-  by simp (transfer, auto) 
+  by (transfer, auto) 
 
 lemma Hoare_ASN_uop3:
   assumes 1:"weak_lens X"
@@ -165,13 +165,13 @@ lemma Hoare_ASN_uop3:
           X:== \<guillemotleft>exp\<guillemotright>
          \<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>" 
   using 1 unfolding subst_upd_var_def unrest_def
-  by simp (transfer, auto) 
+  by (transfer, auto) 
 
 lemma Hoare_Const_test:
   assumes 1:"weak_lens X" and 2:"X \<bowtie> Y"
   shows "\<lbrace>(VAR Y) =\<^sub>e \<guillemotleft>2\<guillemotright>\<rbrace>X:== \<guillemotleft>2::int\<guillemotright>\<lbrace>(VAR Y) =\<^sub>e(VAR X)\<rbrace>" 
   using 1 2 unfolding subst_upd_var_def lens_indep_def
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_bop1:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp2"
@@ -179,7 +179,7 @@ lemma Hoare_ASN_bop1:
           X:== exp1
          \<lbrace>bop P (VAR X) exp2\<rbrace>" 
   using 1 2 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_bop2:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp1"
@@ -187,7 +187,7 @@ lemma Hoare_ASN_bop2:
           X:== exp2
          \<lbrace>bop P exp1 (VAR X)\<rbrace>" 
   using 1 2 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_bop3:
   assumes 1:"weak_lens X" 
@@ -195,7 +195,7 @@ lemma Hoare_ASN_bop3:
           X:== exp1
          \<lbrace>bop P (VAR X) \<guillemotleft>exp2\<guillemotright>\<rbrace>" 
   using 1 unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_bop4:
   assumes 1:"weak_lens X" 
@@ -203,7 +203,7 @@ lemma Hoare_ASN_bop4:
           X:== exp2
          \<lbrace>bop P \<guillemotleft>exp1\<guillemotright> (VAR X)\<rbrace>" 
   using 1 unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_bop5:
   assumes 1:"weak_lens X" and 2:"X \<bowtie> Y"
@@ -211,7 +211,7 @@ lemma Hoare_ASN_bop5:
           X:== exp2
          \<lbrace>bop P (VAR Y) (VAR X)\<rbrace>" 
   using 1 2 unfolding subst_upd_var_def lens_indep_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop1:
   assumes 1:"weak_lens X"  and 2:"X \<sharp> exp2" and 3:"X \<sharp> exp3"
@@ -219,7 +219,7 @@ lemma Hoare_ASN_trop1:
           X:== exp1
          \<lbrace>trop P (VAR X) exp2 exp3\<rbrace>" 
   using 1 2 3 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop2:
   assumes 1:"weak_lens X"  and 2:"X \<sharp> exp1" and 3:"X \<sharp> exp3"
@@ -227,7 +227,7 @@ lemma Hoare_ASN_trop2:
           X:== exp2
          \<lbrace>trop P exp1 (VAR X) exp3\<rbrace>" 
   using 1 2 3 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop3:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp1" and 3:"X \<sharp> exp2"
@@ -235,7 +235,7 @@ lemma Hoare_ASN_trop3:
           X:== exp3
          \<lbrace>trop P exp1 exp2 (VAR X)\<rbrace>" 
   using 1 2 3 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop4:
   assumes 1:"weak_lens X" 
@@ -243,7 +243,7 @@ lemma Hoare_ASN_trop4:
           X:== exp1
          \<lbrace>trop P (VAR X) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright>\<rbrace>" 
   using 1  unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop5:
   assumes 1:"weak_lens X" 
@@ -251,7 +251,7 @@ lemma Hoare_ASN_trop5:
           X:== exp2 
          \<lbrace>trop P \<guillemotleft>exp1\<guillemotright> (VAR X) \<guillemotleft>exp3\<guillemotright>\<rbrace>" 
   using 1  unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_trop6:
   assumes 1:"weak_lens X" 
@@ -259,7 +259,7 @@ lemma Hoare_ASN_trop6:
           X:== exp3
          \<lbrace>trop P \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR X)\<rbrace>" 
   using 1  unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop1:
   assumes 1:"weak_lens X"  and 2:"X \<sharp> exp2" and 3:"X \<sharp> exp3"  and 4:"X \<sharp> exp4"
@@ -267,7 +267,7 @@ lemma Hoare_ASN_qtop1:
           X:== exp1
          \<lbrace>qtop P (VAR X) exp2 exp3 exp4\<rbrace>" 
   using 1 2 3 4unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop2:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp1" and 3:"X \<sharp> exp3" and 4:"X \<sharp> exp4"
@@ -275,7 +275,7 @@ lemma Hoare_ASN_qtop2:
           X:== exp2
          \<lbrace>qtop P exp1 (VAR X) exp3 exp4\<rbrace>" 
   using 1 2 3 4 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop3:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp1" and 3:"X \<sharp> exp2" and 4:"X \<sharp> exp4"
@@ -283,7 +283,7 @@ lemma Hoare_ASN_qtop3:
           X:== exp3
          \<lbrace>qtop P exp1 exp2 (VAR X) exp4\<rbrace>" 
   using 1 2 3 4 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop4:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp1" and 3:"X \<sharp> exp2" and 4:"X \<sharp> exp3"
@@ -291,7 +291,7 @@ lemma Hoare_ASN_qtop4:
           X:== exp4
          \<lbrace>qtop P exp1 exp2 exp3 (VAR X)\<rbrace>" 
   using 1 2 3 4 unfolding subst_upd_var_def unrest_def 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop5:
   assumes 1:"weak_lens X" 
@@ -299,7 +299,7 @@ lemma Hoare_ASN_qtop5:
           X:== exp1
          \<lbrace>qtop P (VAR X) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>\<rbrace> " 
   using 1 unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop6:
   assumes 1:"weak_lens X" 
@@ -307,7 +307,7 @@ lemma Hoare_ASN_qtop6:
           X:== exp2
          \<lbrace>qtop P \<guillemotleft>exp1\<guillemotright> (VAR X) \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>\<rbrace>" 
   using 1  unfolding subst_upd_var_def   
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma Hoare_ASN_qtop7:
   assumes 1:"weak_lens X" 
@@ -315,7 +315,7 @@ lemma Hoare_ASN_qtop7:
           X:== exp3
          \<lbrace>qtop P \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR X) \<guillemotleft>exp4\<guillemotright>\<rbrace>" 
   using 1 unfolding subst_upd_var_def  
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 subsection {*Hoare for Sequential Composition*}
 
@@ -324,7 +324,7 @@ lemma Hoare_SEQ:
   and     2:"\<lbrace>Q\<rbrace>C2\<lbrace>R\<rbrace>"
   shows "\<lbrace>P\<rbrace>C1;C2\<lbrace>R\<rbrace>" 
   using 1 2 
-  by simp (transfer, (metis comp_apply))
+  by (transfer, (metis comp_apply))
 
 subsection {*Hoare for Conditional*}
 
@@ -333,15 +333,15 @@ lemma Hoare_COND:
   and     2:"\<lbrace> P \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>C2\<lbrace>Q\<rbrace>"
   shows "\<lbrace>P\<rbrace>IF b THEN C1 ELSE C2\<lbrace>Q\<rbrace>" 
   using 1 2 
-  by simp (transfer , metis (full_types, hide_lams))   
+  by (transfer , metis (full_types, hide_lams))   
 
 subsection {*Hoare for While-loop*}
 
 lemma Hoare_WHILE:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>P\<rbrace>"  
   shows "\<lbrace>P\<rbrace>WHILE b DO C OD\<lbrace>P \<and>\<^sub>e (\<not>\<^sub>eb)\<rbrace>" 
-  using 1 unfolding RelInv_def Rel_def W_def
-  apply simp apply transfer
+  using 1
+  apply transfer
 oops  
 
 
