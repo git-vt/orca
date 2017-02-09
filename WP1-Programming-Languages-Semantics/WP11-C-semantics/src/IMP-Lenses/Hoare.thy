@@ -336,6 +336,17 @@ lemma Hoare_WHILE[hoare_partial]:
   apply transfer
 oops  
 
+subsection {*Hoare for Assert*}
+lemma Hoare_ASSERT[hoare_partial]:
+  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
+  and     2:"\<lbrace> P \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
+  shows "\<lbrace>P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
+  using 1 2
+  by transfer simp
 
-
+lemma 
+  assumes 1:"weak_lens X"
+  shows"\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>) \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>" 
+  using 1 unfolding subst_upd_var_def apply transfer apply auto done
+ 
 end

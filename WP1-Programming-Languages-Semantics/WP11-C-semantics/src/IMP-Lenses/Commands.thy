@@ -62,6 +62,14 @@ where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else 
 abbreviation While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
 "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" (*emm...*)
 
+subsection{*Assert*}
+text {*In order to annotate our programs we introduce a new statement to our language.
+       The assert statement is a statement that do not change the state but assert an annotation
+       to the program. *}
+
+abbreviation assert :: "(bool ,'\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("assert {_} /(_)"  70) where
+"assert {bexp} C \<equiv> IF bexp THEN C ELSE SKIP" (*emm...*)
+
 notation (latex)
   SKIP  ("\<SKIP>") and
   Cond  ("\<IF> _ \<THEN> _ \<ELSE> _"  60) and
