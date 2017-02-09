@@ -166,7 +166,6 @@ lemma ASN13[small_step]:
   using 1 unfolding subst_upd_var_def 
   by transfer auto
 
-
 theorem ASN14:
   assumes "mwb_lens x" and "x \<sharp>\<sharp> \<guillemotleft>SOME \<sigma>. True\<guillemotright>"
   shows
@@ -191,12 +190,12 @@ text{*In this section we introduce the algebraic laws of programming related to 
  
 (*IF True*)
 lemma COND1[small_step]:
-  "(IF \<guillemotleft>True\<guillemotright> THEN C1 ELSE C2) = C1" 
+  "(IF TRUE THEN C1 ELSE C2) = C1" 
   by transfer simp
 
 (*IF False*)
 lemma COND2[small_step]:
-  "(IF \<guillemotleft>False\<guillemotright> THEN C1 ELSE C2) = C2" 
+  "(IF FALSE THEN C1 ELSE C2) = C2" 
   by transfer simp
 
 (*IF Idemp*)
@@ -228,7 +227,7 @@ lemma COND7[small_step]:
   by auto
 
 (*the rules COND8, COND9 and COND10 are related to non-deterministic choice between C1 and C2..
-  which is not yet supported by our anguage*)
+  which is not yet supported by our language*)
 
 (*IF distribute*)
 lemma COND11[small_step]:
@@ -242,7 +241,7 @@ theorem COND12[small_step]:
    (IF (IF bexp1 THEN bexp2 ELSE bexp3) THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)"
   by auto
 
-subsection {*Sequential laws Laws*}
+subsection {*Sequential Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the sequential
       composition of statements.*}
 
@@ -295,9 +294,9 @@ lemma W_mono: "mono (W b r)"
   by auto
 
 lemma WHILE3:
-  assumes 1:" \<not> b s"
-  shows "(WHILE b DO C OD) s = SKIP s"
-  using 1  apply transfer apply auto
+  assumes 1:" \<lceil>\<not>\<^sub>e b\<rceil>"
+  shows "(WHILE b DO C OD) = SKIP"
+  using 1   unfolding W_def apply transfer apply auto
   oops
 
 lemma D_While_If:

@@ -85,13 +85,14 @@ lemma unrest_id [unrest]:
 
 lemma eq_lift_expr_eq:
   "(x \<sharp>  u =\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> = v \<sigma>))"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_eq [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
   shows  "x \<sharp>   u =\<^sub>e v"
-  using 1 2 by (simp, transfer, auto)
+  using 1 2 
+  by (transfer, auto)
 
 lemma unrest_numeral [unrest]: 
   assumes 1: "x \<sharp> n"
@@ -103,51 +104,52 @@ lemma unrest_sgn [unrest]:
   assumes 1: "x \<sharp> u"
   shows "x \<sharp> SGN u"
   using 1
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_abs [unrest]:
   assumes 1: "x \<sharp> u"
   shows "x \<sharp> ABS u"
   using 1  
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma plus_lift_expr_eq: 
   "(x \<sharp> u +\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> + v \<sigma>))"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_plus [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
   shows "(x \<sharp> u +\<^sub>e v)"
   using assms
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_uminus [unrest]: 
   assumes 1: "x \<sharp> u"
   shows "x \<sharp> -\<^sub>e u"    
-  using 1 by simp (transfer, auto)
+  using 1 
+  by (transfer, auto)
 
 lemma minus_lift_expr_eq: 
   "(x \<sharp> u -\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> - v \<sigma>))"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_minus [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
   shows "x \<sharp> u -\<^sub>e v"
   using 1 2
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma times_lift_expr_eq: 
   "(x \<sharp>  u *\<^sub>e v)  = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> * v \<sigma>))"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_times [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v" 
   shows "x \<sharp> u *\<^sub>e v"
   using 1 2
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma devide_lift_expr_eq: 
   "(x \<sharp> (bop (op /) u v)) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> / v \<sigma>))"
@@ -168,24 +170,24 @@ lemma unrest_ulambda [unrest]:
 
 lemma mod_lift_expr_eq: 
   "(x \<sharp>  u mod\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> mod v \<sigma>))"
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_mod [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
   shows "x \<sharp> u mod\<^sub>e v"
   using 1 2
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma div_lift_expr_eq: 
   "(x \<sharp> u div\<^sub>e v) = (x \<sharp> (\<lambda>\<sigma>. u \<sigma> div v \<sigma>))" 
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 lemma unrest_div [unrest]: 
   assumes 1:"x \<sharp> u"
   and     2:"x \<sharp> v"
   shows "x \<sharp> u div\<^sub>e v"
   using 1 2
-  by simp (transfer, auto)
+  by (transfer, auto)
 
 end

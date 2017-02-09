@@ -131,39 +131,37 @@ lemma subst_qtop [states]: "\<sigma> \<dagger> qtop f u v w x =
   by (transfer, simp)
 
 lemma subst_plus [states]: "\<sigma> \<dagger> (x +\<^sub>e y) = (\<sigma> \<dagger> x) +\<^sub>e (\<sigma> \<dagger> y) "
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_times [states]: "\<sigma> \<dagger> (x *\<^sub>e y) =  (\<sigma> \<dagger> x) *\<^sub>e (\<sigma> \<dagger> y)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_minus [states]: "\<sigma> \<dagger> (x -\<^sub>e y) =  (\<sigma> \<dagger> x) -\<^sub>e (\<sigma> \<dagger> y)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_uminus [states]: "\<sigma> \<dagger> (-\<^sub>e x) = -\<^sub>e(\<sigma> \<dagger> x)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_mod [states]: "\<sigma> \<dagger> (x mod\<^sub>e y) = (\<sigma> \<dagger> x) mod\<^sub>e (\<sigma> \<dagger> y)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_div [states]: "\<sigma> \<dagger> (x div\<^sub>e y) = (\<sigma> \<dagger> x) div\<^sub>e (\<sigma> \<dagger> y)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma subst_eq_upred [states]: "\<sigma> \<dagger> (x =\<^sub>e y) = ((\<sigma> \<dagger> x) =\<^sub>e (\<sigma> \<dagger> y))"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma usubst_sgn [states]: "\<sigma> \<dagger> SGN x = SGN (\<sigma> \<dagger> x)"
-  by (simp, transfer, auto)
+  by (transfer, auto)
 
 lemma usubst_abs [states]: "\<sigma> \<dagger> ABS x  = ABS (\<sigma> \<dagger> x)"
-  by (simp, transfer, auto)
-
+  by (transfer, auto)
 
 lemma subst_zero [states]: "\<sigma> \<dagger> \<guillemotleft>0\<guillemotright> = \<guillemotleft>0\<guillemotright>"
   by transfer auto
 
 lemma subst_one [states]: "\<sigma> \<dagger> \<guillemotleft>1\<guillemotright> = \<guillemotleft>1\<guillemotright>"
   by transfer auto
-
 
 lemma subst_subst [states]: "\<sigma> \<dagger> \<rho> \<dagger> e = (\<rho> \<circ> \<sigma>) \<dagger> e"
   by (transfer, simp)

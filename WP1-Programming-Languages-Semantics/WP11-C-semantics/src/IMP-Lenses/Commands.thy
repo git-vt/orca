@@ -46,7 +46,7 @@ text{*In order to specify while loops we need a concept that refers to the resul
       of body of the loop. We call the result of the execution of the body the next state space.
       Rel is a function that takes a substitution on a state and apply it on a given init
       state. The resulting state from the application is the next state.
-      No we need to reason on the next state space to see if we continue the execution of the body
+      Now we need to reason on the next state space to see if we continue the execution of the body
       or we skip it.*}
 
 (*This definition is inspired by HOL/IMP/denotational.thy*)
