@@ -851,15 +851,16 @@ lemma Hoare_WHILE[hoare_partial]:
   shows "\<lbrace>P\<rbrace>WHILE b DO C OD\<lbrace>P \<and>\<^sub>e (\<not>\<^sub>eb)\<rbrace>" 
   using 1
   apply transfer
-oops  
+sorry  
 
 subsection {*Hoare for Assert*}
-lemma Hoare_ASSERT[hoare_partial]:
-  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
-  and     2:"\<lbrace> P \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
-  shows "\<lbrace>P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
-  using 1 2
-  by transfer simp
+lemma Hoare_ASSERT_WHILE[hoare_partial]:
+  assumes 1:"\<lbrace>P\<rbrace>SKIP\<lbrace>R\<rbrace>"
+  and     2:"\<lbrace>R \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
+  and     3:"\<lbrace>R \<and>\<^sub>e  b\<rbrace>C\<lbrace>R\<rbrace>"
+  shows "\<lbrace>P\<rbrace>assert {R} (WHILE b DO C OD)\<lbrace>Q\<rbrace>" 
+  using 1 2 3 apply (insert assms) using Hoare_WHILE[of P b C]
+oops
 
 lemma 
   assumes 1:"weak_lens X"
