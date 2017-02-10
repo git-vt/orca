@@ -146,18 +146,24 @@ lemma Hoare_ASN_uop1[hoare_partial]:
 lemma Hoare_ASN_uop2[hoare_partial]:
   assumes 1:"weak_lens X" and 2:"X \<sharp> exp"
   shows "\<lbrace>uop P exp\<rbrace>
-          X:== exp
-         \<lbrace>uop P exp\<rbrace>" 
+          X:== x
+         \<lbrace>uop P exp\<rbrace>"
   using 1 2 unfolding subst_upd_var_def unrest_def
   by (transfer, auto) 
 
 lemma Hoare_ASN_uop3[hoare_partial]:
   assumes 1:"weak_lens X"
   shows "\<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>
-          X:== \<guillemotleft>exp\<guillemotright>
-         \<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>" 
+          X:== x
+         \<lbrace>uop P \<guillemotleft>exp\<guillemotright>\<rbrace>"
   using 1 unfolding subst_upd_var_def unrest_def
-  by (transfer, auto) 
+  by (transfer, auto)
+
+lemma Hoare_ASN_uop4[hoare_partial]:
+  assumes 1:"weak_lens X" and 2: "X \<sharp> P"
+  shows "\<lbrace>P\<rbrace>X:== exp\<lbrace>P\<rbrace>"
+  using 1 2 unfolding subst_upd_var_def
+  by (transfer, auto)
 
 lemma Hoare_Const_test:
   assumes 1:"weak_lens X" and 2:"X \<bowtie> Y"
@@ -309,6 +315,517 @@ lemma Hoare_ASN_qtop7[hoare_partial]:
   using 1 unfolding subst_upd_var_def  
   by (transfer, auto)
 
+subsection \<open>Hoare for Assignment with Equality\<close>
+
+lemma Hoare_ASN_EQ1[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp"
+  shows "\<lbrace>P\<rbrace>
+          X :== exp
+         \<lbrace>(VAR X) =\<^sub>e exp\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ2[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>P\<rbrace>
+          X :== \<guillemotleft>exp\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+subsubsection \<open>Assignment of Unary Operations\<close>
+
+lemma Hoare_ASN_EQ_uop1[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp"
+  shows "\<lbrace>P\<rbrace>
+          X :== uop Q exp
+         \<lbrace>(VAR X) =\<^sub>e uop Q exp\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop2[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>exp\<^sub>2 =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== uop Q exp\<^sub>2
+         \<lbrace>(VAR X) =\<^sub>e uop Q exp\<^sub>1\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop3[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>P\<rbrace>
+          X :== uop Q \<guillemotleft>exp\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e uop Q \<guillemotleft>exp\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def unrest_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop4[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>exp\<^sub>1 =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== uop Q exp\<^sub>1
+         \<lbrace>(VAR X) =\<^sub>e uop Q \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop5[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" (* Weird that the unrest is required *)
+  shows "\<lbrace>exp\<^sub>1 =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== uop Q \<guillemotleft>exp\<^sub>2\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e uop Q exp\<^sub>1\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop6[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>\<guillemotleft>exp\<^sub>1\<guillemotright> =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== uop Q \<guillemotleft>exp\<^sub>1\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e uop Q exp\<^sub>2\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_uop7[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>\<guillemotleft>exp\<^sub>1\<guillemotright> =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== uop Q exp\<^sub>2
+         \<lbrace>(VAR X) =\<^sub>e uop Q \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+subsubsection \<open>Assignment of Binary Operations\<close>
+
+lemma Hoare_ASN_EQ_bop1[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== bop Q (VAR X) exp\<^sub>2
+         \<lbrace>(VAR X) =\<^sub>e bop Q exp\<^sub>1 exp\<^sub>2\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop2[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== bop Q (VAR X) exp\<^sub>2
+         \<lbrace>(VAR X) =\<^sub>e bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop3[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== bop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e bop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop4[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== bop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop5[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== bop Q exp\<^sub>1 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e bop Q exp\<^sub>1 exp\<^sub>2\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop6[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== bop Q exp\<^sub>1 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e bop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop7[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_bop8[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e bop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+subsubsection \<open>Assignment of Ternary Operations\<close>
+
+lemma Hoare_ASN_EQ_trop1[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== trop Q (VAR X) exp\<^sub>2 exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop2[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== trop Q (VAR X) exp\<^sub>2 exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop3[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== trop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop4[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== trop Q (VAR X) exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop5[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== trop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop6[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== trop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop7[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== trop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop8[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== trop Q exp\<^sub>1 (VAR X) exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop9[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X) exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop10[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== trop Q exp\<^sub>1 (VAR X) exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop11[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== trop Q exp\<^sub>1 (VAR X) \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop12[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X) exp\<^sub>3
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop13[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== trop Q exp\<^sub>1 (VAR X) \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop14[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X) \<guillemotleft>exp\<^sub>3\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop15[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== trop Q exp\<^sub>1 exp\<^sub>2 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop16[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop17[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop18[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>
+          X :== trop Q exp\<^sub>1 exp\<^sub>2 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop19[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop20[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>
+          X :== trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_trop21[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>
+          X :== trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e trop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+subsubsection \<open>Assignment of Quaternary Operations\<close>
+text \<open>There are, unfortunately, too many combinations of const/non-const lemmas for quaternary
+operations to reasonably list here, but a decent number of possibilities have been included.\<close>
+
+lemma Hoare_ASN_EQ_qtop1[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== qtop Q (VAR X) exp\<^sub>2 exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop2[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== qtop Q (VAR X) exp\<^sub>2 exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop3[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== qtop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop4[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== qtop Q (VAR X) exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop5[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>1\<rbrace>
+          X :== qtop Q (VAR X) exp\<^sub>2 exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop6[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>1\<guillemotright>\<rbrace>
+          X :== qtop Q (VAR X) \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop7[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== qtop Q exp\<^sub>1 (VAR X) exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop8[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X) exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop9[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== qtop Q exp\<^sub>1 (VAR X) exp\<^sub>3 exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop10[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== qtop Q exp\<^sub>1 (VAR X) \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop11[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>2\<rbrace>
+          X :== qtop Q exp\<^sub>1 (VAR X) exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop12[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>2\<guillemotright>\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> (VAR X) \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop13[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 (VAR X) exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop14[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 (VAR X) exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop15[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X) exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop16[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 (VAR X) exp\<^sub>4
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop17[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>3\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 (VAR X) \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop18[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>3\<guillemotright>\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> (VAR X) \<guillemotleft>exp\<^sub>4\<guillemotright>
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop19[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>4\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop20[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>4\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> exp\<^sub>2 exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop21[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>3" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>4\<rbrace>
+          X :== qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 \<guillemotleft>exp\<^sub>2\<guillemotright> exp\<^sub>3 exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop22[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>4"
+  shows "\<lbrace>(VAR X) =\<^sub>e exp\<^sub>4\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 \<guillemotleft>exp\<^sub>3\<guillemotright> exp\<^sub>4\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop23[hoare_partial]:
+  assumes "weak_lens X" and "X \<sharp> exp\<^sub>1" and "X \<sharp> exp\<^sub>2" and "X \<sharp> exp\<^sub>3"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>
+          X :== qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q exp\<^sub>1 exp\<^sub>2 exp\<^sub>3 \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+lemma Hoare_ASN_EQ_qtop24[hoare_partial]:
+  assumes "weak_lens X"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>
+          X :== qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> (VAR X)
+         \<lbrace>(VAR X) =\<^sub>e qtop Q \<guillemotleft>exp\<^sub>1\<guillemotright> \<guillemotleft>exp\<^sub>2\<guillemotright> \<guillemotleft>exp\<^sub>3\<guillemotright> \<guillemotleft>exp\<^sub>4\<guillemotright>\<rbrace>"
+  using assms unfolding subst_upd_var_def
+  by transfer simp
+
+(* We will use match_tac to enhance performance for the ASN_EQ lemmas, apparently, and eventually
+want to move beyond just using (VAR X) =\<^sub>e [whatever] as the precondition. *)
+
 subsection {*Hoare for Sequential Composition*}
 
 lemma Hoare_SEQ[hoare_partial]:
@@ -347,7 +864,7 @@ lemma Hoare_ASSERT[hoare_partial]:
 lemma 
   assumes 1:"weak_lens X"
   shows"\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>) \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>" 
-  using 1 unfolding subst_upd_var_def apply transfer apply auto done
+  using 1 unfolding subst_upd_var_def by transfer auto
 
 lemma
   assumes 1:"weak_lens X"  

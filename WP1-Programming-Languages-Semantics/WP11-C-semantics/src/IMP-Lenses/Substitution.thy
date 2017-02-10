@@ -94,7 +94,8 @@ lemma usubst_upd_comm2:
   by (simp add: lens_indep_comm)
 
 lemma usubst_upd_var_id [states]: 
-  "vwb_lens x \<Longrightarrow> [x \<mapsto>\<^sub>s imp_var x] = id"
+  assumes "vwb_lens x"
+  shows "[x \<mapsto>\<^sub>s imp_var x] = id"
   using assms unfolding subst_upd_var_def
   by transfer (rule ext,auto)
 
