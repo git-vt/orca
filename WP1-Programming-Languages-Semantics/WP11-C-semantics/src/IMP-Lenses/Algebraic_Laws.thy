@@ -32,8 +32,8 @@ lemma ASN_test:
   by transfer auto
 
 lemma ASN_cancel:
-  assumes 1:"weak_lens Var" 
-  shows "(Var :== Expr)\<dagger> (VAR Var) = Expr"
+  assumes 1:"weak_lens var" 
+  shows "(var :== expr)\<dagger> (VAR var) = expr"
   using 1 unfolding subst_upd_var_def
   by transfer auto
 
@@ -211,7 +211,7 @@ lemma COND4[small_step]:
 
 (*IF inverse*)
 lemma COND5[small_step]:
-  "(IF P THEN C1 ELSE C2) = (IF uop Not P THEN C2 ELSE C1)" 
+  "(IF P THEN C1 ELSE C2) = (IF \<not>\<^sub>e P THEN C2 ELSE C1)" 
   by transfer auto
 
 (*IF unfold nested cond*)

@@ -356,7 +356,7 @@ lemma Hoare_ASN_EQ_uop3[hoare_partial]:
   shows "\<lbrace>P\<rbrace>
           X :== uop Q \<guillemotleft>exp\<guillemotright>
          \<lbrace>(VAR X) =\<^sub>e uop Q \<guillemotleft>exp\<guillemotright>\<rbrace>"
-  using assms unfolding subst_upd_var_def unrest_def
+  using assms unfolding subst_upd_var_def
   by transfer simp
 
 lemma Hoare_ASN_EQ_uop4[hoare_partial]:
@@ -375,7 +375,7 @@ lemma Hoare_ASN_EQ_uop5[hoare_partial]:
   using assms unfolding subst_upd_var_def
   by transfer simp
 
-lemma Hoare_ASN_EQ_uop6[hoare_partial]:
+lemma Hoare_ASN_EQ_uop6[hoare_partial]: (*legacy*)
   assumes "weak_lens X" and "X \<sharp> exp\<^sub>2"
   shows "\<lbrace>\<guillemotleft>exp\<^sub>1\<guillemotright> =\<^sub>e exp\<^sub>2\<rbrace>
           X :== uop Q \<guillemotleft>exp\<^sub>1\<guillemotright>
@@ -864,7 +864,8 @@ lemma Hoare_ASSERT[hoare_partial]:
 lemma 
   assumes 1:"weak_lens X"
   shows"\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>) \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>" 
-  using 1 unfolding subst_upd_var_def by transfer auto
+  using 1 unfolding subst_upd_var_def 
+  by transfer auto
 
 lemma
   assumes 1:"weak_lens X"  
