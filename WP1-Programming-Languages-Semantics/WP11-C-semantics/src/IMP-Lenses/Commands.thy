@@ -68,7 +68,8 @@ text {*In order to annotate our programs we introduce a new statement to our lan
        to the program. *}
 
 abbreviation assert :: "(bool ,'\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("assert {_} /(_)"  70) where
-"assert {bexp} C \<equiv> IF bexp THEN C ELSE SKIP" (*emm...*)
+"assert {bexp} C \<equiv> IF bexp THEN C ELSE SKIP" (*emm... This means that whenever the assertions is
+                                                False the execution of the program is stoped*)
 
 notation (latex)
   SKIP  ("\<SKIP>") and

@@ -348,5 +348,14 @@ lemma
   assumes 1:"weak_lens X"
   shows"\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>) \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>" 
   using 1 unfolding subst_upd_var_def apply transfer apply auto done
- 
+
+lemma
+  assumes 1:"weak_lens X"  
+  shows "\<lbrace>uop P \<guillemotleft>exp\<guillemotright> \<and>\<^sub>e (P \<longrightarrow>\<^sub>e Q)\<rbrace>
+          X:== (uop Q \<guillemotleft>exp\<guillemotright>)
+         \<lbrace>uop P (VAR X)\<rbrace>" 
+  using 1 unfolding subst_upd_var_def    
+  apply transfer apply auto
+  oops
+
 end
