@@ -38,7 +38,7 @@ lemma Hoare_test4:
   and     4:"X \<bowtie> Y" and 5:"X \<bowtie> R" and 6:"Y\<bowtie> R"
   shows "\<lceil>(VAR X) =\<^sub>e \<guillemotleft>x\<guillemotright> \<and>\<^sub>e (VAR Y) =\<^sub>e \<guillemotleft>y\<guillemotright>  \<longrightarrow>\<^sub>e
          (R:== (VAR X) ; X :== (VAR Y); Y:== (VAR R))\<dagger>((VAR X) =\<^sub>e\<guillemotleft>y\<guillemotright> \<and>\<^sub>e (VAR Y) =\<^sub>e \<guillemotleft>x\<guillemotright>)\<rceil>"
-  using assms unfolding subst_upd_var_def id_def lens_indep_def 
+  using assms unfolding subst_upd_var_def id_def lens_indep_def
   by transfer auto
 
 subsection {*Hoare triple definition*}
@@ -889,21 +889,31 @@ subsection \<open>Tactics for Theorem Proving\<close>
 text \<open>The tactics below are used to prove the validity of complex Hoare triples/expressions
 semi-automatically.\<close>
 
-lemmas subst_exp_thms = Const.abs_eq bop.abs_eq drop_bexp.abs_eq
+lemmas subst_exp_thms = Const.abs_eq bop.abs_eq drop_bexp.abs_eq subst.abs_eq uop.abs_eq
+(* subst_upd_var_def lens_indep_def *)
+
 ML \<open>
-fun VCG_match_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
+fun vcg_match_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
                          [match_tac ctxt @{thms vcg}]);
-fun VCG_assms_insert_tac ctxt = (ALLGOALS) (FIRST'
+fun vcg_assms_insert_tac ctxt = (ALLGOALS) (FIRST'
                                 [Method.insert_tac ctxt (Assumption.all_prems_of ctxt)]);
-fun VCG_simp_tac ctxt = asm_full_simp_tac ctxt 1;
-fun VCG_subst_exp_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
+fun vcg_simp_tac ctxt = asm_full_simp_tac ctxt 1;
+fun vcg_simp_loop_tac ctxt = (ALLGOALS) (REPEAT o CHANGED o TRY o FIRST'
+                              [asm_full_simp_tac ctxt]);
+fun vcg_subst_exp_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
                              [EqSubst.eqsubst_tac ctxt [0] @{thms subst_exp_thms}]);
 
-val VCG_tac = VCG_match_tac THEN'
-              VCG_assms_insert_tac THEN'
-              VCG_simp_tac THEN'
-              VCG_subst_exp_tac THEN'
-              VCG_simp_tac;
+val vcg_tac = vcg_match_tac THEN'
+              vcg_assms_insert_tac THEN'
+              vcg_simp_tac THEN'
+              vcg_subst_exp_tac THEN'
+              vcg_simp_loop_tac;
+
+val vcg_tacx = vcg_match_tac THEN'
+              vcg_assms_insert_tac THEN'
+              vcg_simp_tac THEN'
+              vcg_subst_exp_tac THEN'
+              vcg_simp_tac;
 \<close>
 
 end
