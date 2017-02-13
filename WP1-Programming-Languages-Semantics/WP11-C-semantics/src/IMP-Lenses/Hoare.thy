@@ -855,10 +855,7 @@ lemma Hoare_WHILE[hoare_partial,vcg]:
 sorry  
 
 subsection {*Hoare for Assert*}
-<<<<<<< .mine
 
-||||||| .r120
-=======
 lemma Hoare_ASSERT[hoare_partial]:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
   and     2:"\<lbrace> P \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
@@ -866,7 +863,19 @@ lemma Hoare_ASSERT[hoare_partial]:
   using 1 2
   by hoare_solver
 
->>>>>>> .r125
+lemma Hoare_ASSERT1[hoare_partial]:
+  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
+  shows "\<lbrace>b \<and>\<^sub>e P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
+  using 1 
+  by hoare_solver
+
+lemma Hoare_GUARANTEE[hoare_partial]:
+  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
+  and     2:"\<lceil>b\<rceil>"
+  shows "\<lbrace>P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
+  using 1 2
+  by hoare_solver
+
 lemma Hoare_ASSERT_WHILE[hoare_partial]:
   assumes 1:"\<lbrace>P\<rbrace>SKIP\<lbrace>R\<rbrace>"
   and     2:"\<lbrace>R \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
