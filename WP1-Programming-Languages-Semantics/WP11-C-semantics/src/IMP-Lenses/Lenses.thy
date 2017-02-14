@@ -1128,8 +1128,18 @@ text {* We require that range type of a lens function has cardinality of at leas
 definition fun_lens :: "'a \<Rightarrow> ('b \<Longrightarrow> ('a \<Rightarrow> 'b))" where
 [lens_defs]: "fun_lens x = \<lparr> lens_get = (\<lambda> f. f x), lens_put = (\<lambda> f u. f(x := u)) \<rparr>"
 
-lemma fun_wb_lens: "wb_lens (fun_lens x)"
+lemma fun_weak_lens: "weak_lens (fun_lens k)" (*legacy:I add this for match purpose*)
   by (unfold_locales, simp_all add: fun_lens_def)
+
+lemma fun_wb_lens: "wb_lens (fun_lens x)" (*legacy:I add this for match purpose*)
+  by (unfold_locales, simp_all add: fun_lens_def)
+
+lemma fun_mwb_lens: "mwb_lens (fun_lens k)" (*legacy:I add this for match purpose*)
+  by (unfold_locales, simp_all add: fun_lens_def)
+
+lemma fun_vwb_lens: "vwb_lens (fun_lens k)"
+  by (unfold_locales, simp_all add: fun_lens_def)
+
 lemma fun_lens_indep:
   "x \<noteq> y \<longrightarrow> fun_lens x \<bowtie> fun_lens y  "
   unfolding  fun_lens_def
@@ -1310,5 +1320,6 @@ term"\<forall> X Y. \<not>(X \<approx>\<^sub>L Y) \<longrightarrow> get\<^bsub>X
 
 
 term"\<forall> X Y. \<not> (X \<bowtie> Y) \<longrightarrow> put\<^bsub>X\<^esub> \<sigma> val = put\<^bsub>Y\<^esub> \<sigma> val"
+
 
 end
