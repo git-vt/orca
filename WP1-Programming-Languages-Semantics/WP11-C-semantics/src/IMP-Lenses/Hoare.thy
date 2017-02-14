@@ -1611,6 +1611,43 @@ lemma
   apply hoare_solver
   oops
 
+term "m :== ((VAR m) +\<^sub>e \<guillemotleft>1\<guillemotright>) ; R :== ((VAR m)  +\<^sub>e VAR n)"
+
+lemma 
+  assumes "mwb_lens m"
+  shows "\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+          \<langle>m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>)\<rangle>\<^sub>s m =\<^sub>e \<guillemotleft>3::int\<guillemotright>\<rceil>"
+  using assms unfolding subst_upd_var_def 
+  by hoare_solver
+
+lemma 
+  assumes "mwb_lens m" and "m \<bowtie> R" and "m \<bowtie> n"
+  shows "\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+          \<langle>m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR m)  +\<^sub>e VAR n)\<rangle>\<^sub>s m =\<^sub>e \<guillemotleft>3::int\<guillemotright>\<rceil>"
+  using assms unfolding subst_upd_var_def lens_indep_def
+  by transfer auto     
+lemma 
+  assumes "mwb_lens m" and "mwb_lens R" and "m \<bowtie> R" and "m \<bowtie> n"
+  shows "\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+          \<langle>m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR m)  +\<^sub>e VAR n)\<rangle>\<^sub>s R =\<^sub>e \<guillemotleft>3::int\<guillemotright>\<rceil>"
+  using assms unfolding subst_upd_var_def lens_indep_def
+  by transfer auto   
+  
+lemma side_effect1:
+  assumes "mwb_lens m" and "mwb_lens R" and "mwb_lens tmp" and 
+  "m \<bowtie> R" and "m \<bowtie> n"  and "m \<bowtie> tmp" and "R \<bowtie> tmp" and "n \<bowtie> tmp"
+  shows "\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+          \<langle>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s R =\<^sub>e \<guillemotleft>2::int\<guillemotright>\<rceil>"
+  using assms unfolding subst_upd_var_def lens_indep_def
+  by transfer auto
+
+lemma side_effect2:  
+  assumes "mwb_lens m" and "mwb_lens R" and "m \<bowtie> R" and "m \<bowtie> n" 
+  shows"\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+        \<langle>[m \<mapsto>\<^sub>s ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>), R \<mapsto>\<^sub>s ((VAR m) +\<^sub>e VAR n)]\<rangle>\<^sub>s R=\<^sub>e \<guillemotleft>2::int\<guillemotright>\<rceil>"
+  using assms unfolding subst_upd_var_def lens_indep_def
+  by transfer auto
+
 term "\<forall>s t. C s= t \<longrightarrow> s \<in> Normal ` P \<longrightarrow> t \<notin> Fault ` F  
                       \<longrightarrow>  t \<in>  Normal ` Q \<union> Abrupt ` A"
 end
