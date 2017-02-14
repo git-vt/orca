@@ -209,5 +209,4 @@ lemma unrest_subst [unrest]:
   using assms unfolding unrest_usubst_def
   by (transfer, simp)
 
-
 end
