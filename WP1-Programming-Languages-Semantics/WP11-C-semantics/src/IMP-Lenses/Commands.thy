@@ -71,6 +71,11 @@ abbreviation assert :: "(bool ,'\<alpha>) expr \<Rightarrow> '\<alpha> states \<
 "assert {bexp} C \<equiv> IF bexp THEN C ELSE SKIP" (*emm... This means that whenever the assertions is
                                                 False the execution of the program is stoped*)
 
+abbreviation try_catch :: "'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("TRY (_) CATCH /(_)"  70) where
+"try_catch C1 C2 \<equiv> undefined"
+
+abbreviation "block \<equiv> undefined"
+
 notation (latex)
   SKIP  ("\<SKIP>") and
   Cond  ("\<IF> _ \<THEN> _ \<ELSE> _"  60) and

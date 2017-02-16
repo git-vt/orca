@@ -33,12 +33,6 @@ val vcg_tacx = vcg_match_tac THEN'
               vcg_simp_tac THEN'
               vcg_subst_exp_tac THEN'
               vcg_simp_tac;
-<<<<<<< .mine
-||||||| .r144
-\<close> 
-=======
-\<close>
->>>>>>> .r147
 
 fun vcg_subst_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
                          [EqSubst.eqsubst_tac ctxt [0] @{thms vcg}]);
