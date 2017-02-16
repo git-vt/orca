@@ -2,7 +2,7 @@ section \<open>Verification Condition Testing\<close>
 
 theory VCG_Tests
   imports Hoare
-begin
+begin                  
 
 subsection \<open>Tactics for Theorem Proving\<close>
 text \<open>The tactics below are used to prove the validity of complex Hoare triples/expressions
@@ -33,8 +33,32 @@ val vcg_tacx = vcg_match_tac THEN'
               vcg_simp_tac THEN'
               vcg_subst_exp_tac THEN'
               vcg_simp_tac;
+<<<<<<< .mine
+||||||| .r144
+\<close> 
+=======
 \<close>
+>>>>>>> .r147
 
+fun vcg_subst_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
+                         [EqSubst.eqsubst_tac ctxt [0] @{thms vcg}]);
+
+fun se_subst_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
+                         [EqSubst.eqsubst_tac ctxt [0] @{thms symbolic_exec_subst}]);
+ \<close> 
+
+lemma 
+  "\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>(var:== exp ; IF bexp THEN C1 ELSE C2)\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
+ 
+  apply (tactic "se_subst_tac @{context}")
+  prefer 3
+
+  apply (tactic \<open>vcg_tac @{context}\<close>)
+oops
+
+lemma "\<lbrace>P\<rbrace>SKIP ; C \<lbrace>Q\<rbrace>"
+  apply (tactic "se_subst_tac @{context}")
+oops
 lemma
   assumes "weak_lens X"
   shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
