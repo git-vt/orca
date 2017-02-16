@@ -1,23 +1,26 @@
 section {*Algebraic laws of programming*}
 
 text{*In this section we introduce the semantic rules related to the different
-      statements of IMP. In the literature this also known as the algebraic laws of programming.*}
+      statements of IMP. In the literature this also known as the algebraic laws of programming.
+      In our framework we will use these rules in order to optimize a given program written in our 
+      language, and this before any deductive proof verification activity or formal testing.*}
 
 theory Algebraic_Laws
 imports Commands
 begin
 
-named_theorems small_step
+named_theorems small_step(*legacy*) and  symbolic_exec_subst
+ 
 
 subsection {*SKIP Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-lemma SKI0 [small_step]:
+lemma SKI0 [symbolic_exec_subst]:
   "SKIP ; C = C"
   by auto
 
-lemma SKI1[small_step]:
+lemma SKI1[symbolic_exec_subst]:
   "C ; SKIP = C"
   by auto
 
@@ -56,8 +59,12 @@ lemma ASN3[small_step]:
   by transfer auto 
 
 text {*In the sequel we find assign laws which are in Simon Foster paper*}
+text {*The rules in the sequel are too generic. 
+       We can not use these rules naively in an automatic tactic for optimizing the program. 
+       To be applied to a given program this rule needs some knowledge, eg., annotations
+       saying that @{text "var \<sharp> exp2"} is true.*}
 
-lemma ASN4[small_step]:
+lemma ASN4: 
   assumes 1: "mwb_lens var" 
   and  2: "var \<sharp> exp2" (*Thats why he needs the concept of unrest in his theory*)
   shows "(var:== exp1 ; var:== exp2) = var:== exp2" 
@@ -74,7 +81,74 @@ proof (rule ext)
     by (simp add: subst.abs_eq) 
 qed
 
-lemma ASN5[small_step]:
+lemma ASN4_uop1[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (uop F (VAR var))) = (var:== (uop F exp1))"
+  using 1  unfolding subst_upd_var_def unrest_def
+  by transfer auto 
+
+lemma ASN4_bop1: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2"
+  shows "(var:== exp1 ; var:== (bop bp (VAR var) exp2)) = (var:== (bop bp exp1 exp2))"
+  using 1 2  unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_bop2: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2"
+  shows "(var:== exp1 ; var:== (bop bp exp2 (VAR var))) = (var:== (bop bp exp2 exp1))"
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_trop1: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3"
+  shows "(var:== exp1 ; var:== (trop tp (VAR var) exp2 exp3)) = 
+         (var:== (trop tp exp1 exp2 exp3))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_trop2: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3"
+  shows "(var:== exp1 ; var:== (trop tp exp2 (VAR var) exp3)) = 
+         (var:== (trop tp exp2 exp1 exp3))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_trop3: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3"
+  shows "(var:== exp1 ; var:== (trop tp exp2 exp3 (VAR var))) = 
+         (var:== (trop tp exp2 exp3 exp1))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_qtop1: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3" and 4:"var \<sharp> exp4"
+  shows "(var:== exp1 ; var:== (qtop tp (VAR var) exp2 exp3 exp4)) = 
+         (var:== (qtop tp exp1 exp2 exp3 exp4))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_qtop2: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3" and 4:"var \<sharp> exp4"
+  shows "(var:== exp1 ; var:== (qtop tp exp2 (VAR var) exp3 exp4)) = 
+         (var:== (qtop tp exp2 exp1 exp3 exp4))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_qtop3: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3" and 4:"var \<sharp> exp4"
+  shows "(var:== exp1 ; var:== (qtop tp exp2 exp3 (VAR var) exp4)) = 
+         (var:== (qtop tp exp2 exp3 exp1 exp4))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN4_qtop4: 
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp2" and 3:"var \<sharp> exp3" and 4:"var \<sharp> exp4"
+  shows "(var:== exp1 ; var:== (qtop tp exp2 exp3 exp4 (VAR var))) = 
+         (var:== (qtop tp exp2 exp3 exp4 exp1))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN5:
   assumes  1: "var1 \<sharp> exp2"
   and  2: "var2 \<sharp> exp1"
   and  3: "var1 \<bowtie> var2"
@@ -103,26 +177,20 @@ proof (rule ext)
     unfolding subst_upd_var_def by transfer simp
 qed
 
-lemma ASN6[small_step]:
+lemma ASN6[symbolic_exec_subst]:
   "(var:== exp ; IF bexp THEN C1 ELSE C2) = 
    (IF ([var \<mapsto>\<^sub>s exp] \<dagger> bexp) THEN (var:== exp ; C1) ELSE (var:== exp ; C2))" 
   by transfer auto
 
 text {*In the sequel we find assignment laws proposed by Hoare*}
 
-lemma ASN7 [small_step]:
-  assumes 1: "mwb_lens var"
-  shows"(var:== exp ; var:== (uop F (VAR var))) = (var:== (uop F exp))"
-  using 1 unfolding subst_upd_var_def 
-  by transfer auto
-
-lemma ASN8 [small_step]:
+lemma ASN8:
   assumes 1: "vwb_lens var"
   shows "(var:== VAR var) = SKIP"
-  using 1 unfolding subst_upd_var_def
-  by transfer auto
+  using 1 usubst_upd_var_id [of var]
+  by simp
 
-lemma ASN9[small_step]:
+lemma ASN9:
   assumes 1: "mwb_lens var1"
   and     2: "vwb_lens var2"
   and     3: "var1 \<bowtie> var2"
@@ -145,20 +213,83 @@ lemma ASN10[small_step]:
   using 1 ASN8[of var2]
   by simp 
 
-lemma ASN11[small_step]:
+lemma ASN11_uop[symbolic_exec_subst]:
   assumes 1: "weak_lens var"
   shows "(var:== exp ; IF (uop F (VAR var)) THEN C1 ELSE C2) = 
          (IF (uop F exp) THEN (var:== exp ; C1) ELSE (var:== exp ; C2))"
   using 1 unfolding subst_upd_var_def 
   by transfer auto 
 
-lemma ASN12[small_step]:
+lemma ASN11_bop1:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2"
+  shows "(var:== exp ; IF (bop bp (VAR var) exp2) THEN C1 ELSE C2) = 
+         (IF (bop bp exp exp2) THEN (var:== exp ; C1) ELSE (var:== exp ; C2))"
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_bop2:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2"
+  shows "(var:== exp1 ; IF (bop bp exp2 (VAR var)) THEN C1 ELSE C2) = 
+         (IF (bop bp exp2 exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_trop1:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3"
+  shows "(var:== exp ; IF (trop tp (VAR var) exp2 exp3) THEN C1 ELSE C2) = 
+         (IF (trop tp exp exp2 exp3) THEN (var:== exp ; C1) ELSE (var:== exp ; C2))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_trop2:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3"
+  shows "(var:== exp1 ; IF (trop tp exp2 (VAR var) exp3) THEN C1 ELSE C2) = 
+         (IF (trop tp exp2 exp1 exp3) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_trop3:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3"
+  shows "(var:== exp1 ; IF (trop bp exp2 exp3 (VAR var)) THEN C1 ELSE C2) = 
+         (IF (trop bp exp2 exp3 exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_qtop1:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3" and 4: "var \<sharp> exp4"
+  shows "(var:== exp1 ; IF (qtop tp (VAR var) exp2 exp3 exp4) THEN C1 ELSE C2) = 
+         (IF (qtop tp exp1 exp2 exp3  exp4) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_qtop2:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3" and 4:"var \<sharp> exp4"
+  shows "(var:== exp1 ; IF (qtop tp exp2 (VAR var) exp3 exp4) THEN C1 ELSE C2) = 
+         (IF (qtop tp exp2 exp1 exp3 exp4) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_qtop3:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3" and 4: "var \<sharp> exp4"
+  shows "(var:== exp1 ; IF (qtop bp exp2 exp3 (VAR var) exp4) THEN C1 ELSE C2) = 
+         (IF (qtop bp exp2 exp3 exp1  exp4) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN11_qtop4:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3" and 4: "var \<sharp> exp4"
+  shows "(var:== exp1 ; IF (qtop bp exp2 exp3 exp4 (VAR var)) THEN C1 ELSE C2) = 
+         (IF (qtop bp exp2 exp3  exp4 exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 2 3 4 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN12[symbolic_exec_subst]:
   "(IF bexp THEN (var:== exp1) ELSE (var:== exp2)) = 
    (var :== (trop If bexp exp1 exp2))" 
    unfolding subst_upd_var_def 
    by transfer auto 
 
-lemma ASN13[small_step]:
+lemma ASN13_uop[symbolic_exec_subst]:
   assumes 1: "mwb_lens var"
   shows "((var:== E); 
           IF uop F (VAR var) THEN (var:== (uop F (VAR var))) ELSE (var:== (uop G (VAR var)))) =
@@ -166,6 +297,111 @@ lemma ASN13[small_step]:
   using 1 unfolding subst_upd_var_def 
   by transfer auto
 
+lemma ASN13_bop:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp"
+  shows "((var:== E); 
+          IF bop F exp (VAR var)  THEN (var:== (bop F exp (VAR var))) ELSE (var:== (bop G exp (VAR var)))) =
+         (var:== (trop If (bop F exp E) (bop F exp E) (bop G exp E)))" 
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_bop1:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp"
+  shows "((var:== E); 
+          IF bop F (VAR var) exp THEN (var:== (bop F (VAR var) exp)) ELSE (var:== (bop G (VAR var) exp))) =
+         (var:== (trop If (bop F E exp) (bop F E exp) (bop G E exp)))" 
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto 
+
+lemma ASN13_bop2:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF bop F (VAR var) exp1 THEN (var:== (bop F (VAR var) exp1)) ELSE (var:== (bop G (VAR var) exp2))) =
+         (var:== (trop If (bop F E exp1) (bop F E exp1) (bop G E exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_bop3:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp"
+  shows "((var:== E); 
+          IF bop F exp (VAR var)  THEN (var:== (bop F exp (VAR var))) ELSE (var:== (bop G exp (VAR var)))) =
+         (var:== (trop If (bop F exp E) (bop F exp E) (bop G exp E)))" 
+  using 1 2 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_bop4:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF bop F (VAR var) exp1 THEN (var:== (bop F (VAR var) exp1)) ELSE (var:== (bop G exp2 (VAR var)))) =
+         (var:== (trop If (bop F E exp1) (bop F E exp1) (bop G exp2 E)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_bop5:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF bop F exp1 (VAR var) THEN (var:== (bop F exp1 (VAR var))) ELSE (var:== (bop G (VAR var) exp2))) =
+         (var:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G E exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_bop6:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF bop F exp1 (VAR var) THEN (var:== (bop F exp1 (VAR var))) ELSE (var:== (bop G exp2 (VAR var)))) =
+         (var:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G exp2 E)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F exp1 exp2 (VAR var)  THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp1 exp2 (VAR var)))) =
+         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop1:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp1 (VAR var) exp2))) =
+         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop2:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F (VAR var)  exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var)  exp1 exp2))) =
+         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto 
+
+lemma ASN13_trop3:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F exp1 exp2 (VAR var) THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp3 exp4 (VAR var)))) =
+         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop4:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp3 (VAR var) exp4))) =
+         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop5:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F (VAR var) exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var) exp3 exp4))) =
+         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+(*To be continued*)
 theorem ASN14:
   assumes "mwb_lens x" and "x \<sharp>\<sharp> \<guillemotleft>SOME \<sigma>. True\<guillemotright>"
   shows
@@ -397,7 +633,247 @@ proof -
     using f3 sorry (* > 1.0 s, timed out *)
 qed
   
+subsection {*Laws used by tactics*}
+text {*In this section we will design a set of rules that can be used to automatise 
+       the process of program optimization.*}
+
+subsubsection {*Assignment rules*}
+text {*We will create a variant rule for @{thm ASN4}. The variant rule in the sequel
+       can be applied naively in an automatic tactic used for optimizing the program.*}
 
 
+lemma ASN4_SE1[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var" 
+  shows "(var:== exp1 ; var:== \<guillemotleft>exp2\<guillemotright>) = (var:== \<guillemotleft>exp2\<guillemotright>)"
+  using 1 unrest_const [of var exp2] ASN4 [of var]
+  by simp
 
+lemma ASN4_SE2[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var" 
+  shows "(var:== exp1 ; var:== (bop bp (VAR var) \<guillemotleft>exp2\<guillemotright>)) = (var:== (bop bp exp1 \<guillemotleft>exp2\<guillemotright>))"
+  using 1 unrest_const [of var exp2] ASN4_bop1[of var]
+  by auto
+
+lemma ASN4_SE3[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var" 
+  shows "(var:== exp1 ; var:== (bop bp \<guillemotleft>exp2\<guillemotright> (VAR var))) = (var:== (bop bp \<guillemotleft>exp2\<guillemotright> exp1 ))"
+  using 1 unrest_const [of var exp2] ASN4_bop2[of var]
+  by auto
+
+lemma ASN4_SE4[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (trop tp (VAR var) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright>)) = 
+         (var:== (trop tp exp1 \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright>))"
+  using 1 unrest_const [of var exp2] unrest_const [of var exp3] ASN4_trop1[of var]
+  by auto
+
+lemma ASN4_SE5[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (trop tp \<guillemotleft>exp2\<guillemotright> (VAR var) \<guillemotleft>exp3\<guillemotright>)) = 
+         (var:== (trop tp \<guillemotleft>exp2\<guillemotright> exp1 \<guillemotleft>exp3\<guillemotright>))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] ASN4_trop2[of var]
+  by auto
+
+lemma ASN4_SE6[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (trop tp \<guillemotleft>exp2\<guillemotright>  \<guillemotleft>exp3\<guillemotright> (VAR var))) = 
+         (var:== (trop tp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> exp1))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] ASN4_trop3[of var]
+  by auto
+
+lemma ASN4_SE7[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (qtop tp (VAR var) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>)) = 
+         (var:== (qtop tp exp1 \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN4_qtop1[of var]
+  by auto
+
+lemma ASN4_SE8[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (qtop tp \<guillemotleft>exp2\<guillemotright> (VAR var) \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>)) = 
+         (var:== (qtop tp \<guillemotleft>exp2\<guillemotright> exp1 \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN4_qtop2[of var]
+  by auto
+
+lemma ASN4_SE9[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (qtop tp \<guillemotleft>exp2\<guillemotright>  \<guillemotleft>exp3\<guillemotright> (VAR var) \<guillemotleft>exp4\<guillemotright>)) = 
+         (var:== (qtop tp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> exp1 \<guillemotleft>exp4\<guillemotright>))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN4_qtop3[of var]
+  by auto
+
+lemma ASN4_SE10[symbolic_exec_subst]: 
+  assumes 1: "mwb_lens var"
+  shows "(var:== exp1 ; var:== (qtop tp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> (VAR var))) = 
+         (var:== (qtop tp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> exp1))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN4_qtop4[of var]
+  by auto
+
+lemma ASN11_SE1[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp ; IF (bop bp (VAR var) \<guillemotleft>exp2\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (bop bp exp \<guillemotleft>exp2\<guillemotright>) THEN (var:== exp ; C1) ELSE (var:== exp ; C2))"
+  using 1 unrest_const[of var exp2] ASN11_bop1[of var] 
+  by auto
+
+lemma ASN11_SE2[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp1 ; IF (bop bp \<guillemotleft>exp2\<guillemotright> (VAR var)) THEN C1 ELSE C2) = 
+         (IF (bop bp \<guillemotleft>exp2\<guillemotright> exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] ASN11_bop2[of var] 
+  by auto
+
+lemma ASN11_SE3[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp1 ; IF (trop tp (VAR var) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (trop tp exp1 \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright>) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] ASN11_trop1[of var] 
+  by auto
+
+lemma ASN11_SE4[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp1 ; IF (trop tp \<guillemotleft>exp2\<guillemotright> (VAR var) \<guillemotleft>exp3\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (trop tp \<guillemotleft>exp2\<guillemotright> exp1 \<guillemotleft>exp3\<guillemotright>) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] ASN11_trop2[of var] 
+  by auto
+
+lemma ASN11_SE5[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp1 ; IF (trop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> (VAR var)) THEN C1 ELSE C2) = 
+         (IF (trop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] ASN11_trop3[of var] 
+  by auto
+
+lemma ASN11_SE6[symbolic_exec_subst]:
+  assumes 1: "weak_lens var" 
+  shows "(var:== exp1 ; IF (qtop tp (VAR var) \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (qtop tp exp1 \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN11_qtop1[of var] 
+  by auto
+
+lemma ASN11_SE7[symbolic_exec_subst]:
+  assumes 1: "weak_lens var"
+  shows "(var:== exp1 ; IF (qtop tp \<guillemotleft>exp2\<guillemotright> (VAR var) \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (qtop tp \<guillemotleft>exp2\<guillemotright> exp1 \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN11_qtop2[of var] 
+  by auto
+
+lemma ASN11_SE8[symbolic_exec_subst]:
+  assumes 1: "weak_lens var" 
+  shows "(var:== exp1 ; IF (qtop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> (VAR var) \<guillemotleft>exp4\<guillemotright>) THEN C1 ELSE C2) = 
+         (IF (qtop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> exp1 \<guillemotleft>exp4\<guillemotright>) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN11_qtop3[of var] 
+  by auto
+
+lemma ASN11_SE9[symbolic_exec_subst]:
+  assumes 1: "weak_lens var" and 2: "var \<sharp> exp2" and 3: "var \<sharp> exp3" and 4: "var \<sharp> exp4"
+  shows "(var:== exp1 ; IF (qtop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> (VAR var)) THEN C1 ELSE C2) = 
+         (IF (qtop bp \<guillemotleft>exp2\<guillemotright> \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> exp1) THEN (var:== exp1 ; C1) ELSE (var:== exp1 ; C2))"
+  using 1 unrest_const[of var exp2] unrest_const[of var exp3] 
+          unrest_const[of var exp4] ASN11_qtop4[of var] 
+  by auto
+
+lemma ASN13_SE1[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F (VAR var) \<guillemotleft>exp\<guillemotright> THEN (var:== (bop F (VAR var) \<guillemotleft>exp\<guillemotright>)) ELSE (var:== (bop G (VAR var) \<guillemotleft>exp\<guillemotright>))) =
+         (var:== (trop If (bop F E \<guillemotleft>exp\<guillemotright>) (bop F E \<guillemotleft>exp\<guillemotright>) (bop G E \<guillemotleft>exp\<guillemotright>)))" 
+  using 1 unrest_const[of var exp] ASN13_bop1[of var] 
+  by auto
+
+lemma ASN13_SE2[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F \<guillemotleft>exp\<guillemotright> (VAR var)  THEN (var:== (bop F \<guillemotleft>exp\<guillemotright> (VAR var))) ELSE (var:== (bop G \<guillemotleft>exp\<guillemotright> (VAR var)))) =
+         (var:== (trop If (bop F \<guillemotleft>exp\<guillemotright> E) (bop F \<guillemotleft>exp\<guillemotright> E) (bop G \<guillemotleft>exp\<guillemotright> E)))" 
+  using 1 unrest_const[of var exp] ASN13_bop[of var] 
+  by auto
+
+lemma ASN13_SE3[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F (VAR var) \<guillemotleft>exp1\<guillemotright> THEN (var:== (bop F (VAR var) \<guillemotleft>exp1\<guillemotright>)) ELSE (var:== (bop G (VAR var) \<guillemotleft>exp2\<guillemotright>))) =
+         (var:== (trop If (bop F E \<guillemotleft>exp1\<guillemotright>) (bop F E \<guillemotleft>exp1\<guillemotright>) (bop G E \<guillemotleft>exp2\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_bop2[of var] 
+  by auto
+
+lemma ASN13_SE4[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F (VAR var) \<guillemotleft>exp1\<guillemotright> THEN (var:== (bop F (VAR var) \<guillemotleft>exp1\<guillemotright>)) ELSE (var:== (bop G \<guillemotleft>exp2\<guillemotright> (VAR var)))) =
+         (var:== (trop If (bop F E \<guillemotleft>exp1\<guillemotright>) (bop F E \<guillemotleft>exp1\<guillemotright>) (bop G \<guillemotleft>exp2\<guillemotright> E)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_bop4[of var] 
+  by auto
+
+lemma ASN13_SE5[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F \<guillemotleft>exp1\<guillemotright> (VAR var) THEN (var:== (bop F \<guillemotleft>exp1\<guillemotright> (VAR var))) ELSE (var:== (bop G (VAR var) \<guillemotleft>exp2\<guillemotright>))) =
+         (var:== (trop If (bop F \<guillemotleft>exp1\<guillemotright> E) (bop F \<guillemotleft>exp1\<guillemotright> E) (bop G E \<guillemotleft>exp2\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_bop5[of var] 
+  by auto
+
+lemma ASN13_SE6[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
+  shows "((var:== E); 
+          IF bop F \<guillemotleft>exp1\<guillemotright> (VAR var) THEN (var:== (bop F \<guillemotleft>exp1\<guillemotright> (VAR var))) ELSE (var:== (bop G \<guillemotleft>exp2\<guillemotright> (VAR var)))) =
+         (var:== (trop If (bop F \<guillemotleft>exp1\<guillemotright> E) (bop F \<guillemotleft>exp1\<guillemotright> E) (bop G \<guillemotleft>exp2\<guillemotright> E)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_bop6[of var] 
+  by auto                                                           
+
+
+lemma ASN13_trop:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F exp1 exp2 (VAR var)  THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp1 exp2 (VAR var)))) =
+         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop1:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp1 (VAR var) exp2))) =
+         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop2:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+  shows "((var:== E); 
+          IF trop F (VAR var)  exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var)  exp1 exp2))) =
+         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))" 
+  using 1 2 3 unfolding subst_upd_var_def unrest_def
+  by transfer auto 
+
+lemma ASN13_trop3:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F exp1 exp2 (VAR var) THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp3 exp4 (VAR var)))) =
+         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop4:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp3 (VAR var) exp4))) =
+         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
+
+lemma ASN13_trop5:
+  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+  shows "((var:== E); 
+          IF trop F (VAR var) exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var) exp3 exp4))) =
+         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))" 
+  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
+  by transfer auto
 end
