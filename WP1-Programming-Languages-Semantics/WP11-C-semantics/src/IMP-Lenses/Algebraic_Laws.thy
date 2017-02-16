@@ -401,7 +401,6 @@ lemma ASN13_trop5:
   using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
   by transfer auto
 
-(*To be continued*)
 theorem ASN14:
   assumes "mwb_lens x" and "x \<sharp>\<sharp> \<guillemotleft>SOME \<sigma>. True\<guillemotright>"
   shows
@@ -425,39 +424,39 @@ text{*In this section we introduce the algebraic laws of programming related to 
       statement.*}
  
 (*IF True*)
-lemma COND1[small_step]:
+lemma COND1[symbolic_exec_subst]:
   "(IF TRUE THEN C1 ELSE C2) = C1" 
   by transfer simp
 
 (*IF False*)
-lemma COND2[small_step]:
+lemma COND2[symbolic_exec_subst]:
   "(IF FALSE THEN C1 ELSE C2) = C2" 
   by transfer simp
 
 (*IF Idemp*)
-lemma COND3[small_step]:
+lemma COND3[symbolic_exec_subst]:
   "(IF bexp THEN C1 ELSE C1) = C1" 
   by simp
 
 (*IF assoc*)
-lemma COND4[small_step]:
+lemma COND4[symbolic_exec_subst]:
   "(IF bexp THEN C1 ELSE (IF bexp THEN C2 ELSE C3)) =  
    (IF bexp THEN (IF bexp THEN C1 ELSE C2) ELSE C3)" 
   by auto
 
 (*IF inverse*)
-lemma COND5[small_step]:
+lemma COND5:
   "(IF P THEN C1 ELSE C2) = (IF \<not>\<^sub>e P THEN C2 ELSE C1)" 
   by transfer auto
 
 (*IF unfold nested cond*)
-lemma COND6[small_step]:
-  "(IF trop If bexp bexp1 bexp2 THEN C1 ELSE C2) = 
-   (IF bexp THEN (IF bexp1 THEN C1 ELSE C2) ELSE (IF bexp2 THEN C1 ELSE C2))" 
+lemma COND6[symbolic_exec_subst]:
+  "(IF bexp THEN (IF bexp1 THEN C1 ELSE C2) ELSE (IF bexp2 THEN C1 ELSE C2)) = 
+   (IF trop If bexp bexp1 bexp2 THEN C1 ELSE C2)" 
   by transfer auto
 
 (*IF ignore*)
-lemma COND7[small_step]:
+lemma COND7[symbolic_exec_subst]:
   "(IF bexp THEN C1 ELSE (IF bexp THEN C2 ELSE C3)) = 
    (IF bexp THEN C1 ELSE C3)" 
   by auto
@@ -466,59 +465,59 @@ lemma COND7[small_step]:
   which is not yet supported by our language*)
 
 (*IF distribute*)
-lemma COND11[small_step]:
-  "(IF bexp2 THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3) =  
-   (IF bexp1 THEN (IF bexp2 THEN C1 ELSE C3) ELSE (IF bexp2 THEN C2 ELSE C3))" 
+lemma COND11[symbolic_exec_subst]:
+  "(IF bexp1 THEN (IF bexp2 THEN C1 ELSE C3) ELSE (IF bexp2 THEN C2 ELSE C3))=  
+   (IF bexp2 THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)" 
   by auto
 
 (*IF Theorem by Hoare: It optimize nested IF*)
-theorem COND12[small_step]: 
+theorem COND12[symbolic_exec_subst]: 
   "(IF bexp1 THEN (IF bexp2 THEN C1 ELSE C3) ELSE (IF bexp3 THEN C2 ELSE C3)) =
-   (IF (IF bexp1 THEN bexp2 ELSE bexp3) THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)"
-  by auto
+   (IF (trop If bexp1 bexp2 bexp3) THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)"
+  by transfer auto
 
 subsection {*Sequential Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the sequential
       composition of statements.*}
 
 (*Seq assoc*)
-lemma SEQ1[small_step]: 
+lemma SEQ1: 
   "(C1 ; C2) ; C3 = C1 ; (C2 ; C3)"
   by auto
 
 (*Seq SKIP*)
-lemma SEQ2[small_step]: 
+lemma SEQ2: 
   "(SKIP ; C) = (C ; SKIP)"
   by transfer simp
 
 (*Seq unit 1*)
-lemma SEQ3[small_step]: 
+lemma SEQ3: 
   "((0\<^sub>L :== VAR 0\<^sub>L) ; C) = (C ; (0\<^sub>L :== VAR 0\<^sub>L))"
   unfolding subst_upd_var_def unit_lens_def
   by transfer auto
 
-lemma SEQ4[small_step]: 
+lemma SEQ4: 
   "(bot ; C) = (C ; bot)"
   unfolding subst_upd_var_def unit_lens_def
  oops
 
 (*Seq unit 2*)
 
-lemma SEQ5[small_step]: 
+lemma SEQ5: 
   "(bot ; C) = bot" 
 oops
 
 (*Seq unit 3*)
-lemma SEQ6[small_step]: 
+lemma SEQ6: 
   "(C ; bot) = bot"
   by auto
 
 (*The rules SEQ6 SEQ7 related to SEQ and non-deterministic choice are missing for now*)
   
 (*Seq distribution*)
-lemma SEQ7[small_step]: 
-  "((IF bexp THEN C1 ELSE C2); C3) = 
-   (IF bexp THEN (C1 ; C3) ELSE (C2 ; C3))"
+lemma SEQ7[symbolic_exec_subst]: 
+  "(IF bexp THEN (C1 ; C3) ELSE (C2 ; C3))= 
+   ((IF bexp THEN C1 ELSE C2); C3)"
    by transfer auto 
 
 subsection {*While laws*}
@@ -828,52 +827,54 @@ lemma ASN13_SE6[symbolic_exec_subst]:
   using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_bop6[of var] 
   by auto                                                           
 
-
-lemma ASN13_trop:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+lemma ASN13_SE7[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
   shows "((var:== E); 
-          IF trop F exp1 exp2 (VAR var)  THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp1 exp2 (VAR var)))) =
-         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))" 
-  using 1 2 3 unfolding subst_upd_var_def unrest_def
-  by transfer auto
+          IF trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR var)  THEN (var:== (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR var))) ELSE (var:== (trop G \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR var)))) =
+         (var:== (trop If (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> E) (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> E) (trop G \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> E)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop[of var] 
+  by auto                                                           
 
-lemma ASN13_trop1:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+lemma ASN13_SE8[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
   shows "((var:== E); 
-          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp1 (VAR var) exp2))) =
-         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))" 
-  using 1 2 3 unfolding subst_upd_var_def unrest_def
-  by transfer auto
+          IF trop F \<guillemotleft>exp1\<guillemotright> (VAR var) \<guillemotleft>exp2\<guillemotright> THEN (var:== (trop F \<guillemotleft>exp1\<guillemotright> (VAR var) \<guillemotleft>exp2\<guillemotright>)) ELSE (var:== (trop G \<guillemotleft>exp1\<guillemotright> (VAR var) \<guillemotleft>exp2\<guillemotright>))) =
+         (var:== (trop If (trop F \<guillemotleft>exp1\<guillemotright> E \<guillemotleft>exp2\<guillemotright>) (trop F \<guillemotleft>exp1\<guillemotright> E \<guillemotleft>exp2\<guillemotright>) (trop G \<guillemotleft>exp1\<guillemotright> E \<guillemotleft>exp2\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop1[of var] 
+  by auto
 
-lemma ASN13_trop2:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2"
+lemma ASN13_SE9[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
   shows "((var:== E); 
-          IF trop F (VAR var)  exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var)  exp1 exp2))) =
-         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))" 
-  using 1 2 3 unfolding subst_upd_var_def unrest_def
-  by transfer auto 
+          IF trop F (VAR var) \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> THEN (var:== (trop F (VAR var) \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>)) ELSE (var:== (trop G (VAR var) \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>))) =
+         (var:== (trop If (trop F E \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>) (trop F E \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>) (trop G E \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop2[of var] 
+  by auto 
 
-lemma ASN13_trop3:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+lemma ASN13_SE10[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var" 
   shows "((var:== E); 
-          IF trop F exp1 exp2 (VAR var) THEN (var:== (trop F exp1 exp2 (VAR var))) ELSE (var:== (trop G exp3 exp4 (VAR var)))) =
-         (var:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))" 
-  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
-  by transfer auto
+          IF trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR var) THEN (var:== (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> (VAR var))) ELSE (var:== (trop G \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> (VAR var)))) =
+         (var:== (trop If (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> E) (trop F \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> E) (trop G \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright> E)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop3[of var]
+          unrest_const[of var exp3] unrest_const[of var exp4] 
+  by auto
 
-lemma ASN13_trop4:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+lemma ASN13_SE11[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var" 
   shows "((var:== E); 
-          IF trop F exp1 (VAR var) exp2 THEN (var:== (trop F exp1 (VAR var) exp2)) ELSE (var:== (trop G exp3 (VAR var) exp4))) =
-         (var:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))" 
-  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
-  by transfer auto
+          IF trop F \<guillemotleft>exp1\<guillemotright> (VAR var) \<guillemotleft>exp2\<guillemotright> THEN (var:== (trop F \<guillemotleft>exp1\<guillemotright> (VAR var) \<guillemotleft>exp2\<guillemotright>)) ELSE (var:== (trop G \<guillemotleft>exp3\<guillemotright> (VAR var) \<guillemotleft>exp4\<guillemotright>))) =
+         (var:== (trop If (trop F \<guillemotleft>exp1\<guillemotright> E \<guillemotleft>exp2\<guillemotright>) (trop F \<guillemotleft>exp1\<guillemotright> E \<guillemotleft>exp2\<guillemotright>) (trop G \<guillemotleft>exp3\<guillemotright> E \<guillemotleft>exp4\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop4[of var]
+          unrest_const[of var exp3] unrest_const[of var exp4] 
+  by auto
 
-lemma ASN13_trop5:
-  assumes 1: "mwb_lens var" and 2:"var \<sharp> exp1" and 3:"var \<sharp> exp2" and 4:"var \<sharp> exp3" and 5:"var \<sharp> exp4"
+lemma ASN13_SE12[symbolic_exec_subst]:
+  assumes 1: "mwb_lens var"
   shows "((var:== E); 
-          IF trop F (VAR var) exp1 exp2 THEN (var:== (trop F (VAR var) exp1 exp2)) ELSE (var:== (trop G (VAR var) exp3 exp4))) =
-         (var:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))" 
-  using 1 2 3 4 5 unfolding subst_upd_var_def unrest_def
-  by transfer auto
+          IF trop F (VAR var) \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright> THEN (var:== (trop F (VAR var) \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>)) ELSE (var:== (trop G (VAR var) \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>))) =
+         (var:== (trop If (trop F E \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>) (trop F E \<guillemotleft>exp1\<guillemotright> \<guillemotleft>exp2\<guillemotright>) (trop G E \<guillemotleft>exp3\<guillemotright> \<guillemotleft>exp4\<guillemotright>)))" 
+  using 1 unrest_const[of var exp1] unrest_const[of var exp2] ASN13_trop5[of var]
+          unrest_const[of var exp3] unrest_const[of var exp4] 
+  by auto
 end
