@@ -33,24 +33,26 @@ val vcg_tacx = vcg_match_tac THEN'
               vcg_simp_tac THEN'
               vcg_subst_exp_tac THEN'
               vcg_simp_tac;
-\<close> 
+\<close>
 
 lemma
   assumes "weak_lens X"
-  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace> X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>) \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
+  shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
+          X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>)
+         \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
   by (tactic \<open>vcg_tac @{context}\<close>)
 
 lemma if_true:
   assumes "weak_lens X"
   shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
-         IF TRUE THEN SKIP ELSE (X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>))
+         IF TRUE THEN SKIP ELSE X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>)
          \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0\<guillemotright>\<rbrace>"
   by (tactic \<open>vcg_tac @{context}\<close>)
 
 lemma if_false:
   assumes "weak_lens X"
   shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
-         IF FALSE THEN SKIP ELSE (X :== ((VAR X) +\<^sub>e \<guillemotleft>1::int\<guillemotright>))
+         IF FALSE THEN SKIP ELSE X :== ((VAR X) +\<^sub>e \<guillemotleft>1::int\<guillemotright>)
          \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1::int\<guillemotright>\<rbrace>"
   using assms unfolding subst_upd_var_def
   apply transfer apply auto
