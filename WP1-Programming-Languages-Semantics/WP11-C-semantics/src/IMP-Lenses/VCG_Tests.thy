@@ -45,9 +45,9 @@ lemma
   "\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>(var:== exp ; IF bexp THEN C1 ELSE C2)\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
  
   apply (tactic "se_subst_tac @{context}")
-  prefer 3
 
   apply (tactic \<open>vcg_tac @{context}\<close>)
+  apply auto
 oops
 
 lemma "\<lbrace>P\<rbrace>SKIP ; C \<lbrace>Q\<rbrace>"
