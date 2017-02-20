@@ -39,33 +39,32 @@ fun vcg_subst_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
 
 fun se_subst_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW) (CHANGED o TRY o FIRST'
                          [EqSubst.eqsubst_tac ctxt [0] @{thms symbolic_exec_subst}]);
+
+val se_vcg_tac =  (se_subst_tac THEN' vcg_tac) ORELSE' vcg_tac;
  \<close> 
 
 lemma 
   "\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>(var:== exp ; IF bexp THEN C1 ELSE C2)\<lbrace>(VAR var) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
  
-  apply (tactic "se_subst_tac @{context}")
-
-  apply (tactic \<open>vcg_tac @{context}\<close>)
-  apply auto
+  apply (tactic "se_vcg_tac @{context}")
 oops
 
 lemma "\<lbrace>P\<rbrace>SKIP ; C \<lbrace>Q\<rbrace>"
-  apply (tactic "se_subst_tac @{context}")
+    apply (tactic "se_vcg_tac @{context}")
 oops
 lemma
   assumes "weak_lens X"
   shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
           X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>)
          \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>1\<guillemotright>\<rbrace>"
-  by (tactic \<open>vcg_tac @{context}\<close>)
+  by (tactic \<open>se_vcg_tac @{context}\<close>)
 
 lemma if_true:
   assumes "weak_lens X"
   shows "\<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0::int\<guillemotright>\<rbrace>
          IF TRUE THEN SKIP ELSE X :== ((VAR X) +\<^sub>e \<guillemotleft>1\<guillemotright>)
          \<lbrace>(VAR X) =\<^sub>e \<guillemotleft>0\<guillemotright>\<rbrace>"
-  by (tactic \<open>vcg_tac @{context}\<close>)
+  by (tactic \<open>se_vcg_tac @{context}\<close>)
 
 lemma if_false:
   assumes "weak_lens X"
