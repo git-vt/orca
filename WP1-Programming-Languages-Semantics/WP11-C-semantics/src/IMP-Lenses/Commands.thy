@@ -9,14 +9,6 @@ theory Commands imports Substitution
 
 begin
 
-(*
-datatype
-  ('\<alpha>, '\<beta>) com = SKIP                    
-      | Assign "('\<alpha>, '\<beta>) var" "'\<alpha> aexp"         ("_ :== _ " [80, 80] 70)
-      | Semi   "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"          ("_; _"     [61, 60] 60)
-      | Cond   "'\<alpha> bexp" "('\<alpha>, '\<beta>) com" "('\<alpha>, '\<beta>) com"     ("IF (_)/ THEN (_) ELSE (_)"  70)
-      | While  "'\<alpha> bexp" "('\<alpha>, '\<beta>) com"         ("WHILE (_) DO /(_) OD"  70)*)
-
 subsection{*SKIP*}
 
 abbreviation "SKIP \<equiv> id" (* in other words Skip is the id substitution.. it means (id \<dagger> id)*)
@@ -62,19 +54,6 @@ where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else 
 abbreviation While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
 "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" (*emm...*)
 
-subsection{*Assert*}
-text {*In order to annotate our programs we introduce a new statement to our language.
-       The assert statement is a statement that do not change the state but assert an annotation
-       to the program. *}
-
-abbreviation assert :: "(bool ,'\<alpha>) expr \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("assert {_} /(_)"  70) where
-"assert {bexp} C \<equiv> IF bexp THEN C ELSE SKIP" (*emm... This means that whenever the assertions is
-                                                False the execution of the program is stoped*)
-
-abbreviation try_catch :: "'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("TRY (_) CATCH /(_) END"  70) where
-"try_catch C1 C2 \<equiv> undefined"
-
-abbreviation "block \<equiv> undefined"
 
 notation (latex)
   SKIP  ("\<SKIP>") and
