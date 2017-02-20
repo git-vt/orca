@@ -1565,35 +1565,5 @@ lemma Hoare_WHILE[hoare_partial,vcg]:
   apply transfer
 sorry  
 
-subsection {*Hoare for Assert*}
-
-lemma Hoare_ASSERT[hoare_partial]:
-  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
-  and     2:"\<lbrace> P \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
-  shows "\<lbrace>P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
-  using 1 2
-  by hoare_solver
-
-lemma Hoare_ASSERT1[hoare_partial]:
-  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
-  shows "\<lbrace>b \<and>\<^sub>e P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
-  using 1 
-  by hoare_solver
-
-lemma Hoare_GUARANTEE[hoare_partial]:
-  assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>Q\<rbrace>"
-  and     2:"\<lceil>b\<rceil>"
-  shows "\<lbrace>P\<rbrace>assert {b} C\<lbrace>Q\<rbrace>" 
-  using 1 2
-  by hoare_solver
-
-lemma Hoare_ASSERT_WHILE[hoare_partial]:
-  assumes 1:"\<lbrace>P\<rbrace>SKIP\<lbrace>R\<rbrace>"
-  and     2:"\<lbrace>R \<and>\<^sub>e (\<not>\<^sub>e b)\<rbrace>SKIP\<lbrace>Q\<rbrace>"
-  and     3:"\<lbrace>R \<and>\<^sub>e  b\<rbrace>C\<lbrace>R\<rbrace>"
-  shows "\<lbrace>P\<rbrace>assert {R} (WHILE b DO C OD)\<lbrace>Q\<rbrace>" 
-  using 1 2 3 apply (insert assms) using Hoare_WHILE[of P b C]
-  apply transfer
-oops
 
 end
