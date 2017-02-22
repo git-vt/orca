@@ -476,6 +476,20 @@ theorem COND12[symbolic_exec_subst]:
    (IF (trop If bexp1 bexp2 bexp3) THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)"
   by transfer auto
 
+lemma COND13:
+  assumes 1: "\<lceil>bexp\<rceil>"
+  shows 
+  "(IF bexp THEN C1 ELSE C2)=  C1"
+  using 1 
+  by transfer auto
+
+lemma COND14:
+  assumes 1: "\<lceil>\<not>\<^sub>e bexp\<rceil>"
+  shows 
+  "(IF bexp THEN C1 ELSE C2)=  C2"
+  using 1 
+  by transfer auto
+
 subsection {*Sequential Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the sequential
       composition of statements.*}
@@ -528,110 +542,189 @@ lemma W_mono: "mono (W b r)"
   unfolding W_def mono_def
   by auto
 
-lemma WHILE3:
-  assumes 1:" \<lceil>\<not>\<^sub>e b\<rceil>"
-  shows "(WHILE b DO C OD) = SKIP"
-  using 1   unfolding W_def apply transfer apply auto
-  oops
 
-lemma D_While_If:
-  "D(WHILE b DO c) = D(IF b THEN c;;WHILE b DO c ELSE SKIP)"
+(* A little complete partial order theory due to Tobias Nipkow, see also IMP as well as 
+   Monads-theory. *)
+definition chain :: "(nat \<Rightarrow> 'a set) \<Rightarrow> bool" 
+where     "chain S = (\<forall>i. S i \<subseteq> S(Suc i))"
+
+lemma chain_total: "chain S \<Longrightarrow> S i \<le> S j \<or> S j \<le> S i"
+by (metis chain_def le_cases lift_Suc_mono_le)
+
+definition cont :: "('a set \<Rightarrow> 'b set) \<Rightarrow> bool" 
+where     "cont f = (\<forall>S. chain S \<longrightarrow> f(UN n. S n) = (UN n. f(S n)))"
+
+lemma mono_if_cont: fixes f :: "'a set => 'b set"
+  assumes "cont f" shows "mono f"
+proof
+  fix a b :: "'a set" assume "a \<subseteq> b"
+  let ?S = "\<lambda>n::nat. if n=0 then a else b"
+  have "chain ?S" using `a \<subseteq> b` by(auto simp: chain_def)
+  hence "f(UN n. ?S n) = (UN n. f(?S n))"
+    using assms by(simp add: cont_def)
+  moreover have "(UN n. ?S n) = b" using `a \<subseteq> b` by (auto split: if_splits)
+  moreover have "(UN n. f(?S n)) = f a \<union> f b" by (auto split: if_splits)
+  ultimately show "f a \<subseteq> f b" by (metis Un_upper1)
+qed
+
+lemma chain_iterates: fixes f :: "'a set \<Rightarrow> 'a set"
+  assumes "mono f" shows "chain(\<lambda>n. (f^^n) {})"
 proof-
-  let ?w = "WHILE b DO c" let ?f = "W (bval b) (D c)"
-  have "D ?w = lfp ?f" by simp
-  also have "\<dots> = ?f (lfp ?f)" by(rule lfp_unfold [OF W_mono])
-  also have "\<dots> = D(IF b THEN c;;?w ELSE SKIP)" by (simp add: W_def)
-  finally show ?thesis .
+  { fix n have "(f ^^ n) {} \<subseteq> (f ^^ Suc n) {}" using assms
+    by(induction n) (auto simp: mono_def) }
+  thus ?thesis by(auto simp: chain_def)
 qed
 
-lemma IF_D1:
-  "(Rel (IF b THEN c1 ELSE c2)) = 
-   {(s,t). if b s then (s,t) \<in> (Rel c1) else (s,t) \<in> (Rel c2)}"
-  by (auto simp add: Rel_def)
-
-lemma WHILE_D1:
-    "RelInv(Rel (WHILE b DO C OD)) = RelInv (lfp (W b (Rel C)))"
-  by (simp add: Rel_def RelInv_def)
-
-lemma WHILE1:
-  "(WHILE b DO C OD) = (IF b THEN C; WHILE b DO C OD ELSE SKIP)"
-proof-
-  let ?w = "WHILE b DO C OD" let ?f = "RelInv(Rel(W  b (Rel C)))"
-  have "?w = RelInv (lfp ?f)" .. 
-  also have "\<dots> = RelInv (?f  (lfp ?f))" by (metis W_mono def_lfp_unfold) 
-  also have "\<dots> = (IF b THEN C; ?w ELSE SKIP)" apply (simp add:  W_def )
-      
-(*proof -
-           { fix aa :: 'a
-             { assume "\<not> b aa"
-               then have "(WHILE b DO C OD) aa = aa \<and> \<not> b aa"
-                 using ff1 by metis (* failed *)
-               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by force }
-             moreover
-             { assume "b aa"
-               then have "(WHILE b DO C OD) aa = (WHILE b DO C OD) (C aa) \<and> b aa"
-                 using ff1 sorry (* > 1.0 s, timed out *)
-               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by fastforce }
-             ultimately have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-               by blast }
-           then show ?thesis
-             by (metis (no_types))
-         qed*)
-       
-  finally show ?thesis
-  by (simp add: \<open>RelInv (W b (Rel C) (lfp (W b (Rel C)))) = IF b THEN C; WHILE b DO C OD ELSE SKIP\<close> \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close>) 
+theorem lfp_if_cont:
+  assumes "cont f" shows "lfp f = (UN n. (f^^n) {})" (is "_ = ?U")
+proof
+  show "lfp f \<subseteq> ?U"
+  proof (rule lfp_lowerbound)
+    have "f ?U = (UN n. (f^^Suc n){})"
+      using chain_iterates[OF mono_if_cont[OF assms]] assms
+      by(simp add: cont_def)
+    also have "\<dots> = (f^^0){} \<union> \<dots>" by simp
+    also have "\<dots> = ?U"
+      by(auto simp del: funpow.simps) (metis not0_implies_Suc)
+    finally show "f ?U \<subseteq> ?U" by simp
+  qed
+next
+  { fix n p assume "f p \<subseteq> p"
+    have "(f^^n){} \<subseteq> p"
+    proof(induction n)
+      case 0 show ?case by simp
+    next
+      case Suc
+      from monoD[OF mono_if_cont[OF assms] Suc] `f p \<subseteq> p`
+      show ?case by simp
+    qed
+  }
+  thus "?U \<subseteq> lfp f" by(auto simp: lfp_def)
 qed
 
-lemma WHILE1:
- "(WHILE b DO C OD) = (IF b THEN C; WHILE b DO C OD ELSE SKIP)"
- proof-
-  let ?w = "WHILE b DO C OD" let ?f = "W  b (Rel C)"
-  have "?w = RelInv (lfp ?f)" .. 
-  also have "\<dots> = RelInv (?f  (lfp ?f))" by (metis W_mono def_lfp_unfold) 
-  also have "\<dots> = (IF b THEN C; ?w ELSE SKIP)" apply (simp add:  W_def )
-         (*proof -
-           { fix aa :: 'a
-             { assume "\<not> b aa"
-               then have "(WHILE b DO C OD) aa = aa \<and> \<not> b aa"
-                 using ff1 by metis (* failed *)
-               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by force }
-             moreover
-             { assume "b aa"
-               then have "(WHILE b DO C OD) aa = (WHILE b DO C OD) (C aa) \<and> b aa"
-                 using ff1 sorry (* > 1.0 s, timed out *)
-               then have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-                 using \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close> by fastforce }
-             ultimately have "(\<not> b aa \<or> (C; WHILE b DO C OD) aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa) \<and> (b aa \<or> SKIP aa = RelInv (W b (Rel C) (lfp (W b (Rel C)))) aa)"
-               by blast }
-           then show ?thesis
-             by (metis (no_types))
-         qed*)
-       
-  finally show ?thesis
-  by (simp add: \<open>RelInv (W b (Rel C) (lfp (W b (Rel C)))) = IF b THEN C; WHILE b DO C OD ELSE SKIP\<close> \<open>WHILE b DO C OD = RelInv (W b (Rel C) (lfp (W b (Rel C))))\<close>) 
+
+lemma single_valued_UN_chain:
+  assumes "chain S" "(!!n. single_valued (S n))"
+  shows "single_valued(UN n. S n)"
+proof(auto simp: single_valued_def)
+  fix m n x y z assume "(x, y) \<in> S m" "(x, z) \<in> S n"
+  with chain_total[OF assms(1), of m n] assms(2)
+  show "y = z" by (auto simp: single_valued_def)
 qed
-  
+
+lemma single_valued_lfp: 
+fixes f :: "('a \<times> 'a) set \<Rightarrow> ('a \<times> 'a) set"
+assumes "cont f" "\<And>r. single_valued r \<Longrightarrow> single_valued (f r)"
+shows "single_valued(lfp f)"
+unfolding lfp_if_cont[OF assms(1)]
+proof(rule single_valued_UN_chain[OF chain_iterates[OF mono_if_cont[OF assms(1)]]])
+  fix n show "single_valued ((f ^^ n) {})"
+  by(induction n)(auto simp: assms(2))
+qed
+
+lemma cont_W: "cont (W c b)"
+  by (auto simp: cont_def W_def)
+
+theorem single_valued_lfp_Fun2Rel: "single_valued (lfp(W c (Rel B)))"
+  apply(rule single_valued_lfp, simp_all add: cont_W)
+  apply(auto simp: W_def single_valued_def)
+  apply (simp add: Commands.Rel_def)
+done
+
+lemma Rel2Fun_if:
+  "RelInv {(s, t). if b s then (s, t) \<in> Rel c O lfp (\<Gamma> b (Rel c)) else s = t} \<sigma> =
+  (if b \<sigma> then RelInv (Rel c O lfp (\<Gamma> b (Rel c))) \<sigma> else  \<sigma>)"
+  by (simp add: RelInv_def)
+
+
+lemma Rel2Fun_Id: "(RelInv \<circ> Rel) x = x"
+  by (rule ext, auto simp: comp_def Rel_def RelInv_def)
+
+lemma Rel2Fun_homomorphism:
+  assumes determ_X: "single_valued X" and determ_Y: "single_valued Y"
+          and "is_total X" and "is_total Y"
+  shows   "RelInv (X O Y) = (RelInv Y) o (RelInv X)"
+proof - 
+    have relational_partial_next_in_O: 
+         "\<And>x E F. (\<exists>y. (x, y) \<in> (E O F)) \<Longrightarrow> (\<exists>y. (x, y) \<in> E)" by auto
+    have some_eq_intro:
+         "\<And> Z x y . single_valued Z \<Longrightarrow> (x, y) \<in> Z \<Longrightarrow> (SOME y. (x, y) \<in> Z) = y"
+          by (auto simp: single_valued_def)
+    show ?thesis
+    proof (rule ext, rename_tac "\<sigma>", simp add: RelInv_def)?
+     fix \<sigma> :: 'a
+     { fix aa :: 'a
+       obtain aaa :: "('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" where
+         ff1: "\<forall>p pa a aa. (\<not> (p OO pa) a aa \<or> p a (aaa p pa a aa) \<and> pa (aaa p pa a aa) aa) \<and> ((\<forall>ab. \<not> p a ab \<or> \<not> pa ab aa) \<or> (p OO pa) a aa)"
+         by moura
+       { assume "(SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y"
+         moreover
+         { assume "(aaa (\<lambda>a aa. (a, aa) \<in> X) (\<lambda>a aa. (a, aa) \<in> Y) \<sigma> aa, aa) \<notin> Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y"
+           then have "\<not> ((\<lambda>a aa. (a, aa) \<in> X) OO (\<lambda>a aa. (a, aa) \<in> Y)) \<sigma> aa \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y"
+             using ff1 by meson }
+         ultimately have "(\<sigma>, SOME a. (\<sigma>, a) \<in> X) \<in> X \<longrightarrow> ((SOME a. (\<sigma>, a) \<in> X O Y) = (SOME a. (SOME a. (\<sigma>, a) \<in> X, a) \<in> Y) \<or> (\<sigma>, aa) \<notin> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> (\<sigma>, aa) \<in> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<in> Y) \<or> \<not> ((\<lambda>a aa. (a, aa) \<in> X) OO (\<lambda>a aa. (a, aa) \<in> Y)) \<sigma> aa \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> (\<sigma>, aaa (\<lambda>a aa. (a, aa) \<in> X) (\<lambda>a aa. (a, aa) \<in> Y) \<sigma> aa) \<notin> X \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> \<not> ((\<lambda>a aa. (a, aa) \<in> X) OO (\<lambda>a aa. (a, aa) \<in> Y)) \<sigma> aa \<and> (\<sigma>, aa) \<notin> X O Y"
+           by (metis (lifting) determ_X some_eq_intro) }
+       moreover
+       { assume "(\<sigma>, SOME a. (\<sigma>, a) \<in> X) \<notin> X"
+         moreover
+         { assume "\<exists>a. \<not> ((\<lambda>a aa. (a, aa) \<in> X) OO (\<lambda>a aa. (a, aa) \<in> Y)) \<sigma> aa \<and> (\<sigma>, aa) \<notin> X O Y \<and> (\<sigma>, a) \<in> X"
+           then have "\<exists>a p. p (a::'a) (SOME a. (\<sigma>, a) \<in> X) \<and> \<not> (p OO (\<lambda>a aa. (a, aa) \<in> Y)) a aa \<and> (\<sigma>, aa) \<notin> X O Y"
+             by (meson exE_some) }
+         ultimately have "(\<sigma>, aa) \<in> X O Y \<and> (\<sigma>, SOME a. (\<sigma>, a) \<in> X) \<notin> X \<or> (\<exists>a p. p (a::'a) (SOME a. (\<sigma>, a) \<in> X) \<and> \<not> (p OO (\<lambda>a aa. (a, aa) \<in> Y)) a aa \<and> (\<sigma>, aa) \<notin> X O Y)"
+           by (metis (no_types) assms(3) is_total_def relcompp_relcomp_eq)
+         then have "(\<exists>a p. p (a::'a) (SOME a. (\<sigma>, a) \<in> X) \<and> \<not> (p OO (\<lambda>a aa. (a, aa) \<in> Y)) a aa \<and> (\<sigma>, aa) \<notin> X O Y) \<or> (\<sigma>, aaa (\<lambda>a aa. (a, aa) \<in> X) (\<lambda>a aa. (a, aa) \<in> Y) \<sigma> aa) \<notin> X \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> (SOME a. (\<sigma>, a) \<in> X O Y) = (SOME a. (SOME a. (\<sigma>, a) \<in> X, a) \<in> Y) \<or> (\<sigma>, aa) \<notin> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> (\<sigma>, aa) \<in> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<in> Y"
+           by (meson exE_some) }
+       moreover
+       { assume "(\<sigma>, aaa (\<lambda>a aa. (a, aa) \<in> X) (\<lambda>a aa. (a, aa) \<in> Y) \<sigma> aa) \<notin> X \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y"
+         then have "\<not> ((\<lambda>a aa. (a, aa) \<in> X) OO (\<lambda>a aa. (a, aa) \<in> Y)) \<sigma> aa \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y"
+           using ff1 by meson }
+       ultimately have "(SOME a. (\<sigma>, a) \<in> X O Y) = (SOME a. (SOME a. (\<sigma>, a) \<in> X, a) \<in> Y) \<or> (\<sigma>, aa) \<notin> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<notin> Y \<or> (\<sigma>, aa) \<in> X O Y \<and> (SOME a. (\<sigma>, a) \<in> X, aa) \<in> Y"
+         by blast }
+     then show "(SOME a. (\<sigma>, a) \<in> X O Y) = (SOME a. (SOME a. (\<sigma>, a) \<in> X, a) \<in> Y)"
+       by meson
+   qed
+qed
+
+(*apply (case_tac " \<exists> \<sigma>'. (\<sigma>, \<sigma>') \<in> X O Y")
+apply (simp )
+apply (frule relational_partial_next_in_O)
+apply (auto simp: single_valued_relcomp some_eq_intro determ_X determ_Y relcomp.relcompI)
+by (meson assms(3) assms(4) is_total_def relcomp.relcompI)*)
+
+lemma single_valued_Rel: "single_valued (Rel B)"
+by (auto simp: single_valued_def Rel_def)
+
+
+text{* Putting everything together, the theory of embedding and the invariant of
+       determinism of the while-body, gives us the usual unfold-theorem: *}
+
+theorem while_unfold:
+assumes loop_terminates: "is_total (lfp (W b (Rel c)))"
+shows  "(WHILE b DO c OD) = (IF b THEN (c ; (WHILE b DO c OD)) ELSE SKIP)"
+proof (rule ext)
+  fix \<sigma>
+  have h1:"(WHILE b DO c OD) = RelInv (W b (Rel c) (lfp (W b (Rel c)))) "
+    using lfp_unfold [OF mono_if_cont, OF cont_W, of b "Rel c"]
+    by simp
+  show "(WHILE b DO c OD) \<sigma> =
+         (IF b THEN c; WHILE b DO c OD ELSE SKIP) \<sigma>"
+   by (subst h1, subst W_def) 
+      (auto simp: h1 Rel2Fun_if Rel2Fun_homomorphism  Rel2Fun_Id [simplified comp_def] 
+                  single_valued_Rel  single_valued_lfp_Fun2Rel loop_terminates)
+qed
 
 lemma WHILE2:
-  assumes 1:"b = \<guillemotleft>True\<guillemotright>"
-  shows "(WHILE b DO C OD) = (C; WHILE  b DO C OD)"
-proof -
-  have f1: "\<forall>A f. (bot (A::'a set)::'a set) = f (bot A::'a set)"
-    by (metis (no_types) SEQ4 SEQ6 comp_apply)
-  then have f2: "\<forall>f. _type_constraint_ = inv f; f"
-    by auto
-  obtain aa :: "('a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" where
-    f3: "\<forall>f fa fb A. f = fb \<or> (fa; f) (aa fa A f fb) \<noteq> (fa; fb) (aa fa A f fb)"
-    using f1 by blast
-  have "\<forall>c ca. c = ca"
-    using f2 by (metis K_record_comp) (* > 1.0 s, timed out *)
-  then show ?thesis
-    using f3 sorry (* > 1.0 s, timed out *)
-qed
-  
+  assumes 1:"\<lceil>b\<rceil>" and 2:"is_total (lfp (W b (Rel c)))" 
+  shows "(WHILE b DO c OD) = (c; WHILE b DO c OD)"
+  using 1 2  
+  by (subst while_unfold) (simp_all only: COND13) 
+
+lemma WHILE3:
+  assumes 1:" \<lceil>\<not>\<^sub>e b\<rceil>" and 2:"is_total (lfp (W b (Rel c)))"  
+  shows "(WHILE b DO c OD) = SKIP"
+  using 1 2  
+  by transfer (auto simp add: while_unfold) 
+
 subsection {*Laws used by tactics*}
 text {*In this section we will design a set of rules that can be used to automatise 
        the process of program optimization.*}

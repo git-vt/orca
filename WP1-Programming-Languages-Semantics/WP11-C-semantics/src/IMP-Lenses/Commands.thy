@@ -47,6 +47,20 @@ where "Rel f = {(\<sigma>, \<sigma>'). (f \<sigma> = \<sigma>')}"
 
 definition RelInv :: "'\<alpha> rel \<Rightarrow> ('\<alpha> \<Rightarrow> '\<alpha>) "
 where "RelInv S = (\<lambda> \<sigma>. (SOME \<sigma>'. (\<sigma>, \<sigma>') \<in> S))"
+definition is_total :: "'\<alpha> rel \<Rightarrow> bool"
+where     "is_total R \<equiv> \<forall>\<sigma>. \<exists>\<sigma>'. (\<sigma>,\<sigma>') \<in> R"
+
+lemma is_total_Rel [simp]:"is_total(Rel c)"
+unfolding is_total_def Rel_def
+by auto
+
+lemma Fun2Rel_Rel2Fun_id: 
+assumes det:"single_valued R" 
+  and   is_tot: "is_total R" 
+shows "(Rel \<circ> RelInv) R = R"
+apply (simp add: comp_def Rel_def RelInv_def,auto)
+apply (meson is_tot someI_ex is_total_def)
+by (metis det single_valued_def some_equality)
 
 definition W :: "('\<sigma> \<Rightarrow> bool) \<Rightarrow>('\<sigma> \<times> '\<sigma>) set \<Rightarrow> (('\<sigma> \<times> '\<sigma>) set \<Rightarrow> ('\<sigma> \<times> '\<sigma>) set)" 
 where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else s = t})"
