@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory VCG_Tests
-  imports Hoare
+  imports Hoare Algebraic_Laws_Xstate
 begin                  
 
 subsection \<open>Tactics for Theorem Proving\<close>

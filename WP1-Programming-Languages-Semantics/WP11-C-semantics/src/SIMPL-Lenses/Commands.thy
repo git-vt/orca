@@ -24,7 +24,17 @@ text {*Our goal is to extend the language IMP with new features.
      \end{itemize}
 *}
 
-datatype (dead '\<sigma>,'f) xstate = isNorm: Normal '\<sigma> | isAbr: Abrupt '\<sigma> | isFault: Fault 'f | isStuck: Stuck
+
+datatype (dead '\<sigma>,'f) xstate = isNorm: Normal '\<sigma> ("\<langle>(_)\<rangle>") | isAbr: Abrupt '\<sigma> ("\<langle>|(_)|\<rangle>")| 
+                               isFault: Fault 'f ("\<langle>!(_)!\<rangle>")| isStuck: Stuck ("\<langle>\<infinity>\<rangle>")
+text {*removing the transfer rules related to @{typ "('\<sigma>,'f)xstate"} from the transfer package.*}
+declare xstate.ctr_transfer [transfer_rule del]
+declare xstate.disc_transfer[transfer_rule del]
+declare xstate.rec_transfer [transfer_rule del]
+declare xstate.case_transfer[transfer_rule del]
+declare xstate.rel_transfer [transfer_rule del]
+declare xstate.map_transfer [transfer_rule del]
+declare xstate.set_transfer [transfer_rule del]
 
 subsection{*Wrapper*}
 text {*In this section we introduce a generic wrapper for the different commands.
@@ -32,8 +42,13 @@ text {*In this section we introduce a generic wrapper for the different commands
        of the state. This wrapper is used to execute a given program following the semantics
        of Simpl.*}
 
-definition Xstate_lift :: "('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states" where
-  "Xstate_lift C = (\<lambda> x\<sigma>. case x\<sigma> of  Normal \<sigma> \<Rightarrow> C (Normal \<sigma>) | _ \<Rightarrow> x\<sigma> )"
+lift_definition Xstate_lift :: "'\<sigma> states \<Rightarrow> ('\<sigma>,'f) xstate states" ("\<lbrakk>(_)\<rbrakk>")is
+  "\<lambda>C x\<sigma>. (case x\<sigma> of  \<langle>\<sigma>\<rangle> \<Rightarrow> \<langle>C \<sigma>\<rangle> | _ \<Rightarrow> x\<sigma> )".
+
+lift_definition Xstate_drop :: "('\<sigma>,'f) xstate states  \<Rightarrow> '\<sigma> states" ("\<lbrakk>(_)\<rbrakk>")is
+  "\<lambda>C \<sigma>. (case C \<langle>\<sigma>\<rangle> of  \<langle>\<sigma>'\<rangle> \<Rightarrow> \<sigma>' 
+
+| _ \<Rightarrow> x\<sigma> )".oops
 
 subsection{*SKIP*}
 
@@ -41,22 +56,22 @@ abbreviation "SKIP \<equiv> id"
 
 subsection{*Assign*}
 
-abbreviation Assign :: "('\<tau> , '\<sigma> ) var \<Rightarrow> ('\<tau> ,'\<sigma>) expr \<Rightarrow> '\<sigma> states" ("_ :== _ " [80, 80] 70) where
-  "Assign Var Expr \<equiv>   (subst_upd_var id Var Expr)"
+lift_definition Assign :: "('\<tau> , '\<sigma>) var \<Rightarrow> ('\<tau> ,'\<sigma>) expr \<Rightarrow> ('\<sigma>,'f) xstate states" ("_ :== _ " [80, 80] 70) is
+  "\<lambda>var expr x\<sigma>. (case x\<sigma> of \<langle>\<sigma>\<rangle> \<Rightarrow> \<langle>subst_upd_var id var expr \<sigma>\<rangle> | _ \<Rightarrow> x\<sigma>)".
 
 abbreviation Assign\<^sub>\<sigma> :: " '\<sigma> states \<Rightarrow> ('\<tau> , '\<sigma> ) var \<Rightarrow> ('\<tau> ,'\<sigma>) expr \<Rightarrow> '\<sigma> states" ("_ '(_ :==\<^sub>\<sigma> _') " [80,80, 80] 70) where
-  "Assign\<^sub>\<sigma> \<sigma> Var Expr \<equiv> \<sigma>(Var \<mapsto>\<^sub>s \<sigma> \<dagger> Expr)" (*It means transform the state by \<sigma> and then do the 
+  "Assign\<^sub>\<sigma> \<sigma> Var Expr \<equiv> \<sigma>(Var \<mapsto>\<^sub>s (\<sigma> \<dagger> Expr))" (*It means transform the state by \<sigma> and then do the 
                                             assignment on the transformed state*)
 
 subsection{*Conditional*}
 
-abbreviation Cond :: "(bool , '\<sigma>) expr \<Rightarrow> '\<sigma> states \<Rightarrow> '\<sigma> states \<Rightarrow> '\<sigma> states" ("IF (_)/ THEN (_) ELSE (_)"  70) where
-  "Cond Bexp C1 C2  \<equiv> (\<lambda> \<sigma>. if Bexp \<sigma> then C1 \<sigma> else C2 \<sigma>)" 
+lift_definition Cond :: "(bool ,'\<sigma>) expr \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states" ("IF (_)/ THEN (_) ELSE (_)"  70) is
+  "\<lambda>bexp C1 C2 x\<sigma>. (case x\<sigma> of \<langle>\<sigma>\<rangle> \<Rightarrow> (if bexp \<sigma> then C1 \<langle>\<sigma>\<rangle> else C2 \<langle>\<sigma>\<rangle>) |  _ \<Rightarrow> x\<sigma>)".
 
 subsection{*Sequential composition*}
 
-abbreviation Seq :: "'\<sigma> states \<Rightarrow> '\<sigma> states \<Rightarrow> '\<sigma> states"  ("_; _" [61, 60] 60) where
-  "Seq  C1 C2 \<equiv> (C2 o C1)" 
+lift_definition Seq :: "('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states"  ("_; _" [61, 60] 60) is
+  "\<lambda> C1 C2 x\<sigma>. (case x\<sigma> of \<langle>\<sigma>\<rangle> \<Rightarrow> C2 (C1 x\<sigma>) |  _ \<Rightarrow> x\<sigma>)".
 
 subsection{*While-loop*}
 text{*In order to specify while loops we need a concept that refers to the result of the execution
@@ -76,18 +91,18 @@ where "RelInv S = (\<lambda> \<sigma>. (SOME \<sigma>'. (\<sigma>, \<sigma>') \<
 definition W :: "('\<sigma> \<Rightarrow> bool) \<Rightarrow>('\<sigma> \<times> '\<sigma>) set \<Rightarrow> (('\<sigma> \<times> '\<sigma>) set \<Rightarrow> ('\<sigma> \<times> '\<sigma>) set)" 
 where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else s = t})"
 
-abbreviation While :: "(('\<sigma>,'f) xstate \<Rightarrow> bool) \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states"  ("WHILE (_) DO /(_) OD"  70) where
-  "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))"
+abbreviation While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
+  "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" 
 
 subsection{*Assert*}
 text {*In order to annotate our programs we introduce a new statement to our language.
        The assert statement is a statement that do not change the state but assert an annotation
        to the program. *}
 
-abbreviation assert :: "'f \<Rightarrow> (bool ,('\<sigma>,'f) xstate) expr \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states" ("Assert (_) /{_} /(_)"  70) where
-  "Assert f {bexp} C \<equiv> (IF bexp THEN C ELSE (\<lambda>x\<sigma>. Fault f))" (*emm... This means that whenever the assertions is
-                                                                False the execution of the program is stopped*)
-
+lift_definition Assert :: "'f \<Rightarrow> (bool , '\<sigma>) expr \<Rightarrow> ('\<sigma>,'f) xstate states \<Rightarrow> ('\<sigma>,'f) xstate states" ("ASSERT (_) /{_} /(_)"  70) is
+  "\<lambda> f bexp C x\<sigma>. (case x\<sigma> of \<langle>\<sigma>\<rangle> \<Rightarrow> (if bexp \<sigma> then  C \<langle>\<sigma>\<rangle> else  Fault f)
+                   | _\<Rightarrow> x\<sigma>)".
+ 
 subsection{*Catch*}
 text {*Abrupt terminations are handled using the statement @{text try_catch}.*}
 
@@ -118,14 +133,19 @@ abbreviation Block :: "[('\<sigma>,'f) xstate states,('\<sigma>,'f) xstate state
   "Block init body return c \<equiv> (\<lambda>\<sigma>. ((TRY init ; body CATCH return \<sigma> ; THROW END); 
                                      (\<lambda>\<sigma>'. (return \<sigma>; c \<sigma> \<sigma>') \<sigma>')) \<sigma>)"
 
+lift_definition esubst_lookupx :: "('\<sigma>,'f) xstate states \<Rightarrow>  ('\<tau> , '\<sigma>) var \<Rightarrow> ('\<tau>, '\<sigma>) expr" ("\<langle>_\<rangle>\<^sub>sx")
+is "\<lambda> \<sigma> x s. get\<^bsub>x\<^esub> (\<sigma> s)" .
+term "esubst_lookupx Normal R"
+term "\<langle>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s "
+term "(tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n))  "
 subsection {*Side effects*}
-
+term "\<langle>R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s "
 lemma side_effect1:
   assumes "mwb_lens m" and "mwb_lens R" and "mwb_lens tmp" and 
-  "m \<bowtie> R" and "m \<bowtie> n"  and "m \<bowtie> tmp" and "R \<bowtie> tmp" and "n \<bowtie> tmp"
-  shows "\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
-          \<langle>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s R =\<^sub>e \<guillemotleft>2::int\<guillemotright>\<rceil>"
-  using assms unfolding subst_upd_var_def lens_indep_def
+  "m \<bowtie> R" and "m \<bowtie> n"  and "m \<bowtie> tmp" and "R \<bowtie> tmp" and "n \<bowtie> tmp" 
+  shows "\<lceil>((VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright>  \<longrightarrow>\<^sub>e 
+          \<langle>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s R =\<^sub>e \<guillemotleft>2::int\<guillemotright>)\<rceil>"
+  using assms  unfolding subst_upd_var_def lens_indep_def  Xstate_lift_def
   by transfer auto
 
 lemma side_effect2:  
@@ -133,6 +153,14 @@ lemma side_effect2:
   shows"\<lceil>(VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
         \<langle>[m \<mapsto>\<^sub>s ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>), R \<mapsto>\<^sub>s ((VAR m) +\<^sub>e VAR n)]\<rangle>\<^sub>s R=\<^sub>e \<guillemotleft>2::int\<guillemotright>\<rceil>"
   using assms unfolding subst_upd_var_def lens_indep_def
+  by transfer auto
+
+lemma side_effect3:
+  assumes "mwb_lens m" and "mwb_lens R" and "mwb_lens tmp" and 
+  "m \<bowtie> R" and "m \<bowtie> n"  and "m \<bowtie> tmp" and "R \<bowtie> tmp" and "n \<bowtie> tmp" 
+  shows "\<lceil>((VAR m) =\<^sub>e \<guillemotleft>2::int\<guillemotright> \<and>\<^sub>e (VAR n) =\<^sub>e \<guillemotleft>0::int\<guillemotright> \<longrightarrow>\<^sub>e 
+          \<langle>\<lbrakk>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rbrakk>\<rangle>\<^sub>s R =\<^sub>e \<guillemotleft>2::int\<guillemotright>)\<rceil>"
+  using assms unfolding subst_upd_var_def lens_indep_def  Xstate_lift_def
   by transfer auto
 
 notation (latex)

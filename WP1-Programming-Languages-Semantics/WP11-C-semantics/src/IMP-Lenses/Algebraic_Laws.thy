@@ -632,8 +632,8 @@ theorem single_valued_lfp_Fun2Rel: "single_valued (lfp(W c (Rel B)))"
 done
 
 lemma Rel2Fun_if:
-  "RelInv {(s, t). if b s then (s, t) \<in> Rel c O lfp (\<Gamma> b (Rel c)) else s = t} \<sigma> =
-  (if b \<sigma> then RelInv (Rel c O lfp (\<Gamma> b (Rel c))) \<sigma> else  \<sigma>)"
+  "RelInv {(s, t). if b s then (s, t) \<in> Rel c O lfp (W b (Rel c)) else s = t} \<sigma> =
+  (if b \<sigma> then RelInv (Rel c O lfp (W b (Rel c))) \<sigma> else  \<sigma>)"
   by (simp add: RelInv_def)
 
 
@@ -698,32 +698,33 @@ by (auto simp: single_valued_def Rel_def)
 text{* Putting everything together, the theory of embedding and the invariant of
        determinism of the while-body, gives us the usual unfold-theorem: *}
 
-theorem while_unfold:
+theorem WHILE_unfold:
 assumes loop_terminates: "is_total (lfp (W b (Rel c)))"
 shows  "(WHILE b DO c OD) = (IF b THEN (c ; (WHILE b DO c OD)) ELSE SKIP)"
 proof (rule ext)
   fix \<sigma>
   have h1:"(WHILE b DO c OD) = RelInv (W b (Rel c) (lfp (W b (Rel c)))) "
     using lfp_unfold [OF mono_if_cont, OF cont_W, of b "Rel c"]
+    unfolding While_def
     by simp
   show "(WHILE b DO c OD) \<sigma> =
          (IF b THEN c; WHILE b DO c OD ELSE SKIP) \<sigma>"
    by (subst h1, subst W_def) 
-      (auto simp: h1 Rel2Fun_if Rel2Fun_homomorphism  Rel2Fun_Id [simplified comp_def] 
+      (auto simp: While_def h1 Rel2Fun_if Rel2Fun_homomorphism  Rel2Fun_Id [simplified comp_def] 
                   single_valued_Rel  single_valued_lfp_Fun2Rel loop_terminates)
 qed
 
-lemma WHILE2:
+lemma WHILE_True:
   assumes 1:"\<lceil>b\<rceil>" and 2:"is_total (lfp (W b (Rel c)))" 
   shows "(WHILE b DO c OD) = (c; WHILE b DO c OD)"
-  using 1 2  
-  by (subst while_unfold) (simp_all only: COND13) 
+  using 1  2
+  by (subst WHILE_unfold) (simp_all only: COND13) 
 
-lemma WHILE3:
+lemma WHILE_False:
   assumes 1:" \<lceil>\<not>\<^sub>e b\<rceil>" and 2:"is_total (lfp (W b (Rel c)))"  
   shows "(WHILE b DO c OD) = SKIP"
   using 1 2  
-  by transfer (auto simp add: while_unfold) 
+  by transfer (auto simp add: WHILE_unfold) 
 
 subsection {*Laws used by tactics*}
 text {*In this section we will design a set of rules that can be used to automatise 
