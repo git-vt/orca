@@ -1557,13 +1557,25 @@ lemma Hoare_COND[hoare_partial,vcg]:
   by hoare_solver  
 
 subsection {*Hoare for While-loop*}
+thm Hoare_Pre_Str
+thm Hoare_Post_weak
+(*weaken_post[OF While[OF assms(1)] assms(2)]" apply (rule Hoare_Post_weak) *)
+thm Hoare_Post_weak
 
 lemma Hoare_WHILE[hoare_partial,vcg]:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>P\<rbrace>"  
-  shows "\<lbrace>P\<rbrace>WHILE b DO C OD\<lbrace>P \<and>\<^sub>e (\<not>\<^sub>eb)\<rbrace>" 
-  using 1
-  apply transfer
-sorry  
+  and 2: "is_total (lfp (W b (Rel C)))"
+  shows "\<lbrace>P\<rbrace>WHILE b DO C OD\<lbrace> P \<and>\<^sub>e ( \<not>\<^sub>e b)\<rbrace>"
+  using 1 2
+   apply (subst WHILE_unfold)
+   apply assumption
+   apply (rule Hoare_COND)
+   defer apply (rule Hoare_SKIP)
+   apply (rule Hoare_SEQ[of "P \<and>\<^sub>e b" C "\<not>\<^sub>e b" "WHILE b DO C OD" "P \<and>\<^sub>e ( \<not>\<^sub>e b)"])
+   defer
+   apply transfer
+   apply clarsimp
+  oops
 
 subsection \<open>Weakest Precondition\<close>
 lift_definition wp :: "'\<alpha> states \<Rightarrow> (bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr" is
