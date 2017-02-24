@@ -208,7 +208,7 @@ lemma Hoare_ASN_bop5[hoare_partial,vcg]:
   shows "\<lbrace>bop P (VAR Y) exp2\<rbrace>
           X:== exp2
          \<lbrace>bop P (VAR Y) (VAR X)\<rbrace>" 
-  using 1 2 unfolding subst_upd_var_def lens_indep_def 
+  using 1 2 unfolding subst_upd_var_def lens_indep_def
   by hoare_solver
 
 lemma Hoare_ASN_trop1[hoare_partial,vcg]:
@@ -1564,6 +1564,5 @@ lemma Hoare_WHILE[hoare_partial,vcg]:
   using 1
   apply transfer
 sorry  
-
 
 end
