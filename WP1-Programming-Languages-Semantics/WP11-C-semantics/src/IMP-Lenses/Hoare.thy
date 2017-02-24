@@ -1587,13 +1587,17 @@ lemma wp_While_If: "wp (WHILE b DO c OD) Q \<sigma> = wp (IF b THEN c;WHILE b DO
   apply hoare_solver
   oops
 
-lemma wp_While_True[wps]: "b \<sigma> \<Longrightarrow> wp (WHILE b DO c OD) Q \<sigma> = wp (c; WHILE b DO c OD) Q \<sigma>"
-  using wp_While_If
+lemma wp_While_True[wps]:
+  assumes "b \<sigma>"
+  shows "wp (WHILE b DO c OD) Q \<sigma> = wp (c; WHILE b DO c OD) Q \<sigma>"
+  using assms wp_While_If
   apply hoare_solver
   oops
 
-lemma wp_While_False[wps]: "\<not> b \<sigma> \<Longrightarrow> wp (WHILE b DO c OD) Q \<sigma> = Q \<sigma>"
-  using wp_While_If
+lemma wp_While_False[wps]:
+  assumes "\<not> b \<sigma>"
+  shows "wp (WHILE b DO c OD) Q \<sigma> = Q \<sigma>"
+  using assms wp_While_If
   apply hoare_solver
   oops
 
