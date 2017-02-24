@@ -1565,4 +1565,39 @@ lemma Hoare_WHILE[hoare_partial,vcg]:
   apply transfer
 sorry  
 
+subsection \<open>Weakest Precondition\<close>
+lift_definition wp :: "'\<alpha> states \<Rightarrow> (bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr" is
+  "\<lambda>c Q \<sigma>. \<forall>\<sigma>'. c \<sigma> = \<sigma>' \<longrightarrow> Q \<sigma>'" .
+
+named_theorems wps
+
+lemma wp_SKIP[wps]: "wp SKIP Q = Q"
+  by hoare_solver
+
+lemma wp_Ass[wps]: "wp (X :== exp) Q = [X \<mapsto>\<^sub>s exp] \<dagger> Q"
+  by hoare_solver
+
+lemma wp_Seq[wps]: "wp (c\<^sub>1; c\<^sub>2) Q = wp c\<^sub>1 (wp c\<^sub>2 Q)"
+  by hoare_solver
+
+lemma wp_If[wps]: "wp (IF b THEN c\<^sub>1 ELSE c\<^sub>2) Q = (\<lambda>\<sigma>. if b \<sigma> then wp c\<^sub>1 Q \<sigma> else wp c\<^sub>2 Q \<sigma>)"
+  by hoare_solver
+
+lemma wp_While_If: "wp (WHILE b DO c OD) Q \<sigma> = wp (IF b THEN c;WHILE b DO c OD ELSE SKIP) Q \<sigma>"
+  apply hoare_solver
+  oops
+
+lemma wp_While_True[wps]: "b \<sigma> \<Longrightarrow> wp (WHILE b DO c OD) Q \<sigma> = wp (c; WHILE b DO c OD) Q \<sigma>"
+  using wp_While_If
+  apply hoare_solver
+  oops
+
+lemma wp_While_False[wps]: "\<not> b \<sigma> \<Longrightarrow> wp (WHILE b DO c OD) Q \<sigma> = Q \<sigma>"
+  using wp_While_If
+  apply hoare_solver
+  oops
+
+lemma wp_is_pre[wps]: "\<lbrace>wp c Q\<rbrace> c \<lbrace>Q\<rbrace>"
+  by hoare_solver
+
 end
