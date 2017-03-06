@@ -629,30 +629,16 @@ text {*In this section we will design a tactic that can be used to automate
 
 method symbolic_exec_commands =
   (simp add: symbolic_exec)?,
-  (subst symbolic_exec)?,
+  ((subst symbolic_exec)+)?,
   (simp add: symbolic_exec_assign_uop)?,
-  (subst symbolic_exec_assign_uop)?,
+  ((subst symbolic_exec_assign_uop)+)?,
   (simp add: symbolic_exec_assign_bop)?,
-  (subst symbolic_exec_assign_bop)?,
+  ((subst symbolic_exec_assign_bop)+)?,
   (simp add: symbolic_exec_assign_trop)?,
-  (subst symbolic_exec_assign_trop)?,
+  ((subst symbolic_exec_assign_trop)+)?,
   (simp add: symbolic_exec_assign_qtop)?,
-  (subst symbolic_exec_assign_qtop)?,
+  ((subst symbolic_exec_assign_qtop)+)?,
   transfer'?,
   rel_auto?
-
-subsection \<open>Other expression simplification\<close>
-
-lemma not_true[symbolic_exec_subst]: "(\<not>\<^sub>e TRUE) = FALSE"
-  by transfer simp
-
-lemma conj_false1[symbolic_exec_subst]: "(exp \<and>\<^sub>e FALSE) = FALSE"
-  by transfer simp
-
-lemma conj_false2[symbolic_exec_subst]: "(FALSE \<and>\<^sub>e exp) = FALSE"
-  by transfer simp
-
-lemma conj_true2[symbolic_exec_subst]: "(TRUE \<and>\<^sub>e exp) = exp"
-  by transfer simp
 
 end

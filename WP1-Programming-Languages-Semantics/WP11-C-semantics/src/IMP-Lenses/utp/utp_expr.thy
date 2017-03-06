@@ -534,7 +534,11 @@ lemma lit_numeral_1: "uop numeral x = Abs_uexpr (\<lambda>b. numeral (\<lbrakk>x
 lemma lit_numeral_2: "Abs_uexpr (\<lambda> b. numeral v) = numeral v"
   by (metis lit.abs_eq lit_num_simps(3))
 
-method literalise = (unfold lit_simps[THEN sym])
-method unliteralise = (unfold lit_simps uexpr_defs[THEN sym]; 
-                     (unfold lit_numeral_1 ; (unfold ueval); (unfold lit_numeral_2))?)+
+method literalise = unfold lit_simps[THEN sym]
+method unliteralise =
+  (unfold lit_simps uexpr_defs[THEN sym]; 
+    (unfold lit_numeral_1;
+      unfold ueval;
+      unfold lit_numeral_2)?)+
+
 end

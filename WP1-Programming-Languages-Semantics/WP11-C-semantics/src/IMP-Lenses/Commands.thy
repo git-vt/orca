@@ -37,16 +37,17 @@ abbreviation assign_2_r ::
 subsection{*Conditional*}
 
 definition cond::"'\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred" ("IF (_)/ THEN (_) ELSE (_)"  70)
-where "(IF b THEN P ELSE Q) = ((b \<and> P) \<or> ((\<not> b) \<and> Q))"
+where "(IF b THEN P ELSE Q) = (b \<and> P \<or> \<not> b \<and> Q)"
+thm cond_def
 
-abbreviation rcond::"('\<alpha>,  '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>,  '\<beta>) rel \<Rightarrow> ('\<alpha>,  '\<beta>) rel"
+abbreviation rcond::"('\<alpha>, '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<alpha>, '\<beta>) rel"
                                                           ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
 where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (IF \<lceil>b\<rceil>\<^sub>< THEN P ELSE Q)"
 
 subsection{*Sequential composition*}
 
-lift_definition seqr::"(('\<alpha> \<times> '\<beta>) upred) \<Rightarrow> (('\<beta> \<times> '\<gamma>) upred) \<Rightarrow> ('\<alpha> \<times> '\<gamma>) upred" (infixr ";;" 51)
-is "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
+lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel" (infixr ";;" 51) is
+  "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
 
 subsection{*While-loop*}
 text{*In order to specify while loops we need a concept that refers to the result of the execution

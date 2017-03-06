@@ -17,32 +17,32 @@ text {*
 
 text {* Without re-interpretation of lens types in state spaces (legacy). *}
 
-method rel_simp' = (
+method rel_simp' =
   (unfold upred_defs urel_defs)?,
-  (transfer),
+  transfer,
   (simp add: fun_eq_iff relcomp_unfold OO_def
     lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
-  (clarsimp)?)
+  clarsimp?
 
 text {* Variations that adjoin @{method rel_simp'} with automatic tactics. *}
 
-method rel_auto' = (rel_simp', auto?)
-method rel_blast' = (rel_simp'; blast)
+method rel_auto' = rel_simp', auto?
+method rel_blast' = rel_simp'; blast
 
 text {* With reinterpretation of lens types in state spaces (default). *}
 
-method rel_simp = (
+method rel_simp =
   (unfold upred_defs urel_defs)?,
-  (transfer),
+  transfer,
   (simp add: fun_eq_iff relcomp_unfold OO_def
     lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
   (simp add: lens_interp_laws)?,
-  (clarsimp)?)
+  clarsimp?
 
 text {* Variations that adjoin @{method rel_simp} with automatic tactics. *}
 
-method rel_auto = (rel_simp, auto?)
-method rel_blast = (rel_simp; blast)
+method rel_auto = rel_simp, auto?
+method rel_blast = rel_simp; blast
 
 
 definition in\<alpha> :: "('\<alpha>, '\<alpha> \<times> '\<beta>) uvar" where

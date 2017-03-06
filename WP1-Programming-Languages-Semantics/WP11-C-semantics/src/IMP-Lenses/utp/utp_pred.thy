@@ -7,7 +7,7 @@ imports
   utp_unrest
 begin
 
-text {* An alphabetised predicate is a simply a boolean valued expression *}
+text {* An alphabetised predicate is simply a boolean-valued expression *}
 
 type_synonym '\<alpha> upred = "(bool, '\<alpha>) uexpr"
 
@@ -21,8 +21,8 @@ named_theorems upred_defs
 text {*
   We set up several automatic tactics that recast theorems on UTP predicates
   into equivalent HOL predicates, eliminating artefacts of the mechanisation
-  as much as this is possible. Our approach is first to unfold all relevant
-  definition of the UTP predicate model, then perform a transfer, and finally
+  as much as this is possible. Our approach is to first unfold all relevant
+  definitions of the UTP predicate model, then perform a transfer, and finally
   simplify by using lens and variable definitions, the split laws of alphabet
   records, and interpretation laws to convert record-based state spaces into
   products. The definition of the methods is facilitated by the Eisbach tool.
@@ -30,34 +30,34 @@ text {*
 
 text {* Without re-interpretation of lens types in state spaces (legacy). *}
 
-method pred_simp' = (
+method pred_simp' =
   (unfold upred_defs)?,
-  (transfer),
+  transfer,
   (simp add: fun_eq_iff
     lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
-  (clarsimp)?)
+  clarsimp?
 
 text {* Variations that adjoin @{method pred_simp'} with automatic tactics. *}
 
-method pred_auto' = (pred_simp', auto?)
-method pred_blast' = (pred_simp'; blast)
+method pred_auto' = pred_simp', auto?
+method pred_blast' = pred_simp'; blast
 
 text {* With reinterpretation of lens types in state spaces (default). *}
 
-method pred_simp = (
+method pred_simp =
   (unfold upred_defs)?,
-  (transfer),
+  transfer,
   (simp add: fun_eq_iff
     lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
   (simp add: lens_interp_laws)?,
-  (clarsimp)?)
+  clarsimp?
 
 text {* Variations that adjoin @{method pred_simp} with automatic tactics. *}
 
-method pred_auto = (pred_simp, auto?)
-method pred_blast = (pred_simp; blast)
+method pred_auto = pred_simp, auto?
+method pred_blast = pred_simp; blast
 
--- {* TODO: Rename @{text pred_auto} into @{text pred_auto}. *}
+-- {* TODO: Rename @{text pred_auto} to @{text pred_auto}. (???) *}
 
 subsection {* Predicate syntax *}
 
@@ -90,8 +90,8 @@ adhoc_overloading
   udisj disj and
   unot Not
 
-text {* We set up two versions of each of the quantifiers: @{const uex} / @{const uall} and
-        @{const ushEx} / @{const ushAll}. The former pair allows quantification of UTP variables,
+text {* We set up two versions of each of the quantifiers: @{const uex}/@{const uall} and
+        @{const ushEx}/@{const ushAll}. The former pair allows quantification of UTP variables,
         whilst the latter allows quantification of HOL variables. Both varieties will be
         needed at various points. Syntactically they are distinguish by a boldface quantifier
         for the HOL versions (achieved by the "bold" escape in Isabelle). *}
