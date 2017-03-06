@@ -181,10 +181,10 @@ lemma assign_vwb_skip:
   shows "(v:== &v) = SKIP"
   by (simp add: assms skip_r_def usubst_upd_var_id)
 
-lemma assign_simultanious:
+lemma assign_simultaneous:
   assumes  1: "vwb_lens var2"
-  and     2: "var1 \<bowtie> var2"
-  shows"(var1, var2 :== exp , &var2) = (var1 :== exp)"
+  and      2: "var1 \<bowtie> var2"
+  shows "(var1, var2 :== exp, &var2) = (var1 :== exp)"
   by (simp add: "1" "2" usubst_upd_comm usubst_upd_var_id)
 
 lemma assign_seq:
@@ -622,12 +622,12 @@ proof -
 qed
 
 subsection {*Tactic setup*}
-text {*In this section we will design a stactic that can be used to automatise 
+text {*In this section we will design a tactic that can be used to automate
        the process of program optimization.*}
 
 (*TODO For Josh: Test this on different random examples*)
 
-method symbolic_exec_commands = (
+method symbolic_exec_commands =
   (simp add: symbolic_exec)?,
   (subst symbolic_exec)?,
   (simp add: symbolic_exec_assign_uop)?,
@@ -638,8 +638,21 @@ method symbolic_exec_commands = (
   (subst symbolic_exec_assign_trop)?,
   (simp add: symbolic_exec_assign_qtop)?,
   (subst symbolic_exec_assign_qtop)?,
-   transfer'?,
-   rel_auto?)
+  transfer'?,
+  rel_auto?
 
+subsection \<open>Other expression simplification\<close>
+
+lemma not_true[symbolic_exec_subst]: "(\<not>\<^sub>e TRUE) = FALSE"
+  by transfer simp
+
+lemma conj_false1[symbolic_exec_subst]: "(exp \<and>\<^sub>e FALSE) = FALSE"
+  by transfer simp
+
+lemma conj_false2[symbolic_exec_subst]: "(FALSE \<and>\<^sub>e exp) = FALSE"
+  by transfer simp
+
+lemma conj_true2[symbolic_exec_subst]: "(TRUE \<and>\<^sub>e exp) = exp"
+  by transfer simp
 
 end
