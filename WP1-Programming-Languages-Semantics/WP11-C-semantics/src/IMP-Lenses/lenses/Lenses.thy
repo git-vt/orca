@@ -311,7 +311,7 @@ lemma fst_snd_lens_indep:
 
 text {* The second law requires independence as we have to apply x first, before y *}
 
-lemma snd_lens_prod:
+lemma snd_lens_plus:
   assumes 1:"wb_lens x" 
   and     2:"x \<bowtie> y"
   shows "snd\<^sub>L ;\<^sub>L (x +\<^sub>L y) = y"
@@ -358,6 +358,11 @@ lemma lens_indep_left_ext:
   shows"(x ;\<^sub>L y) \<bowtie> z" 
   using 1 unfolding lens_indep_def lens_comp_def
   by auto
+lemma lens_indep_right_ext [intro]:
+  assumes 1:"x \<bowtie> z" 
+  shows   "x \<bowtie> (y ;\<^sub>L z)"
+  using 1
+  by (simp add: lens_indep_left_ext lens_indep_sym)
 
 lemma plus_vwb_lens:
   assumes "vwb_lens x" "vwb_lens y" "x \<bowtie> y"
@@ -764,7 +769,7 @@ lemma lens_plus_right_sublens:
   apply (rule_tac x="Z' ;\<^sub>L snd\<^sub>L" in exI)
   apply (auto)
   using comp_vwb_lens snd_vwb_lens apply blast
-  apply (simp add: lens_comp_assoc snd_lens_prod)
+  apply (simp add: lens_comp_assoc snd_lens_plus)
 done
 
 lemma lens_comp_lb: 
@@ -774,7 +779,7 @@ lemma lens_comp_lb:
   by auto 
 
 lemma lens_unit_plus_sublens_1: "X \<subseteq>\<^sub>L 0\<^sub>L +\<^sub>L X"
-  by (metis lens_comp_lb snd_lens_prod snd_vwb_lens unit_lens_indep unit_wb_lens)
+  by (metis lens_comp_lb snd_lens_plus snd_vwb_lens unit_lens_indep unit_wb_lens)
 
 lemma lens_unit_prod_sublens_2: "0\<^sub>L +\<^sub>L x \<subseteq>\<^sub>L x"
   apply (auto simp add: sublens_def)
@@ -1122,6 +1127,7 @@ proof (rule lens_equivI)
   done
 qed
 
+
 text {* We require that range type of a lens function has cardinality of at least 2; this ensures
         that properties of independence are provable. *}
 
@@ -1283,6 +1289,57 @@ abbreviation (input) "fld_put f \<equiv> (\<lambda> \<sigma> u. f (\<lambda>_. u
 
 syntax "_FLDLENS" :: "id \<Rightarrow> ('a \<Longrightarrow> 'r)"  ("FLDLENS _")
 translations "FLDLENS x" => "\<lparr> lens_get = x, lens_put = CONST fld_put (_update_name x) \<rparr>"
+
+subsection {* Interpretation Locale *}
+
+locale interp =
+fixes f :: "'a \<Rightarrow> 'b"
+assumes f_inj : "inj f"
+begin
+lemma meta_interp_law:
+"(\<And>P. PROP Q P) \<equiv> (\<And>P. PROP Q (P o f))"
+apply (rule equal_intr_rule)
+-- {* Subgoal 1 *}
+apply (drule_tac x = "P o f" in meta_spec)
+apply (assumption)
+-- {* Subgoal 2 *}
+apply (drule_tac x = "P o inv f" in meta_spec)
+apply (simp add: f_inj)
+done
+
+lemma all_interp_law:
+"(\<forall>P. Q P) = (\<forall>P. Q (P o f))"
+apply (safe)
+-- {* Subgoal 1 *}
+apply (drule_tac x = "P o f" in spec)
+apply (assumption)
+-- {* Subgoal 2 *}
+apply (drule_tac x = "P o inv f" in spec)
+apply (simp add: f_inj)
+done
+
+lemma exists_interp_law:
+"(\<exists>P. Q P) = (\<exists>P. Q (P o f))"
+apply (safe)
+-- {* Subgoal 1 *}
+apply (rule_tac x = "P o inv f" in exI)
+apply (simp add: f_inj)
+-- {* Subgoal 2 *}
+apply (rule_tac x = "P o f" in exI)
+apply (assumption)
+done
+end
+
+subsection {* Lens Interpretation *}
+
+named_theorems lens_interp_laws
+
+locale lens_interp = interp
+begin
+declare meta_interp_law [lens_interp_laws]
+declare all_interp_law [lens_interp_laws]
+declare exists_interp_law [lens_interp_laws]
+end
 
 subsection {* Memory lenses *}
 

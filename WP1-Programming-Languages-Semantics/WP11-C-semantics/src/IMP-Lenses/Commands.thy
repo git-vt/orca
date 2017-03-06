@@ -5,33 +5,48 @@ text{*Instead of using a deep-embedding for the abstract syntax we use shallow e
       We use abbreviation in order that we do not hide the core theory behind
       another definition layer. Which makes it more suited for exploitation by simp, auto, etc*}
 
-theory Commands imports Substitution
+theory Commands 
+imports "utp/utp_pred" "utp/utp_alphabet" "utp/utp_urel_setup"
 
 begin
 
-subsection{*SKIP*}
 
-abbreviation "SKIP \<equiv> id" (* in other words Skip is the id substitution.. it means (id \<dagger> id)*)
+type_synonym '\<alpha> cond      = "'\<alpha> upred"
+type_synonym ('\<alpha>, '\<beta>) rel = "('\<alpha> \<times> '\<beta>) upred"
+type_synonym '\<alpha> hrel      = "('\<alpha> \<times> '\<alpha>) upred"
+
+translations
+  (type) "('\<alpha>, '\<beta>) rel" <= (type) "('\<alpha> \<times> '\<beta>) upred"
+
+subsection{*SKIP*}
+lift_definition assigns_r :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel" ("\<langle>_\<rangle>\<^sub>a")
+  is "\<lambda> \<sigma> (A, A'). A' = \<sigma>(A)" .
+
+definition skip_r :: "'\<alpha> hrel"("SKIP") where
+"skip_r = assigns_r id"
 
 subsection{*Assign*}
 
-abbreviation Assign :: "('\<tau> , '\<alpha> ) var \<Rightarrow> ('\<tau> ,'\<alpha>) expr \<Rightarrow> '\<alpha> states" ("_ :== _ " [80, 80] 70) where
-"Assign Var Expr \<equiv> (subst_upd_var id Var Expr)" (*in other words an assign is a substitution update
-                                                 on the id substitution (subst_upd (id o id) Var (id \<dagger> Expr ) )*)
+abbreviation assign_r :: "('t, '\<alpha>) uvar \<Rightarrow> ('t, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel"  where 
+  "assign_r v expr \<equiv> assigns_r [v \<mapsto>\<^sub>s expr]"
 
-abbreviation Assign\<^sub>\<sigma> :: " '\<alpha> states \<Rightarrow> ('\<tau> , '\<alpha> ) var \<Rightarrow> ('\<tau> ,'\<alpha>) expr \<Rightarrow> '\<alpha> states" ("_ '(_ :==\<^sub>\<sigma> _') " [80,80, 80] 70) where
-"Assign\<^sub>\<sigma> \<sigma> Var Expr \<equiv> \<sigma>(Var \<mapsto>\<^sub>s \<sigma> \<dagger> Expr)" (*It means transform the state by \<sigma> and then do the 
-                                            assignment on the transformed state*)
+abbreviation assign_2_r ::
+  "('t1, '\<alpha>) uvar \<Rightarrow> ('t2, '\<alpha>) uvar \<Rightarrow> ('t1, '\<alpha>) uexpr \<Rightarrow> ('t2, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel" where 
+  "assign_2_r x y u v \<equiv> assigns_r [x \<mapsto>\<^sub>s u, y \<mapsto>\<^sub>s v]"
 
 subsection{*Conditional*}
 
-abbreviation Cond :: "(bool ,'\<alpha>) expr \<Rightarrow>'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states" ("IF (_)/ THEN (_) ELSE (_)"  70) where
-"Cond Bexp C1 C2  \<equiv> (\<lambda> \<sigma>. if Bexp \<sigma> then C1 \<sigma> else C2 \<sigma>)" (*emm...*)
+definition cond::"'\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred" ("IF (_)/ THEN (_) ELSE (_)"  70)
+where "(IF b THEN P ELSE Q) = ((b \<and> P) \<or> ((\<not> b) \<and> Q))"
+
+abbreviation rcond::"('\<alpha>,  '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>,  '\<beta>) rel \<Rightarrow> ('\<alpha>,  '\<beta>) rel"
+                                                          ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
+where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (IF \<lceil>b\<rceil>\<^sub>< THEN P ELSE Q)"
 
 subsection{*Sequential composition*}
 
-abbreviation Seq :: "'\<alpha> states \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("_; _" [61, 60] 60) where
-"Seq  C1 C2  \<equiv>  C2 o C1 " (*emm... it means (C2 o C1)*)
+lift_definition seqr::"(('\<alpha> \<times> '\<beta>) upred) \<Rightarrow> (('\<beta> \<times> '\<gamma>) upred) \<Rightarrow> ('\<alpha> \<times> '\<gamma>) upred" (infixr ";;" 51)
+is "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
 
 subsection{*While-loop*}
 text{*In order to specify while loops we need a concept that refers to the result of the execution
@@ -41,7 +56,7 @@ text{*In order to specify while loops we need a concept that refers to the resul
       Now we need to reason on the next state space to see if we continue the execution of the body
       or we skip it.*}
 
-(*This definition is inspired by HOL/IMP/denotational.thy*)
+(*This definition is inspired by HOL/IMP/denotational.thy
 definition Rel :: "('\<alpha> \<Rightarrow> '\<alpha>) \<Rightarrow> '\<alpha> rel"
 where "Rel f = {(\<sigma>, \<sigma>'). (f \<sigma> = \<sigma>')}"
 
@@ -68,10 +83,36 @@ where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else 
 definition While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
 "While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" (*emm...*)
 
+definition While' :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  where
+"While' b C =  (\<nu> X \<bullet> (\<lambda>\<sigma>. if b \<sigma> then X(C \<sigma>) else id \<sigma>))"
+*)
+
+definition While :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("WHILE (_) DO /(_) OD"  70) where
+"While b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r SKIP)"
+
+nonterminal
+  svid_list and uexpr_list
+
+syntax
+  "_svid_unit"  :: "svid \<Rightarrow> svid_list" ("_")
+  "_svid_list"  :: "svid \<Rightarrow> svid_list \<Rightarrow> svid_list" ("_,/ _")
+  "_uexpr_unit" :: "('a, '\<alpha>) uexpr \<Rightarrow> uexpr_list" ("_" [40] 40)
+  "_uexpr_list" :: "('a, '\<alpha>) uexpr \<Rightarrow> uexpr_list \<Rightarrow> uexpr_list" ("_,/ _" [40,40] 40)
+  "_assignment" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> '\<alpha> hrel"  ("_ :== _ " [80, 80] 70)
+  "_mk_usubst"  :: "svid_list \<Rightarrow> uexprs \<Rightarrow> '\<alpha> usubst"
+
+translations
+  "_mk_usubst \<sigma> (_svid_unit x) v" == "\<sigma>(&x \<mapsto>\<^sub>s v)"
+  "_mk_usubst \<sigma> (_svid_list x xs) (_uexprs v vs)" == "(_mk_usubst (\<sigma>(&x \<mapsto>\<^sub>s v)) xs vs)"
+  "_assignment xs vs" => "CONST assigns_r (_mk_usubst (CONST id) xs vs)"
+  "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) (CONST svar x) v)"
+  "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) x v)"
+  "x,y :== u,v" <= "CONST assigns_r (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
+
 
 notation (latex)
-  SKIP  ("\<SKIP>") and
-  Cond  ("\<IF> _ \<THEN> _ \<ELSE> _"  60) and
+  skip_r  ("\<SKIP>") and
+  cond  ("\<IF> _ \<THEN> _ \<ELSE> _"  60) and
   While  ("\<WHILE> _ \<DO> _ \<OD>"  60)
 
 

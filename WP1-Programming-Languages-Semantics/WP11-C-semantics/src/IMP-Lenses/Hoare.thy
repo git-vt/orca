@@ -1561,7 +1561,15 @@ thm Hoare_Pre_Str
 thm Hoare_Post_weak
 (*weaken_post[OF While[OF assms(1)] assms(2)]" apply (rule Hoare_Post_weak) *)
 thm Hoare_Post_weak
+lemma blah:
+assumes 1:"P Body"
+shows "P (Body ; RelInv(lfp(W Bexp (Rel Body))))"
 
+sorry
+
+lemma blah2:
+   "\<not> (b ((C; WHILE b DO C OD) \<sigma>))"
+sorry
 lemma Hoare_WHILE[hoare_partial,vcg]:
   assumes 1:"\<lbrace>P \<and>\<^sub>e b\<rbrace>C\<lbrace>P\<rbrace>"  
   and 2: "is_total (lfp (W b (Rel C)))"
@@ -1571,11 +1579,20 @@ lemma Hoare_WHILE[hoare_partial,vcg]:
    apply assumption
    apply (rule Hoare_COND)
    defer apply (rule Hoare_SKIP)
-   apply (rule Hoare_SEQ[of "P \<and>\<^sub>e b" C "\<not>\<^sub>e b" "WHILE b DO C OD" "P \<and>\<^sub>e ( \<not>\<^sub>e b)"])
-   defer
    apply transfer
-   apply clarsimp
-  oops
+   apply (intro allI)
+   apply (intro impI)
+   apply (intro conjI)
+   apply (simp only: While_def)
+   apply (subgoal_tac "P (C \<sigma>)") prefer 2
+   apply (elim conjE)
+   apply (elim allE)
+   apply (elim impE)
+   apply simp
+   apply simp
+   apply (elim blah)
+   apply (rule blah2)
+   done
 
 subsection \<open>Weakest Precondition\<close>
 lift_definition wp :: "'\<alpha> states \<Rightarrow> (bool, '\<alpha>) expr \<Rightarrow> (bool, '\<alpha>) expr" is
