@@ -76,10 +76,23 @@ definition rassert :: "'\<alpha> upred \<Rightarrow> '\<alpha> hrel" ("_\<^sub>\
 subsection{*throw*} 
 text{*To model exceptions we need to use the flag OK from UTP.
       It is a way to capture the termination or non termination of a program.*}
+
 subsection{*blocks*}
-
+(*(\<lambda>\<sigma>. ((TRY init ; body CATCH return \<sigma> ; THROW END); 
+       (\<lambda>\<sigma>'. (return \<sigma>; c \<sigma> \<sigma>') \<sigma>')) \<sigma>)  *)
 term "init ;; body ;; return ;; c"
+term"\<lambda> x \<bullet> p ;; body"
 
+subsection {* Program values *}
+
+abbreviation prog_val :: "'\<alpha> hrel \<Rightarrow> ('\<alpha> hrel, '\<alpha>) uexpr" ("\<lbrace>_\<rbrace>\<^sub>u")
+where "\<lbrace>P\<rbrace>\<^sub>u \<equiv> \<guillemotleft>P\<guillemotright>"
+
+lift_definition call :: "('\<alpha> hrel, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel"
+is "\<lambda> P b. P (fst b) b" .
+
+lemma call_prog_val: "call \<lbrace>P\<rbrace>\<^sub>u = P"
+  by (simp add: call_def urel_defs lit.rep_eq Rep_uexpr_inverse)
 nonterminal
   svid_list and uexpr_list
 
@@ -98,7 +111,6 @@ translations
   "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) x v)"
   "x,y :== u,v" <= "CONST assigns_r (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
-
 
 notation (latex)
   skip_r  ("\<SKIP>") and

@@ -57,13 +57,39 @@ lemma usubst_cancel_r[usubst,symbolic_exec]:
   assumes 1:"weak_lens v" 
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub></$v\<rbrakk>= \<lceil>expr\<rceil>\<^sub><"
   using 1
-  by transfer' rel_auto
+  by  rel_auto
 
 lemma assign_test[symbolic_exec]:
   assumes 1:"mwb_lens x" 
   shows     "(x :== \<guillemotleft>u\<guillemotright> ;; x :== \<guillemotleft>v\<guillemotright>) = (x :== \<guillemotleft>v\<guillemotright>)"
   using 1   
   by (simp add: assigns_comp subst_upd_comp subst_lit usubst_upd_idem)
+
+term "`$x =\<^sub>u \<guillemotleft>1::int\<guillemotright>`"
+term "`x :== \<guillemotleft>1::int\<guillemotright> ;; x :== \<guillemotleft>1::int\<guillemotright>`"
+term "\<lbrakk>x :== \<guillemotleft>1::int\<guillemotright>\<rbrakk>\<^sub>e (\<sigma>, \<sigma>')"
+term "Abs_uexpr(init) ;; body ;; Abs_uexpr(return s)"
+term " (\<lambda>s \<bullet> Abs_uexpr(init) ;; body ;; Abs_uexpr(return s) )"
+term " (\<forall> s \<bullet> Abs_uexpr(init) ;; body ;; Abs_uexpr(return s) )"
+term "x:: ( bool ,  'b \<times> 'c) uexpr"
+term "\<forall> $j \<bullet> j :== \<guillemotleft>1::int\<guillemotright>"
+term "(P:: ('a, 'b) rel)\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>"
+term "SKIP\<lbrakk>$j/$i\<rbrakk>"
+
+term " (\<lambda>s . P s ;; body s) "
+term "\<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
+term "call \<guillemotleft>\<lbrakk>P\<rbrakk>\<^sub>e s\<guillemotright>"
+term "call P"
+term " ([$j \<mapsto>\<^sub>s \<guillemotleft>1::int\<guillemotright>] \<dagger> SKIP) ;; (\<sigma> ($j \<mapsto>\<^sub>s \<guillemotleft>2::int\<guillemotright>) \<dagger> SKIP)"
+lemma  "mwb_lens j \<Longrightarrow> `j :== \<guillemotleft>1::int\<guillemotright> ;;j :== \<guillemotleft>2::int\<guillemotright>` = (`$j =\<^sub>u \<guillemotleft>2::int\<guillemotright>`)"
+  apply rel_auto
+apply (meson mwb_lens_weak weak_lens.view_determination)
+by (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
+
+lemma "mwb_lens x \<Longrightarrow> `x :== \<guillemotleft>1::int\<guillemotright> ;; x :== \<guillemotleft>3::int\<guillemotright>` = (`&x =\<^sub>u \<guillemotleft>3\<guillemotright>`)" 
+  apply rel_auto
+apply (meson mwb_lens_weak weak_lens.view_determination)
+by (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
 
 lemma assign_r_comp[symbolic_exec]: 
   "(x :== u ;; P) = P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>" 
