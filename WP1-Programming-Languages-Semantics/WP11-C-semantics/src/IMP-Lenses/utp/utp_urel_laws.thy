@@ -168,10 +168,6 @@ abbreviation falser :: "'\<alpha> hrel" ("false\<^sub>h") where
 lemma drop_pre_inv [simp]: "\<lbrakk> out\<alpha> \<sharp> p \<rbrakk> \<Longrightarrow> \<lceil>\<lfloor>p\<rfloor>\<^sub><\<rceil>\<^sub>< = p"
   by (pred_auto, auto simp add: out\<alpha>_def lens_create_def fst_lens_def prod.case_eq_if)
 
-text {* While loops with invariant decoration *}
-
-definition while_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while _ invr _ do _ od") where
-"while b invr p do S od = WHILE b DO S OD"
 
 
     
@@ -379,7 +375,7 @@ lemma seqr_post_var_out:
   by (rel_auto)
 
 (*theorem seqr_post_transfer: "out\<alpha> \<sharp> q \<Longrightarrow> (P ;; (q \<and> R)) = ((P \<and> q\<^sup>-) ;; R)"
-  by (simp add: seqr_pre_transfer unrest_convr_in\<alpha>)*)
+  by (simp add: seqr_pre_transfer unrest_convr_in\<alpha>)*) 
 
 lemma seqr_pre_out: "out\<alpha> \<sharp> p \<Longrightarrow> ((p \<and> Q) ;; R) = (p \<and> (Q ;; R))"
   by (rel_blast)
