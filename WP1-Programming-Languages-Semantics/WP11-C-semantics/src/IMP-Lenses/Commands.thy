@@ -23,7 +23,7 @@ lift_definition assigns_r :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel" ("\
   is "\<lambda> \<sigma> (A, A'). A' = \<sigma>(A)" .
 
 definition skip_r :: "'\<alpha> hrel"("SKIP") where
-"skip_r = assigns_r id"
+[urel_defs]:"skip_r = assigns_r id"
 
 subsection{*Assign*}
 
@@ -37,8 +37,7 @@ abbreviation assign_2_r ::
 subsection{*Conditional*}
 
 definition cond::"'\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred \<Rightarrow> '\<alpha> upred" ("IF (_)/ THEN (_) ELSE (_)"  70)
-where "(IF b THEN P ELSE Q) = (b \<and> P \<or> \<not> b \<and> Q)"
-thm cond_def
+where [urel_defs]:"(IF b THEN P ELSE Q) = ((b \<and> P) \<or> ((\<not> b) \<and> Q))"
 
 abbreviation rcond::"('\<alpha>, '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<alpha>, '\<beta>) rel"
                                                           ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
@@ -57,39 +56,29 @@ text{*In order to specify while loops we need a concept that refers to the resul
       Now we need to reason on the next state space to see if we continue the execution of the body
       or we skip it.*}
 
-(*This definition is inspired by HOL/IMP/denotational.thy
-definition Rel :: "('\<alpha> \<Rightarrow> '\<alpha>) \<Rightarrow> '\<alpha> rel"
-where "Rel f = {(\<sigma>, \<sigma>'). (f \<sigma> = \<sigma>')}"
-
-definition RelInv :: "'\<alpha> rel \<Rightarrow> ('\<alpha> \<Rightarrow> '\<alpha>) "
-where "RelInv S = (\<lambda> \<sigma>. (SOME \<sigma>'. (\<sigma>, \<sigma>') \<in> S))"
-definition is_total :: "'\<alpha> rel \<Rightarrow> bool"
-where     "is_total R \<equiv> \<forall>\<sigma>. \<exists>\<sigma>'. (\<sigma>,\<sigma>') \<in> R"
-
-lemma is_total_Rel [simp]:"is_total(Rel c)"
-unfolding is_total_def Rel_def
-by auto
-
-lemma Fun2Rel_Rel2Fun_id: 
-assumes det:"single_valued R" 
-  and   is_tot: "is_total R" 
-shows "(Rel \<circ> RelInv) R = R"
-apply (simp add: comp_def Rel_def RelInv_def,auto)
-apply (meson is_tot someI_ex is_total_def)
-by (metis det single_valued_def some_equality)
-
-definition W :: "('\<sigma> \<Rightarrow> bool) \<Rightarrow>('\<sigma> \<times> '\<sigma>) set \<Rightarrow> (('\<sigma> \<times> '\<sigma>) set \<Rightarrow> ('\<sigma> \<times> '\<sigma>) set)" 
-where     "W b cd = (\<lambda>cw. {(s,t). if b s then (s, t) \<in> cd O cw else s = t})"
-
-definition While :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  ("WHILE (_) DO /(_) OD"  70) where
-"While Bexp Body \<equiv> (RelInv(lfp(W Bexp (Rel Body))))" (*emm...*)
-
-definition While' :: "('\<alpha> \<Rightarrow> bool) \<Rightarrow> '\<alpha> states \<Rightarrow> '\<alpha> states"  where
-"While' b C =  (\<nu> X \<bullet> (\<lambda>\<sigma>. if b \<sigma> then X(C \<sigma>) else id \<sigma>))"
-*)
-
 definition While :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("WHILE (_) DO /(_) OD"  70) where
 "While b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r SKIP)"
+
+subsection{*While-loop inv*}
+text {* While loops with invariant decoration *}
+
+definition while_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while _ invr _ do _ od" 70) where
+"while b invr p do S od = WHILE b DO S OD"
+
+subsection{*assert and assume*}
+
+definition rassume :: "'\<alpha> upred \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<top>" [999] 999) where
+[urel_defs]: "rassume c = SKIP \<triangleleft> c \<triangleright>\<^sub>r false"
+
+definition rassert :: "'\<alpha> upred \<Rightarrow> '\<alpha> hrel" ("_\<^sub>\<bottom>" [999] 999) where
+[urel_defs]: "rassert c = SKIP \<triangleleft> c \<triangleright>\<^sub>r true"
+
+subsection{*throw*} 
+text{*To model exceptions we need to use the flag OK from UTP.
+      It is a way to capture the termination or non termination of a program.*}
+subsection{*blocks*}
+
+term "init ;; body ;; return ;; c"
 
 nonterminal
   svid_list and uexpr_list

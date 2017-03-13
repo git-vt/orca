@@ -18,34 +18,28 @@ text{*In this section we introduce the algebraic laws of programming related to 
 
 lemma seqr_left_unit [simp, symbolic_exec]:
   "SKIP ;; P = P"
-  unfolding skip_r_def
-  by transfer auto
+  by rel_auto
 
 lemma seqr_right_unit [simp, symbolic_exec]:
   "P ;; SKIP = P"
-  unfolding skip_r_def
-  by transfer auto
+  by rel_auto
 
 lemma pre_skip_post: "(\<lceil>b\<rceil>\<^sub>< \<and> SKIP) = (SKIP \<and> \<lceil>b\<rceil>\<^sub>>)"
-  unfolding skip_r_def
-  by (rel_auto)
+  by rel_auto
 
 lemma skip_var:
   fixes x :: "(bool, '\<alpha>) uvar"
   shows "($x \<and> SKIP) = (SKIP \<and> $x\<acute>)"
-   unfolding skip_r_def
-  by (rel_auto)
+  by rel_auto
 
 lemma assign_r_alt_def [symbolic_exec]:
   fixes x :: "('a, '\<alpha>) uvar"
   shows "x :== v = SKIP\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk> "
-  unfolding cond_def skip_r_def
   by rel_auto
 
 lemma skip_r_alpha_eq:
   "SKIP = ($\<Sigma>\<acute> =\<^sub>u $\<Sigma>)"
-  unfolding  skip_r_def
-  by (rel_auto)
+  by rel_auto
 
 subsection {*Assignment Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the assignment
@@ -92,13 +86,11 @@ lemma assign_cond:
   assumes "out\<alpha> \<sharp> b"
   shows "(x :== e ;; (IF b THEN P ELSE Q)) = 
          (IF (b\<lbrakk>\<lceil>e\<rceil>\<^sub></$x\<rbrakk>) THEN (x :== e ;; P) ELSE (x :== e ;; Q))"
-  unfolding cond_def
   by rel_auto
 
 lemma assign_rcond[symbolic_exec]:
   fixes x :: "('a, '\<alpha>) uvar"
   shows "(x :== e ;; (P \<triangleleft> b \<triangleright>\<^sub>r Q)) = ((x :== e ;; P) \<triangleleft> (b\<lbrakk>e/x\<rbrakk>) \<triangleright>\<^sub>r (x :== e ;; Q))"
-  unfolding cond_def
   by rel_auto
 
 lemma assign_uop1[symbolic_exec_assign_uop]: 
@@ -171,7 +163,6 @@ lemma assign_qtop4[symbolic_exec_assign_qtop]:
 lemma assign_cond_seqr_dist[symbolic_exec]:
   "(IF (b\<lbrakk>\<lceil>e\<rceil>\<^sub></$v\<rbrakk>) THEN (v:== e ;; P) ELSE (v:== e ;; Q)) = 
    (v:== e ;; IF b THEN P ELSE Q)" 
-  unfolding cond_def
   by rel_auto
 
 text {*In the sequel we find assignment laws proposed by Hoare*}
@@ -196,76 +187,75 @@ lemma assign_cond_uop[symbolic_exec_assign_uop]:
   assumes 1: "weak_lens v"
   shows "(v:== exp ;; C1) \<triangleleft>uop F exp\<triangleright>\<^sub>r (v:== exp ;; C2) = 
           v:== exp ;; C1 \<triangleleft>uop F (&v)\<triangleright>\<^sub>r  C2"
-  using 1 unfolding cond_def
+  using 1 
   by rel_auto
 
 lemma assign_cond_bop1[symbolic_exec_assign_bop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
   shows "(v:== exp ;; C1 \<triangleleft>(bop bp (&v) exp2)\<triangleright>\<^sub>r C2) = 
          ((v:== exp ;; C1) \<triangleleft>(bop bp exp exp2)\<triangleright>\<^sub>r  (v:== exp ;; C2))"
-  using 1 2 unfolding cond_def
+  using 1 2 
   by rel_auto
 
 lemma assign_cond_bop2[symbolic_exec_assign_bop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
   shows "(v:== exp1 ;; C1 \<triangleleft>(bop bp exp2 (&v))\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(bop bp exp2 exp1)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 unfolding cond_def
+  using 1 2 
   by rel_auto
 
 lemma assign_cond_trop1[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
   shows "(v:== exp ;; C1 \<triangleleft>(trop tp (&v) exp2 exp3)\<triangleright>\<^sub>r C2) = 
          ((v:== exp ;; C1) \<triangleleft>(trop tp exp exp2 exp3)\<triangleright>\<^sub>r (v:== exp ;; C2))"
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_trop2[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
   shows "(v:== exp1 ;; C1 \<triangleleft>(trop tp exp2 (&v) exp3)\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(trop tp exp2 exp1 exp3)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 3 unfolding cond_def
+  using 1 2 3 
   by rel_auto
 
 lemma assign_cond_trop3[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
   shows "(v:== exp1 ;; C1 \<triangleleft>(trop bp exp2 exp3 (&v))\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(trop bp exp2 exp3 exp1)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 3 unfolding cond_def
+  using 1 2 3 
   by rel_auto
 
 lemma assign_cond_qtop1[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
   shows "(v:== exp1 ;;  C1 \<triangleleft>(qtop tp (&v) exp2 exp3 exp4)\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(qtop tp exp1 exp2 exp3  exp4)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 3 4 unfolding cond_def
+  using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop2[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
   shows "(v:== exp1 ;; C1 \<triangleleft>(qtop tp exp2 (&v) exp3 exp4)\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(qtop tp exp2 exp1 exp3 exp4)\<triangleright>\<^sub>r  (v:== exp1 ;; C2))"
-  using 1 2 3 4 unfolding cond_def
+  using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop3[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
   shows "(v:== exp1 ;; C1 \<triangleleft>(qtop bp exp2 exp3 (&v) exp4)\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(qtop bp exp2 exp3 exp1  exp4)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 3 4 unfolding cond_def
+  using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop4[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
   shows "(v:== exp1 ;; C1 \<triangleleft>(qtop bp exp2 exp3 exp4 (&v))\<triangleright>\<^sub>r C2) = 
          ((v:== exp1 ;; C1) \<triangleleft>(qtop bp exp2 exp3  exp4 exp1)\<triangleright>\<^sub>r (v:== exp1 ;; C2))"
-  using 1 2 3 4 unfolding cond_def
+  using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_If [symbolic_exec]:
   "((v:== exp1) \<triangleleft> bexp\<triangleright>\<^sub>r (v:== exp2)) = 
    (v :== (trop If bexp exp1 exp2))" 
-  unfolding cond_def
   by rel_auto
 
 lemma assign_cond_If_uop[symbolic_exec_assign_uop]:
@@ -273,7 +263,7 @@ lemma assign_cond_If_uop[symbolic_exec_assign_uop]:
   shows "(v:== E;; 
          (v:== uop F (&v)) \<triangleleft>uop F (&v)\<triangleright>\<^sub>r (v:== uop G (&v))) =
          (v:== trop If (uop F E) (uop F E) (uop G E))" 
-  using 1 unfolding cond_def
+  using 1
   by rel_auto
 
 lemma assign_cond_If_bop[symbolic_exec_assign_bop]:
@@ -281,7 +271,7 @@ lemma assign_cond_If_bop[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F exp (&v))) \<triangleleft>bop F exp (&v)\<triangleright>\<^sub>r (v:== (bop G exp (&v)))) =
          (v:== (trop If (bop F exp E) (bop F exp E) (bop G exp E)))" 
-  using 1 2 unfolding cond_def
+  using 1 2
   by rel_auto
 
 lemma assign_cond_If_bop1[symbolic_exec_assign_bop]:
@@ -289,7 +279,7 @@ lemma assign_cond_If_bop1[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F (&v) exp)) \<triangleleft>bop F (&v) exp\<triangleright>\<^sub>r (v:== (bop G (&v) exp))) =
          (v:== (trop If (bop F E exp) (bop F E exp) (bop G E exp)))" 
-  using 1 2 unfolding cond_def
+  using 1 2
   by rel_auto
 
 lemma assign_cond_If_bop2[symbolic_exec_assign_bop]:
@@ -297,7 +287,7 @@ lemma assign_cond_If_bop2[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v:== (bop G (&v) exp2))) =
          (v:== (trop If (bop F E exp1) (bop F E exp1) (bop G E exp2)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_bop4[symbolic_exec_assign_bop]:
@@ -305,7 +295,7 @@ lemma assign_cond_If_bop4[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v:== (bop G exp2 (&v)))) =
          (v:== (trop If (bop F E exp1) (bop F E exp1) (bop G exp2 E)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_bop5[symbolic_exec_assign_bop]:
@@ -313,7 +303,7 @@ lemma assign_cond_If_bop5[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v:== (bop G (&v) exp2))) =
          (v:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G E exp2)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_bop6[symbolic_exec_assign_bop]:
@@ -321,7 +311,7 @@ lemma assign_cond_If_bop6[symbolic_exec_assign_bop]:
   shows "((v:== E);; 
           (v:== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v:== (bop G exp2 (&v)))) =
          (v:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G exp2 E)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_trop[symbolic_exec_assign_trop]:
@@ -329,7 +319,7 @@ lemma assign_cond_If_trop[symbolic_exec_assign_trop]:
   shows "((v:== E);;
          (v:== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v:== (trop G exp1 exp2 (&v)))) =
          (v:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_trop1[symbolic_exec_assign_trop]:
@@ -337,7 +327,7 @@ lemma assign_cond_If_trop1[symbolic_exec_assign_trop]:
   shows "((v:== E);; 
           (v:== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v:== (trop G exp1 (&v) exp2))) =
          (v:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_trop2[symbolic_exec_assign_trop]:
@@ -345,7 +335,7 @@ lemma assign_cond_If_trop2[symbolic_exec_assign_trop]:
   shows "((v:== E);; 
           (v:== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v:== (trop G (&v) exp1 exp2))) =
          (v:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))" 
-  using 1 2 3 unfolding cond_def
+  using 1 2 3
   by rel_auto
 
 lemma assign_cond_If_trop3[symbolic_exec_assign_trop]:
@@ -353,7 +343,7 @@ lemma assign_cond_If_trop3[symbolic_exec_assign_trop]:
   shows "((v:== E);;
           (v:== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v:== (trop G exp3 exp4 (&v)))) =
          (v:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))" 
-  using 1 2 3 4 5 unfolding cond_def
+  using 1 2 3 4 5
   by rel_auto
 
 lemma assign_cond_If_trop4[symbolic_exec_assign_trop]:
@@ -361,7 +351,7 @@ lemma assign_cond_If_trop4[symbolic_exec_assign_trop]:
   shows "((v:== E);; 
          (v:== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v:== (trop G exp3 (&v) exp4))) =
          (v:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))" 
-  using 1 2 3 4 5 unfolding cond_def
+  using 1 2 3 4 5
   by rel_auto
 
 lemma assign_cond_If_trop5[symbolic_exec_assign_trop]:
@@ -369,7 +359,7 @@ lemma assign_cond_If_trop5[symbolic_exec_assign_trop]:
   shows "((v:== E);; 
           (v:== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v:== (trop G (&v) exp3 exp4))) =
          (v:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))" 
-  using 1 2 3 4 5 unfolding cond_def
+  using 1 2 3 4 5
   by rel_auto
 
 subsection {*Conditional Laws*}
@@ -378,73 +368,73 @@ text{*In this section we introduce the algebraic laws of programming related to 
 
 lemma cond_idem[symbolic_exec]:
   "(IF b THEN P ELSE P) = P" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_symm:
   "(IF b THEN P ELSE Q) = (IF \<not> b THEN Q ELSE P)" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_assoc: 
   "(IF b THEN P ELSE (IF b THEN Q ELSE R)) =  
    (IF b THEN (IF b THEN P ELSE Q) ELSE R)"  
-   unfolding cond_def by rel_auto
+   by rel_auto
 
 lemma cond_distr[symbolic_exec]: 
   "(IF b THEN (IF b' THEN P ELSE R) ELSE (IF b' THEN Q ELSE R))=  
    (IF b' THEN (IF b THEN P ELSE Q) ELSE R)" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_unit_T [simp, symbolic_exec]:"(IF true THEN P ELSE Q) = P" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_unit_F [simp, symbolic_exec]:"(IF false THEN P ELSE Q) = Q" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_and_T_integrate[symbolic_exec]:
   "((P \<and> b) \<or> (IF b THEN Q ELSE R)) = (IF b THEN (P \<or> Q) ELSE R)"
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_L6[symbolic_exec]: 
   "(IF b THEN P ELSE (IF b THEN Q ELSE R)) = 
    (IF b THEN P ELSE R)" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_L7[symbolic_exec]: 
   "(IF b THEN P ELSE (IF c THEN P ELSE Q)) = 
    (IF b \<or> c THEN P ELSE Q)"
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_and_distr[symbolic_exec]: 
   "(IF b THEN (P \<and> Q) ELSE (R \<and> S)) = 
    ((IF b THEN P ELSE R) \<and> (IF b THEN Q ELSE S))"  
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_or_distr[symbolic_exec]: 
   "(IF b THEN (P \<or> Q) ELSE (R \<or> S)) = 
    ((IF b THEN P ELSE R) \<or> (IF b THEN Q ELSE S))" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_imp_distr[symbolic_exec]:
   "(IF b THEN (P \<Rightarrow> Q) ELSE (R \<Rightarrow> S)) = 
    ((IF b THEN P ELSE R) \<Rightarrow> (IF b THEN Q ELSE S))" 
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_eq_distr[symbolic_exec]:
   "(IF b THEN (P \<Leftrightarrow> Q) ELSE (R \<Leftrightarrow> S)) = 
    ((IF b THEN P ELSE R) \<Leftrightarrow> (IF b THEN Q ELSE S))"
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_conj_distr[symbolic_exec]:
   "(P \<and> (IF b THEN Q ELSE S)) = (IF b THEN (P \<and> Q) ELSE (P \<and> S))"  
-  unfolding cond_def by rel_auto
+  by rel_auto
 
 lemma cond_disj_distr [symbolic_exec]:
   "(P \<or> (IF b THEN Q ELSE S)) = (IF b THEN (P \<or> Q) ELSE (P \<or> S))" 
-  unfolding cond_def by rel_auto 
+  by rel_auto 
 
 lemma cond_neg[symbolic_exec]: 
   "\<not> (IF b THEN P ELSE Q) = (IF b THEN (\<not> P) ELSE (\<not> Q))"
-  unfolding cond_def by rel_auto 
+  by rel_auto 
 
 (*lemma cond_USUP_dist: 
   "IF b THEN (\<Squnion> P\<in>S \<bullet> F(P)) ELSE (\<Squnion> P\<in>S \<bullet> G(P)) = (IF b THEN \<Squnion> P\<in>S \<bullet> F(P) ELSE G(P))"
@@ -456,18 +446,18 @@ lemma cond_UINF_dist: "(\<Sqinter> P\<in>S \<bullet> F(P)) \<triangleleft> b \<t
 
 lemma cond_conj[symbolic_exec]: 
   "(IF b \<and> c THEN P ELSE Q) = IF b THEN (IF c THEN P ELSE Q) ELSE Q"
-  unfolding cond_def by rel_auto 
+  by rel_auto 
     
 
 (*IF Theorem by Hoare: It optimize nested IF*)
 theorem COND12[symbolic_exec]: 
   "(IF bexp1 THEN (IF bexp2 THEN C1 ELSE C3) ELSE (IF bexp3 THEN C2 ELSE C3)) =
    (IF (trop If bexp1 bexp2 bexp3) THEN (IF bexp1 THEN C1 ELSE C2) ELSE C3)"
-  unfolding cond_def by rel_auto 
+  by rel_auto 
  
 lemma comp_cond_left_distr:
   "((P \<triangleleft> b \<triangleright>\<^sub>r Q) ;; R) = ((P ;; R) \<triangleleft> b \<triangleright>\<^sub>r (Q ;; R))"
-  unfolding cond_def by rel_auto
+  by rel_auto
  
 lemma cond_var_subst_left:
   assumes "vwb_lens x"
@@ -484,17 +474,14 @@ lemma cond_var_subst_right:
 
 lemma cond_var_split:
   "vwb_lens x \<Longrightarrow> (IF &x THEN P\<lbrakk>true/x\<rbrakk> ELSE P\<lbrakk>false/x\<rbrakk>) = P"
-  unfolding cond_def
   by (rel_auto, (metis (full_types) vwb_lens.put_eq)+)
 
 lemma cond_seq_left_distr:
   "out\<alpha> \<sharp> b \<Longrightarrow> ((IF b THEN P ELSE Q) ;; R) = (IF b THEN (P ;; R) ELSE (Q ;; R))"
-   unfolding cond_def
-   by rel_auto
+  by rel_auto
 
 lemma cond_seq_right_distr:
   "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (IF b THEN Q ELSE R)) = (IF b THEN (P ;; Q) ELSE (P ;; R))"
-  unfolding cond_def
   by rel_auto
 
 subsection {*Sequential Laws*}
@@ -504,11 +491,11 @@ text{*In this section we introduce the algebraic laws of programming related to 
 
 lemma seqr_exists_left[symbolic_exec]: 
   "((\<exists> $x \<bullet> P) ;; Q) = (\<exists> $x \<bullet> (P ;; Q))"
-  by (rel_auto)
+  by rel_auto
 
 lemma seqr_exists_right[symbolic_exec]:
   "(P ;; (\<exists> $x\<acute> \<bullet> Q)) = (\<exists> $x\<acute> \<bullet> (P ;; Q))"
-  by (rel_auto)
+  by rel_auto
 
 lemma seqr_left_zero [simp, symbolic_exec]:
   "false ;; P = false"
@@ -620,6 +607,13 @@ proof -
     using 1 by (simp add: aext_false)
   finally show ?thesis . 
 qed
+
+subsection {*assume and assert laws*}
+lemma assume_twice: "(b\<^sup>\<top> ;; c\<^sup>\<top>) = (b \<and> c)\<^sup>\<top>"
+  by rel_auto
+
+lemma assert_twice: "(b\<^sub>\<bottom> ;; c\<^sub>\<bottom>) = (b \<and> c)\<^sub>\<bottom>" 
+  by rel_auto
 
 subsection {*Tactic setup*}
 text {*In this section we will design a tactic that can be used to automate
