@@ -1,3 +1,6 @@
+
+
+
 section {*Algebraic laws of programming*}
 
 text{*In this section we introduce the semantic rules related to the different
@@ -8,6 +11,37 @@ text{*In this section we introduce the semantic rules related to the different
 theory Algebraic_Laws
 imports Commands "utp/utp_urel_laws"
 begin
+subsection {*testing features*}
+
+text {*block_test1 is a scenario where the var i is a local var.
+       in that case we can use the restore function and the state s to set he variable to its
+       latest previous value before exit the block.*}
+
+lemma blocks_test1:
+  "mwb_lens i \<Longrightarrow>
+      `i :== \<guillemotleft>2::int\<guillemotright>;; 
+       block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e s\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP)` = 
+       (`$i =\<^sub>u \<guillemotleft>2::int\<guillemotright>`)"
+  apply rel_auto
+  apply (meson mwb_lens_weak weak_lens.view_determination)
+  apply (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
+done
+
+text {*block_test2 is a scenario where the var i is a global var.
+       in that case we can use restore function and the state t to set he variable to its
+       latest value, probably modified inside the scope of the block.*}
+
+lemma blocks_test2:
+  "mwb_lens i \<Longrightarrow> mwb_lens res \<Longrightarrow>
+      `i :== \<guillemotleft>2::int\<guillemotright>;; 
+       block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP)` = 
+       (`$i =\<^sub>u \<guillemotleft>5::int\<guillemotright>`)"
+  apply rel_auto
+  apply (meson mwb_lens_weak weak_lens.view_determination)
+  apply (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
+done
+
+
 
 named_theorems symbolic_exec and symbolic_exec_assign_uop and symbolic_exec_assign_bop and 
                symbolic_exec_assign_trop and  symbolic_exec_assign_qtop
@@ -65,26 +99,6 @@ lemma assign_test[symbolic_exec]:
   using 1   
   by (simp add: assigns_comp subst_upd_comp subst_lit usubst_upd_idem)
 
-term "`$x =\<^sub>u \<guillemotleft>1::int\<guillemotright>`"
-term "`x :== \<guillemotleft>1::int\<guillemotright> ;; x :== \<guillemotleft>1::int\<guillemotright>`"
-term "\<lbrakk>x :== \<guillemotleft>1::int\<guillemotright>\<rbrakk>\<^sub>e (\<sigma>, \<sigma>')"
-term "Abs_uexpr(init) ;; body ;; Abs_uexpr(return s)"
-term " (\<lambda>s \<bullet> Abs_uexpr(init) ;; body ;; Abs_uexpr(return s) )"
-term " (\<forall> s \<bullet> Abs_uexpr(init) ;; body ;; Abs_uexpr(return s) )"
-term "x:: ( bool ,  'b \<times> 'c) uexpr"
-term "\<forall> $j \<bullet> j :== \<guillemotleft>1::int\<guillemotright>"
-term "(P:: ('a, 'b) rel)\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>"
-term "SKIP\<lbrakk>$j/$i\<rbrakk>"
-
-term " (\<lambda>s . P s ;; body s) "
-term "\<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
-term "call \<guillemotleft>\<lbrakk>P\<rbrakk>\<^sub>e s\<guillemotright>"
-term "call P"
-term " ([$j \<mapsto>\<^sub>s \<guillemotleft>1::int\<guillemotright>] \<dagger> SKIP) ;; (\<sigma> ($j \<mapsto>\<^sub>s \<guillemotleft>2::int\<guillemotright>) \<dagger> SKIP)"
-lemma  "mwb_lens j \<Longrightarrow> `j :== \<guillemotleft>1::int\<guillemotright> ;;j :== \<guillemotleft>2::int\<guillemotright>` = (`$j =\<^sub>u \<guillemotleft>2::int\<guillemotright>`)"
-  apply rel_auto
-apply (meson mwb_lens_weak weak_lens.view_determination)
-by (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
 
 lemma "mwb_lens x \<Longrightarrow> `x :== \<guillemotleft>1::int\<guillemotright> ;; x :== \<guillemotleft>3::int\<guillemotright>` = (`&x =\<^sub>u \<guillemotleft>3\<guillemotright>`)" 
   apply rel_auto

@@ -77,11 +77,29 @@ subsection{*throw*}
 text{*To model exceptions we need to use the flag OK from UTP.
       It is a way to capture the termination or non termination of a program.*}
 
-subsection{*blocks*}
-(*(\<lambda>\<sigma>. ((TRY init ; body CATCH return \<sigma> ; THROW END); 
-       (\<lambda>\<sigma>'. (return \<sigma>; c \<sigma> \<sigma>') \<sigma>')) \<sigma>)  *)
-term "init ;; body ;; return ;; c"
-term"\<lambda> x \<bullet> p ;; body"
+subsection{*block*}
+text{*Block is used to model scoping. This feature can be used to introduce local variables and 
+      to handle parameter passing in procedures. To model the block we need a feature to abstract
+      over the state-space. This way we can  initialize the value of the variable when we jump inside the block
+      and restore it when we exit the block. This feature is provided implicitly by the type_def
+      used to model UTP expr. It is @{const Abs_uexpr}. The definition of block takes 4 parameters: 
+     \begin{itemize}
+       \<^item> initP: It is used to initialize the values of variables when we jump inside the block.
+       \<^item> body: It contains the body of the block.
+       \<^item> restore : a function used to restore the values of variables when we jump outside the block.
+       \<^item> return : A function used to return a value if the block uses the traditional return 
+                  statement.
+     \end{itemize}
+*}
+
+
+definition block :: "('a, 'c) rel \<Rightarrow> ('c, 'd) rel  \<Rightarrow> ('a \<times> 'b \<Rightarrow> 'd \<times> 'b \<Rightarrow> ('d, 'e) rel) \<Rightarrow> 
+                     ('a \<times> 'b \<Rightarrow> 'd \<times> 'b \<Rightarrow> ('e, 'b) rel) \<Rightarrow> ('a, 'b) rel" where
+[urel_defs]:"block initP body restore return = 
+             Abs_uexpr (\<lambda>(s, s'). 
+             \<lbrakk>initP ;; body ;; 
+             Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
+
 
 subsection {* Program values *}
 
