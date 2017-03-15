@@ -90,8 +90,8 @@ lemma while_hoare_r [hoare]:
   by (simp add: While_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
 
 lemma while_hoare_r' [hoare]:
-  assumes "\<lbrace>p \<and> b\<rbrace>S\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
-  shows "\<lbrace>p\<rbrace>WHILE b DO S OD\<lbrace>q\<rbrace>\<^sub>u"
+  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
+  shows "\<lbrace>p\<rbrace>WHILE b DO C OD\<lbrace>q\<rbrace>\<^sub>u"
   using assms
   by (metis conj_comm hoare_r_conseq p_imp_p taut_true while_hoare_r)
 
