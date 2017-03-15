@@ -1,6 +1,4 @@
-
-
-
+ 
 section {*Algebraic laws of programming*}
 
 text{*In this section we introduce the semantic rules related to the different
@@ -13,9 +11,12 @@ imports Commands "utp/utp_urel_laws"
 begin
 subsection {*testing features*}
 
-text {*block_test1 is a scenario where the var i is a local var.
-       in that case we can use the restore function and the state s to set he variable to its
-       latest previous value before exit the block.*}
+text {*block_test1 is a scenario. The scenario represent a program where i is name of the variable
+       in the scope of the initial state s. In the scenario, and using the command block,
+       we create a new variable with the same name inside the block. 
+       Now i is a local var for the cope t.
+       In that case we can use the restore function and the state s to set the variable to its
+       previous value ie.,its value in the scope s, and this before we exit the block.*}
 
 lemma blocks_test1:
   "mwb_lens i \<Longrightarrow>
@@ -27,9 +28,9 @@ lemma blocks_test1:
   apply (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
 done
 
-text {*block_test2 is a scenario where the var i is a global var.
-       in that case we can use restore function and the state t to set he variable to its
-       latest value, probably modified inside the scope of the block.*}
+text {*block_test2 is similar to  block_test1 but the var i is a global var.
+       In that case we can use restore function and the state t to set the variable to its
+       latest value, ie.,its value in in the scope t,probably modified inside the scope of the block.*}
 
 lemma blocks_test2:
   "mwb_lens i \<Longrightarrow> mwb_lens res \<Longrightarrow>
@@ -40,8 +41,6 @@ lemma blocks_test2:
   apply (meson mwb_lens_weak weak_lens.view_determination)
   apply (metis mwb_lens_weak odd_nonzero weak_lens.put_get)
 done
-
-
 
 named_theorems symbolic_exec and symbolic_exec_assign_uop and symbolic_exec_assign_bop and 
                symbolic_exec_assign_trop and symbolic_exec_assign_qtop and symbolic_exec_ex
