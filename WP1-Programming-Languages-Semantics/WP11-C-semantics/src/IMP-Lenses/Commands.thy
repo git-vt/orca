@@ -103,13 +103,13 @@ definition block :: "('a, 'c) rel \<Rightarrow> ('c, 'd) rel  \<Rightarrow> ('a 
 
 subsection {* Program values *}
 
-abbreviation prog_val :: "'\<alpha> hrel \<Rightarrow> ('\<alpha> hrel, '\<alpha>) uexpr" ("\<lbrace>_\<rbrace>\<^sub>u")
-where "\<lbrace>P\<rbrace>\<^sub>u \<equiv> \<guillemotleft>P\<guillemotright>"
+abbreviation prog_val :: "'\<alpha> hrel \<Rightarrow> ('\<alpha> hrel, '\<alpha>) uexpr" ("\<lbrace>|_|\<rbrace>\<^sub>u")
+where "\<lbrace>|P|\<rbrace>\<^sub>u \<equiv> \<guillemotleft>P\<guillemotright>"
 
 lift_definition call :: "('\<alpha> hrel, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel"
 is "\<lambda> P b. P (fst b) b" .
 
-lemma call_prog_val: "call \<lbrace>P\<rbrace>\<^sub>u = P"
+lemma call_prog_val: "call \<lbrace>|P|\<rbrace>\<^sub>u = P"
   by (simp add: call_def urel_defs lit.rep_eq Rep_uexpr_inverse)
 nonterminal
   svid_list and uexpr_list
