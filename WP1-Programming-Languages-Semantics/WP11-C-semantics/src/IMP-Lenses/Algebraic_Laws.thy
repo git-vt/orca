@@ -44,17 +44,19 @@ done
 
 
 named_theorems symbolic_exec and symbolic_exec_assign_uop and symbolic_exec_assign_bop and 
-               symbolic_exec_assign_trop and  symbolic_exec_assign_qtop
- 
+               symbolic_exec_assign_trop and symbolic_exec_assign_qtop and symbolic_exec_ex
+(* Usage of symbolic_exec_ex for the simp lemmas avoids annoying warnings about duplicate theorems
+when using `simp add: symbolic_exec` *)
+
 subsection {*SKIP Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-lemma seqr_left_unit [simp, symbolic_exec]:
+lemma seqr_left_unit [simp, symbolic_exec_ex]:
   "SKIP ;; P = P"
   by rel_auto
 
-lemma seqr_right_unit [simp, symbolic_exec]:
+lemma seqr_right_unit [simp, symbolic_exec_ex]:
   "P ;; SKIP = P"
   by rel_auto
 
@@ -68,7 +70,7 @@ lemma skip_var:
 
 lemma assign_r_alt_def [symbolic_exec]:
   fixes x :: "('a, '\<alpha>) uvar"
-  shows "x :== v = SKIP\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk> "
+  shows "x :== v = SKIP\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
   by rel_auto
 
 lemma skip_r_alpha_eq:
@@ -83,7 +85,7 @@ lemma "&v\<lbrakk>expr/v\<rbrakk> = [v \<mapsto>\<^sub>s expr] \<dagger> &v" ..
 
 lemma usubst_cancel[usubst,symbolic_exec]: 
   assumes 1:"weak_lens v" 
-  shows "(&v)\<lbrakk>expr/v\<rbrakk>= expr"
+  shows "(&v)\<lbrakk>expr/v\<rbrakk> = expr"
   using 1
   by transfer' rel_auto
 
@@ -424,10 +426,10 @@ lemma cond_distr[symbolic_exec]:
    (IF b' THEN (IF b THEN P ELSE Q) ELSE R)" 
   by rel_auto
 
-lemma cond_unit_T [simp, symbolic_exec]:"(IF true THEN P ELSE Q) = P" 
+lemma cond_unit_T [simp, symbolic_exec_ex]:"(IF true THEN P ELSE Q) = P" 
   by rel_auto
 
-lemma cond_unit_F [simp, symbolic_exec]:"(IF false THEN P ELSE Q) = Q" 
+lemma cond_unit_F [simp, symbolic_exec_ex]:"(IF false THEN P ELSE Q) = Q" 
   by rel_auto
 
 lemma cond_and_T_integrate[symbolic_exec]:
@@ -537,11 +539,11 @@ lemma seqr_exists_right[symbolic_exec]:
   "(P ;; (\<exists> $x\<acute> \<bullet> Q)) = (\<exists> $x\<acute> \<bullet> (P ;; Q))"
   by rel_auto
 
-lemma seqr_left_zero [simp, symbolic_exec]:
+lemma seqr_left_zero [simp, symbolic_exec_ex]:
   "false ;; P = false"
   by pred_auto
 
-lemma seqr_right_zero [simp, symbolic_exec]:
+lemma seqr_right_zero [simp, symbolic_exec_ex]:
   "P ;; false = false"
   by pred_auto
 
@@ -598,13 +600,11 @@ lemma seqr_insert_ident_right:
 lemma seq_var_ident_lift:
   assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
   shows "(($x\<acute> =\<^sub>u $x \<and> P) ;; ($x\<acute> =\<^sub>u $x \<and> Q)) = ($x\<acute> =\<^sub>u $x \<and> (P ;; Q))"
-  using assms apply (rel_auto)
-  by (metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
+  using assms
+  by (rel_auto, metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
 
-(*Seq SKIP*)
-lemma seqr_skip: 
-  "(SKIP ;; C) = (C ;; SKIP)"
-  by transfer simp
+lemma seqr_skip: "SKIP ;; C = C ;; SKIP"
+  by (metis seqr_left_unit seqr_right_unit)
 
 (*The rules SEQ6 SEQ7 related to SEQ and non-deterministic choice are missing for now*)
   
@@ -659,11 +659,18 @@ subsection {*Tactic setup*}
 text {*In this section we will design a tactic that can be used to automate
        the process of program optimization.*}
 
-(*TODO For Josh: Test this on different random examples*)
+method rel_simp' =
+  (unfold upred_defs urel_defs)?,
+  transfer',
+  (simp add: fun_eq_iff relcomp_unfold OO_def
+    lens_defs upred_defs Product_Type.split_beta)?,
+  (simp add: lens_interp_laws)?,
+  clarsimp?
+method rel_auto' = rel_simp', auto?
 
 method symbolic_exec_commands =
   (simp add: symbolic_exec)?,
-  ((subst symbolic_exec)+)?,
+  ((subst symbolic_exec symbolic_exec_ex)+)?,
   (simp add: symbolic_exec_assign_uop)?,
   ((subst symbolic_exec_assign_uop)+)?,
   (simp add: symbolic_exec_assign_bop)?,
@@ -672,6 +679,19 @@ method symbolic_exec_commands =
   ((subst symbolic_exec_assign_trop)+)?,
   (simp add: symbolic_exec_assign_qtop)?,
   ((subst symbolic_exec_assign_qtop)+)?,
+  transfer'?,
+  rel_auto'?
+
+lemmas symbolic_exec_all =
+  symbolic_exec
+  symbolic_exec_assign_uop
+  symbolic_exec_assign_bop
+  symbolic_exec_assign_trop
+  symbolic_exec_assign_qtop
+
+method symbolic_exec_commands_min =
+  (simp add: symbolic_exec_all)?,
+  ((subst symbolic_exec_all symbolic_exec_ex)+)?,
   transfer'?,
   rel_auto?
 

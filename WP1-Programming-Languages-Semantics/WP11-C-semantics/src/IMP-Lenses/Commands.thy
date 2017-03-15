@@ -45,7 +45,7 @@ where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (IF \<lceil>b\<
 
 subsection{*Sequential composition*}
 
-lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel" (infixr ";;" 51) is
+lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel" (infixl ";;" 51) is
   "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
 
 subsection{*While-loop*}
@@ -119,7 +119,7 @@ syntax
   "_svid_list"  :: "svid \<Rightarrow> svid_list \<Rightarrow> svid_list" ("_,/ _")
   "_uexpr_unit" :: "('a, '\<alpha>) uexpr \<Rightarrow> uexpr_list" ("_" [40] 40)
   "_uexpr_list" :: "('a, '\<alpha>) uexpr \<Rightarrow> uexpr_list \<Rightarrow> uexpr_list" ("_,/ _" [40,40] 40)
-  "_assignment" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> '\<alpha> hrel"  ("_ :== _ " [80, 80] 70)
+  "_assignment" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> '\<alpha> hrel"  ("_ :== _ " [60, 60] 52)
   "_mk_usubst"  :: "svid_list \<Rightarrow> uexprs \<Rightarrow> '\<alpha> usubst"
 
 translations

@@ -18,12 +18,6 @@ definition hoare_r :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow>
 
 declare hoare_r_def [upred_defs]
 
-lemma hoare_true [hoare]: "\<lbrace>P\<rbrace>C\<lbrace>true\<rbrace>\<^sub>u"
-  by rel_auto
-
-lemma hoare_false [hoare]: "\<lbrace>false\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
-  by rel_auto
-
 subsection {*Hoare for Consequence*}
 
 lemma hoare_r_conseq [hoare]: 
@@ -52,6 +46,7 @@ lemma hoare_r_conj [hoare]:
   assumes"\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>u" and "\<lbrace>p\<rbrace>Q\<lbrace>s\<rbrace>\<^sub>u"  
   shows "\<lbrace>p\<rbrace>Q\<lbrace>r \<and> s\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
+
 subsection {*Hoare SKIP*}
 
 lemma skip_hoare_r [hoare]: "\<lbrace>p\<rbrace>SKIP\<lbrace>p\<rbrace>\<^sub>u"
@@ -64,6 +59,9 @@ lemma assigns_hoare_r [hoare]:
   shows  "\<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>q\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
 
+lemma assigns_hoare_r' [hoare]: "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>p\<rbrace>\<^sub>u"
+  by rel_auto
+
 subsection {*Hoare for Sequential Composition*}
 
 lemma seq_hoare_r [hoare]: 
@@ -74,7 +72,7 @@ lemma seq_hoare_r [hoare]:
 subsection {*Hoare for Conditional*}
 
 lemma cond_hoare_r [hoare]: 
-  assumes "\<lbrace>b \<and> p\<rbrace>S\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>b \<and> p\<rbrace>T\<lbrace>q\<rbrace>\<^sub>u" 
+  assumes "\<lbrace>b \<and> p\<rbrace>S\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>b \<and> p\<rbrace>T\<lbrace>q\<rbrace>\<^sub>u"
   shows "\<lbrace>p\<rbrace>S \<triangleleft> b \<triangleright>\<^sub>r T\<lbrace>q\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
 
@@ -86,9 +84,23 @@ lemma while_hoare_r [hoare]:
   using assms
   by (simp add: While_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
 
+lemma while_hoare_r' [hoare]:
+  assumes "\<lbrace>p \<and> b\<rbrace>S\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
+  shows "\<lbrace>p\<rbrace>WHILE b DO S OD\<lbrace>q\<rbrace>\<^sub>u"
+  using assms
+  by (metis conj_comm hoare_r_conseq p_imp_p taut_true while_hoare_r)
+
 lemma while_invr_hoare_r [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>S\<lbrace>p\<rbrace>\<^sub>u" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<lbrace>pre\<rbrace>while b invr p do S od\<lbrace>post\<rbrace>\<^sub>u"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
+
+subsection Miscellaneous
+
+lemma hoare_r_post_true [hoare]: "\<lbrace>p\<rbrace>S\<lbrace>true\<rbrace>\<^sub>u"
+  by rel_auto
+
+lemma hoare_r_pre_false [hoare]: "\<lbrace>false\<rbrace>S\<lbrace>q\<rbrace>\<^sub>u"
+  by rel_auto
 
 end
