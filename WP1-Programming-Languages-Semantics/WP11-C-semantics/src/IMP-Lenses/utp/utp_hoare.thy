@@ -100,5 +100,40 @@ lemma while_invr_hoare_r [hoare]:
   shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>u"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
 
+subsection {*testing features*}
+
+text {*block_test1 is a scenario. The scenario represent a program where i is name of the variable
+       in the scope of the initial state s. In the scenario, and using the command block,
+       we create a new variable with the same name inside the block ie., inside the new scope. 
+       Now i is a local var for the scope t.
+       In that case we can use a restore function on the state s to set the variable to its
+       previous value ie.,its value in the scope s, and this before we exit the block.*}
+term "x  \<and>\<^sub>p s"
+term "&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>"
+
+term "\<lfloor>$i =\<^sub>u $i\<acute>\<rfloor>\<^sub>< "
+lemma   blocks_test1:
+  assumes "weak_lens i"
+  shows "\<lbrace>true\<rbrace>
+          i :== \<guillemotleft>2::int\<guillemotright>;; 
+          block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e s\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP) 
+         \<lbrace>&i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>u"
+  by (insert assms) rel_auto
+
+text {*block_test2 is similar to  block_test1 but the var i is a global var.
+       In that case we can use restore function and the state t to set the variable to its
+       latest value, ie.,its value in in the scope t,probably modified inside the scope of the block.*}
+
+lemma   blocks_test2:
+  assumes "weak_lens i"
+  shows "\<lbrace>true\<rbrace>
+          i :== \<guillemotleft>2::int\<guillemotright>;; 
+          block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP) 
+         \<lbrace>&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
+  by (insert assms) rel_auto
+
+
+
+
 
 end
