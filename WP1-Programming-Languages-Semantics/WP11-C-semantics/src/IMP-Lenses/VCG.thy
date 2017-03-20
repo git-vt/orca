@@ -83,7 +83,7 @@ lemma swap_test_method:
 
 lemma swap_testx:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" and "x \<bowtie> y" and "x \<bowtie> y"
+      and "x \<bowtie> y" 
       and "x \<sharp> a" and "y \<sharp> a" and "z \<sharp> a"
       and "x \<sharp> b" and "y \<sharp> b" and "z \<sharp> b"
   shows "\<lbrace>&x =\<^sub>u a \<and> &y =\<^sub>u b\<rbrace>
@@ -176,14 +176,40 @@ lemma if_false_method:
   by vcg
 
 
-lemma even_count:
-   assumes "weak_lens i" and  "weak_lens a" and  "weak_lens j"  and  "weak_lens n"
-   shows "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
+lemma even_count':
+   assumes "vwb_lens i" and  "weak_lens a" and  "vwb_lens j"  and  "weak_lens n"and
+           "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n" 
+   shows 
+   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
        i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;; 
-      WHILE &i <\<^sub>u &n DO (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r SKIP) ;;  i :== &i + \<guillemotleft>1\<guillemotright> OD
+     while  &i <\<^sub>u &n 
+       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
+       do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r SKIP) ;;  i :== &i + \<guillemotleft>1\<guillemotright> od
      \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
-  (*apply vcg*)
-sorry
+  apply (rule seq_hoare_r)
+ 
+  prefer 2
+  apply (rule while_invr_hoare_r [of _ _ _ "&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright>"])
+  prefer 4
+  apply (rule seq_hoare_r)
+  prefer 2
+  apply (rule assigns_hoare_r')
+  apply (rule assigns_hoare_r)
+  prefer 2
+   apply (rule seq_hoare_r)
+  prefer 2
+  apply (rule assigns_hoare_r')
+  apply (rule cond_hoare_r)
+  apply (rule assigns_hoare_r)
+  unfolding lens_indep_def
+  apply rel_auto[1]
+   apply rel_auto[1]
+   apply (simp add: mod_pos_pos_trivial)
+   apply rel_auto[1]
+   prefer 2
+     apply rel_auto[1]
+   apply rel_auto[1]
+done
 
 end
