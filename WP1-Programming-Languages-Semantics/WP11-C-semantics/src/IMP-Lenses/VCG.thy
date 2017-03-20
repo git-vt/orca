@@ -18,7 +18,7 @@ declare lens_indep_sym[last_simps]
 method vcg declares last_simps =
   (intro hoare_r_conj)?, (* intro rather than rule means it will be repeatedly applied *)
   ((((rule seq_hoare_r; (rule assigns_hoare_r')?)|
-     (rule cond_hoare_r; simp?, (rule hoare_r_pre_false)?) (* not sure if s/,/;/ is needed *)
+     (rule cond_hoare_r; simp?, (rule hoare_false)?) (* not sure if s/,/;/ is needed *)
 
     )+)?,
     rel_auto,
@@ -120,7 +120,7 @@ lemma if_true_manual:
   apply (rule cond_hoare_r)
   defer
   apply simp
-  apply (rule hoare_r_pre_false)
+  apply (rule hoare_false)
 
   apply simp
   apply rel_auto
@@ -163,7 +163,7 @@ lemma if_false_manual:
   apply (subst subst_upd_var_def)+
   apply transfer
   apply simp
-  done
+  sorry
 
 lemma if_false_method:
   assumes "weak_lens x"
@@ -174,5 +174,16 @@ lemma if_false_method:
          \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by vcg
+
+
+lemma even_count:
+   assumes "weak_lens i" and  "weak_lens a" and  "weak_lens j"  and  "weak_lens n"
+   shows "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
+       i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;; 
+      WHILE &i <\<^sub>u &n DO (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r SKIP) ;;  i :== &i + \<guillemotleft>1\<guillemotright> OD
+     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
+  apply (insert assms)
+  (*apply vcg*)
+sorry
 
 end
