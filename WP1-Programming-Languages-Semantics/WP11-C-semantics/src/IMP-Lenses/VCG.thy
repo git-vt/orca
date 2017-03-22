@@ -18,11 +18,13 @@ declare lens_indep_sym[last_simps]
 method vcg declares last_simps =
   (intro hoare_r_conj)?, (* intro rather than rule means it will be repeatedly applied *)
   ((((rule seq_hoare_r; (rule assigns_hoare_r')?)|
-     (rule cond_hoare_r; simp?, (rule hoare_false)?) (* not sure if s/,/;/ is needed *)
+     (rule cond_hoare_r; simp?, (rule hoare_false)?)| (* not sure if s/,/;/ is needed *)
+     (rule assigns_hoare_r)
 
     )+)?,
-    rel_auto,
+    rel_simp,
     (simp add: last_simps)?)+
+(* Need weakest precondition reasoning *)
 
 subsubsection \<open>Building swap (SEQ+ASN)\<close>
 
@@ -50,22 +52,20 @@ lemma swap_test_manual:
 
   apply (rule seq_hoare_r)
   prefer 2
-  apply (rule assigns_hoare_r')
   apply (rule seq_hoare_r)
-  prefer 2
+  apply (rule assigns_hoare_r')
   apply (rule assigns_hoare_r')
   apply simp
   defer
 
   apply (rule seq_hoare_r)
   prefer 2
-  apply (rule assigns_hoare_r')
   apply (rule seq_hoare_r)
-  prefer 2
+  apply (rule assigns_hoare_r')
   apply (rule assigns_hoare_r')
   apply simp
 
-  apply rel_auto
+  apply rel_simp
   apply (simp add: lens_indep_sym)
   oops (* Not sure why this isn't working even though the VCG based on it does. *)
 (* ML_prf \<open>\<close> *)
@@ -95,7 +95,7 @@ lemma swap_testx:
           x :== &y
          \<lbrace>&x =\<^sub>u b \<and> &z =\<^sub>u a\<rbrace>\<^sub>u"
   using assms
-  by rel_auto
+  by rel_simp
 
 subsubsection \<open>Building COND\<close>
 
@@ -107,7 +107,7 @@ lemma if_true:
           IF \<lceil>true\<rceil>\<^sub>< THEN x :== (&x - exp\<^sub>2) ELSE x :== (&x + exp\<^sub>2)
          \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
-  by rel_auto
+  by rel_simp
 
 lemma if_true_manual:
   assumes "weak_lens x"
@@ -123,7 +123,7 @@ lemma if_true_manual:
   apply (rule hoare_false)
 
   apply simp
-  apply rel_auto
+  apply rel_simp
   done
 
 lemma if_true_method:
@@ -144,7 +144,7 @@ lemma if_false:
           IF \<lceil>false\<rceil>\<^sub>< THEN x :== (&x - exp\<^sub>2) ELSE x :== (&x + exp\<^sub>2)
          \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
-  by rel_auto
+  by rel_simp
 
 lemma if_false_manual:
   assumes "weak_lens x"
@@ -156,14 +156,14 @@ lemma if_false_manual:
   apply (insert assms)
   apply (rule cond_hoare_r)
   
-  apply (subst symbolic_exec_subst)+
-  apply (rule Hoare_False)
+  apply (subst symbolic_exec_subst)+ (* don't exist anymore *)
+  apply (rule hoare_false)
 
   apply (subst symbolic_exec_subst)+
   apply (subst subst_upd_var_def)+
-  apply transfer
+  apply transfer'
   apply simp
-  sorry
+  oops
 
 lemma if_false_method:
   assumes "weak_lens x"
@@ -175,32 +175,73 @@ lemma if_false_method:
   using assms
   by vcg
 
+lemma if_base:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>2"
+      and "x \<sharp> exp\<^sub>3"
+  shows "\<lbrace>true\<rbrace>
+          IF \<lceil>exp\<^sub>1\<rceil>\<^sub>< THEN x :== exp\<^sub>2 ELSE x :== exp\<^sub>3
+         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  using assms
+  by rel_auto
 
-lemma even_count':
-   assumes "vwb_lens i" and  "weak_lens a" and  "vwb_lens j"  and  "weak_lens n"and
-           "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n" 
-   shows 
+lemma if_manual:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>2"
+      and "x \<sharp> exp\<^sub>3"
+  shows "\<lbrace>true\<rbrace>
+          IF \<lceil>exp\<^sub>1\<rceil>\<^sub>< THEN x :== exp\<^sub>2 ELSE x :== exp\<^sub>3
+         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule cond_hoare_r)
+  apply simp
+  apply (rule assigns_hoare_r)
+
+  defer
+  apply simp
+  apply (rule assigns_hoare_r)
+
+  apply rel_auto
+  by (simp add: bop_ueval impl.rep_eq subst.rep_eq sup_uexpr.rep_eq taut.rep_eq unrest_upred.rep_eq
+      var.rep_eq)
+
+lemma if_method:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>2"
+      and "x \<sharp> exp\<^sub>3"
+  shows "\<lbrace>true\<rbrace>
+          IF \<lceil>exp\<^sub>1\<rceil>\<^sub>< THEN x :== exp\<^sub>2 ELSE x :== exp\<^sub>3
+         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  using assms
+  by vcg
+
+subsubsection \<open>Building WHILE\<close>
+
+lemma even_count:
+   assumes "vwb_lens i" and  "weak_lens a" and  "vwb_lens j"  and  "weak_lens n"
+       and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n" 
+   shows
    "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
-       i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;; 
-     while  &i <\<^sub>u &n 
-       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
-       do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r SKIP) ;;  i :== &i + \<guillemotleft>1\<guillemotright> od
+     i :== &a;; j :== \<guillemotleft>0::int\<guillemotright>;;
+     while &i <\<^sub>u &n
+       invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+       do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r SKIP);; i :== &i + \<guillemotleft>1\<guillemotright> od
      \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r)
- 
+  prefer 2
+  apply (rule seq_hoare_r)
   prefer 2
   apply (rule while_invr_hoare_r [of _ _ _ "&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright>"])
-  prefer 4
   apply (rule seq_hoare_r)
   prefer 2
   apply (rule assigns_hoare_r')
+  prefer 4
   apply (rule assigns_hoare_r)
   prefer 2
-   apply (rule seq_hoare_r)
-  prefer 2
-  apply (rule assigns_hoare_r')
   apply (rule cond_hoare_r)
+  apply (rule assigns_hoare_r)
+  prefer 6
   apply (rule assigns_hoare_r)
   unfolding lens_indep_def
   apply rel_auto[1]

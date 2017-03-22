@@ -45,7 +45,7 @@ where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (IF \<lceil>b\<
 
 subsection{*Sequential composition*}
 
-lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel" (infixl ";;" 51) is
+lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel" (infixr ";;" 51) is
   "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
 
 subsection{*While-loop*}
