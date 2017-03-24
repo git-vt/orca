@@ -81,6 +81,22 @@ lemma cond_hoare_r [hoare]:
   shows "\<lbrace>p\<rbrace>C\<^sub>1 \<triangleleft> b \<triangleright>\<^sub>r C\<^sub>2\<lbrace>q\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
 
+subsection {*Hoare for assert*}
+
+lemma assert_hoare_r [hoare]: 
+  assumes "\<lbrace>c \<and> p\<rbrace>SKIP\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>true\<lbrace>q\<rbrace>\<^sub>u" 
+  shows "\<lbrace>p\<rbrace>c\<^sub>\<bottom>\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding rassert_def using assms cond_hoare_r [of c p SKIP q ]
+  by auto
+
+subsection {*Hoare for assume*}
+
+lemma assume_hoare_r [hoare]: 
+  assumes "\<lbrace>c \<and> p\<rbrace>SKIP\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>false\<lbrace>q\<rbrace>\<^sub>u" 
+  shows "\<lbrace>p\<rbrace>c\<^sup>\<top>\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding rassume_def using assms cond_hoare_r [of c p SKIP q ]
+  by auto
+
 subsection {*Hoare for While-loop*}
 
 lemma while_hoare_r [hoare]:
@@ -108,10 +124,7 @@ text {*block_test1 is a scenario. The scenario represent a program where i is na
        Now i is a local var for the scope t.
        In that case we can use a restore function on the state s to set the variable to its
        previous value ie.,its value in the scope s, and this before we exit the block.*}
-term "x  \<and>\<^sub>p s"
-term "&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>"
 
-term "\<lfloor>$i =\<^sub>u $i\<acute>\<rfloor>\<^sub>< "
 lemma   blocks_test1:
   assumes "weak_lens i"
   shows "\<lbrace>true\<rbrace>

@@ -615,7 +615,13 @@ proof -
   finally show ?thesis . 
 qed
 
+lemma while_inv_unfold:
+  "while b invr p do P od = ((P ;; while b invr p do P od) \<triangleleft> b \<triangleright>\<^sub>r SKIP)"
+  unfolding while_inv_def using while_unfold
+  by auto
+
 subsection {*assume and assert laws*}
+
 lemma assume_twice: "(b\<^sup>\<top> ;; c\<^sup>\<top>) = (b \<and> c)\<^sup>\<top>"
   by rel_auto
 
