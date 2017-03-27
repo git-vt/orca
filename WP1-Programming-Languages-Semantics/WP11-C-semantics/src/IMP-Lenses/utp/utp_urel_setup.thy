@@ -1,49 +1,12 @@
 section {* UTP variables *}
 
 theory utp_urel_setup
-  imports utp_lift
+  imports utp_lift utp_tactics
 begin
- named_theorems urel_defs
-
-text {*
-  We set up several automatic tactics that recast theorems on UTP predicates
-  into equivalent HOL predicates, eliminating artefacts of the mechanisation
-  as much as this is possible. Our approach is first to unfold all relevant
-  definition of the UTP predicate model, then perform a transfer, and finally
-  simplify by using lens and variable definitions, the split laws of alphabet
-  records, and interpretation laws to convert record-based state spaces into
-  products. The definition of the methods is facilitated by the Eisbach tool.
-*}
-
-text {* Without re-interpretation of lens types in state spaces (legacy). *}
-
-method rel_simp' =
-  (unfold upred_defs urel_defs)?,
-  transfer,
-  (simp add: fun_eq_iff relcomp_unfold OO_def
-    lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
-  clarsimp?
-
-text {* Variations that adjoin @{method rel_simp'} with automatic tactics. *}
-
-method rel_auto' = rel_simp', auto?
-method rel_blast' = rel_simp'; blast
-
-text {* With reinterpretation of lens types in state spaces (default). *}
-
-method rel_simp =
-  (unfold upred_defs urel_defs)?,
-  transfer,
-  (simp add: fun_eq_iff relcomp_unfold OO_def
-    lens_defs upred_defs (*alpha_splits*) Product_Type.split_beta)?,
-  (simp add: lens_interp_laws)?,
-  clarsimp?
-
-text {* Variations that adjoin @{method rel_simp} with automatic tactics. *}
-
-method rel_auto = rel_simp, auto?
-method rel_blast = rel_simp; blast
-
+(*tactics are in utp_tactics*)
+consts
+  useq   :: "'a \<Rightarrow> 'b \<Rightarrow> 'c" (infixr ";;" 51)
+  uskip  :: "'a" ("II")
 
 definition in\<alpha> :: "('\<alpha>, '\<alpha> \<times> '\<beta>) uvar" where
 "in\<alpha> = \<lparr> lens_get = fst, lens_put = \<lambda> (A, A') v. (v, A') \<rparr>"
@@ -79,5 +42,6 @@ abbreviation usubst_rel_lift :: "'\<alpha> usubst \<Rightarrow> ('\<alpha> \<tim
 
 abbreviation usubst_rel_drop :: "('\<alpha> \<times> '\<alpha>) usubst \<Rightarrow> '\<alpha> usubst" ("\<lfloor>_\<rfloor>\<^sub>s") where
 "\<lfloor>\<sigma>\<rfloor>\<^sub>s \<equiv> \<sigma> \<restriction>\<^sub>s in\<alpha>"
+
 
 end

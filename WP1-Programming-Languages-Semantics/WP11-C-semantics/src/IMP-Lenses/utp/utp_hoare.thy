@@ -54,7 +54,7 @@ lemma hoare_r_conj [hoare]:
 
 subsection {*Hoare SKIP*}
 
-lemma skip_hoare_r [hoare]: "\<lbrace>p\<rbrace>SKIP\<lbrace>p\<rbrace>\<^sub>u"
+lemma skip_hoare_r [hoare]: "\<lbrace>p\<rbrace>II\<lbrace>p\<rbrace>\<^sub>u"
   by rel_auto
 
 subsection {*Hoare for assignment*}
@@ -84,66 +84,49 @@ lemma cond_hoare_r [hoare]:
 subsection {*Hoare for assert*}
 
 lemma assert_hoare_r [hoare]: 
-  assumes "\<lbrace>c \<and> p\<rbrace>SKIP\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>true\<lbrace>q\<rbrace>\<^sub>u" 
+  assumes "\<lbrace>c \<and> p\<rbrace>II\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>true\<lbrace>q\<rbrace>\<^sub>u" 
   shows "\<lbrace>p\<rbrace>c\<^sub>\<bottom>\<lbrace>q\<rbrace>\<^sub>u"
-  unfolding rassert_def using assms cond_hoare_r [of c p SKIP q ]
+  unfolding rassert_def using assms cond_hoare_r [of c p _ q ]
   by auto
 
 subsection {*Hoare for assume*}
 
 lemma assume_hoare_r [hoare]: 
-  assumes "\<lbrace>c \<and> p\<rbrace>SKIP\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>false\<lbrace>q\<rbrace>\<^sub>u" 
+  assumes "\<lbrace>c \<and> p\<rbrace>II\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>c \<and> p\<rbrace>false\<lbrace>q\<rbrace>\<^sub>u" 
   shows "\<lbrace>p\<rbrace>c\<^sup>\<top>\<lbrace>q\<rbrace>\<^sub>u"
-  unfolding rassume_def using assms cond_hoare_r [of c p SKIP q ]
+  unfolding rassume_def using assms cond_hoare_r [of c p _ q ]
   by auto
 
 subsection {*Hoare for While-loop*}
 
 lemma while_hoare_r [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u"
-  shows "\<lbrace>p\<rbrace>WHILE b DO C OD\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
+  shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
   using assms
-  by (simp add: While_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
+  by (simp add: while_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
 
 lemma while_hoare_r' [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
-  shows "\<lbrace>p\<rbrace>WHILE b DO C OD\<lbrace>q\<rbrace>\<^sub>u"
+  shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>q\<rbrace>\<^sub>u"
   using assms
   by (metis conj_comm hoare_r_conseq p_imp_p taut_true while_hoare_r)
+
+lemma while_bot_hoare_r [hoare]: (*this is not correct*)
+  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u"
+  shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
+oops
+
+lemma while_bot_hoare_r' [hoare]: (*this is not correct*)
+  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
+  shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do C od\<lbrace>q\<rbrace>\<^sub>u"
+  using assms
+oops
 
 lemma while_invr_hoare_r [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`pre \<Rightarrow> p`" and "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>u"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
 
-subsection {*testing features*}
-
-text {*block_test1 is a scenario. The scenario represent a program where i is name of the variable
-       in the scope of the initial state s. In the scenario, and using the command block,
-       we create a new variable with the same name inside the block ie., inside the new scope. 
-       Now i is a local var for the scope t.
-       In that case we can use a restore function on the state s to set the variable to its
-       previous value ie.,its value in the scope s, and this before we exit the block.*}
-
-lemma   blocks_test1:
-  assumes "weak_lens i"
-  shows "\<lbrace>true\<rbrace>
-          i :== \<guillemotleft>2::int\<guillemotright>;; 
-          block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e s\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP) 
-         \<lbrace>&i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>u"
-  by (insert assms) rel_auto
-
-text {*block_test2 is similar to  block_test1 but the var i is a global var.
-       In that case we can use restore function and the state t to set the variable to its
-       latest value, ie.,its value in in the scope t,probably modified inside the scope of the block.*}
-
-lemma   blocks_test2:
-  assumes "weak_lens i"
-  shows "\<lbrace>true\<rbrace>
-          i :== \<guillemotleft>2::int\<guillemotright>;; 
-          block (i :== \<guillemotleft>5\<guillemotright>) (SKIP) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  SKIP) 
-         \<lbrace>&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
-  by (insert assms) rel_auto
 
 
 

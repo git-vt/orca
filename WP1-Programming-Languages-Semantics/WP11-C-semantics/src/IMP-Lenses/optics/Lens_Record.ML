@@ -212,7 +212,7 @@ fun add_alphabet_cmd _ (raw_params, binding) raw_parent raw_fields thy =
          |> Named_Target.theory_map (snd o Specification.theorems_cmd "" [((Binding.empty, []), [(Facts.named (tname ^ splits_suffix), alpha_splits)])] [] false)
             (* Add definitions for each of the lenses corresponding to each record field in-situ *)
          |> Named_Target.theory_map
-              (fold (fn x => snd o Specification.definition_cmd (NONE, (lens_defs, x)) true) (ldefs @ [mldef]))
+              (fold (fn x => snd o Specification.definition_cmd (NONE,  (lens_defs, x)) true) (ldefs @ [mldef]))
             (* Add definitions for each of the lenses corresponding to each record field augmented with the parent's child lens *)
          |> Named_Target.theory_map
               (fold (fn x => snd o Specification.definition_cmd (NONE, (lens_defs, x)) true) pldefs)

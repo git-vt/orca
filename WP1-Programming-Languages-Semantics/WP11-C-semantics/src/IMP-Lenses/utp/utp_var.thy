@@ -1,5 +1,5 @@
 section {* UTP variables *}
-
+ 
 theory utp_var
   imports
   Deriv
@@ -13,17 +13,18 @@ theory utp_var
   "../contrib/Galois_Connection"
   "../optics/Lenses"
   "../utils/Profiling"
+  "../utils/TotalRecall"
   "../utils/Pfun"
   "../utils/Ffun"
   "../utils/List_lexord_alt"
   "../utils/Monoid_extra"
   utp_parser_utils
 begin
-  
+
 text {* We will overload the square order relation with refinement and also the lattice operators so
   we will turn off these notations. *}
 
-no_notation 
+purge_notation
   le (infixl "\<sqsubseteq>\<index>" 50) and
   asup ("\<Squnion>\<index>_" [90] 90) and
   ainf ("\<Sqinter>\<index>_" [90] 90) and
@@ -33,17 +34,18 @@ no_notation
 text {* We hide HOL's built-in relation type since we will replace it with our own *}
 
 hide_type rel
+type_synonym 'a relation = "('a \<times> 'a) set"
 
 declare fst_vwb_lens [simp]
 declare snd_vwb_lens [simp]
-declare lens_indep_left_comp [simp]
+(* declare lens_indep_left_comp [simp] *)
 declare comp_vwb_lens [simp]
 declare lens_indep_left_ext [simp]
 declare lens_indep_right_ext [simp]
 
 text {* This theory describes the foundational structure of UTP variables, upon which the rest
-        of our model rests. We start by defining alphabets, which following~\cite{Feliachi2010,Feliachi2012} 
-        in this shallow model are simply represented as types, though by convention usually a record 
+        of our model rests. We start by defining alphabets, which following~\cite{Feliachi2010,Feliachi2012}
+        in this shallow model are simply represented as types, though by convention usually a record
         type where each field corresponds to a variable. *}
 
 type_synonym '\<alpha> "alphabet"  = "'\<alpha>"
@@ -52,8 +54,8 @@ text {* UTP variables in this frame are simply modelled as lenses, where the vie
   @{typ "'a"} is the variable type, and the source type @{text "'\<alpha>"} is the state-space
   type. *}
 
-type_synonym ('\<tau> , '\<alpha> ) uvar = "('\<tau> \<Longrightarrow> '\<alpha>)" 
-    
+type_synonym ('a, '\<alpha>) uvar = "('a, '\<alpha>) lens"
+
  text {* We also define some lifting functions for variables to create input and output variables.
         These simply lift the alphabet to a tuple type since relations will ultimately be defined
         to a tuple alphabet. *}
@@ -106,7 +108,7 @@ lemma prod_lens_indep_in_var [simp]:
 lemma prod_lens_indep_out_var [simp]:
   "b \<bowtie> x \<Longrightarrow> a \<times>\<^sub>L b \<bowtie> out_var x"
   by (metis in_out_indep in_var_def out_var_def out_var_indep plus_pres_lens_indep prod_as_plus)
-    
+
 text {* We also define some lookup abstraction simplifications. *}
 
 lemma var_lookup_in [simp]: "lens_get (in_var x) (A, A') = lens_get x A"
@@ -189,8 +191,7 @@ syntax
 parse_translation {*
 let
   fun uvar_ty_tr [ty] = Syntax.const @{type_syntax uvar} $ ty $ Syntax.const @{type_syntax dummy}
-    | uvar_ty_tr ts = raise TERM ("var_ty_tr", ts);
+    | uvar_ty_tr ts = raise TERM ("uvar_ty_tr", ts);
 in [(@{syntax_const "_uvar_ty"}, K uvar_ty_tr)] end
 *}
-
 end

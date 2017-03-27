@@ -140,7 +140,7 @@ abbreviation (input) "fld_put f \<equiv> (\<lambda> \<sigma> u. f (\<lambda>_. u
 
 syntax "_FLDLENS" :: "id \<Rightarrow> ('a \<Longrightarrow> 'r)"  ("FLDLENS _")
 translations "FLDLENS x" => "\<lparr> lens_get = x, lens_put = CONST fld_put (_update_name x) \<rparr>"
-
+ 
 text {* Introduce the alphabet command that creates a record with lenses for each field *}
                  
 ML_file "Lens_Record.ML"
