@@ -1,7 +1,7 @@
 section {* Concurrent programming *}
 
 theory utp_concurrency
-  imports utp_urel_laws utp_tactics
+  imports "../Algebraic_Laws" utp_tactics
 begin
 
 text {* In parallel-by-merge constructions, a merge predicate defines the behaviour following execution of
@@ -81,7 +81,7 @@ text {* swap is a predicate that the swaps the left and right indices; it is use
 
 -- {* TODO: There is an ambiguity below due to list assignment and tuples. *}
 
-definition [upred_defs]: "swap\<^sub>m = (0-\<Sigma>,1-\<Sigma> := &1-\<Sigma>,&0-\<Sigma>)"
+definition [upred_defs]: "swap\<^sub>m = (0-\<Sigma>,1-\<Sigma> :== &1-\<Sigma>,&0-\<Sigma>)"
 
 lemma U0_swap: "(U0 ;; swap\<^sub>m) = U1"
   by (rel_auto)+
