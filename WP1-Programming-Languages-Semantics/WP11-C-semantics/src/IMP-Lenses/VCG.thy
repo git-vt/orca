@@ -15,7 +15,22 @@ those.\<close>
 named_theorems last_simps
 declare lens_indep_sym[last_simps]
 declare mod_pos_pos_trivial[last_simps]
-(* declare lens_indep_def[last_simps] (* causes the VCG to hang *) *)
+
+method vcg_while = (* Will try with other while loops to find the right patterns  *)
+  (rule seq_hoare_r);
+  (rule seq_hoare_r [of _ _ true])?, (* ? needed as it attempts application of the rule to the first subgoal as well *)
+  (rule assigns_hoare_r')?, (* ? needed again to avoid error *)
+  (rule seq_hoare_r)?,
+  (rule assume_hoare_r)?,
+  (rule skip_hoare_r)?;
+  (rule while_invr_hoare_r)?,
+  (rule seq_hoare_r)?;
+  (rule assigns_hoare_r')?,
+  (rule cond_hoare_r)?,
+  (rule assigns_hoare_r)?,
+  (unfold lens_indep_def)?, (* can't put in last_simps, it hangs the VCG *)
+  (insert mod_pos_pos_trivial);
+  rel_auto
 
 method vcg_rules = 
   ((rule seq_hoare_r|
@@ -29,13 +44,13 @@ method vcg_rules =
    )+
   )?
 
-method vcg declares last_simps =
-  (intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
-  vcg_rules;
-  (rel_auto|
-   pred_auto| (* also has simp version *)
-   pred_blast),
-  (auto simp: last_simps)?
+method vcg declares last_simps = vcg_while|
+  ((intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
+    vcg_rules;
+    (rel_auto|
+      pred_auto| (* also has simp version *)
+      pred_blast),
+    (auto simp: last_simps)?)
 (* maybe want another VCG that does single-goal solving *)
 
 (* Need weakest precondition reasoning? *)
@@ -235,52 +250,76 @@ lemma even_count_manual:
   shows
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
       i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;;
-      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
-    while  &i <\<^sub>u &n
-      invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
-      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;;  i :== &i + \<guillemotleft>1\<guillemotright> od
+      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+    while &i <\<^sub>u &n
+      invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
-apply (insert assms)
-apply (rule seq_hoare_r)
- prefer 2
- apply (rule seq_hoare_r [of _ _ true]) (* The usage of `of` is an issue here *)
-  apply (rule assigns_hoare_r')
- apply (rule seq_hoare_r)
-  apply (rule assume_hoare_r)
-  apply (rule skip_hoare_r)
- prefer 2
- apply (rule while_invr_hoare_r)
-   apply (rule seq_hoare_r)
-    prefer 2
+  apply (insert assms)
+  apply (rule seq_hoare_r)
+   prefer 2
+   apply (rule seq_hoare_r [of _ _ true])
     apply (rule assigns_hoare_r')
-   apply (rule cond_hoare_r)
-    apply (rule assigns_hoare_r)
-    prefer 6
-    apply (rule assigns_hoare_r)
-    unfolding lens_indep_def
+   apply (rule seq_hoare_r)
+    apply (rule assume_hoare_r)
+    apply (rule skip_hoare_r)
+   prefer 2
+   apply (rule while_invr_hoare_r)
+     apply (rule seq_hoare_r)
+      prefer 2
+      apply (rule assigns_hoare_r')
+     apply (rule cond_hoare_r)
+      apply (rule assigns_hoare_r)
+      prefer 6
+      apply (rule assigns_hoare_r)
+      unfolding lens_indep_def
+      apply rel_auto
+     apply rel_auto
+     using mod_pos_pos_trivial
     apply rel_auto
    apply rel_auto
-   using mod_pos_pos_trivial apply auto[1]
   apply rel_auto
- apply rel_auto
-apply rel_auto
-apply rel_auto
-done
+  apply rel_auto
+  done
 
-lemma even_count_method:
-  assumes "vwb_lens i" and  "weak_lens a" and  "vwb_lens j"  and  "weak_lens n"and
-          "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+lemma even_count_manual2:
+  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
+      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
   shows
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
       i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;;
-      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
-    while  &i <\<^sub>u &n
-      invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
-      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;;  i :== &i + \<guillemotleft>1\<guillemotright> od
+      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+    while &i <\<^sub>u &n
+      invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
-  using assms
-  apply vcg
-  unfolding lens_indep_def
-  oops
+  by ((insert assms),
+       (rule seq_hoare_r);
+       (rule seq_hoare_r [of _ _ true])?, (* ? needed as it attempts application of the rule to the first subgoal as well *)
+       (rule assigns_hoare_r')?, (* ? needed again to avoid error *)
+       (rule seq_hoare_r)?,
+       (rule assume_hoare_r)?,
+       (rule skip_hoare_r)?;
+       (rule while_invr_hoare_r)?,
+       (rule seq_hoare_r)?;
+       (rule assigns_hoare_r')?,
+       (rule cond_hoare_r)?,
+       (rule assigns_hoare_r)?,
+       (unfold lens_indep_def)?,
+       (insert mod_pos_pos_trivial);
+       rel_auto)
+
+lemma even_count_method:
+  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
+      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  shows
+  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
+      i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;;
+      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+    while &i <\<^sub>u &n
+      invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
+    \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
+  by (insert assms) vcg
 
 end
