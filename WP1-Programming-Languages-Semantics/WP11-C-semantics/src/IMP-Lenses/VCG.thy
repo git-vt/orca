@@ -16,13 +16,21 @@ named_theorems last_simps
 declare lens_indep_sym[last_simps]
 declare mod_pos_pos_trivial[last_simps]
 
+definition ax :: "int \<Rightarrow> int" where
+  "ax a \<equiv> a * 2"
+
+text \<open>Some proof subgoals require theorem unfolding.\<close>
+named_theorems unfolds
+declare lens_indep_def[unfolds]
+declare ax_def[unfolds]
+
 method while_pre =
   (rule seq_hoare_r)?,
   (rule assume_hoare_r)?,
   (rule skip_hoare_r)?
 
 (* trying with other while loops to find the right patterns *)
-method even_count =
+method even_count declares last_simps =
   rule seq_hoare_r;
   (rule seq_hoare_r[of _ _ true])?, (* ? needed as it attempts application of the rule to the first subgoal as well *)
   (rule assigns_hoare_r')?, (* ? needed again to avoid error *)
@@ -31,17 +39,15 @@ method even_count =
   (rule seq_hoare_r)?;
   (rule assigns_hoare_r')?,
   (rule cond_hoare_r)?,
-  (rule assigns_hoare_r)?,
-  (unfold lens_indep_def)?, (* can't put in last_simps, it hangs the VCG *)
-  insert mod_pos_pos_trivial;
+  (unfold unfolds)?,
+  insert last_simps;
   rel_auto
 
-method sum =
+method increment =
   rule seq_hoare_r[of _ _ true];
   while_pre;
   (rule while_invr_hoare_r)?,
-  (rule assigns_hoare_r)?,
-  unfold lens_indep_def;
+  unfold unfolds;
   rel_auto
 
 method rules =
@@ -50,13 +56,17 @@ method rules =
       rule while_invr_hoare_r|
       (rule cond_hoare_r; simp?, (rule hoare_false)?)| (* not sure if s/,/;/ is needed *)
       rule assigns_hoare_r'| (* infixr seqr means this is not useful chained with seq rule *)
-      rule assigns_hoare_r|
       rule assert_hoare_r|
       rule assume_hoare_r
     )+
   )?
 
-method vcg declares last_simps = even_count|sum|
+(* VCG for partial solving; applies hoare rules (possibly generating more subgoals) and attempts
+to solve the first *)
+method vcg_step =
+  while_pre|fail
+
+method vcg declares last_simps = (even_count last_simps: last_simps)|increment|
   ((intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
     rules;
     (rel_auto|
@@ -64,7 +74,6 @@ method vcg declares last_simps = even_count|sum|
       pred_blast),
     (auto simp: last_simps)?
   )
-(* maybe want another VCG that does single-goal solving *)
 
 (* Need weakest precondition reasoning? *)
 
@@ -235,11 +244,9 @@ lemma if_manual:
   apply (insert assms)
   apply (rule cond_hoare_r)
   apply simp
-  apply (rule assigns_hoare_r)
 
   defer
   apply simp
-  apply (rule assigns_hoare_r)
 
   apply rel_simp
   apply pred_simp (* needed for UTP predicates; pred_blast needed for sets *)
@@ -266,7 +273,7 @@ lemma even_count_manual:
       (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
     while &i <\<^sub>u &n
       invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
+      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r)
@@ -282,9 +289,7 @@ lemma even_count_manual:
       prefer 2
       apply (rule assigns_hoare_r')
      apply (rule cond_hoare_r)
-      apply (rule assigns_hoare_r)
       prefer 6
-      apply (rule assigns_hoare_r)
       unfolding lens_indep_def
       apply rel_auto
      apply rel_auto
@@ -304,20 +309,20 @@ lemma even_count_method:
       (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
     while &i <\<^sub>u &n
       invr &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
+      do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II) ;; i :== &i + \<guillemotleft>1\<guillemotright> od
     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
-lemma sum_manual:
+lemma increment_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-    x :== \<guillemotleft>0::int\<guillemotright>;;
+    x :== \<guillemotleft>0\<guillemotright>;;
    (&x =\<^sub>u \<guillemotleft>0\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>)\<^sup>\<top>;;
     while &x <\<^sub>u &y
       invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
       do x :== &x + \<guillemotleft>1\<guillemotright> od
-    \<lbrace>&x =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
+    \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
   defer
@@ -326,7 +331,6 @@ lemma sum_manual:
   apply (rule skip_hoare_r)
   defer
   apply (rule while_invr_hoare_r)
-  apply (rule assigns_hoare_r)
   unfolding lens_indep_def
   apply rel_auto
   apply rel_auto
@@ -335,16 +339,16 @@ lemma sum_manual:
   apply rel_auto
   done
 
-lemma sum_method:
+lemma increment_method:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-    x :== \<guillemotleft>0::int\<guillemotright>;;
+    x :== \<guillemotleft>0\<guillemotright>;;
    (&x =\<^sub>u \<guillemotleft>0\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>)\<^sup>\<top>;;
     while &x <\<^sub>u &y
       invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
       do x :== &x + \<guillemotleft>1\<guillemotright> od
-    \<lbrace>&x =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
+    \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 end
