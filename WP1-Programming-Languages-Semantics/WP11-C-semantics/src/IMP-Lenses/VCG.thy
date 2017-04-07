@@ -9,6 +9,7 @@ text \<open>The tactics below are used to prove the validity of complex Hoare tr
 semi-automatically in a more efficient manner than using @{method rel_auto} by itself.\<close>
 
 subsection \<open>Using Eisbach methods\<close>
+(* apparently `|` has lower precedence than `,` , so method `a, b|c` is equivalent to `(a, b)|c` *)
 
 text \<open>Some proof subgoals require extra cleanup beyond plain simp/auto, so we need a simpset for
 those.\<close>
@@ -16,13 +17,9 @@ named_theorems last_simps
 declare lens_indep_sym[last_simps]
 declare mod_pos_pos_trivial[last_simps]
 
-definition ax :: "int \<Rightarrow> int" where
-  "ax a \<equiv> a * 2"
-
 text \<open>Some proof subgoals require theorem unfolding.\<close>
 named_theorems unfolds
 declare lens_indep_def[unfolds]
-declare ax_def[unfolds]
 
 method while_pre =
   (rule seq_hoare_r)?,
@@ -30,12 +27,13 @@ method while_pre =
   (rule skip_hoare_r)?
 
 (* trying with other while loops to find the right patterns *)
-method even_count declares last_simps =
+method even_count declares unfolds last_simps =
   rule seq_hoare_r;
-  (rule seq_hoare_r[of _ _ true])?, (* ? needed as it attempts application of the rule to the first subgoal as well *)
-  (rule assigns_hoare_r')?, (* ? needed again to avoid error *)
+  (rule seq_hoare_r[of _ _ true])?,
+  (rule assigns_hoare_r'|rule assigns_hoare_r),
+  (* ? needed as it attempts application of the rule to the first subgoal as well *)
   while_pre;
-  (rule while_invr_hoare_r)?,
+  (rule while_invr_hoare_r)?, (* ? needed again to avoid error *)
   (rule seq_hoare_r)?;
   (rule assigns_hoare_r')?,
   (rule cond_hoare_r)?,
@@ -43,37 +41,61 @@ method even_count declares last_simps =
   insert last_simps;
   rel_auto
 
-method increment =
+method increment declares unfolds =
   rule seq_hoare_r[of _ _ true];
+  (rule assigns_hoare_r'|rule assigns_hoare_r)?,
   while_pre;
   (rule while_invr_hoare_r)?,
-  unfold unfolds;
-  rel_auto
+  unfold unfolds,
+  rel_auto+
+
+method double_increment declares unfolds =
+  rule seq_hoare_r[of _ _ true],
+  rule while_invr_hoare_r,
+  unfold unfolds,
+  rel_auto+,
+  while_pre,
+  rel_auto,
+  rule while_invr_hoare_r,
+  rel_auto+
 
 method rules =
-  ((rule seq_hoare_r|
-      rule skip_hoare_r|
-      rule while_invr_hoare_r|
-      (rule cond_hoare_r; simp?, (rule hoare_false)?)| (* not sure if s/,/;/ is needed *)
-      rule assigns_hoare_r'| (* infixr seqr means this is not useful chained with seq rule *)
-      rule assert_hoare_r|
-      rule assume_hoare_r
-    )+
-  )?
+  (rule seq_hoare_r|
+    rule skip_hoare_r|
+    rule while_invr_hoare_r|
+    (rule cond_hoare_r; simp?, (rule hoare_false)?)| (* not sure if s/,/;/ is needed *)
+    rule assigns_hoare_r'| (* infixr seqr means this is not useful chained with seq rule *)
+    rule assert_hoare_r|
+    rule assume_hoare_r
+  )+
 
-(* VCG for partial solving; applies hoare rules (possibly generating more subgoals) and attempts
-to solve the first *)
+method rule_no_seq_try =
+  (rule skip_hoare_r|
+    (rule cond_hoare_r; simp?, (rule hoare_false)?)|
+    rule assigns_hoare_r'|
+    rule assigns_hoare_r|
+    rule assert_hoare_r
+  )
+
+(* VCG for partial solving; applies hoare rules to the first subgoal (possibly generating more
+subgoals) and attempts to solve it. *)
+(* How to fit in (rule seq_hoare_r[of _ _ true]), which must precede the seq-assume-skip
+but could have any other rule in between (even recursive if the command preceding the seq was a
+conditional or while loop)? *)
 method vcg_step =
-  while_pre|fail
+  rule seq_hoare_r, rule assume_hoare_r, rule skip_hoare_r|
+  fail
 
-method vcg declares last_simps = (even_count last_simps: last_simps)|increment|
-  ((intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
-    rules;
+method vcg declares last_simps unfolds =
+  even_count last_simps: last_simps unfolds: unfolds|
+  double_increment unfolds: unfolds|
+  increment unfolds: unfolds|
+  (intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
+    rules?;
     (rel_auto|
       pred_auto| (* also has simp version *)
       pred_blast),
     (auto simp: last_simps)?
-  )
 
 (* Need weakest precondition reasoning? *)
 
@@ -278,8 +300,8 @@ lemma even_count_manual:
   apply (insert assms)
   apply (rule seq_hoare_r)
    prefer 2
-   apply (rule seq_hoare_r[of _ _ true])
-    apply (rule assigns_hoare_r')
+   apply (rule seq_hoare_r[of _ _ true](* , rule hoare_true *))
+   apply (rule assigns_hoare_r')
    apply (rule seq_hoare_r)
     apply (rule assume_hoare_r)
     apply (rule skip_hoare_r)
@@ -325,6 +347,7 @@ lemma increment_manual:
     \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
+  apply (rule assigns_hoare_r) (* hoare_true works here but not in general *)
   defer
   apply (rule seq_hoare_r)
   apply (rule assume_hoare_r)
@@ -350,5 +373,107 @@ lemma increment_method:
       do x :== &x + \<guillemotleft>1\<guillemotright> od
     \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
   by (insert assms) vcg
+
+lemma increment'_manual:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od
+    \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule while_invr_hoare_r)
+  unfolding lens_indep_def
+  apply rel_auto
+  apply rel_auto
+  apply rel_auto
+  done
+
+lemma increment'_method:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od
+    \<lbrace>&x =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
+  by (insert assms) vcg
+
+lemma double_increment_manual:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od;;
+    (&x =\<^sub>u \<guillemotleft>5\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>)\<^sup>\<top>;;
+    while &x <\<^sub>u &y * \<guillemotleft>2\<guillemotright>
+      invr &x \<le>\<^sub>u &y * \<guillemotleft>2\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od
+    \<lbrace>&x =\<^sub>u \<guillemotleft>10\<guillemotright>\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule seq_hoare_r[of _ _ true])
+
+  apply (rule while_invr_hoare_r)
+  unfolding lens_indep_def
+  apply rel_auto
+  apply rel_auto
+  apply rel_auto
+
+  apply (rule seq_hoare_r)
+  apply (rule assume_hoare_r)
+  apply (rule skip_hoare_r)
+  apply rel_auto
+
+  apply (rule while_invr_hoare_r)
+  apply rel_auto
+  apply rel_auto
+  apply rel_auto
+  done
+
+lemma double_increment_method:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od;;
+    (&x =\<^sub>u \<guillemotleft>5\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>)\<^sup>\<top>;;
+    while &x <\<^sub>u &y * \<guillemotleft>2\<guillemotright>
+      invr &x \<le>\<^sub>u &y * \<guillemotleft>2\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>
+      do x :== &x + \<guillemotleft>1\<guillemotright> od
+    \<lbrace>&x =\<^sub>u \<guillemotleft>10\<guillemotright>\<rbrace>\<^sub>u"
+  by (insert assms) vcg
+
+section Testing
+
+lemma
+  assumes X: "Q \<longrightarrow> P" Q
+  shows P
+  by (match X in I: "Q \<longrightarrow> P" and I': Q \<Rightarrow> \<open>insert mp[OF I I']\<close>)
+
+lemma "Q \<longrightarrow> P \<Longrightarrow> Q \<Longrightarrow> P"
+  by (match premises in I: "Q \<longrightarrow> P" and I': Q \<Rightarrow> \<open>insert mp[OF I I']\<close>)
+
+lemma
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+         x :== \<guillemotleft>3\<guillemotright>
+        \<lbrace>&x =\<^sub>u \<guillemotleft>3\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
+  apply (rule assigns_hoare_r)
+  using assms
+  apply (match assms in "_ \<bowtie> _" \<Rightarrow> \<open>unfold lens_indep_def\<close>)
+  apply rel_auto
+  done
+
+lemma
+  "vwb_lens x \<Longrightarrow> x \<bowtie> y \<Longrightarrow> \<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>
+         x :== \<guillemotleft>3\<guillemotright>
+        \<lbrace>&x =\<^sub>u \<guillemotleft>3\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>5\<guillemotright>\<rbrace>\<^sub>u"
+  apply (rule assigns_hoare_r)
+  apply (match conclusion in _ \<Rightarrow> \<open>unfold lens_indep_def\<close>) (* why doesn't premises work? *)
+  apply rel_auto
+  done
 
 end
