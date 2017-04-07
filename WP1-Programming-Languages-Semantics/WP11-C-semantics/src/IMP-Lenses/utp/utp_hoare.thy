@@ -59,8 +59,8 @@ lemma skip_hoare_r [hoare]: "\<lbrace>p\<rbrace>II\<lbrace>p\<rbrace>\<^sub>u"
 
 subsection {*Hoare for assignment*}
 
-lemma assigns_hoare_r [hoare]: 
-  assumes"`p \<Rightarrow> \<sigma> \<dagger> q`" 
+lemma assigns_hoare_r [hoare]:
+  assumes"`p \<Rightarrow> \<sigma> \<dagger> q`"
   shows  "\<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>q\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
 
@@ -69,8 +69,8 @@ lemma assigns_hoare_r' [hoare]: "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>
 
 subsection {*Hoare for Sequential Composition*}
 
-lemma seq_hoare_r [hoare]: 
-  assumes"\<lbrace>p\<rbrace>C\<^sub>1\<lbrace>s\<rbrace>\<^sub>u" and "\<lbrace>s\<rbrace>C\<^sub>2\<lbrace>r\<rbrace>\<^sub>u" 
+lemma seq_hoare_r [hoare]:
+  assumes"\<lbrace>p\<rbrace>C\<^sub>1\<lbrace>s\<rbrace>\<^sub>u" and "\<lbrace>s\<rbrace>C\<^sub>2\<lbrace>r\<rbrace>\<^sub>u"
   shows"\<lbrace>p\<rbrace>C\<^sub>1 ;; C\<^sub>2\<lbrace>r\<rbrace>\<^sub>u"
   by (insert assms) rel_auto
 
