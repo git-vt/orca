@@ -21,7 +21,7 @@ text \<open>Some proof subgoals require theorem unfolding.\<close>
 named_theorems unfolds
 declare lens_indep_def[unfolds]
 
-method while_pre =
+method assume_steps =
   rule seq_hoare_r,
   rule assume_hoare_r,
   rule skip_hoare_r
@@ -32,7 +32,7 @@ method even_count declares unfolds last_simps =
   (rule seq_hoare_r[of _ _ true])?,
   (rule assigns_hoare_r'|rule assigns_hoare_r),
   (* ? needed as it attempts application of the rule to the first subgoal as well *)
-  while_pre?;
+  assume_steps?;
   (rule while_invr_hoare_r)?, (* ? needed again to avoid error *)
   (rule seq_hoare_r)?;
   (rule assigns_hoare_r')?,
@@ -44,7 +44,7 @@ method even_count declares unfolds last_simps =
 method increment declares unfolds =
   rule seq_hoare_r[of _ _ true];
   (rule assigns_hoare_r'|rule assigns_hoare_r)?,
-  while_pre?;
+  assume_steps?;
   (rule while_invr_hoare_r)?,
   unfold unfolds,
   rel_auto+
@@ -54,15 +54,15 @@ method double_increment declares unfolds =
   rule while_invr_hoare_r,
   unfold unfolds,
   rel_auto+,
-  while_pre,
+  assume_steps,
   rel_auto,
   rule while_invr_hoare_r,
   rel_auto+
 
 method if_increment declares unfolds =
-  rule cond_hoare_r,
   unfold unfolds,
-  (rule while_invr_hoare_r, rel_auto+)+
+  rule cond_hoare_r;
+  rule while_invr_hoare_r, rel_auto+
 
 method rules =
   (rule seq_hoare_r|
@@ -74,7 +74,8 @@ method rules =
     rule assume_hoare_r
   )+
 
-method rules_no_seq_once =
+method rules_x =
+  rule seq_hoare_r|
   rule skip_hoare_r|
   rule cond_hoare_r|
   rule assigns_hoare_r'| (* merges two subgoals? *)
@@ -85,24 +86,27 @@ method rules_no_seq_once =
   rule while_hoare_r'|
   rule while_invr_hoare_r
 
-(* VCG for partial solving; applies hoare rules to the first subgoal (possibly generating more
-subgoals) and attempts to solve it. *)
-(* How to fit in (rule seq_hoare_r[of _ _ true]), which must precede the seq-assume-skip
-but could have any other rule in between (even recursive if the command preceding the seq was a
-conditional or while loop)? *)
-method vcg_step = while_pre|fail
+(* also have simp versions *)
+method utp_methods = rel_auto|rel_blast|pred_auto|pred_blast
 
 method vcg declares last_simps unfolds =
   if_increment unfolds: unfolds|
   even_count last_simps: last_simps unfolds: unfolds|
   double_increment unfolds: unfolds|
   increment unfolds: unfolds|
-  (intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied *)
+(*   (intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied; this may
+not actually be useful (it's certainly not necessary) and so is currently commented out *) *)
     rules?;
-    (rel_auto|
-      pred_auto| (* also has simp version *)
-      pred_blast),
+    utp_methods,
     (auto simp: last_simps)?
+
+text \<open>VCG for partial solving; applies a Hoare rule to the first subgoal (possibly generating more
+subgoals) and then attempts to solve it and any simply-solvable immediately-succeeding goals.
+For now, \texttt{rule seq_hoare_r[of _ _ true]}, which must precede the seq-assume-skip, will be
+applied manually. For certain programs, we need to do utp_methods first (in fact, for some it's all
+that's needed), but this results in slowdowns for other programs that do not require it first and in
+fact some rules are not properly applied if the application does not come before utp_methods usage.\<close>
+method vcg_step = utp_methods|rules_x, utp_methods?
 
 (* Need weakest precondition reasoning? *)
 
@@ -128,27 +132,16 @@ lemma swap_test_manual:
           y :== &z
          \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
-  apply (intro hoare_r_conj)
 
   apply (rule seq_hoare_r)
   prefer 2
   apply (rule seq_hoare_r)
   apply (rule assigns_hoare_r')
   apply (rule assigns_hoare_r')
-  apply simp
-  defer
-
-  apply (rule seq_hoare_r)
-  prefer 2
-  apply (rule seq_hoare_r)
-  apply (rule assigns_hoare_r')
-  apply (rule assigns_hoare_r')
-  apply simp
 
   apply rel_simp
   apply (simp add: lens_indep_sym)
-  oops (* Not sure why this isn't working even though the VCG based on it does. *)
-(* ML_prf \<open>\<close> *)
+  done
 
 lemma swap_test_method:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
@@ -161,9 +154,22 @@ lemma swap_test_method:
   using assms
   by vcg
 
+lemma swap_test_method_step:
+  assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
+      and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
+          z :== &x;;
+          x :== &y;;
+          y :== &z
+         \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+  apply (insert assms)
+  unfolding lens_indep_def
+  apply vcg_step
+  done
+
 lemma swap_testx:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" 
+      and "x \<bowtie> y"
       and "x \<sharp> a" and "y \<sharp> a" and "z \<sharp> a"
       and "x \<sharp> b" and "y \<sharp> b" and "z \<sharp> b"
   shows "\<lbrace>&x =\<^sub>u a \<and> &y =\<^sub>u b\<rbrace>
@@ -216,6 +222,15 @@ lemma if_true_method:
   using assms
   by vcg
 
+lemma if_true_method_step:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>1"
+      and "x \<sharp> exp\<^sub>2"
+  shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
+          x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+         \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
+  by (insert assms) vcg_step
+
 lemma if_false:
   assumes "weak_lens x"
       and "x \<sharp> exp\<^sub>1"
@@ -252,6 +267,15 @@ lemma if_false_method:
          \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by vcg
+
+lemma if_false_method_step:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>1"
+      and "x \<sharp> exp\<^sub>2"
+  shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
+          x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+         \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
+  by (insert assms) vcg_step
 
 lemma if_base:
   assumes "weak_lens x"
@@ -290,6 +314,15 @@ lemma if_method:
          \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   using assms
   by vcg
+
+lemma if_method_step:
+  assumes "weak_lens x"
+      and "x \<sharp> exp\<^sub>2"
+      and "x \<sharp> exp\<^sub>3"
+  shows "\<lbrace>true\<rbrace>
+          x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
+         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  by (insert assms) vcg_step
 
 subsubsection \<open>Building WHILE\<close>
 
@@ -342,6 +375,33 @@ lemma even_count_method:
     \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
+lemma even_count_method_step:
+  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
+      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  shows
+  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
+      i :== &a ;; j :== 0 ;;
+      (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+    while &i <\<^sub>u &n
+      invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+      do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+    \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply vcg_step
+  defer
+  apply (rule seq_hoare_r[of _ _ true])
+  apply vcg_step+
+  unfolding lens_indep_def
+  apply vcg_step+
+  using mod_pos_pos_trivial
+  apply vcg_step
+  apply vcg_step
+  apply vcg_step
+  apply vcg_step
+  apply vcg_step
+  (* leaves us with an extra schematic variable *)
+  done
+
 lemma increment_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
@@ -354,7 +414,7 @@ lemma increment_manual:
     \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
-  apply (rule assigns_hoare_r) (* hoare_true works here but not in general *)
+(*   apply (rule assigns_hoare_r) (* hoare_true works here but not in general *) *)
   defer
   apply (rule seq_hoare_r)
   apply (rule assume_hoare_r)
@@ -380,6 +440,22 @@ lemma increment_method:
       do x :== &x + 1 od
     \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   by (insert assms) vcg
+
+lemma increment_method_step:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
+    x :== 0;;
+   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+      do x :== &x + 1 od
+    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule seq_hoare_r[of _ _ true])
+  unfolding lens_indep_def
+  apply vcg_step+
+  done
 
 lemma increment'_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
@@ -453,6 +529,25 @@ lemma double_increment_method:
     \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
+lemma double_increment_method_step:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+      do x :== &x + 1 od;;
+    (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+    while &x <\<^sub>u &y * 2
+      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+      do x :== &x + 1 od
+    \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule seq_hoare_r[of _ _ true])
+  apply vcg_step+
+  unfolding lens_indep_def
+  apply vcg_step+
+  done
+
 subsubsection \<open>Building more complicated stuff\<close>
 
 lemma if_increment_manual:
@@ -491,6 +586,26 @@ lemma if_increment_method:
       do x :== &x + 1 od
     \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   by (insert assms) vcg
+
+lemma if_increment_method_step:
+  assumes "vwb_lens x" and "x \<bowtie> y"
+  shows
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
+    while &x <\<^sub>u &y
+      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+      do x :== &x + 1 od
+    \<triangleleft> b \<triangleright>\<^sub>r
+    while &x <\<^sub>u &y * 2
+      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+      do x :== &x + 1 od
+    \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule cond_hoare_r) (* needed as vcg_step tries utp_methods first and that messes up cond
+rule *)
+  apply vcg_step+
+  unfolding lens_indep_def
+  apply vcg_step+
+  done
 
 section Testing
 
