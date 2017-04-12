@@ -197,4 +197,8 @@ declare rel_var_res_def [urel_defs]
 -- {* Configuration for UTP tactics (see @{theory utp_tactics}). *}
 
 update_uexpr_rep_eq_thms -- {* Reread @{text rep_eq} theorems. *}
+
+lemma Rep_inverse[code]:"Rep_uexpr (Abs_uexpr x) = x" 
+by rel_auto
+
 end

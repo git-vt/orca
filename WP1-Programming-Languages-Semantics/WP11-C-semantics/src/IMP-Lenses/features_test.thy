@@ -7,7 +7,7 @@ begin
 subsection {*Even count*}
 
 lemma even_count:
-   assumes "vwb_lens i" and  "weak_lens a" and  "vwb_lens j"  and  "weak_lens n"and
+   assumes "weak_lens i" and  "weak_lens a" and  "weak_lens j"  and  "weak_lens n"and
            "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n" 
    shows 
    "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
@@ -35,13 +35,13 @@ lemma even_count:
      prefer 6
      apply (rule assigns_hoare_r)
      unfolding lens_indep_def
-     apply rel_auto[1]
-    apply rel_auto[1]
-    using mod_pos_pos_trivial apply auto[1]
-   apply rel_auto[1]
-  apply rel_auto[1]
- apply rel_auto[1]
- apply rel_auto[1]
+     apply rel_auto
+    apply rel_auto
+    using mod_pos_pos_trivial apply auto
+   apply rel_auto
+  apply rel_auto
+ apply rel_auto
+ apply rel_auto
 done
 
 subsection {*testing features*}
@@ -72,5 +72,17 @@ lemma   blocks_test2:
           block (i :== \<guillemotleft>5\<guillemotright>) (II) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  II) 
          \<lbrace>&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
   using assms by rel_auto
+
+subsection {*Infinite loops*}
+text{*The next two lemmas are the witness needed to justify the theory of designs.*}
+
+lemma 1:"while\<^sub>\<bottom> true do II od = true"
+  unfolding while_bot_def
+  apply rel_simp unfolding gfp_def apply transfer apply auto done
+
+lemma "in\<alpha> \<sharp> ( x :== \<guillemotleft>c\<guillemotright>) \<Longrightarrow> while\<^sub>\<bottom> true  do II od;; x :== \<guillemotleft>c\<guillemotright> = x :== \<guillemotleft>c\<guillemotright>"
+  apply (subst 1) apply (simp only: assigns_r.abs_eq )  
+  apply (simp only: seqr_def) apply simp
+ apply rel_simp  apply transfer apply auto done
 
 end

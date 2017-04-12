@@ -4,7 +4,7 @@ theory utp_reactive
 imports
   "../utp/utp_concurrency"
   utp_designs
-begin
+begin 
 
 alphabet 't::ordered_cancel_monoid_diff rp_vars = des_vars +
   wait :: bool
@@ -20,8 +20,8 @@ text {*
   of their derivatives have been applied. Eventually, it would be desirable to
   automate both interpretations as part of a custom outer command for defining
   alphabets.
-*}
-
+*} 
+ 
 interpretation rp_vars:
   lens_interp "\<lambda>(ok, r). (ok, wait\<^sub>v r, tr\<^sub>v r, more r)"
 apply (unfold_locales)
@@ -75,7 +75,7 @@ abbreviation lift_rea :: "_ \<Rightarrow> _" ("\<lceil>_\<rceil>\<^sub>R") where
 
 abbreviation drop_rea :: "('t::ordered_cancel_monoid_diff, '\<alpha>, '\<beta>) rel_rp \<Rightarrow> ('\<alpha>, '\<beta>) rel" ("\<lfloor>_\<rfloor>\<^sub>R") where
 "\<lfloor>P\<rfloor>\<^sub>R \<equiv> P \<restriction>\<^sub>p (\<Sigma>\<^sub>R \<times>\<^sub>L \<Sigma>\<^sub>R)"
-
+ 
 abbreviation rea_pre_lift :: "_ \<Rightarrow> _" ("\<lceil>_\<rceil>\<^sub>R\<^sub><") where "\<lceil>n\<rceil>\<^sub>R\<^sub>< \<equiv> \<lceil>\<lceil>n\<rceil>\<^sub><\<rceil>\<^sub>R"
 
 subsection {* Reactive lemmas *}
