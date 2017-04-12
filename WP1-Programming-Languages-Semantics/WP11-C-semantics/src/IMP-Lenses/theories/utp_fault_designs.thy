@@ -282,6 +282,9 @@ lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW)  CATCH (\<langle>b\<ran
         ( \<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
       by rel_auto blast + 
 
+lemma "(TRY  THROW;; \<langle>a\<rangle>\<^sub>CCATCH SKIP    END ) = (SKIP  )"
+ by rel_auto blast + 
+
 term "(\<lceil>true\<rceil>\<^sub>C \<turnstile> \<lceil>assigns_r a\<rceil>\<^sub>C)"
 lemma "((THROW;;  (\<langle>a\<rangle>\<^sub>C \<triangleleft> $abrupt \<triangleright> SKIP)) \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) = 
        ((THROW;; \<langle>a\<rangle>\<^sub>C)\<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt)"
