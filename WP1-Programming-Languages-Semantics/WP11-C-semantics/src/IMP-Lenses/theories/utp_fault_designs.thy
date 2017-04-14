@@ -170,7 +170,7 @@ where [urel_defs]: "STUCK = (\<not>$ok\<acute> \<or>  $abrupt\<acute> \<or> $fau
 
 definition assigns_c :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
 where [urel_defs]: "assigns_c \<sigma> = 
-                    C3(true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>C))"
+                    C3(\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>C))"
 
 definition throw_c :: "('f,'\<alpha>) hrel_cp" ("THROW")
 where [urel_defs]: "THROW = C3(true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C))"
@@ -181,30 +181,12 @@ where "guard_c f b P \<equiv> C3(true \<turnstile> (P \<triangleleft> \<lceil>b\
 abbreviation catch_c :: "('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("TRY (_) CATCH /(_) END")
 where "TRY P CATCH Q END \<equiv> 
        C3(true \<turnstile> (P ;; ((abrupt:== (\<not> &abrupt) ;;Q) \<triangleleft> $abrupt \<triangleright> II)))"
-(*C3(true \<turnstile> (P;;(((\<not>$abrupt) \<Rightarrow> Q) \<triangleleft> $abrupt \<triangleright> SKIP))) *)
 
-term"(true \<turnstile> P) ;;
-     ((block (abrupt:== (\<not> &abrupt)) (true \<turnstile> Q) (\<lambda> (s, s') (t, t').  abrupt:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s abrupt\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  II)) \<triangleleft> $abrupt \<triangleright> SKIP)"
-term "abrupt:== (\<not> &abrupt)"
-term "Abs_uexpr (\<lambda>(t, t'). \<lbrakk> $abrupt  \<rbrakk>\<^sub>e (t, t'))"
-term "Abs_uexpr (\<lambda>(s, s'). 
-          \<lbrakk>P ;; 
-           Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))"
-term "Abs_uexpr (\<lambda>(s, s'). 
-             \<lbrakk>initP ;; body ;; 
-             Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))"
-term "(C3((true \<turnstile> (C3 (Q) \<and> $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt)))\<triangleleft> $abrupt \<triangleright>
-        SKIP)"
-term "C3(true \<turnstile> (P \<Rightarrow> $abrupt\<acute>))"
-
-term "((C3 (P) \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt ) \<Rightarrow> $abrupt\<acute>) \<and> (C3 (P) \<and> \<not>$abrupt \<and> C3 (Q))"
-term "((C3 (P) \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt ) \<Rightarrow> (\<not>$abrupt\<acute>)) \<and> (C3 (P))"
-
-term "((C3 (P) \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt )\<and> (\<not>$abrupt\<acute>))\<or>
-      ((C3 (P) \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt )\<and> ($abrupt\<acute>) \<and> 
-       (C3 (Q) \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt ))"
-find_theorems "(_ \<turnstile> _;; (_ \<turnstile> _))"
-term "((P1 \<turnstile> Q1) ;; (P2 \<turnstile> Q2)) = (((\<not> ((\<not> P1) ;; true)) \<and> \<not> (Q1 ;; (\<not> P2))) \<turnstile> (Q1 ;; Q2))"
+definition block_c  where
+[urel_defs]:"block_c init body restore return = 
+            Abs_uexpr (\<lambda>(s, s'). \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
+                                                    \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW) \<triangleleft> $abrupt \<triangleright> II;; 
+         restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
 
 (*What happen if we do not use healthiness conditions*)
 lemma "(true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) ;; 
@@ -215,16 +197,6 @@ lemma "(true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u
 lemma [simp]:"(SKIP ;; C3(true \<turnstile> P)) = C3(true \<turnstile> P)"
   by rel_auto
 
-lemma [simp]:
-  "(($fault \<noteq>\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) \<or> ($abrupt \<and> II) \<or> 
-    ($fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt \<and> (true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C))))= THROW"
-  by rel_auto
- 
-lemma  [simp]:
-  "(($fault \<noteq>\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) \<or> ($abrupt \<and> II) \<or> 
-    ($fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt \<and>  (true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and>  \<lceil>II\<rceil>\<^sub>C)))) = SKIP"
-  by rel_auto
-   
 lemma "(SKIP ;; THROW) = THROW"
   by rel_auto
 
@@ -234,81 +206,20 @@ lemma "(THROW ;; SKIP) = THROW"
 lemma "(THROW ;; guard_c f b P) = THROW" 
   by rel_auto
 
-(*lemma "((THROW ;; TRY P CATCH Q END)) = 
+lemma "((THROW ;; TRY P CATCH Q END)) = 
      THROW" 
-  by rel_auto*)
-
-
-lemma 
-  "(SKIP \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt ) = 
-   ($ok\<acute>\<and>  $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and>  \<lceil>II\<rceil>\<^sub>C  \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt)"
-  by rel_auto
-
-
-lemma 
-  "(SKIP \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt ) = 
-   ($ok\<acute>\<and>  $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and>  \<lceil>II\<rceil>\<^sub>C  \<and>  $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt)"
-  by rel_auto
-
-lemma 
-  "( SKIP \<and>   $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt) = 
-   (($ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt)\<and>($ok\<acute>\<and>  $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and>  \<lceil>II\<rceil>\<^sub>C) )"
-  by rel_auto
-
-lemma "(THROW \<and> $ok \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) = 
-       ($ok \<and> \<not>$abrupt \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> $ok\<acute>\<and> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<lceil>II\<rceil>\<^sub>C)"
-   by rel_auto
-
-lemma "(TRY  THROW CATCH SKIP    END ) = (SKIP  )"
-  by rel_auto
-
-
-lemma "(TRY \<langle>a\<rangle>\<^sub>C CATCH  SKIP   END ) = (\<langle>a\<rangle>\<^sub>C  )"
-  by rel_auto
-
-
-
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C)  CATCH (SKIP) END ) =
-        (SKIP ;; \<langle>a\<rangle>\<^sub>C)"
-      by rel_auto blast + 
-
-
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW)  CATCH (SKIP) END ) =
-        ( \<langle>a\<rangle>\<^sub>C)"
-      by rel_auto blast + 
-
-
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW)  CATCH (\<langle>b\<rangle>\<^sub>C) END ) =
-        ( \<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
-      by rel_auto blast + 
-
-lemma "(TRY  THROW;; \<langle>a\<rangle>\<^sub>CCATCH SKIP    END ) = (SKIP  )"
- by rel_auto blast + 
-
-term "(\<lceil>true\<rceil>\<^sub>C \<turnstile> \<lceil>assigns_r a\<rceil>\<^sub>C)"
-lemma "((THROW;;  (\<langle>a\<rangle>\<^sub>C \<triangleleft> $abrupt \<triangleright> SKIP)) \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) = 
-       ((THROW;; \<langle>a\<rangle>\<^sub>C)\<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt)"
   by rel_auto
 
 lemma "`(THROW \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
   by rel_simp
 
-lemma "`(guard_c f b P \<and> \<not>\<lceil>b\<rceil>\<^sub>C\<^sub>< \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
+lemma "`(guard_c f false P \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
   by rel_simp 
 
 lemma "((true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II)) =\<^sub>u $ok) =
         ($ok\<acute>\<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and> II)"
   by rel_auto
 
-
-lemma "((true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II)) =\<^sub>u $ok) =
-        ($ok\<acute>\<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and> II)"
-by rel_auto
-
-lemma "((\<not>$abrupt \<and> true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) \<and> 
-         true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II))) = 
-       (\<not>$abrupt \<and> true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II))"
-  by rel_auto
 
 (*lemma "(true ;; guard_c f b P) = true" by rel_auto
 lemma "(SKIP ;;\<langle>s\<rangle>\<^sub>C) = \<langle>s\<rangle>\<^sub>C" by rel_auto
@@ -329,6 +240,7 @@ lemma "(SKIP) = ((\<not>$ok)\<or> (\<not>$abrupt\<acute> \<and> $fault\<acute> =
 lemma "(H1 (II) =\<^sub>u $ok)= ($ok\<acute> \<and> II)" by rel_auto
 
 
+*)
 syntax
   "_assignmentc" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr ":=" 55)
 
@@ -338,7 +250,6 @@ translations
   "x := v" <= "CONST assigns_c (CONST subst_upd (CONST id) x v)"
   "x,y := u,v" <= "CONST assigns_c (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
 
-*)
 
 
 

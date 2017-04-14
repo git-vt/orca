@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory features_test
-  imports "utp/utp_hoare"
+  imports "utp_hoare_total"
 begin
 
 subsection {*Even count*}
@@ -43,8 +43,27 @@ lemma even_count:
  apply rel_auto
  apply rel_auto
 done
+subsection {*catch feature*}
 
-subsection {*testing features*}
+lemma "(TRY THROW CATCH SKIP END ) = SKIP"
+  by rel_auto
+
+lemma "(TRY \<langle>a\<rangle>\<^sub>C CATCH  SKIP  END ) = \<langle>a\<rangle>\<^sub>C"
+  by rel_auto
+
+lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C) CATCH SKIP END ) =  \<langle>a\<rangle>\<^sub>C"
+      by rel_auto blast + 
+
+lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH SKIP END ) = \<langle>a\<rangle>\<^sub>C"
+      by rel_auto blast + 
+
+lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH \<langle>b\<rangle>\<^sub>C END) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
+      by rel_auto blast + 
+
+lemma "(TRY  THROW;; \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = SKIP "
+ by rel_auto blast + 
+
+subsection {*block feature*}
 
 text {*block_test1 is a scenario. The scenario represent a program where i is name of the variable
        in the scope of the initial state s. In the scenario, and using the command block,
@@ -61,6 +80,16 @@ lemma   blocks_test1:
          \<lbrace>&i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>u"
   using assms by rel_auto
 
+lemma   block_c_test1:
+  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+          i := \<guillemotleft>2::int\<guillemotright>;; j := \<guillemotleft>0::int\<guillemotright> ;; 
+          block_c (j := \<guillemotleft>5\<guillemotright>;; i:= \<guillemotleft>5\<guillemotright>) (II)
+                  (\<lambda> (s, s') (t, t').  i:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                     j:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
+                  (\<lambda> (s, s') (t, t').  II)
+         \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
+  using assms  by rel_simp
+
 text {*block_test2 is similar to  block_test1 but the var i is a global var.
        In that case we can use restore function and the state t to set the variable to its
        latest value, ie.,its value in in the scope t,probably modified inside the scope of the block.*}
@@ -72,6 +101,16 @@ lemma   blocks_test2:
           block (i :== \<guillemotleft>5\<guillemotright>) (II) (\<lambda> (s, s') (t, t').  i:== \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e t\<guillemotright>) (\<lambda> (s, s') (t, t').  II) 
          \<lbrace>&i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>u"
   using assms by rel_auto
+
+lemma   block_c_test2:
+  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+          i := \<guillemotleft>2::int\<guillemotright>;; j := \<guillemotleft>0::int\<guillemotright> ;; 
+          block_c (j := \<guillemotleft>5\<guillemotright>;; i:= \<guillemotleft>5\<guillemotright>) (II)
+                  (\<lambda> (s, s') (t, t').  i:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright> ;; 
+                     j:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright>) 
+                  (\<lambda> (s, s') (t, t').  II)
+         \<lbrace>&j =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>D"
+  using assms  unfolding lens_indep_def by rel_simp
 
 subsection {*Infinite loops*}
 text{*The next two lemmas are the witness needed to justify the theory of designs.*}
