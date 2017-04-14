@@ -171,6 +171,13 @@ where [urel_defs]: "STUCK = (\<not>$ok\<acute> \<or>  $abrupt\<acute> \<or> $fau
 definition assigns_c :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
 where [urel_defs]: "assigns_c \<sigma> = 
                     C3(\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>C))"
+subsection{*assert and assume*}
+
+definition rassume_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
+[urel_defs]: "rassume_c c = SKIP \<triangleleft> \<lceil>c\<rceil>\<^sub>C\<^sub>< \<triangleright> \<top>\<^sub>D"
+
+definition rassert_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
+[urel_defs]: "rassert_c c = SKIP \<triangleleft> \<lceil>c\<rceil>\<^sub>C\<^sub>< \<triangleright> \<bottom>\<^sub>D"
 
 definition throw_c :: "('f,'\<alpha>) hrel_cp" ("THROW")
 where [urel_defs]: "THROW = C3(true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C))"
@@ -187,6 +194,22 @@ definition block_c  where
             Abs_uexpr (\<lambda>(s, s'). \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                                                     \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW) \<triangleleft> $abrupt \<triangleright> II;; 
          restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
+definition While :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("While\<^sup>\<top> _ do _ od") where
+"While b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> \<lceil>b\<rceil>\<^sub>C\<^sub>< \<triangleright> SKIP)"
+
+abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow>  ('f,'\<alpha>) hrel_cp" ("WHILE _ DO _ OD") where
+"WHILE b DO P OD \<equiv> While\<^sup>\<top> b do P od"
+
+definition While_bot :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("While\<^sub>\<bottom> _ do _ od") where
+"While\<^sub>\<bottom> b do P od = (\<mu> X \<bullet> (P ;; X) \<triangleleft> \<lceil>b\<rceil>\<^sub>C\<^sub>< \<triangleright> SKIP)"
+
+declare while_def [urel_defs]
+
+subsection{*While-loop inv*}
+text {* While loops with invariant decoration *}
+
+definition while_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("WHILE _ invr _ DO _ OD" 70) where
+"WHILE b invr p DO S OD = WHILE b DO S OD"
 
 (*What happen if we do not use healthiness conditions*)
 lemma "(true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) ;; 

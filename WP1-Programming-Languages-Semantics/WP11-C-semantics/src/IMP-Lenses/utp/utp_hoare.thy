@@ -111,24 +111,11 @@ lemma while_hoare_r' [hoare]:
   using assms
   by (metis conj_comm hoare_r_conseq p_imp_p taut_true while_hoare_r)
 
-lemma while_bot_hoare_r [hoare]: (*this is not correct*)
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u"
-  shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
-oops
-
-lemma while_bot_hoare_r' [hoare]: (*this is not correct*)
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
-  shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do C od\<lbrace>q\<rbrace>\<^sub>u"
-  using assms
-oops
 
 lemma while_invr_hoare_r [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`pre \<Rightarrow> p`" and "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>u"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
-
-
-
 
 
 
