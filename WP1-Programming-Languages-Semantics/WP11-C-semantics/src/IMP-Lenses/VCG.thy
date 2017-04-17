@@ -114,30 +114,30 @@ subsubsection \<open>Building swap (SEQ+ASN)\<close>
 
 lemma swap_test:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
   shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-          z :== &x;;
-          x :== &y;;
-          y :== &z
-         \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+  z :== &x;;
+  x :== &y;;
+  y :== &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   using assms
   by rel_auto (simp add: lens_indep_sym)
 
 lemma swap_test_manual:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
   shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-          z :== &x;;
-          x :== &y;;
-          y :== &z
-         \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+  z :== &x;;
+  x :== &y;;
+  y :== &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
 
   apply (rule seq_hoare_r)
-  prefer 2
-  apply (rule seq_hoare_r)
-  apply (rule assigns_hoare_r')
-  apply (rule assigns_hoare_r')
+   prefer 2
+   apply (rule seq_hoare_r)
+    apply (rule assigns_hoare_r')
+   apply (rule assigns_hoare_r')
 
   apply rel_simp
   apply (simp add: lens_indep_sym)
@@ -145,23 +145,23 @@ lemma swap_test_manual:
 
 lemma swap_test_method:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
   shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-          z :== &x;;
-          x :== &y;;
-          y :== &z
-         \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+  z :== &x;;
+  x :== &y;;
+  y :== &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   using assms
   by vcg
 
 lemma swap_test_method_step:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
   shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-          z :== &x;;
-          x :== &y;;
-          y :== &z
-         \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+  z :== &x;;
+  x :== &y;;
+  y :== &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
   unfolding lens_indep_def
   apply vcg_step
@@ -169,17 +169,17 @@ lemma swap_test_method_step:
 
 lemma swap_testx:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
-      and "x \<bowtie> y"
-      and "x \<sharp> a" and "y \<sharp> a" and "z \<sharp> a"
-      and "x \<sharp> b" and "y \<sharp> b" and "z \<sharp> b"
+  and "x \<bowtie> y"
+  and "x \<sharp> a" and "y \<sharp> a" and "z \<sharp> a"
+  and "x \<sharp> b" and "y \<sharp> b" and "z \<sharp> b"
   shows "\<lbrace>&x =\<^sub>u a \<and> &y =\<^sub>u b\<rbrace>
-          z :== &x;;
-          x :== &y;;
-          y :== &z
-         \<lbrace>&x =\<^sub>u b \<and> &y =\<^sub>u a\<rbrace>\<^sub>u = \<lbrace>&x =\<^sub>u a \<and> &y =\<^sub>u b\<rbrace>
-          z :== &x;;
-          x :== &y
-         \<lbrace>&x =\<^sub>u b \<and> &z =\<^sub>u a\<rbrace>\<^sub>u"
+  z :== &x;;
+  x :== &y;;
+  y :== &z
+  \<lbrace>&x =\<^sub>u b \<and> &y =\<^sub>u a\<rbrace>\<^sub>u = \<lbrace>&x =\<^sub>u a \<and> &y =\<^sub>u b\<rbrace>
+  z :== &x;;
+  x :== &y
+  \<lbrace>&x =\<^sub>u b \<and> &z =\<^sub>u a\<rbrace>\<^sub>u"
   using assms
   by rel_simp
 
@@ -187,245 +187,235 @@ subsubsection \<open>Building COND\<close>
 
 lemma if_true:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by rel_simp
 
 lemma if_true_manual:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule cond_hoare_r)
-  defer
-  apply simp
-  apply (rule hoare_false)
-
-  apply simp
+   defer
+   apply simp
+   apply (rule hoare_false)
   apply rel_simp
   done
 
 lemma if_true_method:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by vcg
 
 lemma if_true_method_step:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> true \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 - exp\<^sub>2\<rbrace>\<^sub>u"
   by (insert assms) vcg_step
 
 lemma if_false:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by rel_simp
 
 lemma if_false_manual:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule cond_hoare_r)
-  
-  apply simp
-  apply (rule hoare_false)
-
-  apply simp
-  apply rel_auto
+   apply simp
+   apply (rule hoare_false)
+  apply rel_simp
   done
 
 lemma if_false_method:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   using assms
   by vcg
 
 lemma if_false_method_step:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>1"
-      and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>1"
+  and "x \<sharp> exp\<^sub>2"
   shows "\<lbrace>&x =\<^sub>u exp\<^sub>1\<rbrace>
-          x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
-         \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
+  x :== &x - exp\<^sub>2 \<triangleleft> false \<triangleright>\<^sub>r (x :== &x + exp\<^sub>2)
+  \<lbrace>&x =\<^sub>u exp\<^sub>1 + exp\<^sub>2\<rbrace>\<^sub>u"
   by (insert assms) vcg_step
 
 lemma if_base:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>2"
-      and "x \<sharp> exp\<^sub>3"
+  and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>3"
   shows "\<lbrace>true\<rbrace>
-          x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
-         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
+  \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   using assms
   by rel_auto
 
 lemma if_manual:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>2"
-      and "x \<sharp> exp\<^sub>3"
+  and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>3"
   shows "\<lbrace>true\<rbrace>
-          x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
-         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
+  \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule cond_hoare_r)
-  apply simp
-
-  defer
-  apply simp
-
-  apply rel_simp
+   apply rel_simp
   apply pred_simp (* needed for UTP predicates; pred_blast needed for sets *)
   done
 
 lemma if_method:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>2"
-      and "x \<sharp> exp\<^sub>3"
+  and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>3"
   shows "\<lbrace>true\<rbrace>
-          x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
-         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
+  \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   using assms
   by vcg
 
 lemma if_method_step:
   assumes "weak_lens x"
-      and "x \<sharp> exp\<^sub>2"
-      and "x \<sharp> exp\<^sub>3"
+  and "x \<sharp> exp\<^sub>2"
+  and "x \<sharp> exp\<^sub>3"
   shows "\<lbrace>true\<rbrace>
-          x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
-         \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
+  x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
+  \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   by (insert assms) vcg_step
 
 subsubsection \<open>Building WHILE\<close>
 
 lemma even_count_manual:
   assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
   shows
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-      i :== &a ;; j :== 0 ;;
-      (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-    while &i <\<^sub>u &n
-      invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-      do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-    \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  i :== &a ;; j :== 0 ;;
+  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+  while &i <\<^sub>u &n
+  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r)
    prefer 2
    apply (rule seq_hoare_r[of _ _ true](* , rule hoare_true *))
-   apply (rule assigns_hoare_r')
+    apply (rule assigns_hoare_r')
    apply (rule seq_hoare_r)
     apply (rule assume_hoare_r)
-    apply (rule skip_hoare_r)
-   prefer 2
-   apply (rule while_invr_hoare_r)
-     apply (rule seq_hoare_r)
-      prefer 2
-      apply (rule assigns_hoare_r')
-     apply (rule cond_hoare_r)
-      prefer 6
-      unfolding lens_indep_def
+     apply (rule skip_hoare_r)
+    prefer 2
+    apply (rule while_invr_hoare_r)
+      apply (rule seq_hoare_r)
+       prefer 2
+       apply (rule assigns_hoare_r')
+      apply (rule cond_hoare_r)
+       prefer 6
+       unfolding lens_indep_def
+       apply rel_auto
       apply rel_auto
-     apply rel_auto
      using mod_pos_pos_trivial
+     apply rel_auto
     apply rel_auto
    apply rel_auto
-  apply rel_auto
   apply rel_auto
   done
 
 lemma even_count_method:
   assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
   shows
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-      i :== &a ;; j :== 0 ;;
-      (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-    while &i <\<^sub>u &n
-      invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-      do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-    \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  i :== &a ;; j :== 0 ;;
+  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+  while &i <\<^sub>u &n
+  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma even_count_method_step:
   assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-      and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
   shows
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-      i :== &a ;; j :== 0 ;;
-      (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-    while &i <\<^sub>u &n
-      invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-      do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-    \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  i :== &a ;; j :== 0 ;;
+  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
+  while &i <\<^sub>u &n
+  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   apply (insert assms)
   apply vcg_step
-  defer
-  apply (rule seq_hoare_r[of _ _ true])
-  apply vcg_step+
-  unfolding lens_indep_def
-  apply vcg_step+
-  using mod_pos_pos_trivial
-  apply vcg_step
-  apply vcg_step
-  apply vcg_step
-  apply vcg_step
+   defer
+   apply (rule seq_hoare_r[of _ _ true])
+    apply vcg_step+
+              unfolding lens_indep_def
+              apply vcg_step+
+       using mod_pos_pos_trivial
+       apply vcg_step
+      apply vcg_step
+     apply vcg_step
+    apply vcg_step
+   apply vcg_step
   apply vcg_step
   (* leaves us with an extra schematic variable *)
-  done
+  oops
 
 lemma increment_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-    x :== 0;;
-   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  x :== 0;;
+  (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
-(*   apply (rule assigns_hoare_r) (* hoare_true works here but not in general *) *)
-  defer
-  apply (rule seq_hoare_r)
-  apply (rule assume_hoare_r)
-  apply (rule skip_hoare_r)
-  defer
-  apply (rule while_invr_hoare_r)
-  unfolding lens_indep_def
-  apply rel_auto
-  apply rel_auto
-  apply rel_auto
-  apply rel_auto
+   defer
+   apply (rule seq_hoare_r)
+    apply (rule assume_hoare_r)
+     apply (rule skip_hoare_r)
+    defer
+    apply (rule while_invr_hoare_r)
+      unfolding lens_indep_def
+      apply rel_auto
+     apply rel_auto
+    apply rel_auto
+   apply rel_auto
   apply rel_auto
   done
 
@@ -433,43 +423,44 @@ lemma increment_method:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-    x :== 0;;
-   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  x :== 0;;
+  (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma increment_method_step:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-    x :== 0;;
-   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  x :== 0;;
+  (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
-  unfolding lens_indep_def
-  apply vcg_step+
+   apply vcg_step+
+     unfolding lens_indep_def
+     apply vcg_step+
   done
 
 lemma increment'_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule while_invr_hoare_r)
-  unfolding lens_indep_def
-  apply rel_auto
-  apply rel_auto
+    unfolding lens_indep_def
+    apply rel_auto
+   apply rel_auto
   apply rel_auto
   done
 
@@ -477,41 +468,38 @@ lemma increment'_method:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma double_increment_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od;;
-    (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od;;
+  (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
-
-  apply (rule while_invr_hoare_r)
-  unfolding lens_indep_def
-  apply rel_auto
-  apply rel_auto
-  apply rel_auto
-
+   apply (rule while_invr_hoare_r)
+     unfolding lens_indep_def
+     apply rel_auto
+    apply rel_auto
+   apply rel_auto
   apply (rule seq_hoare_r)
-  apply (rule assume_hoare_r)
-  apply (rule skip_hoare_r)
-  apply rel_auto
-
+   apply (rule assume_hoare_r)
+    apply (rule skip_hoare_r)
+   apply rel_auto
   apply (rule while_invr_hoare_r)
-  apply rel_auto
-  apply rel_auto
+    apply rel_auto
+   apply rel_auto
   apply rel_auto
   done
 
@@ -519,33 +507,33 @@ lemma double_increment_method:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od;;
-    (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od;;
+  (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma double_increment_method_step:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od;;
-    (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od;;
+  (&x =\<^sub>u 5 \<and> &y =\<^sub>u 5)\<^sup>\<top>;;
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x =\<^sub>u 10\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r[of _ _ true])
-  apply vcg_step+
-  unfolding lens_indep_def
-  apply vcg_step+
+   apply vcg_step+
+     unfolding lens_indep_def
+     apply vcg_step+
   done
 
 subsubsection \<open>Building more complicated stuff\<close>
@@ -554,57 +542,55 @@ lemma if_increment_manual:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<triangleleft> b \<triangleright>\<^sub>r
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<triangleleft> b \<triangleright>\<^sub>r
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule cond_hoare_r)
-  unfolding lens_indep_def
-
+   unfolding lens_indep_def
+   apply (rule while_invr_hoare_r)
+     apply rel_auto+
   apply (rule while_invr_hoare_r)
-  apply rel_auto+
-
-  apply (rule while_invr_hoare_r)
-  apply rel_auto+
+    apply rel_auto+
   done
 
 lemma if_increment_method:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<triangleleft> b \<triangleright>\<^sub>r
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<triangleleft> b \<triangleright>\<^sub>r
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma if_increment_method_step:
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows
   "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-    while &x <\<^sub>u &y
-      invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<triangleleft> b \<triangleright>\<^sub>r
-    while &x <\<^sub>u &y * 2
-      invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
-      do x :== &x + 1 od
-    \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
+  while &x <\<^sub>u &y
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<triangleleft> b \<triangleright>\<^sub>r
+  while &x <\<^sub>u &y * 2
+  invr &x \<le>\<^sub>u &y * 2 \<and> &y =\<^sub>u 5
+  do x :== &x + 1 od
+  \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule cond_hoare_r) (* needed as vcg_step tries utp_methods first and that messes up cond
-rule *)
-  apply vcg_step+
-  unfolding lens_indep_def
-  apply vcg_step+
+   rule *)
+   apply vcg_step+
+      unfolding lens_indep_def
+      apply vcg_step+
   done
 
 section Testing
@@ -620,8 +606,8 @@ lemma "Q \<longrightarrow> P \<Longrightarrow> Q \<Longrightarrow> P"
 lemma
   assumes "vwb_lens x" and "x \<bowtie> y"
   shows "\<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-         x :== 3
-        \<lbrace>&x =\<^sub>u 3 \<and> &y =\<^sub>u 5\<rbrace>\<^sub>u"
+  x :== 3
+  \<lbrace>&x =\<^sub>u 3 \<and> &y =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (rule assigns_hoare_r)
   using assms
   apply (match assms in "_ \<bowtie> _" \<Rightarrow> \<open>unfold lens_indep_def\<close>)
@@ -630,8 +616,8 @@ lemma
 
 lemma
   "vwb_lens x \<Longrightarrow> x \<bowtie> y \<Longrightarrow> \<lbrace>&x =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &y =\<^sub>u 5\<rbrace>
-         x :== 3
-        \<lbrace>&x =\<^sub>u 3 \<and> &y =\<^sub>u 5\<rbrace>\<^sub>u"
+  x :== 3
+  \<lbrace>&x =\<^sub>u 3 \<and> &y =\<^sub>u 5\<rbrace>\<^sub>u"
   apply (rule assigns_hoare_r)
   apply (match conclusion in _ \<Rightarrow> \<open>unfold lens_indep_def\<close>) (* why doesn't premises work? *)
   apply rel_auto
