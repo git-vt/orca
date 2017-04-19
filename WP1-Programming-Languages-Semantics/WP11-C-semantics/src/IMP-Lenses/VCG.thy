@@ -64,7 +64,7 @@ method if_increment declares unfolds =
   rule cond_hoare_r;
   rule while_invr_hoare_r, rel_auto+
 
-method rules =
+method rules_x =
   (rule seq_hoare_r|
     rule skip_hoare_r|
     rule while_invr_hoare_r|
@@ -74,7 +74,7 @@ method rules =
     rule assume_hoare_r
   )+
 
-method rules_x =
+method rules =
   rule seq_hoare_r|
   rule skip_hoare_r|
   rule cond_hoare_r|
@@ -96,7 +96,7 @@ method vcg declares last_simps unfolds =
   increment unfolds: unfolds|
 (*   (intro hoare_r_conj)?; (* intro rather than rule means it will be repeatedly applied; this may
 not actually be useful (it's certainly not necessary) and so is currently commented out *) *)
-    rules?;
+    rules_x?;
     utp_methods,
     (auto simp: last_simps)?
 
@@ -106,7 +106,7 @@ For now, \texttt{rule seq_hoare_r[of _ _ true]}, which must precede the seq-assu
 applied manually. For certain programs, we need to do utp_methods first (in fact, for some it's all
 that's needed), but this results in slowdowns for other programs that do not require it first and in
 fact some rules are not properly applied if the application does not come before utp_methods usage.\<close>
-method vcg_step = utp_methods|rules_x, utp_methods?
+method vcg_step = utp_methods|rules, utp_methods?
 
 (* Need weakest precondition reasoning? *)
 
@@ -132,13 +132,11 @@ lemma swap_test_manual:
   y :== &z
   \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   apply (insert assms)
-
   apply (rule seq_hoare_r)
-   prefer 2
+   defer
    apply (rule seq_hoare_r)
     apply (rule assigns_hoare_r')
    apply (rule assigns_hoare_r')
-
   apply rel_simp
   apply (simp add: lens_indep_sym)
   done
@@ -586,8 +584,8 @@ lemma if_increment_method_step:
   do x :== &x + 1 od
   \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   apply (insert assms)
-  apply (rule cond_hoare_r) (* needed as vcg_step tries utp_methods first and that messes up cond
-   rule *)
+  apply (rule cond_hoare_r) (* needed as vcg_step tries
+utp_methods first and that messes up cond rule *)
    apply vcg_step+
       unfolding lens_indep_def
       apply vcg_step+

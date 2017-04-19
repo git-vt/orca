@@ -7,42 +7,43 @@ begin
 subsection {*Even count*}
 
 lemma even_count:
-   assumes "weak_lens i" and  "weak_lens a" and  "weak_lens j"  and  "weak_lens n"and
-           "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n"  "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n" 
-   shows 
-   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>
-       i:== &a ;; j :== \<guillemotleft>0::int\<guillemotright> ;; 
-       (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a)\<^sup>\<top>;; 
-     while  &i <\<^sub>u &n 
-       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
-       do (j :== &j + \<guillemotleft>1\<guillemotright> \<triangleleft> &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright>\<triangleright>\<^sub>r II) ;;  i :== &i + \<guillemotleft>1\<guillemotright> od
-     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>u"
- apply (insert assms)
- apply (rule seq_hoare_r)
-  prefer 2
-  apply (rule seq_hoare_r [of _ _ true])
-   apply (rule assigns_hoare_r')
-  apply (rule seq_hoare_r)
-   apply (rule assume_hoare_r)
-   apply (rule skip_hoare_r)
-  prefer 2
-  apply (rule while_invr_hoare_r)
-    apply (rule seq_hoare_r)
-     prefer 2
+   assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
+           "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+   shows
+   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
+       i:== &a;; j :== 0;;
+       (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
+     while &i <\<^sub>u &n
+       invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+       do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II);; i :== &i + 1 od
+     \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+   apply (insert assms)
+   apply (rule seq_hoare_r)
+    prefer 2
+    apply (rule seq_hoare_r [of _ _ true])
      apply (rule assigns_hoare_r')
-    apply (rule cond_hoare_r)
-     apply (rule assigns_hoare_r)
-     prefer 6
-     apply (rule assigns_hoare_r)
-     unfolding lens_indep_def
+    apply (rule seq_hoare_r)
+     apply (rule assume_hoare_r)
+     apply (rule skip_hoare_r)
+    prefer 2
+    apply (rule while_invr_hoare_r)
+      apply (rule seq_hoare_r)
+       prefer 2
+       apply (rule assigns_hoare_r')
+      apply (rule cond_hoare_r)
+       apply (rule assigns_hoare_r)
+       prefer 6
+       apply (rule assigns_hoare_r)
+       unfolding lens_indep_def
+       apply rel_auto
+      apply rel_auto
+      using mod_pos_pos_trivial apply auto
      apply rel_auto
     apply rel_auto
-    using mod_pos_pos_trivial apply auto
    apply rel_auto
-  apply rel_auto
- apply rel_auto
- apply rel_auto
-done
+   apply rel_auto
+  done
+
 subsection {*catch feature*}
 
 lemma "(TRY THROW CATCH SKIP END ) = SKIP"
