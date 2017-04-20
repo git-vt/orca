@@ -315,16 +315,16 @@ lemma if_method_step:
 subsubsection \<open>Building WHILE\<close>
 
 lemma even_count_manual:
-  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens end"
+  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> end" and "start \<bowtie> j" and "start \<bowtie> end" and "j \<bowtie> end"
   shows
-  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-  i :== &a ;; j :== 0 ;;
-  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-  while &i <\<^sub>u &n
-  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &end =\<^sub>u 1\<rbrace>
+    i :== &start;; j :== 0;;
+    (&start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top> ;;
+    while &i <\<^sub>u &end
+    invr &start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &end \<and> &i \<ge>\<^sub>u &start
+    do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   apply (insert assms)
   apply (rule seq_hoare_r)
    prefer 2
@@ -351,29 +351,29 @@ lemma even_count_manual:
   done
 
 lemma even_count_method:
-  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens end"
+  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> end" and "start \<bowtie> j" and "start \<bowtie> end" and "j \<bowtie> end"
   shows
-  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-  i :== &a ;; j :== 0 ;;
-  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-  while &i <\<^sub>u &n
-  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &end =\<^sub>u 1\<rbrace>
+    i :== &start;; j :== 0;;
+    (&start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top> ;;
+    while &i <\<^sub>u &end
+    invr &start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &end \<and> &i \<ge>\<^sub>u &start
+    do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
 lemma even_count_method_step:
-  assumes "vwb_lens i" and "weak_lens a" and "vwb_lens j" and "weak_lens n"
-  and "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
+  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens end"
+  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> end" and "start \<bowtie> j" and "start \<bowtie> end" and "j \<bowtie> end"
   shows
-  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-  i :== &a ;; j :== 0 ;;
-  (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top> ;;
-  while &i <\<^sub>u &n
-  invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-  do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &end =\<^sub>u 1\<rbrace>
+    i :== &start;; j :== 0;;
+    (&start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top> ;;
+    while &i <\<^sub>u &end
+    invr &start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &end \<and> &i \<ge>\<^sub>u &start
+    do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
+   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   apply (insert assms)
   apply vcg_step
    defer
