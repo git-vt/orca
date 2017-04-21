@@ -6,6 +6,17 @@ begin
 
 subsection {*Even count*}
 
+term "
+
+i:= &a ;; j := \<guillemotleft>0::int\<guillemotright> ;; 
+ WHILE  &i <\<^sub>u &n  
+   DO (IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
+       THEN  j := &j + \<guillemotleft>1\<guillemotright> 
+       ELSE SKIP) ;;  
+       i := &i + \<guillemotleft>1\<guillemotright> 
+   OD
+
+"
 lemma even_count:
    assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
            "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
@@ -44,25 +55,72 @@ lemma even_count:
    apply rel_auto
   done
 
+
+lemma even_count_total:
+   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
+     \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+     \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<rbrace>
+      i:= &a ;; 
+      j := \<guillemotleft>0::int\<guillemotright> ;; 
+     (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> 
+      \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+      \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>)\<^sup>\<top>\<^sup>C;; 
+     WHILE  &i <\<^sub>u &n 
+       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
+             \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+             \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<and> 
+             &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
+       DO (IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
+           THEN  j := &j + \<guillemotleft>1\<guillemotright> 
+           ELSE SKIP) ;;  
+           i := &i + \<guillemotleft>1\<guillemotright> 
+       OD
+     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>D"
+ apply (rule seq_hoare_r_t)
+  prefer 2
+  apply (rule seq_hoare_r_t [of _ _ true])
+   apply (rule assigns_hoare_r'_t)
+  apply (rule seq_hoare_r_t)
+   apply (rule assume_hoare_r_t)
+   apply (rule skip_hoare_r_t)
+  prefer 2
+  apply (rule while_invr_hoare_r_t)
+    apply (rule seq_hoare_r_t)
+     prefer 2
+     apply (rule assigns_hoare_r'_t)
+    apply (rule cond_hoare_r_t)
+     apply (rule assigns_hoare_r_t)
+     prefer 6
+     apply (rule assigns_hoare_r_t)
+     unfolding lens_indep_def
+     apply rel_auto
+    apply rel_auto
+    using mod_pos_pos_trivial apply auto
+   apply rel_auto
+  apply rel_auto
+ apply rel_auto
+ apply rel_auto
+done
+
 subsection {*catch feature*}
 
-lemma "(TRY THROW CATCH SKIP END ) = SKIP"
+lemma "(TRY THROW CATCH SKIP END) = SKIP"
   by rel_auto
 
-lemma "(TRY \<langle>a\<rangle>\<^sub>C CATCH  SKIP  END ) = \<langle>a\<rangle>\<^sub>C"
+lemma "(TRY \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = \<langle>a\<rangle>\<^sub>C"
   by rel_auto
-
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C) CATCH SKIP END ) =  \<langle>a\<rangle>\<^sub>C"
-      by rel_auto blast + 
-
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH SKIP END ) = \<langle>a\<rangle>\<^sub>C"
-      by rel_auto blast + 
 
 lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH \<langle>b\<rangle>\<^sub>C END) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
-      by rel_auto blast + 
+  by rel_auto blast + 
 
-lemma "(TRY  THROW;; \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = SKIP "
- by rel_auto blast + 
+lemma "(TRY THROW ;; \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = SKIP "
+  by rel_auto blast + 
+
+lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C) CATCH SKIP END ) =  \<langle>a\<rangle>\<^sub>C"
+  by rel_auto blast + 
+
+lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH SKIP END) = \<langle>a\<rangle>\<^sub>C"
+  by rel_auto blast + 
 
 subsection {*block feature*}
 

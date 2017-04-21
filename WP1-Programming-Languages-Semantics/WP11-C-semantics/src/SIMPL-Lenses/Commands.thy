@@ -50,6 +50,16 @@ lift_definition Xstate_drop :: "('\<sigma>,'f) xstate states  \<Rightarrow> '\<s
 
 | _ \<Rightarrow> x\<sigma> )".oops
 
+term "Normal "
+term "C \<dagger> Normal"
+
+term "\<sigma>(Var \<mapsto>\<^sub>s (\<sigma> \<dagger> Expr))"
+find_theorems name:"xstate" name:"transfer"
+lemma "\<sigma>(Var \<mapsto>\<^sub>s (\<sigma> \<dagger> Expr)) = X"
+  apply transfer'
+  unfolding subst_upd_var_def
+  apply transfer apply (rule ext)
+oops
 subsection{*SKIP*}
 
 abbreviation "SKIP \<equiv> id"
@@ -134,7 +144,7 @@ abbreviation Block :: "[('\<sigma>,'f) xstate states,('\<sigma>,'f) xstate state
                                      (\<lambda>\<sigma>'. (return \<sigma>; c \<sigma> \<sigma>') \<sigma>')) \<sigma>)"
 
 lift_definition esubst_lookupx :: "('\<sigma>,'f) xstate states \<Rightarrow>  ('\<tau> , '\<sigma>) var \<Rightarrow> ('\<tau>, '\<sigma>) expr" ("\<langle>_\<rangle>\<^sub>sx")
-is "\<lambda> \<sigma> x s. get\<^bsub>x\<^esub> (\<sigma> s)" .
+ is "\<lambda> \<sigma> x s. get\<^bsub>x\<^esub> (\<sigma> s)" .
 term "esubst_lookupx Normal R"
 term "\<langle>tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n)\<rangle>\<^sub>s "
 term "(tmp :== (VAR m) ; m :== ((VAR m) +\<^sub>e \<guillemotleft>1::int\<guillemotright>) ; R :== ((VAR tmp) +\<^sub>e VAR n))  "
