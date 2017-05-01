@@ -183,4 +183,24 @@ lemma "in\<alpha> \<sharp> ( x :== \<guillemotleft>c\<guillemotright>) \<Longrig
   apply (simp only: seqr_def) apply simp
  apply rel_simp  apply transfer apply auto done
 
+section {*Separation Algebra by Calcagno*}
+subsection {*axioms*}
+named_theorems separation_algebra
+
+declare Lens_Laws.lens_indep_sym[separation_algebra] (*x \<sharp>\<sharp> y \<Longrightarrow> y \<sharp>\<sharp> x *)
+declare unit_ief_lens[separation_algebra] (*x + 0 = x*)
+declare lens_indep.lens_put_comm[separation_algebra] (*x \<sharp>\<sharp> y \<Longrightarrow>x + y = y + x *)
+declare lens_indep.lens_put_irr1[separation_algebra]
+declare lens_indep.lens_put_irr2[separation_algebra]
+
+lemma [separation_algebra]:"x \<bowtie> 0\<^sub>L" (*x \<sharp>\<sharp> 0*)
+  unfolding lens_indep_def  
+  by rel_auto
+
+lemma [separation_algebra]:
+  "\<lbrakk>X \<bowtie> Y; Y \<bowtie> Z; X \<bowtie> Z\<rbrakk>\<Longrightarrow> 
+   lens_put Z (lens_put X (lens_put Y \<sigma> v) u) i = lens_put X (lens_put Y (lens_put Z \<sigma> i) v) u"
+  unfolding lens_indep_def  
+  by rel_auto
+
 end
