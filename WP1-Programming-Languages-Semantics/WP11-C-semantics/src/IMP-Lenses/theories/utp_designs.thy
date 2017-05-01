@@ -599,7 +599,14 @@ lemma H1_monotone:
   by (pred_auto)
 
 lemma H1_Continuous: "Continuous H1"
-  by (rel_auto)
+  apply (rel_auto)
+  unfolding SUP_def 
+  apply transfer apply auto 
+  unfolding SUP_def 
+  apply transfer apply auto 
+  unfolding SUP_def 
+  apply transfer apply auto 
+done
 
 lemma H1_below_top:
   "H1(P) \<sqsubseteq> \<top>\<^sub>D"
@@ -829,9 +836,20 @@ theorem J_idem:
 theorem H2_idem:
   "H2(H2(P)) = H2(P)"
   by (metis H2_def J_idem seqr_assoc)
-
+ 
 theorem H2_Continuous: "Continuous H2"
-  by (rel_auto)
+  apply (rel_auto)
+  unfolding  SUP_def apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply auto
+  apply (metis des_vars.surjective)+
+done
 
 theorem H2_not_okay: "H2 (\<not> $ok) = (\<not> $ok)"
 proof -
@@ -1064,7 +1082,18 @@ theorem H3_Monotonic:
   by (simp add: H3_mono Monotonic_def)
 
 theorem H3_Continuous: "Continuous H3"
-  by (rel_auto)
+   apply (rel_auto)
+  unfolding  SUP_def apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply auto
+  apply (metis des_vars.surjective)+
+done
 
 theorem design_condition_is_H3:
   assumes "out\<alpha> \<sharp> p"

@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory utp_hoare_total
-  imports "theories/utp_fault_designs"
+  imports "../theories/utp_fault_designs"
 begin
 named_theorems hoare_total
 

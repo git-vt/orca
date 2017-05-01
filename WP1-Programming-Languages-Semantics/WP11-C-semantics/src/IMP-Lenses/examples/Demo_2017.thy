@@ -1,5 +1,5 @@
 theory Demo_2017
-  imports VCG
+  imports "../hoare/VCG"
 begin
 
 section \<open>Testing swap (SEQ+ASN)\<close>

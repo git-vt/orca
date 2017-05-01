@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory features_test
-  imports "utp_hoare_total"
+  imports "../hoare/utp_hoare_total"
 begin
 
 subsection {*Even count*}

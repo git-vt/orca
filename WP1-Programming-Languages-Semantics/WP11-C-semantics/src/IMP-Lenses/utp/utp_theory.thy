@@ -1,7 +1,7 @@
 section {* UTP Theories *}
 
 theory utp_theory
-imports "../Algebraic_Laws"
+imports "../hoare/Algebraic_Laws"
 begin
 
 text {* Closure laws for theories *}
