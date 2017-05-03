@@ -103,8 +103,8 @@ lemma while_hoare_r [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u"
   shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
   using assms
-  by (simp add: while_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
-
+  apply (simp add: while_def hoare_r_def)apply ( rule_tac lfp_lowerbound) apply(rel_auto)
+  done
 lemma while_hoare_r' [hoare]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`p \<and> \<not>b \<Rightarrow> q`"
   shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>q\<rbrace>\<^sub>u"

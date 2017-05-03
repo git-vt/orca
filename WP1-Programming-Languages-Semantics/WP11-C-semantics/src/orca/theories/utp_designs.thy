@@ -747,6 +747,7 @@ proof -
   from assms have "H1 ` A = A"
     by (auto simp add: Healthy_def rev_image_eqI)
   with H1_UINF[of A id] show ?thesis
+    using assms
     by (simp add: UINF_as_Inf_image Healthy_def)
 qed
 

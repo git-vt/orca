@@ -86,20 +86,21 @@ lemma assume_hoare_r_t [hoare_total]:
 subsection {*Hoare for While-loop*}
 
 lemma while_hoare_r_t [hoare_total]:
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>D"
+  assumes "\<lbrace>p \<and> b \<rbrace> C\<lbrace>p\<rbrace>\<^sub>D"
   shows "\<lbrace>p\<rbrace>WHILE b DO C OD\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>D"
   using assms
-  by (simp add: While_def hoare_rd_def, rule_tac lfp_lowerbound) (rel_blast) 
+  by (simp add: While_def hoare_rd_def, rule_tac lfp_lowerbound)(rel_blast) 
+
 
 lemma while_hoare_r'_t [hoare_total]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>D" and "`p \<and> \<not>b \<Rightarrow> q`"
   shows "\<lbrace>p\<rbrace>WHILE b DO C OD\<lbrace>q\<rbrace>\<^sub>D"
   using assms
-  by (metis utp_hoare_total.hoare_post_weak_t utp_hoare_total.while_hoare_r_t utp_pred.inf_commute)
+  by (metis hoare_post_weak_t while_hoare_r_t inf_commute)
 
 lemma while_invr_hoare_r_t [hoare_total]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>D" and "`pre \<Rightarrow> p`" and "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<lbrace>pre\<rbrace>WHILE b invr p DO C OD\<lbrace>post\<rbrace>\<^sub>D"
-  by (metis assms utp_hoare_total.hoare_pre_str_t utp_hoare_total.while_hoare_r'_t utp_fault_designs.while_inv_def utp_pred.inf_commute)
+  by (metis assms hoare_pre_str_t while_hoare_r'_t while_inv_def inf_commute)
 
 end

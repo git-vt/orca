@@ -6,17 +6,6 @@ begin
 
 subsection {*Even count*}
 
-term "
-
-i:= &a ;; j := \<guillemotleft>0::int\<guillemotright> ;; 
- WHILE  &i <\<^sub>u &n  
-   DO (IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
-       THEN  j := &j + \<guillemotleft>1\<guillemotright> 
-       ELSE SKIP) ;;  
-       i := &i + \<guillemotleft>1\<guillemotright> 
-   OD
-
-"
 lemma even_count:
    assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
            "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
@@ -60,8 +49,8 @@ lemma even_count_total:
    "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
      \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
      \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<rbrace>
-      i:= &a ;; 
-      j := \<guillemotleft>0::int\<guillemotright> ;; 
+      i \<Midarrow> &a ;; 
+      j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
      (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> 
       \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
       \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>)\<^sup>\<top>\<^sup>C;; 
@@ -71,9 +60,9 @@ lemma even_count_total:
              \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<and> 
              &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
        DO (IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
-           THEN  j := &j + \<guillemotleft>1\<guillemotright> 
+           THEN  j \<Midarrow> &j + \<guillemotleft>1\<guillemotright> 
            ELSE SKIP) ;;  
-           i := &i + \<guillemotleft>1\<guillemotright> 
+           i \<Midarrow> &i + \<guillemotleft>1\<guillemotright> 
        OD
      \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>D"
  apply (rule seq_hoare_r_t)
@@ -104,22 +93,46 @@ done
 
 subsection {*catch feature*}
 
-lemma "(TRY THROW CATCH SKIP END) = SKIP"
+
+lemma try_throw_zero:
+  "Simpl (TRY THROW CATCH SKIP END) = SKIP"
   by rel_auto
 
-lemma "(TRY \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = \<langle>a\<rangle>\<^sub>C"
+lemma try_throw_zero_hoare:
+      "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+         i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
+         TRY THROW;; i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright> CATCH SKIP END
+       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
   by rel_auto
 
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH \<langle>b\<rangle>\<^sub>C END) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
+lemma try_not_throw_ignor_catch:
+  "Simpl (TRY \<langle>a\<rangle>\<^sub>C CATCH \<langle>b\<rangle>\<^sub>C END) = \<langle>a\<rangle>\<^sub>C"
+  by rel_auto
+
+lemma try_not_throw_ignor_catch_hoare:
+      "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+         TRY i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> CATCH i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright> END
+       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
+  by rel_auto
+
+lemma try_throw_zero':
+  "Simpl (TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH \<langle>b\<rangle>\<^sub>C END) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
   by rel_auto blast + 
 
-lemma "(TRY THROW ;; \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = SKIP "
+lemma try_throw_zero'_hoare:
+      "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+         TRY SKIP ;; i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;; THROW 
+         CATCH i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright>  END
+       \<lbrace>&i =\<^sub>u \<guillemotleft>7::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>8::int\<guillemotright> \<rbrace>\<^sub>D"
+  by rel_auto
+
+lemma "Simpl (TRY THROW ;; \<langle>a\<rangle>\<^sub>C CATCH SKIP END) = SKIP "
   by rel_auto blast + 
 
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C) CATCH SKIP END ) =  \<langle>a\<rangle>\<^sub>C"
+lemma "Simpl (TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C) CATCH SKIP END ) =  \<langle>a\<rangle>\<^sub>C"
   by rel_auto blast + 
 
-lemma "(TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH SKIP END) = \<langle>a\<rangle>\<^sub>C"
+lemma "Simpl (TRY (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) CATCH SKIP END) = \<langle>a\<rangle>\<^sub>C"
   by rel_auto blast + 
 
 subsection {*block feature*}
@@ -141,10 +154,10 @@ lemma   blocks_test1:
 
 lemma   block_c_test1:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i := \<guillemotleft>2::int\<guillemotright>;; j := \<guillemotleft>0::int\<guillemotright> ;; 
-          block_c (j := \<guillemotleft>5\<guillemotright>;; i:= \<guillemotleft>5\<guillemotright>) (II)
-                  (\<lambda> (s, s') (t, t').  i:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                     j:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
+          block_c (j \<Midarrow> \<guillemotleft>5\<guillemotright>;; i\<Midarrow> \<guillemotleft>5\<guillemotright>) (II)
+                  (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                     j\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
                   (\<lambda> (s, s') (t, t').  II)
          \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
   using assms  by rel_simp
@@ -163,13 +176,14 @@ lemma   blocks_test2:
 
 lemma   block_c_test2:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i := \<guillemotleft>2::int\<guillemotright>;; j := \<guillemotleft>0::int\<guillemotright> ;; 
-          block_c (j := \<guillemotleft>5\<guillemotright>;; i:= \<guillemotleft>5\<guillemotright>) (II)
-                  (\<lambda> (s, s') (t, t').  i:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright> ;; 
-                     j:= \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright>) 
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
+          block_c (j \<Midarrow> \<guillemotleft>5\<guillemotright>;; i \<Midarrow> \<guillemotleft>5\<guillemotright>) (II)
+                  (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright> ;; 
+                     j \<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright>) 
                   (\<lambda> (s, s') (t, t').  II)
          \<lbrace>&j =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>D"
   using assms  unfolding lens_indep_def by rel_simp
+
 
 subsection {*Infinite loops*}
 text{*The next two lemmas are the witness needed to justify the theory of designs.*}
@@ -202,5 +216,5 @@ lemma [separation_algebra]:
    lens_put Z (lens_put X (lens_put Y \<sigma> v) u) i = lens_put X (lens_put Y (lens_put Z \<sigma> i) v) u"
   unfolding lens_indep_def  
   by rel_auto
-
+term "(\<lambda>n. None) (x := Some y)"
 end
