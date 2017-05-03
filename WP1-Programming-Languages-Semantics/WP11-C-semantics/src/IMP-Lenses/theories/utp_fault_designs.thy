@@ -182,59 +182,64 @@ where [urel_defs]: "THROW = Simpl ($abrupt\<acute> \<and> $fault\<acute> =\<^sub
 
 subsection{*Conditional*}
 
-abbreviation If_c :: "'\<alpha> cond \<Rightarrow>('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("IF (_)/ THEN (_) ELSE (_)")where
+abbreviation If_c :: "'\<alpha> cond \<Rightarrow>('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("bif (_)/ then (_) else (_) eif")where
   "If_c b P Q \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>C\<^sub>< \<triangleright> Q)"
 
 subsection{*GUARD*}
 
 abbreviation guard_c :: "'f \<Rightarrow> '\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp" (*Is this correct!*) 
-where "guard_c f b \<equiv>  (IF b THEN SKIP ELSE (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>Some f\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C))"
+where "guard_c f b \<equiv>  (bif b then SKIP else (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>Some f\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C) eif)"
 
 subsection{*assert and assume*}
 
 definition rassume_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
-[urel_defs]: "rassume_c c = (IF c THEN SKIP ELSE \<top>\<^sub>D)"
+[urel_defs]: "rassume_c c = (bif c then SKIP else \<top>\<^sub>D eif)"
 
 definition rassert_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
-[urel_defs]: "rassert_c c = (IF c THEN SKIP ELSE \<bottom>\<^sub>D)"
+[urel_defs]: "rassert_c c = (bif c then SKIP else \<bottom>\<^sub>D eif)"
 
 
 subsection{*Exceptions*}
 
-abbreviation catch_c :: "('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("TRY (_) CATCH /(_) END")
-where "TRY P CATCH Q END \<equiv> (P ;; ((abrupt:== (\<not> &abrupt) ;;Q) \<triangleleft> $abrupt \<triangleright> II))"
-
+abbreviation catch_c :: "('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("try (_) catch /(_) end")
+where "try P catch Q end \<equiv> (P ;; ((abrupt:== (\<not> &abrupt) ;;Q) \<triangleleft> $abrupt \<triangleright> II))"
 
 subsection{*Scoping*}
 
-definition block_c ("\<rparr>(_)\<lparr> \<rbrace>/(_) /(_) /(_)\<lbrace>") where
+definition block_c ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
-  "block_c init body restore return = 
+  "bob INIT init BODY body RESTORE restore RETURN return eob= 
     (Abs_uexpr (\<lambda>(s, s'). 
      \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                        \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW) \<triangleleft> $abrupt \<triangleright> II;; 
          restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s')))" 
+
 subsection{*Loops*}
+purge_notation while ("while\<^sup>\<top> _ do _ od")
 
-definition While :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("While\<^sup>\<top> _ do _ od") where
-"While b C = (\<nu> X \<bullet> IF b THEN (C ;; X) ELSE SKIP)"
+definition While :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("while\<^sup>\<top> _ do _ od") where
+"While b C = (\<nu> X \<bullet> bif b then (C ;; X) else SKIP eif)"
 
-abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow>  ('f,'\<alpha>) hrel_cp" ("WHILE _ DO _ OD") where
-"WHILE b DO P OD \<equiv> While\<^sup>\<top> b do P od"
+purge_notation while_top ("while _ do _ od")
 
-definition While_bot :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("While\<^sub>\<bottom> _ do _ od") where
-"While\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> IF b THEN (P ;; X) ELSE SKIP)"
+abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow>  ('f,'\<alpha>) hrel_cp" ("while _ do _ od") where
+"while b do P od \<equiv> while\<^sup>\<top> b do P od"
 
-declare While_def [urel_defs]
+purge_notation while_bot ("while\<^sub>\<bottom> _ do _ od")
+
+definition While_bot :: "'\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("while\<^sub>\<bottom> _ do _ od") where
+"while\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> bif b then (P ;; X) else SKIP eif)"
 
 subsection{*While-loop inv*}
 text {* While loops with invariant decoration *}
 
-definition while_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("WHILE _ invr _ DO _ OD" 70) where
-"WHILE b invr p DO S OD = WHILE b DO S OD"
+purge_notation while_inv ("while _ invr _ do _ od" 70)
+
+definition While_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("while _ invr _ do _ od" 70) where
+"while b invr p do S od = while b do S od"
 
 declare While_def [urel_defs]
-declare while_inv_def [urel_defs]
+declare While_inv_def [urel_defs]
 declare While_bot_def [urel_defs]
 
 
@@ -270,30 +275,10 @@ lemma "((true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>
         ($ok\<acute>\<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and> II)"
   by rel_auto
 
-lemma "(THROW ;;  Simpl (\<rparr>a\<lparr>\<rbrace>b r r\<lbrace>)) = THROW"  by rel_auto
+lemma "(THROW ;;  Simpl (bob INIT a BODY b RESTORE r RETURN r eob)) = THROW"  by rel_auto
 
-lemma "(THROW ;; Simpl(WHILE b DO P OD)) = THROW" by rel_auto
-
-(*lemma "(true ;; guard_c f b P) = true" by rel_auto
-lemma "(SKIP ;;\<langle>s\<rangle>\<^sub>C) = \<langle>s\<rangle>\<^sub>C" by rel_auto
-lemma "(\<langle>s\<rangle>\<^sub>C ;; SKIP) = \<langle>s\<rangle>\<^sub>C" by rel_auto
-
-lemma "(SKIP =\<^sub>u ($ok \<and> \<not>$abrupt \<and> $fault =\<^sub>u \<guillemotleft>None\<guillemotright>)) = ($ok\<acute> \<and> \<not> $abrupt\<acute> \<and>  $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II)"
-  by rel_auto
-
-lemma "II = ($\<Sigma>\<acute> =\<^sub>u $\<Sigma>)" by auto
-
-lemma "(SKIP =\<^sub>u (\<not>$ok) ) = (\<not>$ok\<acute> \<or>  $abrupt\<acute> \<or> $fault\<acute> \<noteq>\<^sub>u \<guillemotleft>None\<guillemotright> \<or> \<not>II)"
-  by rel_auto
-
-lemma "(SKIP) = ((\<not>$ok)\<or> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II))"
-  by rel_auto
-
-
-lemma "(H1 (II) =\<^sub>u $ok)= ($ok\<acute> \<and> II)" by rel_auto
-
-
-*)
+lemma "(THROW ;; Simpl(while b do P od)) = THROW" by rel_auto
+lemma "(THROW ;; Simpl P) = THROW" by rel_auto
 
 syntax
   "_assignmentc" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 55)
