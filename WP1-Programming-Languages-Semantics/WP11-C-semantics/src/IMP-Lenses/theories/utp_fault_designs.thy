@@ -262,7 +262,7 @@ lemma "(THROW ;; SKIP) = THROW"
 lemma "(THROW ;;  Simpl(guard_c f b)) = THROW" 
   by rel_auto
 
-lemma "((THROW ;; Simpl (TRY P CATCH Q END))) = THROW" 
+lemma "((THROW ;; Simpl (try P catch Q end))) = THROW" 
   by rel_auto
 
 lemma "`(THROW \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
@@ -280,6 +280,13 @@ lemma "(THROW ;;  Simpl (bob INIT a BODY b RESTORE r RETURN r eob)) = THROW"  by
 lemma "(THROW ;; Simpl(while b do P od)) = THROW" by rel_auto
 lemma "(THROW ;; Simpl P) = THROW" by rel_auto
 
+lemma "(SKIP ;;  \<langle>a\<rangle>\<^sub>C) =  \<langle>a\<rangle>\<^sub>C" by rel_auto
+
+lemma "(SKIP;; Simpl P) = Simpl P" by rel_auto
+
+lemma "(Simpl P ;; SKIP) = Simpl P"  
+by rel_auto (metis option.exhaust) 
+
 syntax
   "_assignmentc" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 55)
 
@@ -288,5 +295,6 @@ translations
   "x \<Midarrow> v" <= "CONST assigns_c (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x \<Midarrow> v" <= "CONST assigns_c (CONST subst_upd (CONST id) x v)"
   "x,y \<Midarrow> u,v" <= "CONST assigns_c (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
-
+term "(x::int itself\<Rightarrow> 'b) (TYPE (int))"
+find_consts "'a itself"
 end
