@@ -354,7 +354,7 @@ translations
   "x :\<^sub>u 'a" == "x :: ('a, _) uexpr"
   "\<langle>\<rangle>"       == "\<guillemotleft>[]\<guillemotright>"
   "\<langle>x, xs\<rangle>"  == "CONST bop (op #) x \<langle>xs\<rangle>"
-  "\<langle>x\<rangle>"      == "CONST bop (op #) x \<guillemotleft>[]\<guillemotright>"
+  "\<langle>x\<rangle>"      == "CONST bop (op #) x \<langle>\<rangle>"
   "x ^\<^sub>u y"   == "CONST bop (op @) x y"
   "last\<^sub>u(xs)" == "CONST uop CONST last xs"
   "front\<^sub>u(xs)" == "CONST uop CONST butlast xs"
