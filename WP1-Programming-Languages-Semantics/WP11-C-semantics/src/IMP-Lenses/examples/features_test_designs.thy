@@ -3,7 +3,34 @@ section \<open>Verification Condition Testing\<close>
 theory features_test_designs
   imports "../hoare/utp_hoare_total"
 begin
-
+text{*In the following examples:
+      \begin{itemize}  
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a Hoare triple for total 
+            correctness.
+         \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
+           where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
+         \<^item> Lens properties such as @{term "weak_lens"}, @{term "mwb_lens"}, @{term "wb_lens"},
+           @{term "vwb_lens"}, @{term "ief_lens"}, @{term "bij_lens"}
+           are used to semantically express what does not change in the state space. For example
+           applying the property @{term "bij_lens"} of variable @{term "x"} gives the term
+           @{term "bij_lens x"}. Informally this means that any change on x will appear on all
+           other variables in the state space.The property @{term "ief_lens"} is just the opposite
+           of @{term "bij_lens"}.
+          \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
+            @{term "unrest_relation x P"}:
+           informally it is used to semantically express that the variable x does not occur
+           in the program P.
+          \<^item> The formal notation @{term "x \<Midarrow> v"} is a syntactic sugar for @{term "assigns_c [x \<mapsto>\<^sub>s v]"}:
+           informally it represent an assignment of a value v to a variable x. 
+         \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
+           informally it represent the content of a variable x.
+         \<^item> The formal notation @{term "\<guillemotleft>l\<guillemotright>"} is a syntactic sugar for @{term "lit l"}: 
+            informally it represent a lifting of an HOL literal l to utp expression.
+         \<^item> The formal notation @{term "x \<bowtie> y"} is a syntactic sugar for @{term "lens_indep x y"}: 
+           informally it is a semantic representation that uses two variables 
+           to characterise independence between two state space regions  .
+     \end{itemize}
+     *}
 subsection {*Even count*}
 
 lemma even_count_total:
@@ -127,15 +154,60 @@ lemma   block_c_test2:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
           i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
           bob 
-            INIT (j \<Midarrow> \<guillemotleft>5\<guillemotright>;; i \<Midarrow> \<guillemotleft>5\<guillemotright>) 
+            INIT (j \<Midarrow> 5;; i \<Midarrow> 5) 
             BODY (II)
-            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright> ;; 
-                                      j \<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright>) 
+            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright> ;; 
+                                      j \<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) t)\<guillemotright>) 
             RETURN  (\<lambda> (s, s') (t, t').  II)
+          eob
+         \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
+  using assms  unfolding lens_indep_def by rel_simp
+
+lemma  block_c_nested_test1:
+  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;;
+          bob
+            INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>)  
+            BODY
+              bob 
+                INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
+                BODY (II)
+                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
+                RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+              eob
+            RESTORE (\<lambda> (s, s') (t, t'). SKIP)
+            RETURN  (\<lambda> (s, s') (t, t').  SKIP)
           eob
          \<lbrace>&j =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>D"
   using assms  unfolding lens_indep_def by rel_simp
 
+lemma  block_c_nested_test2:
+  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;;
+          bob
+            INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>)  
+            BODY
+              bob 
+                INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
+                BODY (II)
+                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
+                RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+              eob
+            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                                        j\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>)
+            RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+          eob
+         \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
+  using assms  by rel_simp
+term "fault"
+term "SKIP"
+term "fault :== v"
+term "fault :== v;; (assign_r (f k) \<guillemotleft>val\<guillemotright>) "
+term "lens_comp "
+term "fault :== v;; (assign_r (add1  ;\<^sub>L field) val) ;; x\<Midarrow> val1"
+find_theorems name:".fault"
 section {*Separation Algebra by Calcagno*}
 subsection {*axioms*}
 named_theorems separation_algebra

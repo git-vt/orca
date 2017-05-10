@@ -3,7 +3,35 @@ theory Demo_2017
 begin
 
 section \<open>Testing swap (SEQ+ASN)\<close>
-
+text{*In the following examples:
+      \begin{itemize}  
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>u"} represent a hoare triple for partial 
+            correctness.
+         \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
+           where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
+         \<^item> Lens properties such as @{term "weak_lens"}, @{term "mwb_lens"}, @{term "wb_lens"},
+           @{term "vwb_lens"}, @{term "ief_lens"}, @{term "bij_lens"}
+           are used to semantically express what does not change in the state space. For example
+           applying the property @{term "bij_lens"} of variable @{term "x"} gives the term
+           @{term "bij_lens x"}. Informally this means that any change on x will appear on all
+           other variables in the state space.The property @{term "ief_lens"} is just the opposite
+           of @{term "bij_lens"}.
+          \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
+            @{term "unrest_relation x P"}:
+           informally it is used to semantically express that the variable x does not occur
+           in the program P.
+         \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
+           informally it represent an assignment of a value v to a variable x. 
+         \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
+           informally it represent the content of a variable x.
+         \<^item> The formal notation @{term "\<guillemotleft>l\<guillemotright>"} is a syntactic sugar for @{term "lit l"}: 
+            informally it represent a lifting of an HOL literal l to utp expression.
+         \<^item> The formal notation @{term "x \<bowtie> y"} is a syntactic sugar for @{term "lens_indep x y"}: 
+           informally it is a semantic representation that uses two variables 
+           to characterise independence between two state space regions.
+           
+     \end{itemize}
+     *}
 lemma swap_test_manual:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
   and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
