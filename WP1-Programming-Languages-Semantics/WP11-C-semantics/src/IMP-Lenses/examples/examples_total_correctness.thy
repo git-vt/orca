@@ -1,0 +1,131 @@
+
+theory examples_total_correctness
+imports "../hoare/utp_hoare_total"
+begin
+section "Examples"
+
+text{* In this section we provide a set of examples for the use of Hoare logic 
+      for total correctness based on a theory of UTP and lenses. The combination of 
+      relational algebra, ie. UTP, and lens algebra allows for a semantic based
+      framework for the specification of programming languages and their features. It also
+      allows a powerful proof tactics for the framework such as @{method rel_auto},
+      @{method pred_auto}, etc.*}
+
+text{*
+   In the following examples:
+      \begin{itemize}  
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a hoare triple for total 
+            correctness.
+         \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
+           where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
+         \<^item> Lens properties such as @{term "weak_lens"}, @{term "mwb_lens"}, @{term "wb_lens"},
+           @{term "vwb_lens"}, @{term "ief_lens"}, @{term "bij_lens"}
+           are used to semantically express what does not change in the state space. For example
+           applying the property @{term "bij_lens"} of variable @{term "x"} gives the term
+           @{term "bij_lens x"}. Informally this means that any change on x will appear on all
+           other variables in the state space.The property @{term "ief_lens"} is just the opposite
+           of @{term "bij_lens"}.
+         \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
+            @{term "unrest_relation x P"}:
+           informally it is used to semantically express that the variable x does not occur
+           in the program P.
+         \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
+           informally it represent an assignment of a value v to a variable x. 
+         \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
+           informally it represent the content of a variable x.
+         \<^item> The formal notation @{term "\<guillemotleft>l\<guillemotright>"} is a syntactic sugar for @{term "lit l"}: 
+            informally it represent a lifting of an HOL literal l to utp expression.
+         \<^item> The formal notation @{term "x \<bowtie> y"} is a syntactic sugar for @{term "lens_indep x y"}: 
+           informally it is a semantic representation that uses two variables 
+           to characterise independence between two state space regions.
+         \<^item> The tactics @{method rel_auto}, @{method pred_auto}, @{method rel_simp},
+           @{method pred_simp}, @{method rel_blast}, @{method pred_blast} are used
+           to discharge proofs related to UTP-relations and UTP-predicates.
+     \end{itemize}
+     *}
+
+subsection {*Swap variables program*}
+
+lemma swap_test_manual:
+  assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
+  z \<Midarrow> &x;;
+  x \<Midarrow> &y;;
+  y \<Midarrow> &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  apply (insert assms)
+  apply (rule seq_hoare_r_t)
+   defer
+   apply (rule seq_hoare_r_t)
+    apply (rule assigns_hoare_r'_t)
+   apply (rule assigns_hoare_r'_t)
+  apply rel_simp
+  apply (simp add: lens_indep_sym)
+  apply blast
+  done
+
+lemma swap_test:
+  assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
+  z \<Midarrow> &x;;
+  x \<Midarrow> &y;;
+  y \<Midarrow> &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  using assms
+  by rel_auto (simp add: lens_indep_sym)
+
+subsection {*Even count program*}
+
+
+lemma even_count_total:
+   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
+     \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+     \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<rbrace>
+      i \<Midarrow> &a ;; 
+      j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
+     (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> 
+      \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+      \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>)\<^sup>\<top>\<^sup>C;; 
+     while  &i <\<^sub>u &n 
+       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
+             \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
+             \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<and> 
+             &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
+       do (bif &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
+           then  j \<Midarrow> &j + \<guillemotleft>1\<guillemotright> 
+           else SKIP
+           eif) ;;  
+           i \<Midarrow> &i + \<guillemotleft>1\<guillemotright> 
+       od
+     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>D"
+ apply (rule seq_hoare_r_t)
+  prefer 2
+  apply (rule seq_hoare_r_t [of _ _ true])
+   apply (rule assigns_hoare_r'_t)
+  apply (rule seq_hoare_r_t)
+   apply (rule assume_hoare_r_t)
+   apply (rule skip_hoare_r_t)
+  prefer 2
+  apply (rule while_invr_hoare_r_t)
+    apply (rule seq_hoare_r_t)
+     prefer 2
+     apply (rule assigns_hoare_r'_t)
+    apply (rule cond_hoare_r_t)
+     apply (rule assigns_hoare_r_t)
+     prefer 6
+     apply (rule assigns_hoare_r_t)
+     unfolding lens_indep_def
+     apply rel_auto
+    apply rel_auto
+    using mod_pos_pos_trivial apply auto
+   apply rel_auto
+  apply rel_auto
+ apply rel_auto
+ apply rel_auto
+done
+
+
+
+end 

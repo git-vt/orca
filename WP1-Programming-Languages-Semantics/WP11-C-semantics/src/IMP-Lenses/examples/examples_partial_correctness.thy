@@ -4,11 +4,11 @@ imports "../hoare/VCG"
 begin
 section "Examples"
 
-text{* In this section we provid a set of examples for the use of Hoare logic 
+text{* In this section we provide a set of examples for the use of Hoare logic 
       for partial correctness using a theory of UTP and lenses. The combination of 
       relational algebra, ie. UTP, and lens algebra allows for a semantic based
       framework for the specification of programming languages and their features. It also
-      allows a powerfull proof tactics for the framework such as @{method rel_auto},
+      allows a powerful proof tactics for the framework such as @{method rel_auto},
       @{method pred_auto}, etc.*}
 
 text{*

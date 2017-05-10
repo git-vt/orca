@@ -1,11 +1,21 @@
 section \<open>Verification Condition Testing\<close>
 
-theory features_test_designs
+theory control_flow_total_examples
   imports "../hoare/utp_hoare_total"
 begin
-text{*In the following examples:
+text{*In this section we provide a set of examples on the verification
+      of programs that uses control flow statements
+      with Hoare logic for total correctness. 
+      The combination of 
+      relational algebra, ie. UTP, and lens algebra allows for a semantic based
+      framework for the specification of programming languages and their features. It also
+      allows a powerful proof tactics for the framework such as @{method rel_auto},
+      @{method pred_auto}, etc.*}
+
+text{*
+   In the following examples:
       \begin{itemize}  
-         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a Hoare triple for total 
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a hoare triple for total 
             correctness.
          \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
            where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
@@ -16,11 +26,11 @@ text{*In the following examples:
            @{term "bij_lens x"}. Informally this means that any change on x will appear on all
            other variables in the state space.The property @{term "ief_lens"} is just the opposite
            of @{term "bij_lens"}.
-          \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
+         \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
             @{term "unrest_relation x P"}:
            informally it is used to semantically express that the variable x does not occur
            in the program P.
-          \<^item> The formal notation @{term "x \<Midarrow> v"} is a syntactic sugar for @{term "assigns_c [x \<mapsto>\<^sub>s v]"}:
+         \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
            informally it represent an assignment of a value v to a variable x. 
          \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
            informally it represent the content of a variable x.
@@ -28,60 +38,26 @@ text{*In the following examples:
             informally it represent a lifting of an HOL literal l to utp expression.
          \<^item> The formal notation @{term "x \<bowtie> y"} is a syntactic sugar for @{term "lens_indep x y"}: 
            informally it is a semantic representation that uses two variables 
-           to characterise independence between two state space regions  .
+           to characterise independence between two state space regions.
+         \<^item> The tactics @{method rel_auto}, @{method pred_auto}, @{method rel_simp},
+           @{method pred_simp}, @{method rel_blast}, @{method pred_blast} are used
+           to discharge proofs related to UTP-relations and UTP-predicates.
      \end{itemize}
      *}
-subsection {*Even count*}
-
-lemma even_count_total:
-   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
-     \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
-     \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<rbrace>
-      i \<Midarrow> &a ;; 
-      j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
-     (&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &i =\<^sub>u &a \<and> 
-      \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
-      \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>)\<^sup>\<top>\<^sup>C;; 
-     while  &i <\<^sub>u &n 
-       invr  &a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u \<guillemotleft>1::int\<guillemotright> \<and> 
-             \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and> 
-             \<guillemotleft>i \<bowtie> a\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>  \<and> \<guillemotleft>i \<bowtie> n\<guillemotright> \<and> \<guillemotleft>a \<bowtie> j\<guillemotright> \<and> \<guillemotleft>a \<bowtie> n\<guillemotright> \<and> \<guillemotleft>j \<bowtie> n\<guillemotright>\<and> 
-             &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
-       do (bif &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u  \<guillemotleft>0::int\<guillemotright> 
-           then  j \<Midarrow> &j + \<guillemotleft>1\<guillemotright> 
-           else SKIP
-           eif) ;;  
-           i \<Midarrow> &i + \<guillemotleft>1\<guillemotright> 
-       od
-     \<lbrace>&j =\<^sub>u \<guillemotleft>1::int\<guillemotright>\<rbrace>\<^sub>D"
- apply (rule seq_hoare_r_t)
-  prefer 2
-  apply (rule seq_hoare_r_t [of _ _ true])
-   apply (rule assigns_hoare_r'_t)
-  apply (rule seq_hoare_r_t)
-   apply (rule assume_hoare_r_t)
-   apply (rule skip_hoare_r_t)
-  prefer 2
-  apply (rule while_invr_hoare_r_t)
-    apply (rule seq_hoare_r_t)
-     prefer 2
-     apply (rule assigns_hoare_r'_t)
-    apply (rule cond_hoare_r_t)
-     apply (rule assigns_hoare_r_t)
-     prefer 6
-     apply (rule assigns_hoare_r_t)
-     unfolding lens_indep_def
-     apply rel_auto
-    apply rel_auto
-    using mod_pos_pos_trivial apply auto
-   apply rel_auto
-  apply rel_auto
- apply rel_auto
- apply rel_auto
-done
 
 subsection {*catch feature*}
 
+text{*The control flow statement @{term "try P catch Q end"} is used to capture state exceptions.
+      Combined with the @{term "THROW"} it can be used to capture semantics of @{term return}
+      @{term break} and @{term continue}. Informally @{term "try P catch Q end"} will execute
+       a program @{term P}. If @{term P} triggers an exception, this exception is handled by 
+       @{term Q}.*}
+
+text{*Informally @{term "THROW"} statement will transform
+      the state from normal, ie. stable state, to an abrupt state. Under the assumption
+      that the initial state of a program is stable, any control flow
+      statement after @{term "THROW"} is executed will be purged. So, @{term "THROW"}
+      is a left zero under the assumption that the initial state is stable.*}
 
 lemma try_throw_zero:
   "Simpl (try THROW catch SKIP end) = SKIP"
