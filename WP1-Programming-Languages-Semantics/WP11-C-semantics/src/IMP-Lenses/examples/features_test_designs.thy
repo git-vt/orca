@@ -195,8 +195,8 @@ lemma  block_c_nested_test2:
                                              j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
                 RETURN  (\<lambda> (s, s') (t, t').  SKIP)
               eob
-            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                        j\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>)
+            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                                        j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>)
             RETURN  (\<lambda> (s, s') (t, t').  SKIP)
           eob
          \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"

@@ -1,12 +1,21 @@
 section \<open>Verification Condition Testing\<close>
 
-theory features_test
+theory control_flow_partial_examples
   imports "../hoare/utp_hoare"
 begin
+section "Examples"
 
-subsection {*Even count*}
+text{*In this section we provide a set of examples on the verification
+      of programs that uses  control flow statements
+      with Hoare logic for partial correctness. 
+      The combination of 
+      relational algebra, ie. UTP, and lens algebra allows for a semantic based
+      framework for the specification of programming languages and their features. It also
+      allows a powerful proof tactics for the framework such as @{method rel_auto},
+      @{method pred_auto}, etc.*}
 
-text{*In the following examples:
+text{*
+   In the following examples:
       \begin{itemize}  
          \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>u"} represent a hoare triple for partial 
             correctness.
@@ -19,11 +28,11 @@ text{*In the following examples:
            @{term "bij_lens x"}. Informally this means that any change on x will appear on all
            other variables in the state space.The property @{term "ief_lens"} is just the opposite
            of @{term "bij_lens"}.
-          \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
+         \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
             @{term "unrest_relation x P"}:
            informally it is used to semantically express that the variable x does not occur
            in the program P.
-          \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
+         \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
            informally it represent an assignment of a value v to a variable x. 
          \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
            informally it represent the content of a variable x.
@@ -31,46 +40,12 @@ text{*In the following examples:
             informally it represent a lifting of an HOL literal l to utp expression.
          \<^item> The formal notation @{term "x \<bowtie> y"} is a syntactic sugar for @{term "lens_indep x y"}: 
            informally it is a semantic representation that uses two variables 
-           to characterise independence between two state space regions  .
+           to characterise independence between two state space regions.
+         \<^item> The tactics @{method rel_auto}, @{method pred_auto}, @{method rel_simp},
+           @{method pred_simp}, @{method rel_blast}, @{method pred_blast} are used
+           to discharge proofs related to UTP-relations and UTP-predicates.
      \end{itemize}
      *}
-lemma even_count:
-   assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
-           "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
-   shows
-   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-       i:== &a;; j :== 0;;
-       (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
-     while &i <\<^sub>u &n
-       invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-       do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II);; i :== &i + 1 od
-     \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
-   apply (insert assms)
-   apply (rule seq_hoare_r)
-    prefer 2
-    apply (rule seq_hoare_r [of _ _ true])
-     apply (rule assigns_hoare_r')
-    apply (rule seq_hoare_r)
-     apply (rule assume_hoare_r)
-     apply (rule skip_hoare_r)
-    prefer 2
-    apply (rule while_invr_hoare_r)
-      apply (rule seq_hoare_r)
-       prefer 2
-       apply (rule assigns_hoare_r')
-      apply (rule cond_hoare_r)
-       apply (rule assigns_hoare_r)
-       prefer 6
-       apply (rule assigns_hoare_r)
-       unfolding lens_indep_def
-       apply rel_auto
-      apply rel_auto
-      using mod_pos_pos_trivial apply auto
-     apply rel_auto
-    apply rel_auto
-   apply rel_auto
-   apply rel_auto
-  done
 
 subsection {*block feature*}
 
