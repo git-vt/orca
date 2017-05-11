@@ -4,16 +4,15 @@ begin
 subsection {*Sequential C-program alphabet*}
 
 text {*In order to record the interaction of a sequential C program with its execution environment, 
-       we extend the alphabet of UTP by four additional global state variables:
+       we extend the alphabet of UTP by two additional global state variables:
       \begin{itemize}   
-       \<^item> wait: a boolean variable used to   
        \<^item> fault: a variable of type @{typ "'f option"} used to record a fault of a given guard is 
          not satisfied.
        \<^item> abrupt: a boolean variable used to
-       \<^item> wait: a boolean variable used to
      \end{itemize}
 
 *}
+
 alphabet 'f cp_vars = des_vars +
   abrupt:: bool
   fault :: "'f option"
@@ -243,50 +242,6 @@ declare While_inv_def [urel_defs]
 declare While_bot_def [urel_defs]
 
 
-
-(*What happen if we do not use healthiness conditions*)
-lemma "(true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II) ;; 
-        true \<turnstile> ($abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II)) =
-       ( true \<turnstile> false)"
-  by rel_auto
-                   
-lemma [simp]:"(SKIP ;; C3(true \<turnstile> P)) = C3(true \<turnstile> P)"
-  by rel_auto
-
-lemma "(SKIP ;; THROW) = THROW"
-  by rel_auto
-
-lemma "(THROW ;; SKIP) = THROW" 
-  by rel_auto
-
-lemma "(THROW ;;  Simpl(guard_c f b)) = THROW" 
-  by rel_auto
-
-lemma "((THROW ;; Simpl (try P catch Q end))) = THROW" 
-  by rel_auto
-
-lemma "`(THROW \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
-  by rel_simp
-
-lemma "`(guard_c f false  \<and> $ok \<and>$fault =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$abrupt) \<Rightarrow> STUCK`"
-  by rel_simp 
-
-lemma "((true \<turnstile> (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> II)) =\<^sub>u $ok) =
-        ($ok\<acute>\<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright>  \<and> \<not>$abrupt\<acute> \<and> II)"
-  by rel_auto
-
-lemma "(THROW ;;  Simpl (bob INIT a BODY b RESTORE r RETURN r eob)) = THROW"  by rel_auto
-
-lemma "(THROW ;; Simpl(while b do P od)) = THROW" by rel_auto
-lemma "(THROW ;; Simpl P) = THROW" by rel_auto
-
-lemma "(SKIP ;;  \<langle>a\<rangle>\<^sub>C) =  \<langle>a\<rangle>\<^sub>C" by rel_auto
-
-lemma "(SKIP;; Simpl P) = Simpl P" by rel_auto
-
-lemma "(Simpl P ;; SKIP) = Simpl P"  
-by rel_auto (metis option.exhaust) 
-
 syntax
   "_assignmentc" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 55)
 
@@ -295,6 +250,5 @@ translations
   "x \<Midarrow> v" <= "CONST assigns_c (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x \<Midarrow> v" <= "CONST assigns_c (CONST subst_upd (CONST id) x v)"
   "x,y \<Midarrow> u,v" <= "CONST assigns_c (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
-term "(x::int itself\<Rightarrow> 'b) (TYPE (int))"
-find_consts "'a itself"
+
 end

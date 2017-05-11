@@ -15,6 +15,13 @@ lemma throw_right_zero_skip[simp]:
   "(SKIP ;; THROW) = THROW " 
   by rel_auto
 
+lemma throw_right_zero:
+  fixes P::"('f,'\<alpha>) hrel_cp"
+  assumes "$ok\<acute> \<sharp> P" "$ok \<sharp> P" "$abrupt\<acute> \<sharp> P" "$abrupt \<sharp> P"
+          "$fault\<acute> \<sharp> P" "$fault \<sharp> P"
+  shows "(Simpl P  ;; THROW) = THROW"
+oops
+ 
 subsection"Skip"
 
 lemma skip_c_left_unit[simp]: 
