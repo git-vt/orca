@@ -4,15 +4,14 @@ imports "../hoare/VCG"
 begin
 section "Examples"
 
-text{* In this section we provide a set of examples for the use of Hoare logic 
+text \<open>In this section we provide a set of examples for the use of Hoare logic 
       for partial correctness using a theory of UTP and lenses. The combination of 
       relational algebra, ie. UTP, and lens algebra allows for a semantic based
       framework for the specification of programming languages and their features. It also
       allows a powerful proof tactics for the framework such as @{method rel_auto},
-      @{method pred_auto}, etc.*}
+      @{method pred_auto}, etc.\<close>
 
-text{*
-   In the following examples:
+text \<open>In the following examples:
       \begin{itemize}  
          \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>u"} represent a hoare triple for partial 
             correctness.
@@ -41,11 +40,10 @@ text{*
          \<^item> The tactics @{method rel_auto}, @{method pred_auto}, @{method rel_simp},
            @{method pred_simp}, @{method rel_blast}, @{method pred_blast} are used
            to discharge proofs related to UTP-relations and UTP-predicates.
-     \end{itemize}
-     *}
+     \end{itemize}\<close>
 
 
-subsection {*Swap variables program*}
+subsection \<open>Swap variables program\<close>
 
 lemma swap_test_manual:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
@@ -75,7 +73,6 @@ lemma swap_test:
   \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
   using assms
   by rel_auto (simp add: lens_indep_sym)
-
 
 lemma swap_test_method:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
@@ -117,25 +114,29 @@ lemma swap_testx:
   using assms
   by rel_simp
 
-subsection {*Even count program*}
+subsection \<open>Even count program\<close>
 lemma even_count:
-   assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
+  assumes "weak_lens i" and "weak_lens a" and "weak_lens j" and "weak_lens n" and
            "i \<bowtie> a" and "i \<bowtie> j" and "i \<bowtie> n" and "a \<bowtie> j" and "a \<bowtie> n" and "j \<bowtie> n"
-   shows
-   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
-       i:== &a;; j :== 0;;
-       (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
+  shows
+  "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1\<rbrace>
+     i :== &a;;
+     j :== 0;;
+     (&a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &a)\<^sup>\<top>;;
      while &i <\<^sub>u &n
-       invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
-       do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II);; i :== &i + 1 od
-     \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
-   apply (insert assms)
+     invr &a =\<^sub>u 0 \<and> &n =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and> &i \<ge>\<^sub>u &a
+     do
+       j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II;;
+       i :== &i + 1
+     od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply (rule seq_hoare_r)
+   prefer 2
+   apply (rule seq_hoare_r [of _ _ true])
+    apply (rule assigns_hoare_r')
    apply (rule seq_hoare_r)
-    prefer 2
-    apply (rule seq_hoare_r [of _ _ true])
-     apply (rule assigns_hoare_r')
-    apply (rule seq_hoare_r)
-     apply (rule assume_hoare_r)
+    apply (rule assume_hoare_r)
      apply (rule skip_hoare_r)
     prefer 2
     apply (rule while_invr_hoare_r)
@@ -149,7 +150,7 @@ lemma even_count:
        unfolding lens_indep_def
        apply rel_auto
       apply rel_auto
-      using mod_pos_pos_trivial apply auto
+     using mod_pos_pos_trivial apply auto
      apply rel_auto
     apply rel_auto
    apply rel_auto
@@ -161,15 +162,19 @@ lemma even_count_method:
   and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> end" and "start \<bowtie> j" and "start \<bowtie> end" and "j \<bowtie> end"
   shows
   "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &end =\<^sub>u 1\<rbrace>
-    i :== &start;; j :== 0;;
-    (&start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top> ;;
+    i :== &start;;
+    j :== 0;;
+    (&start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top>;;
     while &i <\<^sub>u &end
     invr &start =\<^sub>u 0 \<and> &end =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &end \<and> &i \<ge>\<^sub>u &start
-    do (j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II) ;; i :== &i + 1 od
-   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
+    do
+      j :== &j + 1 \<triangleleft> &i mod 2 =\<^sub>u 0 \<triangleright>\<^sub>r II;;
+      i :== &i + 1
+    od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u"
   by (insert assms) vcg
 
-subsection {*Increment program*}
+subsection \<open>Increment program\<close>
 
 subsubsection \<open>Simple increment program\<close>
 
@@ -368,15 +373,15 @@ lemma if_increment_method_step:
   do x :== &x + 1 od
   \<lbrace>&x \<in>\<^sub>u {5, 10}\<^sub>u\<rbrace>\<^sub>u"
   apply (insert assms)
-  apply (rule cond_hoare_r) (* needed as vcg_step tries
-utp_methods first and that messes up cond rule *)
+  apply (rule cond_hoare_r) (* needed as vcg_step tries utp_methods first and that messes up cond
+rule *)
    apply vcg_step+
       unfolding lens_indep_def
       apply vcg_step+
   done
 
 
-subsection {*If-based programs*}
+subsection \<open>If-based programs\<close>
 
 lemma if_manual:
   assumes "weak_lens x"
@@ -507,6 +512,5 @@ lemma if_method_step:
   x :== exp\<^sub>2 \<triangleleft> exp\<^sub>1 \<triangleright>\<^sub>r (x :== exp\<^sub>3)
   \<lbrace>&x =\<^sub>u exp\<^sub>2 \<or> &x =\<^sub>u exp\<^sub>3\<rbrace>\<^sub>u"
   by (insert assms) vcg_step
-
 
 end 
