@@ -4,7 +4,7 @@ theory utp_rea_designs
   imports utp_reactive
 begin
 
-subsection {* Preliminaries *}
+subsection {* Preliminaries *} 
 
 text {* R3 as presented in the UTP book and related publications is not sensitive to state, although
   reactive designs often need this property. Thus is is necessary to use a modification of R3

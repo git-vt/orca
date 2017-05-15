@@ -115,7 +115,14 @@ lemma R1_Monotonic: "Monotonic R1"
   by (simp add: Monotonic_def R1_mono)
 
 lemma R1_Continuous: "Continuous R1"
-  by (auto simp add: Continuous_def, rel_auto)
+  apply (rel_auto)
+  unfolding SUP_def 
+  apply transfer apply auto 
+  unfolding SUP_def 
+  apply transfer apply auto 
+  unfolding SUP_def 
+  apply transfer apply auto 
+done
 
 lemma R1_unrest [unrest]: "\<lbrakk> x \<bowtie> in_var tr; x \<bowtie> out_var tr; x \<sharp> P \<rbrakk> \<Longrightarrow> x \<sharp> R1(P)"
   by (metis R1_def in_var_uvar lens_indep_sym out_var_uvar tr_vwb_lens unrest_bop unrest_conj unrest_var)
@@ -275,7 +282,23 @@ lemma R2_mono: "P \<sqsubseteq> Q \<Longrightarrow> R2(P) \<sqsubseteq> R2(Q)"
   by (pred_auto)
 
 lemma R2c_Continuous: "Continuous R2c"
-  by (auto simp add: Continuous_def, rel_auto)
+  apply (rel_auto)
+  unfolding  SUP_def apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+done
 
 lemma R2c_lit: "R2c(\<guillemotleft>x\<guillemotright>) = \<guillemotleft>x\<guillemotright>"
   by (rel_auto)
@@ -576,7 +599,54 @@ lemma R3_Monotonic: "Monotonic R3"
   by (simp add: Monotonic_def R3_mono)
 
 lemma R3_Continuous: "Continuous R3"
-  by (rel_auto)
+ apply (rel_auto)
+  unfolding  SUP_def apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+   unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+   unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+   unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply meson apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply (metis (mono_tags) case_prod_conv des_vars.ext_inject id_apply)
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply (metis (mono_tags) case_prod_conv des_vars.ext_inject id_apply) 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply meson apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply (metis (mono_tags, lifting) des_vars.ext_inject id_apply prod.simps(2) rp_vars.iffs) 
+  apply rel_simp
+   unfolding  SUP_def INF_def
+  apply transfer apply (simp add: Product_Type.split_beta)
+  apply (metis (mono_tags, lifting) des_vars.ext_inject id_apply prod.simps(2) rp_vars.iffs) 
+done
 
 lemma R3_conj: "R3(P \<and> Q) = (R3(P) \<and> R3(Q))"
   by (rel_auto)
