@@ -15,7 +15,7 @@ lemma throw_right_zero_skip[simp]:
   "(SKIP ;; THROW) = THROW " 
   by rel_auto
 
-lemma throw_c_idem [simp]: 
+lemma throw_idem [simp]: 
   "(THROW ;; THROW) = THROW " 
   by rel_auto
 
@@ -23,6 +23,7 @@ subsection"Skip"
 
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
+
 theorem design_skip_c_idem [simp]:
   "(SKIP ;; SKIP) = SKIP"
   by (rel_auto)
@@ -31,17 +32,17 @@ lemma skip_c_left_unit[simp]:
   "(SKIP ;;  Simpl P) =  Simpl P"
   by rel_auto
 
-lemma skip_lift_alpha_eq:
+lemma skip_c_right_unit[simp]: 
+  "(Simpl P  ;;  SKIP) =  Simpl P"  
+  by rel_auto (metis option.exhaust_sel)
+
+lemma skip_c_lift_alpha_eq:
   "\<lceil>II\<rceil>\<^sub>C = ($\<Sigma>\<^sub>C\<acute> =\<^sub>u $\<Sigma>\<^sub>C)"
   by rel_auto
 
 lemma skip_c_alpha_eq:
   "SKIP = Simpl (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> ($\<Sigma>\<^sub>C\<acute> =\<^sub>u $\<Sigma>\<^sub>C))"
-  by (simp add: skip_lift_alpha_eq skip_c_def)
-
-lemma skip_c_right_unit[simp]: 
-  "(Simpl P  ;;  SKIP) =  Simpl P"  
-  by rel_auto (metis option.exhaust_sel)
+  by (simp add: skip_c_lift_alpha_eq skip_c_def)
 
 lemma pre_skip_c_post: 
   "(Simpl \<lceil>b\<rceil>\<^sub>C\<^sub>< \<and> SKIP) = (SKIP \<and> Simpl \<lceil>b\<rceil>\<^sub>C\<^sub>>)"
@@ -63,12 +64,18 @@ subsection {*Assignment Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the assignment
       statement.*}
 
-lemma usubst_cancel_c[usubst,symbolic_exec_cp]: 
+lemma usubst_c_cancel [usubst,symbolic_exec_cp]: 
   assumes 1:"weak_lens v" 
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub>C\<^sub></$v\<rbrakk>= \<lceil>expr\<rceil>\<^sub>C\<^sub><"
   using 1
   by  rel_auto
-thm assigns_comp
+
+lemma usubst_c_lift_cancel[usubst,symbolic_exec_cp]: 
+  assumes 1:"weak_lens v" 
+  shows "\<lceil>($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub></$v\<rbrakk>\<rceil>\<^sub>C= \<lceil>expr\<rceil>\<^sub>C\<^sub><"
+  using 1
+  by  rel_auto
+
 lemma assigns_c_comp: "(\<langle>f\<rangle>\<^sub>C ;; \<langle>g\<rangle>\<^sub>C) = \<langle>g \<circ> f\<rangle>\<^sub>C"
   by rel_auto
 
@@ -83,7 +90,7 @@ lemma assign_c_left_comp:
   by rel_auto
 
 lemma assign_c_left_comp_subst[symbolic_exec_cp]: 
-  "(x \<Midarrow> u ;; Simpl(\<lceil>P\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<rceil>\<^sub>C)) = Simpl(\<lceil>[$x \<mapsto>\<^sub>s \<lceil>u\<rceil>\<^sub><] \<dagger> P\<rceil>\<^sub>C \<turnstile> \<lceil>[$x \<mapsto>\<^sub>s \<lceil>u\<rceil>\<^sub><] \<dagger> Q\<rceil>\<^sub>C)" 
+  "(x \<Midarrow> u ;; Simpl(\<lceil>P\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<rceil>\<^sub>C)) = Simpl(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>C)" 
   by rel_auto 
 
 lemma assign_c_twice[symbolic_exec_cp]: 
@@ -324,292 +331,73 @@ lemma assign_c_cond_If [symbolic_exec_cp]:
    (v \<Midarrow> (trop If bexp exp1 exp2))" 
   by rel_auto
 
-lemma assign_c_cond_If_uop[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v"
-  shows "(v \<Midarrow> E;; 
-         bif uop F (&v) then (v \<Midarrow> uop F (&v)) else (v\<Midarrow> uop G (&v)) eif) =
-         (v \<Midarrow> trop If (uop F E) (uop F E) (uop G E))" 
-  using 1 assign_c_alt_def assign_c_cond_If assign_c_cond_c_uop assign_c_uop1 mwb_lens_weak
-  by (metis (no_types, lifting))
+subsection {*While laws*}
+text{*In this section we introduce the algebraic laws of programming related to the while
+      statement.*}
 
-lemma assign_cond_If_bop[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp"
-  shows "((v \<Midarrow> E);; 
-          bif bop F exp (&v) then (v \<Midarrow> (bop F exp (&v))) else (v \<Midarrow> (bop G exp (&v))) eif) =
-         (v \<Midarrow> (trop If (bop F exp E) (bop F exp E) (bop G exp E)))"
+theorem while_unfold:
+  "while b do P od = (bif b then (P ;; while b do P od) else SKIP eif)"
 proof -
-  have f1: 
-    "\<forall>l u p ua ub uc. 
-      \<not> weak_lens (l::bool \<Longrightarrow> 'a) \<or> \<not> (l \<sharp> (u::('b, 'a) uexpr)) \<or> 
-      bif bop p u (ua :\<^sub>u bool) 
-      then (l \<Midarrow> ua::('c, _, _) rel_cp) ;; C3 ((true::('c, _, _) rel_cp) \<turnstile> ub)::('c, _, _) rel_cp 
-      else (l \<Midarrow> ua::('c, _, _) rel_cp) ;; C3 (true \<turnstile> uc) 
-      eif = 
-      (l \<Midarrow> ua::('c, _, _) rel_cp) ;; 
-      bif bop p u (&l) then C3 (true \<turnstile> ub) else C3 (true \<turnstile> uc) eif"
-    using assign_c_cond_bop2 by blast
-  have "\<forall>l. \<not> mwb_lens (l::bool \<Longrightarrow> 'a) \<or> weak_lens l"
-    using mwb_lens_weak by blast
-  then have "weak_lens v"
-    by (metis "1") 
-  then have f2: 
-         "bif bop F exp E 
-          then (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; C3 ((true::('c, 'a, _) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop F exp (&v)]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C))::('c, 'a, 'a) rel_cp 
-          else (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; C3 ((true::('c, 'a, _) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop G exp (&v)]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C)) 
-          eif = 
-          (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-          bif bop F exp (&v) 
-          then C3 ((true::('c, 'a, 'a) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop F exp (&v)]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C))
-          else C3 (true \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop G exp (&v)]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C)) 
-          eif"
-    using f1 by (metis "2") 
-  have f3: 
-    "\<forall>l u ua p. 
-      \<not> mwb_lens (l::bool \<Longrightarrow> 'a) \<or> \<not> (l \<sharp> (u::('b, 'a) uexpr)) \<or> 
-      (l \<Midarrow> (ua :\<^sub>u bool)::('c, _, _) rel_cp) ;; (l \<Midarrow> bop p u (&l)::('c, _, _) rel_cp) = 
-      (l \<Midarrow> (bop p u ua :\<^sub>u bool)::('c, _, _) rel_cp)"
-    by (meson assign_c_bop2)
-  then have f4: 
-         "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-          (v \<Midarrow> bop F exp (&v)::('c, 'a, 'a) rel_cp) = 
-          (v \<Midarrow> bop F exp E::('c, 'a, 'a) rel_cp)"
-    by (metis "1" "2")
-  have 
-    "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-     (v \<Midarrow> bop G exp (&v)::('c, 'a, 'a) rel_cp) = 
-     (v \<Midarrow> bop G exp E::('c, 'a, 'a) rel_cp)"
-    using f3 by (metis "1" "2") 
-  then have 
-         "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-          bif bop F exp (&v) 
-          then v \<Midarrow> bop F exp (&v)::('c, 'a, 'a) rel_cp 
-          else v \<Midarrow> bop G exp (&v) 
-          eif = 
-          bif bop F exp E 
-          then v \<Midarrow> bop F exp E::('c, 'a, 'a) rel_cp  
-          else v \<Midarrow> bop G exp E 
-          eif"
-    using f4 f2 by (simp add: assign_c_alt_def)
-  then have 
-         "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-           bif bop F exp (&v) then v \<Midarrow> bop F exp (&v)::('c, 'a, 'a) rel_cp else v \<Midarrow> bop G exp (&v) eif = 
-          (v \<Midarrow> (bop F exp E \<triangleleft> bop F exp E \<triangleright> bop G exp E)::('c, 'a, 'a) rel_cp)"
-    by (metis assign_c_cond_If)
-  then show ?thesis
-    by meson
-qed 
-
-lemma assign_c_cond_If_bop1[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp"
-  shows "((v \<Midarrow> E);; 
-          bif bop F (&v) exp then (v \<Midarrow> (bop F (&v) exp)) else (v \<Midarrow>(bop G (&v) exp)) eif) =
-         (v \<Midarrow> (trop If (bop F E exp) (bop F E exp) (bop G E exp)))" 
-  using 1 2
-proof -
-  have f1: 
-    "\<forall> l u p ua ub uc. 
-       \<not> weak_lens (l::bool \<Longrightarrow> 'a) \<or> \<not> (l \<sharp> (u::('b, 'a) uexpr)) \<or> 
-       bif bop p (ua :\<^sub>u bool) u 
-       then (l \<Midarrow> ua::('c, _, _) rel_cp) ;; C3 ((true::('c, _, _) rel_cp) \<turnstile> ub)::('c, _, _) rel_cp 
-       else (l \<Midarrow> ua::('c, _, _) rel_cp) ;; C3 (true \<turnstile> uc) 
-       eif = 
-       (l \<Midarrow> ua::('c, _, _) rel_cp) ;; 
-       bif bop p (&l) u 
-       then C3 (true \<turnstile> ub) 
-       else C3 (true \<turnstile> uc) eif"
-    using assign_c_cond_bop1 by blast
-  have "\<forall>l. \<not> mwb_lens (l::bool \<Longrightarrow> 'a) \<or> weak_lens l"
-    using mwb_lens_weak by blast
-  then have "weak_lens v"
-    by (metis "1") 
-  then have f2: 
-         "bif bop F E exp 
-          then (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-               C3 ((true::('c, 'a, _) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop F (&v) exp]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C))::('c, 'a, 'a) rel_cp 
-          else (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; C3 ((true::('c, 'a, _) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop G (&v) exp]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C)) 
-          eif = 
-          (v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-          bif bop F (&v) exp 
-          then C3 ((true::('c, 'a, 'a) rel_cp) \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop F (&v) exp]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C)) 
-          else C3 (true \<turnstile> (\<not> $abrupt\<acute> \<and> $fault\<acute> =\<^sub>u (\<guillemotleft>None::'c option\<guillemotright>::('c option, ('c, 'a) cp \<times> ('c, 'a) cp) uexpr) \<and> \<lceil>(\<lceil>[v \<mapsto>\<^sub>s bop G (&v) exp]\<rceil>\<^sub>s::'a \<times> 'a \<Rightarrow> 'a \<times> _) \<dagger> (II::('a, 'a) rel)\<rceil>\<^sub>C)) 
-          eif"
-    using f1 by (metis "2") 
-  have f3: 
-    "\<forall>l u ua p. \<not> mwb_lens (l::bool \<Longrightarrow> 'a) \<or> \<not> (l \<sharp> (u::('b, 'a) uexpr)) \<or> 
-                (l \<Midarrow> (ua :\<^sub>u bool)::('c, _, _) rel_cp) ;; 
-                (l \<Midarrow> bop p (&l) u::('c, _, _) rel_cp) = 
-                (l \<Midarrow> (bop p ua u :\<^sub>u bool)::('c, _, _) rel_cp)"
-    by (meson assign_c_bop1)
-  then have f4: 
-         "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-          (v \<Midarrow> bop F (&v) exp::('c, 'a, 'a) rel_cp) = 
-          (v \<Midarrow> bop F E exp::('c, 'a, 'a) rel_cp)"
-    by (metis "1" "2")
-  have "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; (v \<Midarrow> bop G (&v) exp::('c, 'a, 'a) rel_cp) = 
-        (v \<Midarrow> bop G E exp::('c, 'a, 'a) rel_cp)"
-    using f3 by (metis "1" "2")
-  then have "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-              bif bop F (&v) exp 
-              then v \<Midarrow> bop F (&v) exp::('c, 'a, 'a) rel_cp 
-              else v \<Midarrow> bop G (&v) exp 
-              eif = 
-              bif bop F E exp then v \<Midarrow> bop F E exp::('c, 'a, 'a) rel_cp else v \<Midarrow> bop G E exp eif"
-    using f4 f2 by (simp add: assign_c_alt_def)
-  then have "(v \<Midarrow> E::('c, 'a, 'a) rel_cp) ;; 
-              bif bop F (&v) exp 
-              then v \<Midarrow> bop F (&v) exp::('c, 'a, 'a) rel_cp 
-              else v \<Midarrow> bop G (&v) exp eif = 
-             (v \<Midarrow> (bop F E exp \<triangleleft> bop F E exp \<triangleright> bop G E exp)::('c, 'a, 'a) rel_cp)"
-    by (metis assign_c_cond_If) 
-  then show ?thesis
-    by meson
+  have m:"mono (\<lambda>X. bif b then (P ;; X) else SKIP eif)"
+    by (auto intro: monoI seqr_mono cond_mono)
+  have "(while b do P od) = (\<nu> X \<bullet> bif b then (P ;; X) else SKIP eif)"
+    by (simp add: While_def)
+  also have "... = (bif b then (P ;; (\<nu> X \<bullet> bif b then (P ;; X) else SKIP eif)) else SKIP eif)"
+    by (subst lfp_unfold, simp_all add: m)
+  also have "... = (bif b then (P ;; while b do P od) else SKIP eif)"
+    by (simp add: While_def)
+  finally show ?thesis .
 qed
 
-lemma assign_c_cond_If_bop2[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v \<Midarrow> E);; 
-          bif bop F (&v) exp1 then (v \<Midarrow> (bop F (&v) exp1)) else (v \<Midarrow> (bop G (&v) exp2)) eif) =
-         (v \<Midarrow> (trop If (bop F E exp1) (bop F E exp1) (bop G E exp2)))" 
-  using 1 2 3
-  by (smt assign_c_alt_def assign_c_bop1 assign_c_cond_If assign_c_cond_bop1 mwb_lens_weak)
+lemma while_true:
+  shows "(while true do P od) = false"
+  apply (simp add: While_def alpha)
+  apply (rule antisym)
+  apply (simp_all)
+  apply (rule lfp_lowerbound)
+  apply (simp)
+done
 
-lemma assign_cond_If_bop4[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v \<Midarrow> E);; 
-          bif bop F (&v) exp1 then (v \<Midarrow> (bop F (&v) exp1)) else (v \<Midarrow> (bop G exp2 (&v))) eif ) =
-         (v \<Midarrow> (trop If (bop F E exp1) (bop F E exp1) (bop G exp2 E)))" 
-  using assms
+lemma while_false:
+  shows "(while false do P od) = SKIP"
+proof -
+  have "(while false do P od) = bif false then (P ;; while false do P od) else SKIP eif" 
+    using while_unfold[of _ P] by simp
+  also have "... = SKIP" by (simp add: aext_false)
+  finally show ?thesis . 
+qed
+
+lemma while_inv_unfold:
+  "while b invr p do P od = (bif b then (P ;; while b invr p do P od) else SKIP eif)"
+  unfolding While_inv_def using while_unfold
+  by auto
+
+theorem while_bot_unfold:
+  "while\<^sub>\<bottom> b do P od = (bif b then (P ;; while\<^sub>\<bottom> b do P od) else SKIP eif)"
+proof -
+  have m:"mono (\<lambda>X. bif b then (P ;; X) else SKIP eif)"
+    by (auto intro: monoI seqr_mono cond_mono)
+  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> bif b then (P ;; X) else SKIP eif)"
+    by (simp add: While_bot_def)
+  also have "... = (bif b then (P ;; (\<mu> X \<bullet> bif b then (P ;; X) else SKIP eif)) else SKIP eif)"
+    by (subst gfp_unfold, simp_all add: m)
+  also have "... = (bif b then (P ;; while\<^sub>\<bottom> b do P od) else SKIP eif)"
+    by (simp add: While_bot_def)
+  finally show ?thesis .
+qed
+
+theorem while_bot_false: "while\<^sub>\<bottom> false do P od = SKIP"
+  by (simp add: While_bot_def mu_const alpha)
+
+theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet> P ;; X)"
+  by (simp add: While_bot_def alpha)
+
+subsection {*assume laws*}
+
+lemma assume_twice: "(b\<^sup>\<top>\<^sup>C ;; c\<^sup>\<top>\<^sup>C) = (b \<and> c)\<^sup>\<top>\<^sup>C"
+  by rel_auto  (metis not_None_eq)
 
 
-oops
 
-
-lemma assign_cond_If_bop5[symbolic_exec_cp]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v:== E);; 
-          (v:== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v:== (bop G (&v) exp2))) =
-         (v:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G E exp2)))" 
-  using 1 2 3
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_bop6[symbolic_exec_assign_bop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v:== E);; 
-          (v:== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v:== (bop G exp2 (&v)))) =
-         (v:== (trop If (bop F exp1 E) (bop F exp1 E) (bop G exp2 E)))" 
-  using 1 2 3
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v:== E);;
-         (v:== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v:== (trop G exp1 exp2 (&v)))) =
-         (v:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))" 
-  using 1 2 3
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop1[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v:== E);; 
-          (v:== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v:== (trop G exp1 (&v) exp2))) =
-         (v:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))" 
-  using 1 2 3
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop2[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
-  shows "((v:== E);; 
-          (v:== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v:== (trop G (&v) exp1 exp2))) =
-         (v:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))" 
-  using 1 2 3
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop3[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
-  shows "((v:== E);;
-          (v:== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v:== (trop G exp3 exp4 (&v)))) =
-         (v:== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))" 
-  using 1 2 3 4 5
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop4[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
-  shows "((v:== E);; 
-         (v:== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v:== (trop G exp3 (&v) exp4))) =
-         (v:== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))" 
-  using 1 2 3 4 5
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
-
-lemma assign_cond_If_trop5[symbolic_exec_assign_trop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
-  shows "((v:== E);; 
-          (v:== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v:== (trop G (&v) exp3 exp4))) =
-         (v:== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))" 
-  using 1 2 3 4 5
-proof (rel_simp, transfer)
-  fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
-  have "Fa (Ea a) \<longrightarrow> (Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)) \<and> (\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a)))"
-    by presburger
-  then have "\<not> ((\<not> Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Fa (Ea a))) \<and> (Fa (Ea a) \<or> \<not> b = put\<^bsub>va\<^esub> a (Ga (Ea a)))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by fastforce
-  then show "(Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Fa (Ea a)) \<or> \<not> Fa (Ea a) \<and> b = put\<^bsub>va\<^esub> a (Ga (Ea a))) = (b = put\<^bsub>va\<^esub> a (Fa (Ea a) \<or> \<not> Fa (Ea a) \<and> Ga (Ea a)))"
-    by meson
-qed 
 
 end

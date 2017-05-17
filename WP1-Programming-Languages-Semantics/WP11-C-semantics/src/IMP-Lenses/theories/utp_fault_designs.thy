@@ -168,7 +168,7 @@ definition skip_c :: "('f,'\<alpha>) hrel_cp" ("SKIP")
 where [urel_defs]:"SKIP = Simpl (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C)"
 
 definition stuck_c :: "('f,'\<alpha>) hrel_cp" ("STUCK")
-where [urel_defs]: "STUCK = (\<not>$ok\<acute> \<or>  $abrupt\<acute> \<or> $fault\<acute> \<noteq>\<^sub>u \<guillemotleft>None\<guillemotright>)"
+where [urel_defs]: "STUCK = (\<not>$ok\<acute> \<or>  $fault\<acute> \<noteq>\<^sub>u \<guillemotleft>None\<guillemotright>)"
 
 definition assigns_c :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
 where [urel_defs]: "assigns_c \<sigma> = 

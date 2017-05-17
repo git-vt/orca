@@ -82,8 +82,8 @@ lemma try_not_throw_ignor_catch_hoare:
 
 lemma try_throw_zero':
   "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) catch \<langle>b\<rangle>\<^sub>C end) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
-  apply rel_simp apply transfer
-oops
+  by rel_auto blast+  
+
 lemma try_throw_zero'_hoare:
       "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
          try SKIP ;; i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;; THROW 
@@ -98,7 +98,7 @@ lemma "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C) catch SKIP end) =  \<lan
   by rel_auto blast + 
 
 lemma "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) catch SKIP end) = \<langle>a\<rangle>\<^sub>C"
-  by rel_blast  
+  by rel_auto blast +
 
 subsection {*block feature*}
 
@@ -132,12 +132,12 @@ lemma   block_c_test2:
           bob 
             INIT (j \<Midarrow> 5;; i \<Midarrow> 5) 
             BODY (II)
-            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) t)\<guillemotright> ;; 
-                                      j \<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) t)\<guillemotright>) 
+            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) t)\<guillemotright> ;; 
+                                      j \<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) t)\<guillemotright>) 
             RETURN  (\<lambda> (s, s') (t, t').  II)
           eob
          \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
-  using assms  unfolding lens_indep_def by rel_simp
+  unfolding lens_indep_def by rel_simp
 
 lemma  block_c_nested_test1:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
@@ -148,15 +148,15 @@ lemma  block_c_nested_test1:
               bob 
                 INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
                 BODY (II)
-                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright>) 
+                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright> ;; 
+                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>) 
                 RETURN  (\<lambda> (s, s') (t, t').  SKIP)
               eob
             RESTORE (\<lambda> (s, s') (t, t'). SKIP)
             RETURN  (\<lambda> (s, s') (t, t').  SKIP)
           eob
          \<lbrace>&j =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>D"
-  using assms  unfolding lens_indep_def by rel_simp
+  unfolding lens_indep_def by rel_simp
 
 lemma  block_c_nested_test2:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
@@ -167,16 +167,16 @@ lemma  block_c_nested_test2:
               bob 
                 INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
                 BODY (II)
-                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright>) 
+                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright> ;; 
+                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>) 
                 RETURN  (\<lambda> (s, s') (t, t').  SKIP)
               eob
-            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                        j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o rp_vars.more o des_vars.more) s)\<guillemotright>)
+            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
+                                        j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>)
             RETURN  (\<lambda> (s, s') (t, t').  SKIP)
           eob
          \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
-  using assms  by rel_simp
+    by rel_simp
 term "fault"
 term "SKIP"
 term "fault :== v"
