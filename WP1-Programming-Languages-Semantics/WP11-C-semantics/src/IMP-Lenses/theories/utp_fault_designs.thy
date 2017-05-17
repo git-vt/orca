@@ -197,7 +197,6 @@ definition rassume_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" (
 definition rassert_c :: "'\<alpha> upred \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
 [urel_defs]: "rassert_c c = (bif c then SKIP else \<bottom>\<^sub>D eif)"
 
-
 subsection{*Exceptions*}
 
 abbreviation catch_c :: "('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("try (_) catch /(_) end")

@@ -1124,7 +1124,6 @@ proof -
     by (metis H3_def Healthy_def')
   also have "... \<longleftrightarrow> P = (\<not> ((\<not> P) ;; true))"
     by (metis rdesign_pre)
-      thm seqr_true_lemma
   also have "... \<longleftrightarrow> P = (P ;; true)"
     by (simp add: seqr_true_lemma)
   finally show ?thesis .
