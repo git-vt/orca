@@ -589,7 +589,9 @@ lemma design_post_condr [simp]:
   by (rel_auto)
 
 subsection {* H1: No observation is allowed before initiation *}
-
+term "\<lambda>x . \<lambda>y. x (y x)"
+term "Fun.comp"
+term "P o P"
 lemma H1_idem:
   "H1 (H1 P) = H1(P)"
   by (pred_auto)

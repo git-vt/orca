@@ -24,7 +24,7 @@ subsection"Skip"
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-theorem design_skip_c_idem [simp]:
+lemma skip_c_idem [simp]:
   "(SKIP ;; SKIP) = SKIP"
   by (rel_auto)
 

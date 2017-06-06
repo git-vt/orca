@@ -1,4 +1,4 @@
-theory utp_fault_designs
+theory utp_fault_rea_designs
 imports  utp_reactive
 begin
 subsection {*Sequential C-program alphabet*}

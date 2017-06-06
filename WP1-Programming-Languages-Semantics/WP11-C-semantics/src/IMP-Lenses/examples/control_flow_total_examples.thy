@@ -6,8 +6,7 @@ begin
 text{*In this section we provide a set of examples on the verification
       of programs that uses control flow statements
       with Hoare logic for total correctness. 
-      The combination of 
-      relational algebra, ie. UTP, and lens algebra allows for a semantic based
+      The combination of relational algebra, ie. UTP, and lens algebra allows for a semantic based
       framework for the specification of programming languages and their features. It also
       allows a powerful proof tactics for the framework such as @{method rel_auto},
       @{method pred_auto}, etc.*}
@@ -18,19 +17,17 @@ text{*
          \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a hoare triple for total 
             correctness.
          \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
-           where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
+           where @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
          \<^item> Lens properties such as @{term "weak_lens"}, @{term "mwb_lens"}, @{term "wb_lens"},
            @{term "vwb_lens"}, @{term "ief_lens"}, @{term "bij_lens"}
            are used to semantically express what does not change in the state space. For example
-           applying the property @{term "bij_lens"} of variable @{term "x"} gives the term
-           @{term "bij_lens x"}. Informally this means that any change on x will appear on all
-           other variables in the state space.The property @{term "ief_lens"} is just the opposite
-           of @{term "bij_lens"}.
-         \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for 
-            @{term "unrest_relation x P"}:
+           applying the property @{term "id_lens"}. Informally this means that any change on x will
+           appear on all  other variables in the state space.The property @{term "ief_lens"} is 
+           just the opposite of @{term "id_lens"}.
+         \<^item> The formal notation @{term "x \<sharp>\<sharp> P"} is a syntactic sugar for @{term "unrest_relation x P"}:
            informally it is used to semantically express that the variable x does not occur
            in the program P.
-         \<^item> The formal notation @{term "x :== v"} is a syntactic sugar for @{term "assigns_r [x \<mapsto>\<^sub>s v]"}:
+         \<^item> The formal notation @{term "x \<Midarrow> v"} is a syntactic sugar for @{term "assigns_c [x \<mapsto>\<^sub>s v]"}:
            informally it represent an assignment of a value v to a variable x. 
          \<^item> The formal notation @{term "&x"} is a syntactic sugar for @{term "\<langle>id\<rangle>\<^sub>s x"}: 
            informally it represent the content of a variable x.
@@ -124,7 +121,7 @@ lemma   block_c_test1:
 
 text {*block_test2 is similar to  block_test1 but the var i is a global var.
        In that case we can use restore function and the state t to set the variable to its
-       latest value, ie.,its value in in the scope t,probably modified inside the scope of the block.*}
+       latest value, ie.,its value in the scope t,probably modified inside the scope of the block.*}
 
 lemma   block_c_test2:
   shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
