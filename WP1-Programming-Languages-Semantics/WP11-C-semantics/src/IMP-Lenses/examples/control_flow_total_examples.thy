@@ -106,73 +106,79 @@ text {*block_test1 is a scenario. The scenario represent a program where i is na
        In that case we can use a restore function on the state s to set the variable to its
        previous value ie.,its value in the scope s, and this before we exit the block.*}
 
+text \<open>The normal restore/return functions were verbose, so it's good to have an abbreviation to use
+      to reduce duplicated code. Unfortunately, this does cause some parsing ambiguity, but Isabelle
+      resolves that fairly well. It may reduce performance slightly, though.\<close>
+abbreviation cp_des where
+  "cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_vars.more \<circ> des_vars.more) s)\<guillemotright>"
+
 lemma   block_c_test1:
-  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
-          bob 
-            INIT (j \<Midarrow> \<guillemotleft>5\<guillemotright>;; i\<Midarrow> \<guillemotleft>5\<guillemotright>) 
-            BODY (II)
-            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                         j\<Midarrow> \<guillemotleft>\<lbrakk>\<langle>id\<rangle>\<^sub>s j\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright>) 
-            RETURN  (\<lambda> (s, s') (t, t').  II)
+  shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
+          bob
+            INIT j \<Midarrow> 5;; i \<Midarrow> 5
+            BODY II
+            RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                                j \<Midarrow> cp_des &j s
+            RETURN  \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
-  using assms  by rel_simp
+         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>D"
+  using assms by rel_simp
 
 text {*block_test2 is similar to  block_test1 but the var i is a global var.
        In that case we can use restore function and the state t to set the variable to its
        latest value, ie.,its value in the scope t,probably modified inside the scope of the block.*}
 
 lemma   block_c_test2:
-  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;; 
-          bob 
-            INIT (j \<Midarrow> 5;; i \<Midarrow> 5) 
-            BODY (II)
-            RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) t)\<guillemotright> ;; 
-                                      j \<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) t)\<guillemotright>) 
-            RETURN  (\<lambda> (s, s') (t, t').  II)
+  shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace>
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
+          bob
+            INIT j \<Midarrow> 5;; i \<Midarrow> 5
+            BODY II
+            RESTORE \<lambda> _ (t, _). i \<Midarrow> cp_des &i t;;
+                                j \<Midarrow> cp_des &j t
+            RETURN  \<lambda> _ _. II
           eob
          \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
   unfolding lens_indep_def by rel_simp
 
 lemma  block_c_nested_test1:
-  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;;
+  shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace>
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
           bob
-            INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>)  
+            INIT j \<Midarrow> 5;; i \<Midarrow> 5
             BODY
-              bob 
-                INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
-                BODY (II)
-                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright> ;; 
-                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>) 
-                RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+              bob
+                INIT j \<Midarrow> 5;; i \<Midarrow> 5
+                BODY II
+                RESTORE \<lambda> (s, _) _.  i \<Midarrow> cp_des &i s;;
+                                     j \<Midarrow> cp_des &j s
+                RETURN  \<lambda> _ _. II
               eob
-            RESTORE (\<lambda> (s, s') (t, t'). SKIP)
-            RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+            RESTORE \<lambda> _ _. II
+            RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>\<^sub>D"
+         \<lbrace>&j =\<^sub>u 5 \<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
   unfolding lens_indep_def by rel_simp
 
 lemma  block_c_nested_test2:
-  shows "\<lbrace> \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> ;;
+  shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace>
+          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
           bob
-            INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>)  
+            INIT j \<Midarrow> 5;; i \<Midarrow> 5
             BODY
-              bob 
-                INIT (j \<Midarrow> \<guillemotleft>5::int\<guillemotright>;; i\<Midarrow> \<guillemotleft>5::int\<guillemotright>) 
-                BODY (II)
-                RESTORE (\<lambda> (s, s') (t, t').  i\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright> ;; 
-                                             j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>) 
-                RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+              bob
+                INIT j \<Midarrow> 5;; i \<Midarrow> 5
+                BODY II
+                RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                                    j \<Midarrow> cp_des &j s
+                RETURN \<lambda> _ _. II
               eob
-            RESTORE (\<lambda> (s, s') (t, t'). i\<Midarrow> \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e ((cp_vars.more o des_vars.more) s)\<guillemotright> ;; 
-                                        j\<Midarrow> \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e ((cp_vars.more o  des_vars.more) s)\<guillemotright>)
-            RETURN  (\<lambda> (s, s') (t, t').  SKIP)
+            RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                                j \<Midarrow> cp_des &j s
+            RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
+         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>D"
     by rel_simp
 term "fault"
 term "SKIP"
