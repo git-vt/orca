@@ -120,7 +120,7 @@ lemma   block_c_test1:
             BODY II
             RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
                                 j \<Midarrow> cp_des &j s
-            RETURN  \<lambda> _ _. II
+            RETURN \<lambda> _ _. II
           eob
          \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>D"
   using assms by rel_simp
@@ -137,7 +137,7 @@ lemma   block_c_test2:
             BODY II
             RESTORE \<lambda> _ (t, _). i \<Midarrow> cp_des &i t;;
                                 j \<Midarrow> cp_des &j t
-            RETURN  \<lambda> _ _. II
+            RETURN \<lambda> _ _. II
           eob
          \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
   unfolding lens_indep_def by rel_simp
@@ -151,9 +151,9 @@ lemma  block_c_nested_test1:
               bob
                 INIT j \<Midarrow> 5;; i \<Midarrow> 5
                 BODY II
-                RESTORE \<lambda> (s, _) _.  i \<Midarrow> cp_des &i s;;
-                                     j \<Midarrow> cp_des &j s
-                RETURN  \<lambda> _ _. II
+                RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                                    j \<Midarrow> cp_des &j s
+                RETURN \<lambda> _ _. II
               eob
             RESTORE \<lambda> _ _. II
             RETURN \<lambda> _ _. II
