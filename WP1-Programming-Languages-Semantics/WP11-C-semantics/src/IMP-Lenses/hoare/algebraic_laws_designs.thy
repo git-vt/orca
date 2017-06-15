@@ -5,19 +5,20 @@ imports "../theories/utp_fault_designs"
 
 begin
 named_theorems symbolic_exec_cp
+
 subsection"Throw"
 
 lemma throw_left_zero[simp]: 
   "(THROW ;; Simpl P) = THROW" 
-  by rel_auto
+  by rel_auto blast+
 
 lemma throw_right_zero_skip[simp]: 
   "(SKIP ;; THROW) = THROW " 
-  by rel_auto
+  by rel_auto blast+
 
 lemma throw_idem [simp]: 
   "(THROW ;; THROW) = THROW " 
-  by rel_auto
+  by rel_auto blast+
 
 subsection"Skip"
 
@@ -26,22 +27,22 @@ text{*In this section we introduce the algebraic laws of programming related to 
 
 lemma skip_c_idem [simp]:
   "(SKIP ;; SKIP) = SKIP"
-  by (rel_auto)
+  by rel_auto blast+
 
 lemma skip_c_left_unit[simp]: 
   "(SKIP ;;  Simpl P) =  Simpl P"
-  by rel_auto
+  by rel_auto (blast, metis) 
 
 lemma skip_c_right_unit[simp]: 
   "(Simpl P  ;;  SKIP) =  Simpl P"  
-  by rel_auto (metis option.exhaust_sel)
+  by rel_auto (metis option.exhaust_sel)+
 
 lemma skip_c_lift_alpha_eq:
   "\<lceil>II\<rceil>\<^sub>C = ($\<Sigma>\<^sub>C\<acute> =\<^sub>u $\<Sigma>\<^sub>C)"
   by rel_auto
 
 lemma skip_c_alpha_eq:
-  "SKIP = Simpl (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> ($\<Sigma>\<^sub>C\<acute> =\<^sub>u $\<Sigma>\<^sub>C))"
+  "SKIP = Simpl (\<not>$abrupt\<acute> \<and> \<not>$stuck\<acute> \<and> \<not>$fault\<acute> \<and>$fault_tr\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> ($\<Sigma>\<^sub>C\<acute> =\<^sub>u $\<Sigma>\<^sub>C))"
   by (simp add: skip_c_lift_alpha_eq skip_c_def)
 
 lemma pre_skip_c_post: 
@@ -57,7 +58,7 @@ lemma assigns_c_id [simp]: "\<langle>id\<rangle>\<^sub>C = SKIP"
   by (rel_auto)
 
 lemma assign_c_alt_def [symbolic_exec_cp]: 
-  "\<langle>\<sigma>\<rangle>\<^sub>C = Simpl (\<not>$abrupt\<acute> \<and> $fault\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>C)"
+  "\<langle>\<sigma>\<rangle>\<^sub>C = Simpl (\<not>$abrupt\<acute> \<and>\<not>$stuck\<acute> \<and> \<not>$fault\<acute> \<and>$fault_tr\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>C)"
   by rel_auto
 
 subsection {*Assignment Laws*}
@@ -77,7 +78,7 @@ lemma usubst_c_lift_cancel[usubst,symbolic_exec_cp]:
   by  rel_auto
 
 lemma assigns_c_comp: "(\<langle>f\<rangle>\<^sub>C ;; \<langle>g\<rangle>\<^sub>C) = \<langle>g \<circ> f\<rangle>\<^sub>C"
-  by rel_auto
+  by rel_auto blast+
 
 lemma assign_test[symbolic_exec_cp]:
   assumes 1:"mwb_lens x" 
@@ -87,11 +88,11 @@ lemma assign_test[symbolic_exec_cp]:
 
 lemma assign_c_left_comp: 
   "(\<langle>\<sigma>\<rangle>\<^sub>C ;; Simpl(\<lceil>P\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<rceil>\<^sub>C)) = Simpl(\<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> P\<rceil>\<^sub>C \<turnstile> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> Q\<rceil>\<^sub>C)"
-  by rel_auto
+  by rel_auto blast+
 
 lemma assign_c_left_comp_subst[symbolic_exec_cp]: 
   "(x \<Midarrow> u ;; Simpl(\<lceil>P\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<rceil>\<^sub>C)) = Simpl(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>C \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>C)" 
-  by rel_auto 
+  by rel_auto blast+
 
 lemma assign_c_twice[symbolic_exec_cp]: 
   assumes "mwb_lens x" and  "x \<sharp> f" 
@@ -111,77 +112,81 @@ proof -
 qed
 
 lemma assign_c_cond_c[symbolic_exec_cp]:
-  fixes x :: "('a, '\<alpha>) uvar"
+   fixes x :: "('a, '\<alpha>) uvar"
   shows "(x \<Midarrow> e ;; (bif b then Simpl P else Simpl Q eif)) = 
          (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e ;; Simpl P)  else (x \<Midarrow> e ;; Simpl Q) eif)"
-  by rel_auto (metis option.distinct(1))
+   
+  (*apply rel_auto  apply (metis option.distinct(1)*)
+oops
+
 
 lemma assign_c_uop1[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (uop F (&v))) = (v \<Midarrow> (uop F e1))"
-  using 1
-  by rel_auto (fastforce)
+  by (simp add: assigns_c_comp assms subst_uop subst_upd_comp subst_var 
+                usubst_lookup_upd usubst_upd_idem)
+
 
 lemma assign_c_bop1[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow>(bop bp (&v) e2)) = (v \<Midarrow> (bop bp e1 e2))"
   using 1 2  
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_bop2[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (bop bp e2 (&v))) = (v \<Midarrow> (bop bp e2 e1))"
   using 1 2  
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_trop1[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp (&v) e2 e3)) = 
          (v \<Midarrow> (trop tp e1 e2 e3))"
   using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_trop2[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp e2 (&v) e3)) = 
          (v \<Midarrow> (trop tp e2 e1 e3))"
   using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_trop3[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp e2 e3 (&v))) = 
          (v \<Midarrow> (trop tp e2 e3 e1))"
   using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_qtop1[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp (&v) e2 e3 e4)) = 
          (v \<Midarrow> (qtop tp e1 e2 e3 e4))"
   using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_qtop2[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 (&v) e3 e4)) = 
          (v \<Midarrow> (qtop tp e2 e1 e3 e4))"
   using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_qtop3[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 e3 (&v) e4)) = 
          (v \<Midarrow> (qtop tp e2 e3 e1 e4))"
   using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_qtop4[symbolic_exec_cp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 e3 e4 (&v))) = 
          (v \<Midarrow> (qtop tp e2 e3 e4 e1))"
   using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
 
 lemma assign_c_cond_seqr_dist[symbolic_exec_cp]:
   "(bif (b\<lbrakk>e/v\<rbrakk>) then (v \<Midarrow> e ;; Simpl P) else (v \<Midarrow> e ;; Simpl Q) eif) = 
@@ -204,7 +209,7 @@ lemma assign_c_simultaneous:
 lemma assign_c_seq:
   assumes  1: "vwb_lens var2"
   shows"(var1 \<Midarrow> exp);; (var2 \<Midarrow> &var2) = (var1 \<Midarrow> exp)"
-  using 1 by rel_auto
+  using 1 by rel_auto (blast, metis)
 
 lemma assign_c_cond_c_uop[symbolic_exec_cp]:
   assumes 1: "weak_lens v"
@@ -395,7 +400,7 @@ theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet>
 subsection {*assume laws*}
 
 lemma assume_twice: "(b\<^sup>\<top>\<^sup>C ;; c\<^sup>\<top>\<^sup>C) = (b \<and> c)\<^sup>\<top>\<^sup>C"
-  by rel_auto  (metis not_None_eq)
+  by (rel_auto) (blast, blast, blast, metis not_None_eq)
 
 
 

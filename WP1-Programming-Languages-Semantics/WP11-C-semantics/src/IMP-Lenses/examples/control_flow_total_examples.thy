@@ -2,7 +2,7 @@ section \<open>Verification Condition Testing\<close>
 
 theory control_flow_total_examples
   imports "../hoare/utp_hoare_total"
-begin
+begin 
 text{*In this section we provide a set of examples on the verification
       of programs that uses control flow statements
       with Hoare logic for total correctness. 
@@ -79,7 +79,7 @@ lemma try_not_throw_ignor_catch_hoare:
 
 lemma try_throw_zero':
   "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) catch \<langle>b\<rangle>\<^sub>C end) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
-  by rel_auto blast+  
+  by rel_auto blast +  
 
 lemma try_throw_zero'_hoare:
       "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
