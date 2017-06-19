@@ -1,4 +1,4 @@
-theory utp_abrupt_designs_aux
+theory utp_abrupt_designs
 imports   "../utp/utp" utp_designs
 begin
 subsection {*Sequential C-program alphabet*}
@@ -96,9 +96,7 @@ translations
             (CONST conj_upred (CONST not_upred (CONST utp_expr.var (CONST ivar CONST abrupt)))
                               (CONST eq_upred  (CONST utp_expr.var (CONST ivar CONST abrupt_aux))
                                                (CONST utp_expr.lit (CONST None))))"
-  "\<bottom>\<^sub>A\<^sub>B\<^sub>R" => "true
-            (*(CONST eq_upred (CONST utp_expr.var (CONST ivar CONST abrupt_aux))
-                            (CONST utp_expr.lit (CONST None)))*)"
+  "\<bottom>\<^sub>A\<^sub>B\<^sub>R" => "true"
 
 lemma "\<top>\<^sub>A\<^sub>B\<^sub>R = ((\<not> $ok) \<and> (\<not> $abrupt) \<and> ($abrupt_aux =\<^sub>u \<guillemotleft>None\<guillemotright>))"
   by auto
@@ -154,11 +152,11 @@ text{*We introduce the known control-flow statements for C. Our semantics is res
     *}
 
 abbreviation
- "Simpl P \<equiv> C3_abr(true \<turnstile> (P))"
+ "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
 
 definition skip_abr :: "('a, '\<alpha>) hrel_cpa" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]:
-  "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
 
 definition assigns_c :: " '\<alpha> usubst \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
@@ -168,37 +166,37 @@ subsection{*THROW*}
 
 definition throw_abr :: "('a, '\<alpha>) hrel_cpa" ("THROW\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl ($abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R ($abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
 
 subsection{*Conditional*}
 
-abbreviation If_c :: "'\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")where
-  "If_c b P Q \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
+abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")where
+  "bif b then P else Q eif \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
 
 subsection{*GUARD*}
 
-abbreviation guard_c :: "'f \<Rightarrow> '\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa" 
-where "guard_c f b \<equiv> (bif b then SKIP\<^sub>A\<^sub>B\<^sub>R else (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) eif)"
+abbreviation guard_abr :: "'f \<Rightarrow> '\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa" 
+where "guard_abr f b \<equiv> (bif b then SKIP\<^sub>A\<^sub>B\<^sub>R else (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) eif)"
 
 subsection{*assert and assume*}
 
-definition rassume_c :: "'\<alpha> upred \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
-[urel_defs]: "rassume_c c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<top>\<^sub>A\<^sub>B\<^sub>R eif)"
+definition rassume_abr :: "'\<alpha> upred \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
+[urel_defs]: "rassume_abr c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<top>\<^sub>A\<^sub>B\<^sub>R eif)"
 
-definition rassert_c :: "'\<alpha> upred \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
-[urel_defs]: "rassert_c c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<bottom>\<^sub>A\<^sub>B\<^sub>R eif)"
+definition rassert_abr :: "'\<alpha> upred \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
+[urel_defs]: "rassert_abr c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<bottom>\<^sub>A\<^sub>B\<^sub>R eif)"
 
 subsection{*Exceptions*}
 
-abbreviation catch_c :: "('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("try (_) catch /(_) end")
-where "try P catch Q end \<equiv> (P ;; ((abrupt:== (\<not> &abrupt) ;;Q) \<triangleleft> $abrupt \<triangleright> II))"
+abbreviation catch_abr :: "('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("try (_) catch /(_) end")
+where "try P catch Q end \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P ;; ((abrupt:== (\<not> &abrupt) ;;Q) \<triangleleft> $abrupt \<triangleright> II))"
 
 subsection{*Scoping*}
 
-definition block_c ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
+definition block_abr ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
   "bob INIT init BODY body RESTORE restore RETURN return eob= 
-    (Abs_uexpr (\<lambda>(s, s'). 
+    Simpl\<^sub>A\<^sub>B\<^sub>R (Abs_uexpr (\<lambda>(s, s'). 
      \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                        \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II;; 
          restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s')))" 
