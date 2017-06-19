@@ -1,7 +1,7 @@
 
 section "Algebraic laws for abrupt designs"
 theory algebraic_laws_abrupt
-imports "../theories/utp_abrupt_designs_aux"
+imports algebraic_laws_abrupt_aux
 
 begin
 named_theorems symbolic_exec_cp
@@ -353,9 +353,6 @@ proof -
   finally show ?thesis .
 qed
 
-lemma design_top_abr:
-  "Simpl\<^sub>A\<^sub>B\<^sub>R (P) \<sqsubseteq> \<top>\<^sub>A\<^sub>B\<^sub>R"
-  by (rel_auto)
 
 (*lemma while_true:
   shows "(while true do P od) = \<top>\<^sub>A\<^sub>B\<^sub>R"
@@ -406,17 +403,21 @@ theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet>
 subsection {*assume laws*}
 
 lemma assume_twice: "(b\<^sup>\<top>\<^sup>C ;; c\<^sup>\<top>\<^sup>C) = (b \<and> c)\<^sup>\<top>\<^sup>C"
-  by (rel_auto) 
-
-lemma assert_twice: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\<^sub>C) = (b \<and> c)\<^sub>\<bottom>\<^sub>C" 
-  apply (simp add: rassert_abr_def C3_abr_def cond_def)
   apply pred_simp 
   apply auto
   apply (rel_simp)+
   apply blast
   apply (rel_simp)+
   apply (metis (full_types) option.exhaust)
-  apply (rel_blast+)
+done
+
+lemma assert_twice: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\<^sub>C) = (b \<and> c)\<^sub>\<bottom>\<^sub>C" 
+  apply pred_simp 
+  apply auto
+  apply (rel_simp)+
+  apply blast
+  apply (rel_simp)+
+  apply (metis (full_types) option.exhaust)
 done
 
 
