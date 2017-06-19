@@ -79,9 +79,13 @@ lemma RD1_mono: "P \<sqsubseteq> Q \<Longrightarrow> RD1(P) \<sqsubseteq> RD1(Q)
 
 lemma RD1_Monotonic: "Monotonic RD1"
   using Monotonic_def RD1_mono by blast
-
+  
 lemma RD1_Continuous: "Continuous RD1"
-  by (rel_auto)
+  unfolding Continuous_def SUP_def apply rel_simp
+  unfolding  SUP_def  
+  apply transfer apply auto 
+done
+
 
 lemma RD2_idem: "RD2(RD2(P)) = RD2(P)"
   by (simp add: H2_idem RD2_def)
@@ -96,7 +100,21 @@ lemma RD2_Monotonic: "Monotonic RD2"
   using Monotonic_def RD2_mono by blast
 
 lemma RD2_Continuous: "Continuous RD2"
-  by (rel_auto)
+  apply (rel_auto)
+  unfolding  SUP_def apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force 
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer apply force
+  apply rel_simp
+  unfolding  SUP_def INF_def
+  apply transfer 
+  apply rel_simp
+   unfolding  SUP_def INF_def
+  apply transfer apply force
+done
+
 
 lemma RD1_RD2_commute: "RD1(RD2(P)) = RD2(RD1(P))"
   by (rel_auto)
@@ -109,7 +127,7 @@ lemma RD1_R2c_commute: "RD1(R2c(P)) = R2c(RD1(P))"
 
 lemma RD1_via_R1: "R1(H1(P)) = RD1(R1(P))"
   by (rel_auto)
-    
+     
 definition skip_rea :: "('t::ordered_cancel_monoid_diff, '\<alpha>) hrel_rp" ("II\<^sub>r") where
 skip_rea_def [urel_defs]: "II\<^sub>r = (II \<or> (\<not> $ok \<and> $tr \<le>\<^sub>u $tr\<acute>))"
 
@@ -133,7 +151,11 @@ lemma R3c_Monotonic: "Monotonic R3c"
   by (simp add: Monotonic_def R3c_mono)
 
 lemma R3c_Continuous: "Continuous R3c"
-  by (rel_auto)
+  unfolding Continuous_def SUP_def
+  apply rel_simp+ 
+  unfolding SUP_def  
+  apply transfer apply auto
+done
 
 lemma R3h_idem: "R3h(R3h(P)) = R3h(P)"
   by (rel_auto)

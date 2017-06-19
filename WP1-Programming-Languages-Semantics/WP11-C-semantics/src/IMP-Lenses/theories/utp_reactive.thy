@@ -115,12 +115,8 @@ lemma R1_Monotonic: "Monotonic R1"
   by (simp add: Monotonic_def R1_mono)
 
 lemma R1_Continuous: "Continuous R1"
-  apply (rel_auto)
-  unfolding SUP_def 
-  apply transfer apply auto 
-  unfolding SUP_def 
-  apply transfer apply auto 
-  unfolding SUP_def 
+  unfolding Continuous_def SUP_def apply rel_simp
+  unfolding  SUP_def  
   apply transfer apply auto 
 done
 
@@ -282,22 +278,9 @@ lemma R2_mono: "P \<sqsubseteq> Q \<Longrightarrow> R2(P) \<sqsubseteq> R2(Q)"
   by (pred_auto)
 
 lemma R2c_Continuous: "Continuous R2c"
-  apply (rel_auto)
-  unfolding  SUP_def apply rel_simp
-  unfolding  SUP_def INF_def
-  apply transfer apply force 
-  apply rel_simp
-  unfolding  SUP_def INF_def
-  apply transfer apply force
-  apply rel_simp
-  unfolding  SUP_def INF_def
-  apply transfer apply force
-  apply rel_simp
-  unfolding  SUP_def INF_def
-  apply transfer apply force
-  apply rel_simp
-  unfolding  SUP_def INF_def
-  apply transfer apply force
+  unfolding Continuous_def SUP_def apply rel_simp
+  unfolding  SUP_def  
+  apply transfer apply auto 
 done
 
 lemma R2c_lit: "R2c(\<guillemotleft>x\<guillemotright>) = \<guillemotleft>x\<guillemotright>"
@@ -894,7 +877,7 @@ definition [upred_defs]: "skip\<^sub>m = ($0-\<Sigma>\<acute> =\<^sub>u $\<Sigma
 
 text {* @{term "skip\<^sub>m"} is the system which does nothing to the variables in both predicates. A merge
   predicate which is R3 must yield @{term II} when composed with it. *}
-
+  
 lemma R3_par_by_merge:
   assumes
     "P is R3" "Q is R3" "(skip\<^sub>m ;; M) = II"

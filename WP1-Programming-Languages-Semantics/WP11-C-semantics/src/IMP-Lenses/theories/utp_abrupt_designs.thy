@@ -173,11 +173,6 @@ subsection{*Conditional*}
 abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")where
   "bif b then P else Q eif \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
 
-subsection{*GUARD*}
-
-abbreviation guard_abr :: "'f \<Rightarrow> '\<alpha> cond \<Rightarrow> ('a, '\<alpha>) hrel_cpa" 
-where "guard_abr f b \<equiv> (bif b then SKIP\<^sub>A\<^sub>B\<^sub>R else (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) eif)"
-
 subsection{*assert and assume*}
 
 definition rassume_abr :: "'\<alpha> upred \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
