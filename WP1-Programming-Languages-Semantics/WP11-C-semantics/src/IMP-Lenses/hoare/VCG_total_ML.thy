@@ -135,8 +135,8 @@ lemma increment_tactic:
   apply (tactic \<open>vcg_rule_wc_tac @{context} 1\<close>)
   apply rel_auto
 oops
-term "II"
 ML \<open>
+@{term "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>D"};
 @{term "while b invr i do c od"};
 pprint_cterm @{context} @{cterm "\<lbrace>p\<rbrace>C;;c\<^sup>\<top>\<^sup>C\<lbrace>q\<rbrace>\<^sub>D"}
 \<close>
