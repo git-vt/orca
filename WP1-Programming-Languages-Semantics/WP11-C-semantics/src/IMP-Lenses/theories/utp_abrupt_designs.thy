@@ -6,9 +6,9 @@ subsection {*Sequential C-program alphabet*}
 text {*In order to record the interaction of a sequential C program with its execution environment, 
        we extend the alphabet of UTP by two additional global state variables:
       \begin{itemize}   
-       \<^item> fault: a variable of type @{typ "'f option"} used to record a fault of a given guard is 
-         not satisfied.
-       \<^item> abrupt: a boolean variable used to
+       \<^item> abrupt_aux: a variable of type @{typ "'a option"} used to record the reason of the abrupt.
+         For example a reason for abrupt in a C program can be: break, continue, return.
+       \<^item> abrupt: a boolean variable used to specify if the program is in an abrupt state or not.
      \end{itemize}
 
 *}
@@ -138,6 +138,9 @@ text {*Programs in fault or abrupt or stuck state do not progress*}
 definition C3_abr_def [upred_defs]: 
   "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<and> $abrupt_aux =\<^sub>u \<guillemotleft>None\<guillemotright> \<triangleright> II)"
 
+abbreviation
+ "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
+
 subsection{*Control flow statements*}
 
 text{*We introduce the known control-flow statements for C. Our semantics is restricted
@@ -151,8 +154,6 @@ text{*We introduce the known control-flow statements for C. Our semantics is res
     Thus it capture Simpl semantics.
     *}
 
-abbreviation
- "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
 
 definition skip_abr :: "('a, '\<alpha>) hrel_cpa" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]:
@@ -160,7 +161,7 @@ where [urel_defs]:
 
 definition assigns_c :: " '\<alpha> usubst \<Rightarrow> ('a, '\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "assigns_c \<sigma> =  C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  "assigns_c \<sigma> = Simpl\<^sub>A\<^sub>B\<^sub>R(\<not>$abrupt\<acute> \<and> $abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
 
 subsection{*THROW*}
 

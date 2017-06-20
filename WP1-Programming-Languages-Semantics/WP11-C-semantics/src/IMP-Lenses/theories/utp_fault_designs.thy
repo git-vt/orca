@@ -1,26 +1,21 @@
 theory utp_fault_designs
-imports   "../utp/utp" utp_designs
+imports   "../hoare/algebraic_laws_abrupt"
 begin
 subsection {*Sequential C-program alphabet*}
 
 text {*In order to record the interaction of a sequential C program with its execution environment, 
        we extend the alphabet of UTP by two additional global state variables:
       \begin{itemize}   
-       \<^item> fault: a variable of type @{typ "'f option"} used to record a fault of a given guard is 
-         not satisfied.
-       \<^item> abrupt: a boolean variable used to
+       \<^item> fault_tr: a variable of type @{typ "'f list"} used to record a fault of from a given guard.
+       \<^item> fault: a boolean variable used to
      \end{itemize}
-
 *}
 
-alphabet 'f cp_vars = des_vars +
-  abrupt:: bool
+alphabet 'f cp_flt = "'a cp_abr" +
   fault :: bool
-  fault_tr :: "'f option"
-  stuck :: bool
-  (*wait :: bool*)
+  fault_tr :: "'f list"
 
-declare cp_vars.splits [alpha_splits]
+declare cp_flt.splits [alpha_splits]
 
 subsubsection {*Alphabet proofs*}
 text {*
@@ -33,130 +28,111 @@ text {*
   alphabets.
 *}
 
-interpretation cp_vars:
-  lens_interp "\<lambda> (ok, r) . (ok, abrupt\<^sub>v r, fault\<^sub>v r, fault_tr\<^sub>v r, stuck\<^sub>v r, more r)"
+interpretation cp_flt:
+  lens_interp "\<lambda> (ok, abrupt, abrupt_aux, r). 
+                 (ok, abrupt, abrupt_aux, fault\<^sub>v r, fault_tr\<^sub>v r, more r)"
 apply (unfold_locales)
 apply (rule injI)
 apply (clarsimp)
 done
 
-interpretation cp_vars_rel: lens_interp "\<lambda>(ok, ok', r, r').
-  (ok, ok', abrupt\<^sub>v r, abrupt\<^sub>v r', fault\<^sub>v r, fault\<^sub>v r', fault_tr\<^sub>v r, fault_tr\<^sub>v r', stuck\<^sub>v r, 
-   stuck\<^sub>v r',more r, more r')"
+interpretation cp_flt_rel: 
+  lens_interp "\<lambda>(ok, ok', abrupt, abrupt', abrupt_aux, abrupt_aux', r, r').
+  (ok, ok', abrupt, abrupt', abrupt_aux, abrupt_aux', fault\<^sub>v r, fault\<^sub>v r', fault_tr\<^sub>v r, fault_tr\<^sub>v r', more r, more r')"
 apply (unfold_locales)
 apply (rule injI)
 apply (clarsimp)
 done
-
 
 subsubsection {*Type lifting*}
 
-type_synonym ('f, '\<alpha>) cp = "('f, '\<alpha>) cp_vars_scheme des"
-type_synonym ('f,'\<alpha>,'\<beta>) rel_cp  = "(('f,'\<alpha>) cp, ('f,'\<beta>) cp) rel"
-type_synonym ('f,'\<alpha>) hrel_cp  = "(('f,'\<alpha>) cp) hrel"
+type_synonym ('f, 'a, '\<alpha>) cpf = "('a, ('f, '\<alpha>) cp_flt_scheme) cpa"
+type_synonym ('f,'a,'\<alpha>,'\<beta>) rel_cpf  = "(('f,'a,'\<alpha>) cpf, ('f,'a,'\<beta>) cpf) rel"
+type_synonym ('f,'a,'\<alpha>) hrel_cp  = "(('f,'a,'\<alpha>) cpf) hrel"
 
 subsubsection {*Syntactic type setup*}
 
 translations
-  (type) "('f,'\<alpha>) cp" <= (type) "('f, '\<alpha>) cp_vars_scheme des"
-  (type) "('f,'\<alpha>) cp" <= (type) "('f, '\<alpha>) cp_vars_ext des"
-  (type) "('f,'\<alpha>,'\<beta>) rel_cp" <= (type) "(('f,'\<alpha>) cp, (_,'\<beta>) cp) rel"
+  (type) "('f, 'a, '\<alpha>) cpf" <= (type) "('a, ('f, '\<alpha>) cp_flt_scheme) cpa"
+  (type) "('f, 'a, '\<alpha>) cpf" <= (type) "('a, ('f, '\<alpha>) cp_flt_ext) cpa"
+  (type) "('f,'a,'\<alpha>,'\<beta>) rel_cpf" <= (type) "(('f,'a,'\<alpha>) cpf, (_,_,'\<beta>) cpf) rel"
 
-notation cp_vars_child_lens\<^sub>a ("\<Sigma>\<^sub>c")
-notation cp_vars_child_lens ("\<Sigma>\<^sub>C")
+notation cp_flt_child_lens\<^sub>a ("\<Sigma>\<^sub>f\<^sub>l\<^sub>t")
+notation cp_flt_child_lens ("\<Sigma>\<^sub>F\<^sub>L\<^sub>T")
 
 syntax
-  "_svid_st_alpha"  :: "svid" ("\<Sigma>\<^sub>C")
-  "_svid_st_a"  :: "svid" ("\<Sigma>\<^sub>c")
+  "_svid_st_alpha"  :: "svid" ("\<Sigma>\<^sub>F\<^sub>L\<^sub>T")
+  "_svid_st_a"  :: "svid" ("\<Sigma>\<^sub>f\<^sub>l\<^sub>t")
 translations
-  "_svid_st_alpha" => "CONST cp_vars_child_lens"
-   "_svid_st_a" => "CONST cp_vars_child_lens\<^sub>a"
+  "_svid_st_alpha" => "CONST cp_flt_child_lens"
+   "_svid_st_a" => "CONST cp_flt_child_lens\<^sub>a"
 
 lemma cvars_ord [usubst]:
-  "$ok \<prec>\<^sub>v $ok\<acute>" "$abrupt \<prec>\<^sub>v $abrupt\<acute>" "$fault \<prec>\<^sub>v $fault\<acute>" "$fault_tr \<prec>\<^sub>v $fault_tr\<acute>" "$stuck \<prec>\<^sub>v $stuck\<acute>" 
-  "$ok \<prec>\<^sub>v $abrupt\<acute>" "$ok \<prec>\<^sub>v $abrupt" "$ok\<acute> \<prec>\<^sub>v $abrupt\<acute>" "$ok\<acute> \<prec>\<^sub>v $abrupt" 
+  "$ok \<prec>\<^sub>v $ok\<acute>" "$abrupt \<prec>\<^sub>v $abrupt\<acute>" "$abrupt_aux \<prec>\<^sub>v $abrupt_aux\<acute>" "$fault \<prec>\<^sub>v $fault\<acute>" "$fault_tr \<prec>\<^sub>v $fault_tr\<acute>" "$stuck \<prec>\<^sub>v $stuck\<acute>" 
+  "$ok \<prec>\<^sub>v $abrupt\<acute>" "$ok \<prec>\<^sub>v $abrupt" "$ok\<acute> \<prec>\<^sub>v $abrupt\<acute>" "$ok\<acute> \<prec>\<^sub>v $abrupt"
+  "$ok \<prec>\<^sub>v $abrupt_aux\<acute>" "$ok \<prec>\<^sub>v $abrupt_aux" "$ok\<acute> \<prec>\<^sub>v $abrupt_aux\<acute>" "$ok\<acute> \<prec>\<^sub>v $abrupt_aux" 
   "$ok \<prec>\<^sub>v $fault\<acute>" "$ok \<prec>\<^sub>v $fault" "$ok\<acute> \<prec>\<^sub>v $fault\<acute>" "$ok\<acute> \<prec>\<^sub>v $fault"
   "$ok \<prec>\<^sub>v $fault_tr\<acute>" "$ok \<prec>\<^sub>v $fault_tr" "$ok\<acute> \<prec>\<^sub>v $fault_tr\<acute>" "$ok\<acute> \<prec>\<^sub>v $fault_tr"
   "$ok \<prec>\<^sub>v $stuck\<acute>" "$ok \<prec>\<^sub>v $stuck" "$ok\<acute> \<prec>\<^sub>v $stuck\<acute>" "$ok\<acute> \<prec>\<^sub>v $stuck"
   "$abrupt \<prec>\<^sub>v $fault" "$abrupt \<prec>\<^sub>v $fault\<acute>" "$abrupt\<acute> \<prec>\<^sub>v $fault" "$abrupt\<acute> \<prec>\<^sub>v $fault\<acute>"
   "$abrupt \<prec>\<^sub>v $fault_tr" "$abrupt \<prec>\<^sub>v $fault_tr\<acute>" "$abrupt\<acute> \<prec>\<^sub>v $fault_tr" "$abrupt\<acute> \<prec>\<^sub>v $fault_tr\<acute>"
-  "$abrupt \<prec>\<^sub>v $stuck\<acute>" "$abrupt \<prec>\<^sub>v $stuck" "$abrupt\<acute> \<prec>\<^sub>v $stuck\<acute>" "$abrupt\<acute> \<prec>\<^sub>v $stuck"  
-  "$fault \<prec>\<^sub>v $stuck\<acute>" "$fault \<prec>\<^sub>v $stuck" "$fault\<acute> \<prec>\<^sub>v $stuck\<acute>" "$fault\<acute> \<prec>\<^sub>v $stuck"
-  "$fault_tr \<prec>\<^sub>v $stuck\<acute>" "$fault_tr \<prec>\<^sub>v $stuck" "$fault_tr\<acute> \<prec>\<^sub>v $stuck\<acute>" "$fault_tr\<acute> \<prec>\<^sub>v $stuck"
+  "$abrupt \<prec>\<^sub>v $abrupt_aux\<acute>" "$abrupt \<prec>\<^sub>v $abrupt_aux" "$abrupt\<acute> \<prec>\<^sub>v $abrupt_aux\<acute>" "$abrupt\<acute> \<prec>\<^sub>v $abrupt_aux"  
+  "$fault \<prec>\<^sub>v $abrupt_aux\<acute>" "$fault \<prec>\<^sub>v $abrupt_aux" "$fault\<acute> \<prec>\<^sub>v $abrupt_aux\<acute>" "$fault\<acute> \<prec>\<^sub>v $abrupt_aux"
+  "$fault_tr \<prec>\<^sub>v $abrupt_aux\<acute>" "$fault_tr \<prec>\<^sub>v $abrupt_aux" "$fault_tr\<acute> \<prec>\<^sub>v $abrupt_aux\<acute>" "$fault_tr\<acute> \<prec>\<^sub>v $abrupt_aux"
   by (simp_all add: var_name_ord_def)
 
-abbreviation abrupt_f::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
-where "abrupt_f R \<equiv> R\<lbrakk>false/$abrupt\<rbrakk>"
-
-abbreviation abrupt_t::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
-where "abrupt_t R \<equiv> R\<lbrakk>true/$abrupt\<rbrakk>"
-
-abbreviation fault_f::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
+abbreviation fault_f::"('f,'a,'\<alpha>,'\<beta>) rel_cpf \<Rightarrow> ('f,'a,'\<alpha>,'\<beta>) rel_cpf"
 where "fault_f R \<equiv> R\<lbrakk>false/$fault\<rbrakk>"
 
-abbreviation fault_t::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
+abbreviation fault_t::"('f,'a,'\<alpha>,'\<beta>) rel_cpf \<Rightarrow>('f,'a,'\<alpha>,'\<beta>) rel_cpf"
 where "fault_t R \<equiv> R\<lbrakk>true/$fault\<rbrakk>"
 
-abbreviation stuck_f::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
-where "stuck_f R \<equiv> R\<lbrakk>false/$stuck\<rbrakk>"
-
-abbreviation stuck_t::"('f, '\<alpha>, '\<beta>) rel_cp \<Rightarrow> ('f, '\<alpha>, '\<beta>) rel_cp"
-where "stuck_t R \<equiv> R\<lbrakk>true/$stuck\<rbrakk>"
-
 syntax
-  "_abrupt_f"  :: "logic \<Rightarrow> logic" ("_\<^sub>a\<^sub>f" [1000] 1000)
-  "_abrupt_t"  :: "logic \<Rightarrow> logic" ("_\<^sub>a\<^sub>t" [1000] 1000)
   "_fault_f"  :: "logic \<Rightarrow> logic" ("_\<^sub>f\<^sub>f" [1000] 1000)
   "_fault_t"  :: "logic \<Rightarrow> logic" ("_\<^sub>f\<^sub>t" [1000] 1000)
-  "_stuck_f"  :: "logic \<Rightarrow> logic" ("_\<^sub>s\<^sub>f" [1000] 1000)
-  "_stuck_t"  :: "logic \<Rightarrow> logic" ("_\<^sub>s\<^sub>t" [1000] 1000)
 
 translations
-  "P \<^sub>a\<^sub>f" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST abrupt) false) P"
-  "P \<^sub>a\<^sub>t" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST abrupt) true) P"
   "P \<^sub>f\<^sub>f" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST fault) false) P"
   "P \<^sub>f\<^sub>t" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST fault) true) P"
-  "P \<^sub>s\<^sub>f" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST stuck) false) P"
-  "P \<^sub>s\<^sub>t" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST stuck) true) P"
 
 subsection {*UTP-Relations lift and drop*}
 
-abbreviation lift_desr ("\<lceil>_\<rceil>\<^sub>C")
-where "\<lceil>P\<rceil>\<^sub>C \<equiv> P \<oplus>\<^sub>p (\<Sigma>\<^sub>C \<times>\<^sub>L \<Sigma>\<^sub>C)"
+abbreviation lift_desr ("\<lceil>_\<rceil>\<^sub>F\<^sub>L\<^sub>T")
+where "\<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T \<equiv> P \<oplus>\<^sub>p (\<Sigma>\<^sub>F\<^sub>L\<^sub>T \<times>\<^sub>L \<Sigma>\<^sub>F\<^sub>L\<^sub>T)"
 
-abbreviation lift_pre_desr ("\<lceil>_\<rceil>\<^sub>C\<^sub><")
-where "\<lceil>p\<rceil>\<^sub>C\<^sub>< \<equiv> \<lceil>\<lceil>p\<rceil>\<^sub><\<rceil>\<^sub>C"
+abbreviation lift_pre_desr ("\<lceil>_\<rceil>\<^sub>F\<^sub>L\<^sub>T\<^sub><")
+where "\<lceil>p\<rceil>\<^sub>F\<^sub>L\<^sub>T\<^sub>< \<equiv> \<lceil>\<lceil>p\<rceil>\<^sub><\<rceil>\<^sub>F\<^sub>L\<^sub>T"
 
-abbreviation lift_post_desr ("\<lceil>_\<rceil>\<^sub>C\<^sub>>")
-where "\<lceil>p\<rceil>\<^sub>C\<^sub>> \<equiv> \<lceil>\<lceil>p\<rceil>\<^sub>>\<rceil>\<^sub>C"
+abbreviation lift_post_desr ("\<lceil>_\<rceil>\<^sub>F\<^sub>L\<^sub>T\<^sub>>")
+where "\<lceil>p\<rceil>\<^sub>F\<^sub>L\<^sub>T\<^sub>> \<equiv> \<lceil>\<lceil>p\<rceil>\<^sub>>\<rceil>\<^sub>F\<^sub>L\<^sub>T"
 
-abbreviation drop_desr ("\<lfloor>_\<rfloor>\<^sub>C")
-where "\<lfloor>P\<rfloor>\<^sub>C \<equiv> P \<restriction>\<^sub>p (\<Sigma>\<^sub>C \<times>\<^sub>L \<Sigma>\<^sub>C)"
+abbreviation drop_desr ("\<lfloor>_\<rfloor>\<^sub>F\<^sub>L\<^sub>T")
+where "\<lfloor>P\<rfloor>\<^sub>F\<^sub>L\<^sub>T \<equiv> P \<restriction>\<^sub>p (\<Sigma>\<^sub>F\<^sub>L\<^sub>T \<times>\<^sub>L \<Sigma>\<^sub>F\<^sub>L\<^sub>T)"
 
 
 subsection {* Reactive lemmas *}
 
 lemma unrest_ok_lift_rea [unrest]:
-  "$ok \<sharp> \<lceil>P\<rceil>\<^sub>C" "$ok\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>C"
+  "$ok \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T" "$ok\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
   by (pred_auto)+
 
 lemma unrest_abrupt_lift_rea [unrest]:
-  "$abrupt \<sharp> \<lceil>P\<rceil>\<^sub>C" "$abrupt\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>C"
+  "$abrupt \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T" "$abrupt\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
   by (pred_auto)+
 
+
+lemma unrest_abrupt_aux_lift_rea [unrest]:
+  "$abrupt_aux \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T" "$abrupt_aux\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
+  by (pred_auto)+
+
+
 lemma unrest_fault_lift_rea [unrest]:
-  "$fault \<sharp> \<lceil>P\<rceil>\<^sub>C" "$fault\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>C"
+  "$fault \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T" "$fault\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
   by (pred_auto)+
 
 lemma unrest_stuck_lift_rea [unrest]:
-  "$stuck \<sharp> \<lceil>P\<rceil>\<^sub>C" "$stuck\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>C"
+  "$fault_tr \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T" "$fault_tr\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
   by (pred_auto)+
-
-lemma seqr_abrupt_true [usubst]: "(P ;; Q) \<^sub>a\<^sub>t = (P \<^sub>a\<^sub>t ;; Q)"
-  by (rel_auto)
-
-lemma seqr_abrupt_false [usubst]: "(P ;; Q) \<^sub>a\<^sub>f = (P \<^sub>a\<^sub>f ;; Q)"
-  by (rel_auto)
 
 lemma seqr_fault_true [usubst]: "(P ;; Q) \<^sub>f\<^sub>t = (P \<^sub>f\<^sub>t ;; Q)"
   by (rel_auto)
@@ -164,42 +140,34 @@ lemma seqr_fault_true [usubst]: "(P ;; Q) \<^sub>f\<^sub>t = (P \<^sub>f\<^sub>t
 lemma seqr_fault_false [usubst]: "(P ;; Q) \<^sub>f\<^sub>f = (P \<^sub>f\<^sub>f ;; Q)"
   by (rel_auto)
 
-lemma seqr_stuck_true [usubst]: "(P ;; Q) \<^sub>s\<^sub>t = (P \<^sub>s\<^sub>t ;; Q)"
-  by (rel_auto)
-
-lemma seqr_stuck_false [usubst]: "(P ;; Q) \<^sub>s\<^sub>f = (P \<^sub>s\<^sub>f ;; Q)"
-  by (rel_auto)
-
 subsection{*Healthiness conditions*}
 
-text {*Programs in fault or abrupt or stuck state do not progress*}
-definition C3_def [upred_defs]: 
-  "C3(P) = (P \<triangleleft> \<not>$abrupt \<and> \<not>$fault \<and> \<not>$stuck \<and> $fault_tr =\<^sub>u \<guillemotleft>None\<guillemotright> \<triangleright> II)"
+text {*Programs in fault do not progress*}
+
+definition C3_flt_def [upred_defs]: 
+  "C3_flt(P) = (P \<triangleleft>\<not>$fault \<and> $fault_tr =\<^sub>u \<guillemotleft>[]\<guillemotright> \<triangleright> II)"
+
+abbreviation
+ "Simpl\<^sub>F\<^sub>L\<^sub>T P \<equiv> C3_flt(C3_abr(\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (P)))"
 
 subsection{*Control flow statements*}
 
 text{*We introduce the known control-flow statements for C. Our semantics is restricted
-      to @{const C3}. In other words It assumes:
+      to @{const "Simpl\<^sub>F\<^sub>L\<^sub>T"}. In other words It assumes:
      \begin{itemize}   
        \<^item>  an execution starting from initial stable state ie,@{term "$ok"},   
-       \<^item>  terminates a final state ie,@{term "$ok\<acute>"},
+       \<^item>  terminates in a final state ie,@{term "$ok\<acute>"},
        \<^item>  the final state is a normal state ie,
-          @{term "\<not>$abrupt"} and @{term "$fault_tr =\<^sub>u \<guillemotleft>None\<guillemotright>"},
+          @{term "\<not>$abrupt"} and @{term "$fault_tr =\<^sub>u \<guillemotleft>[]\<guillemotright>"},
      \end{itemize}
     Thus it capture Simpl semantics.
     *}
 
-abbreviation
- "Simpl P \<equiv> C3(\<lceil>true\<rceil>\<^sub>C \<turnstile> (P))"
-
-definition skip_c :: "('f,'\<alpha>) hrel_cp" ("SKIP")
+definition skip_flt :: "('f,'a,'\<alpha>) hrel_cp" ("SKIP\<^sub>F\<^sub>L\<^sub>T")
 where [urel_defs]:
-  "SKIP = Simpl (\<not>$abrupt\<acute> \<and> \<not>$stuck\<acute> \<and> \<not>$fault\<acute> \<and> $fault_tr\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>C)"
+  "SKIP\<^sub>F\<^sub>L\<^sub>T = Simpl\<^sub>F\<^sub>L\<^sub>T (\<not>$abrupt\<acute> \<and> \<not>$abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$fault\<acute> \<and> $fault_tr\<acute> =\<^sub>u \<guillemotleft>[]\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>F\<^sub>L\<^sub>T)"
 
-definition stuck_c :: "('f,'\<alpha>) hrel_cp" ("STUCK")
-where [urel_defs]: "STUCK = C3($stuck\<acute>)"
-
-definition assigns_c :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
+definition assigns_flt :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
 where [urel_defs]: 
   "assigns_c \<sigma> =  C3(\<lceil>true\<rceil>\<^sub>C \<turnstile> (\<not>$abrupt\<acute> \<and> \<not>$stuck\<acute> \<and> \<not>$fault\<acute> \<and> $fault_tr\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>C))"
 

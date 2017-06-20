@@ -12,13 +12,20 @@ lemma throw_left_zero[simp]:
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R (P)) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto 
 
-lemma throw_right_zero_skip[simp]: 
-  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
-  by rel_auto 
-
 lemma throw_idem [simp]: 
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto
+
+lemma throw_right_zero_skip_abr[simp]: 
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
+  by rel_auto 
+
+
+lemma "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
+  by rel_auto (metis (full_types))
+
+lemma "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto  (metis (no_types) option.distinct(1))+
 
 subsection"Skip"
 
