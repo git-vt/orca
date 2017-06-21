@@ -16,8 +16,9 @@ text {*In order to record the interaction of a sequential C program with its exe
 alphabet 'f cp_vars = des_vars +
   abrupt:: bool
   fault :: bool
-  fault_tr :: "'f option"
   stuck :: bool
+  fault_tr :: "'f option"
+  
   (*wait :: bool*)
 
 declare cp_vars.splits [alpha_splits]

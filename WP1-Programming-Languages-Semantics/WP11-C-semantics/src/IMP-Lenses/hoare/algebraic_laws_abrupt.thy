@@ -108,8 +108,6 @@ lemma assign_c_alt_def [symbolic_exec_cp]:
   "\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto
 
-lemma assigns_c_comp: "(\<langle>f\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>g\<rangle>\<^sub>A\<^sub>B\<^sub>R) = \<langle>g \<circ> f\<rangle>\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto 
 
 lemma assign_test[symbolic_exec_cp]:
   assumes 1:"mwb_lens x" 

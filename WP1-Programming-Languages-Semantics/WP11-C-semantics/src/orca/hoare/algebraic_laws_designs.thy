@@ -187,7 +187,7 @@ lemma assign_c_qtop4[symbolic_exec_cp]:
          (v \<Midarrow> (qtop tp e2 e3 e4 e1))"
   using 1 2 3 4
   by rel_auto (blast, metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
-
+ 
 lemma assign_c_cond_seqr_dist[symbolic_exec_cp]:
   "(bif (b\<lbrakk>e/v\<rbrakk>) then (v \<Midarrow> e ;; Simpl P) else (v \<Midarrow> e ;; Simpl Q) eif) = 
    (v \<Midarrow> e ;; bif b then Simpl P else Simpl Q eif)"
