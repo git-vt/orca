@@ -167,7 +167,7 @@ definition skip_flt :: "('f,'a,'\<alpha>) hrel_cp" ("SKIP\<^sub>F\<^sub>L\<^sub>
 where [urel_defs]:
   "SKIP\<^sub>F\<^sub>L\<^sub>T = Simpl\<^sub>F\<^sub>L\<^sub>T (\<not>$abrupt\<acute> \<and> \<not>$abrupt_aux\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<not>$fault\<acute> \<and> $fault_tr\<acute> =\<^sub>u \<guillemotleft>[]\<guillemotright> \<and> \<lceil>II\<rceil>\<^sub>F\<^sub>L\<^sub>T)"
 
-definition assigns_flt :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>C")
+definition assigns_flt :: "'\<alpha> usubst \<Rightarrow> ('f,'\<alpha>) hrel_cp" ("\<langle>_\<rangle>\<^sub>F\<^sub>L\<^sub>T")
 where [urel_defs]: 
   "assigns_c \<sigma> =  C3(\<lceil>true\<rceil>\<^sub>C \<turnstile> (\<not>$abrupt\<acute> \<and> \<not>$stuck\<acute> \<and> \<not>$fault\<acute> \<and> $fault_tr\<acute> =\<^sub>u \<guillemotleft>None\<guillemotright> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>C))"
 

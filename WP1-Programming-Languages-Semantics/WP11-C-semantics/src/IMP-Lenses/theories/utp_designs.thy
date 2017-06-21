@@ -18,7 +18,7 @@ designs are defined by $H1$, $H2$, $H3$ and $H4$.*}
 
 alphabet des_vars =
   ok :: bool
-
+update_uexpr_rep_eq_thms
 
 text {*
   The two locale interpretations below are a technicality to improve automatic
@@ -119,6 +119,7 @@ translations
   "x :=\<^sub>D v" <= "CONST assigns_d (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x :=\<^sub>D v" <= "CONST assigns_d (CONST subst_upd (CONST id) x v)"
   "x,y :=\<^sub>D u,v" <= "CONST assigns_d (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
+
 
 definition J :: "'\<alpha> hrel_des"
 where "J = (($ok \<Rightarrow> $ok\<acute>) \<and> \<lceil>II\<rceil>\<^sub>D)"

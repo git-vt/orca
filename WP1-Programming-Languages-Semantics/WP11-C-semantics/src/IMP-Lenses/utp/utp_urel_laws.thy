@@ -5,12 +5,41 @@ theory utp_urel_laws
 begin
   
 subsection {* Unrestriction Laws *}
+lemma unrest_iuvar_mwb [unrest]: 
+  assumes  1:"mwb_lens x"
+  shows "out\<alpha> \<sharp> $x" 
+  by (simp add: out\<alpha>_def, transfer, auto)
+ 
+lemma unrest_ouvar_mwb [unrest]: 
+  assumes  1:"mwb_lens x"
+  shows "in\<alpha> \<sharp> $x\<acute>" 
+  by (simp add: in\<alpha>_def, transfer, auto)
 
-lemma unrest_iuvar [unrest]: (*legacy assumes 1:"mwb_lens x"*) 
+lemma unrest_iuvar_wb [unrest]: 
+  assumes  1:"wb_lens x"
+  shows "out\<alpha> \<sharp> $x" 
+  by (simp add: out\<alpha>_def, transfer, auto)
+ 
+lemma unrest_ouvar_wb [unrest]: 
+  assumes  1:"wb_lens x"
+  shows "in\<alpha> \<sharp> $x\<acute>" 
+  by (simp add: in\<alpha>_def, transfer, auto)
+
+lemma unrest_iuvar_vwb [unrest]: 
+  assumes  1:"vwb_lens x"
+  shows "out\<alpha> \<sharp> $x" 
+  by (simp add: out\<alpha>_def, transfer, auto)
+ 
+lemma unrest_ouvar_vwb [unrest]:  
+  assumes  1:"vwb_lens x"
+  shows "in\<alpha> \<sharp> $x\<acute>" 
+  by (simp add: in\<alpha>_def, transfer, auto)
+
+lemma unrest_iuvar [unrest]:  
   "out\<alpha> \<sharp> $x" 
   by (simp add: out\<alpha>_def, transfer, auto)
  
-lemma unrest_ouvar [unrest]: (*legacy need assumes 1:"mwb_lens x"*) 
+lemma unrest_ouvar [unrest]: 
   "in\<alpha> \<sharp> $x\<acute>" 
   by (simp add: in\<alpha>_def, transfer, auto)
 
@@ -73,6 +102,14 @@ lemma unrest_in_rel_var_res [unrest]:
  
 lemma unrest_out_rel_var_res [unrest]:
   "vwb_lens x \<Longrightarrow> $x\<acute> \<sharp> (P \<restriction>\<^sub>\<alpha> x)"
+  by (simp add: rel_var_res_def unrest)
+
+lemma unrest_in_rel_var_res_mwb [unrest]:
+  "mwb_lens x \<Longrightarrow> $x \<sharp> (P \<restriction>\<^sub>\<alpha> x)"
+  by (simp add: rel_var_res_def unrest)
+ 
+lemma unrest_out_rel_var_res_mwb [unrest]:
+  "mwb_lens x \<Longrightarrow> $x\<acute> \<sharp> (P \<restriction>\<^sub>\<alpha> x)"
   by (simp add: rel_var_res_def unrest)
 
 subsection {* Substitution laws *}
