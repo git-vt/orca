@@ -134,7 +134,7 @@ subsection{*Healthiness conditions*}
 
 text {*Programs in fault or abrupt or stuck state do not progress*}
 definition C3_abr_def [upred_defs]: 
-  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> II)"
+  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
 
 abbreviation
  "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
@@ -154,17 +154,17 @@ text{*We introduce the known control-flow statements for C. Our semantics is res
 
 definition skip_abr :: "('\<alpha>) hrel_cpa" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]:
-  "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "SKIP\<^sub>A\<^sub>B\<^sub>R =(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
 
 subsection{*THROW*}
 
 definition throw_abr :: "('\<alpha>) hrel_cpa" ("THROW\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "THROW\<^sub>A\<^sub>B\<^sub>R = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
 
 definition assigns_abr :: " '\<alpha> usubst \<Rightarrow> ('\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "assigns_abr \<sigma> = Simpl\<^sub>A\<^sub>B\<^sub>R((\<not>$abrupt\<acute>) \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "assigns_abr \<sigma> = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
 
 subsection{*Conditional*}
 

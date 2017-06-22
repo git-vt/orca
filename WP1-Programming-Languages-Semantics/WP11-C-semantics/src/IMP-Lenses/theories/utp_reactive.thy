@@ -1,5 +1,5 @@
 section {* Reactive processes *}
-
+ 
 theory utp_reactive
 imports
   "../utp/utp_concurrency"
