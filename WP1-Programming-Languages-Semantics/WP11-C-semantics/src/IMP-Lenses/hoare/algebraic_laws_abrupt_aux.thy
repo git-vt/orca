@@ -4,13 +4,19 @@ theory algebraic_laws_abrupt_aux
 imports "../theories/utp_abrupt_designs"
  
 begin
-subsection {*laws complementing those for urels *}
+subsection {*laws complementing for urels *}
+
+lemma unrest_iuvar_not[unrest]: "out\<alpha> \<sharp> (\<not>$x)"
+  by rel_auto
+
+lemma unrest_ouvar_not[unrest]: "in\<alpha> \<sharp> (\<not>$x\<acute>)"
+  by rel_auto
 
 lemma assigns_r_usubst_skip_r[usubst]:
   "(\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II) =  \<langle>\<sigma>\<rangle>\<^sub>a" 
   by rel_auto
 
-subsection {*laws complementing those for des*}
+subsection {*laws complementing for des*}
 
 lemma usubst_d_true[usubst]: "\<sigma> \<dagger> \<lceil>true\<rceil>\<^sub>D = \<lceil>true\<rceil>\<^sub>D" 
   by rel_auto
@@ -41,18 +47,6 @@ lemma Simpl_abr_Monotonic: "Monotonic Simpl\<^sub>A\<^sub>B\<^sub>R"
 lemma Simpl_abr_condr: "Simpl\<^sub>A\<^sub>B\<^sub>R(P \<triangleleft> b \<triangleright> Q) = (Simpl\<^sub>A\<^sub>B\<^sub>R(P) \<triangleleft> b \<triangleright> Simpl\<^sub>A\<^sub>B\<^sub>R(Q))"
   by (rel_auto)
 
-lemma simpl_cpa_skip_cpa[simp]:
-  "Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) = SKIP\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto
-
-lemma simpl_cpa_throw_cpa[simp]: 
-  "Simpl\<^sub>A\<^sub>B\<^sub>R ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto
-
-lemma simpl_cpa_assigns_cpa[simp]:
-  "Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) = \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto
-
 lemma Simpl_abr_if_abr: 
   "Simpl\<^sub>A\<^sub>B\<^sub>R(bif b then P else Q eif) = 
    (bif b then Simpl\<^sub>A\<^sub>B\<^sub>R(P) else Simpl\<^sub>A\<^sub>B\<^sub>R(Q) eif)"
@@ -68,27 +62,16 @@ lemma Simpl_abr_assign_abr[simp]: "Simpl\<^sub>A\<^sub>B\<^sub>R(\<langle>\<sigm
   by (rel_auto)
 
 lemma Simpl_abr_form: 
-  "Simpl\<^sub>A\<^sub>B\<^sub>R(P) = ((\<not> (\<not>$abrupt) \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<or> ((\<not>$abrupt) \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))))"
+  "Simpl\<^sub>A\<^sub>B\<^sub>R(P) = ((\<not> (\<not>$abrupt) \<and> II) \<or> ((\<not>$abrupt) \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))))"
   by (rel_auto) 
 
 lemma abrupt_Simpl_abr:
-  "(\<not>(\<not>$abrupt) \<and> Simpl\<^sub>A\<^sub>B\<^sub>R(P)) = (\<not>(\<not>$abrupt) \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  "($abrupt \<and> Simpl\<^sub>A\<^sub>B\<^sub>R(P)) = ($abrupt \<and> II)"
   by (rel_auto)
 
 lemma nabrupt_Simpl_abr:
-  "(\<not>$abrupt \<and> \<not>$fault \<and> Simpl\<^sub>A\<^sub>B\<^sub>R(P)) = 
-   (\<not>$abrupt \<and>\<not>$fault \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P)))"
+  "(\<not>$abrupt \<and> Simpl\<^sub>A\<^sub>B\<^sub>R(P)) = (\<not>$abrupt \<and> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P)))"
   by (rel_auto)
- 
-lemma Simpl_abr_semir_form:
-  "(Simpl\<^sub>A\<^sub>B\<^sub>R(P) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(Q)) = Simpl\<^sub>A\<^sub>B\<^sub>R((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P)) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(Q))"
-oops
- 
-lemma Simpl_abr_semir_closure:
-  assumes "P is Simpl\<^sub>A\<^sub>B\<^sub>R" "Q is Simpl\<^sub>A\<^sub>B\<^sub>R"
-  shows "(P ;; Q) is Simpl\<^sub>A\<^sub>B\<^sub>R"
-  using assms
-  by (metis  Healthy_def Simpl_abr_semir_form Simpl_abr_idem)
 
 definition design_abr_sup :: "('\<alpha>,'\<beta>) rel_cpa set \<Rightarrow> ('\<alpha>,'\<beta>) rel_cpa" ("\<Sqinter>\<^sub>A\<^sub>B\<^sub>R_" [900] 900) where
 "\<Sqinter>\<^sub>A\<^sub>B\<^sub>R A = (if (A = {}) then \<top>\<^sub>A\<^sub>B\<^sub>R else \<Sqinter> A)"
@@ -109,7 +92,6 @@ lemma Simpl_abr_USUP:
   assumes "A \<noteq> {}"
   shows "Simpl\<^sub>A\<^sub>B\<^sub>R(\<Sqinter> i \<in> A \<bullet> P(i)) = (\<Sqinter> i \<in> A \<bullet> Simpl\<^sub>A\<^sub>B\<^sub>R(P(i)))"
   using assms by (rel_auto)
-
 
 lemma design_abr_sup_non_empty [simp]:  
   "A \<noteq> {} \<Longrightarrow> \<Sqinter>\<^sub>A\<^sub>B\<^sub>R A = \<Sqinter> A"
@@ -223,9 +205,15 @@ lemma usubst_cpa_true[usubst]: "\<sigma> \<dagger> \<lceil>true\<rceil>\<^sub>A\
 lemma usubst_cpa_false[usubst]: "\<sigma> \<dagger> \<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R = \<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto
 
+lemma usubst_lift_cpa_assigns_lift_cpa [usubst]:
+  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R = \<lceil>\<langle>\<rho> \<circ> \<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R" 
+  by (simp add: usubst)
+
 lemma usubst_lift_cpa_skip_lift_cpa[usubst]: 
+
   "(\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)  = \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R" 
-  by (simp add: usubst unrest)
+  unfolding skip_r_def
+  by (simp add: usubst_lift_cpa_assigns_lift_cpa)
 
 lemma rel_usubst_lift_cpa_in_out_abrupt_ok[usubst]:
   "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> $abrupt = $abrupt" "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> (\<not>$abrupt) = (\<not>$abrupt)"
@@ -236,40 +224,30 @@ lemma rel_usubst_lift_cpa_in_out_abrupt_ok[usubst]:
 
 lemma rel_usubst_cpa_c3_abr[usubst]: 
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
-  shows "\<sigma> \<dagger> C3_abr(P) = (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+  shows "\<sigma> \<dagger> C3_abr(P) = (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> II))"
   using assms unfolding C3_abr_def  
   by (simp add: usubst) 
 
 lemma rel_usubst_lift_cpa_c3_abr[usubst]: 
-  "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P) = (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R\<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+  "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P) = (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R\<dagger> II))"
   unfolding C3_abr_def
   by (simp add: usubst unrest) 
 
+
 lemma usubst_lift_cpa_c3_abr[usubst]: 
-  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> II))"
   by (simp add: usubst)
 
 lemma rel_usubst_cpa_c3_abr_des[usubst]: 
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
-  shows "\<sigma> \<dagger> C3_abr(P \<turnstile> Q) = ((\<sigma> \<dagger> P \<turnstile> \<sigma> \<dagger> Q) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+  shows "\<sigma> \<dagger> C3_abr(P \<turnstile> Q) = ((\<sigma> \<dagger> P \<turnstile> \<sigma> \<dagger> Q) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> II))"
   using assms 
   by (simp add: usubst) 
  
 lemma rel_usubst_lift_cpa_c3_abr_des[usubst]: 
   "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P \<turnstile> Q) = 
-   ((\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<turnstile> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> Q) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+   ((\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<turnstile> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> Q) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> II))"
   by (simp add: usubst unrest)
-
-lemma usubst_lift_cpa_c3_abr_des[usubst]: 
-  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> C3_abr(P \<turnstile> Q) = 
-   ((\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P \<turnstile> \<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> Q) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R))" 
-  by (simp add: usubst unrest)
-
-lemma rel_usubst_cpa_simpl [usubst]: 
-  assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
-  shows "\<sigma> \<dagger> Simpl\<^sub>A\<^sub>B\<^sub>R (P) = ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> P)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
-  using assms 
-  by (simp add: usubst) 
 
 subsection {*SKIP abrupt usubst*}
 
@@ -277,20 +255,15 @@ lemma usubst_cpa_skip_cpa [usubst]:
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
   shows 
   "(\<sigma> \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = 
-   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))))"
+   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> II))"
   using assms unfolding skip_abr_def 
   by (simp add: usubst) 
 
 lemma rel_usubst_lift_cpa_skip_cpa [usubst]:
   "(\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = 
    ((\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<turnstile> 
-    ((\<not>$abrupt\<acute> \<and> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))))"
+    ((\<not>$abrupt\<acute> \<and> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> II))"
   by (simp add: usubst unrest) 
-
-lemma usubst_lift_cpa_skip_cpa [usubst]:
-  "(\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = 
-   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> (\<not>$abrupt) \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
-  by (simp add: usubst) 
 
 subsection {*THROW abrupt usubst*}
 
@@ -314,36 +287,91 @@ lemma usubst_lift_cpa_throw_cpa [usubst]:
 
 subsection {*Assigns abrupt usubst*}
 
-lemma usubst_lift_cpa_assigns_lift_cpa [usubst]:
-  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R = \<lceil>\<langle>\<rho> \<circ> \<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R" 
-  by rel_auto
+lemma usubst_cpa_assigns_cpa [usubst]:
+  assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
+  shows 
+  "\<sigma> \<dagger> \<langle>\<rho>\<rangle>\<^sub>A\<^sub>B\<^sub>R = 
+   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ((\<not>$abrupt\<acute>) \<and> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright>  (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))))"  
+   using assms unfolding assigns_abr_def
+   by (simp add: usubst)
 
-
-lemma assigns_lift_cpa_comp_rel_lift_cpa: 
-  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
-  by rel_auto 
-
-lemma assigns_abr_subst [usubst]:
-  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<langle>\<rho>\<rangle>\<^sub>A\<^sub>B\<^sub>R = 
-   ((\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<rho> \<circ> \<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (\<not>$abrupt) \<triangleright> \<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> II)"
-   unfolding assigns_abr_def   
+lemma rel_usubst_lift_cpa_assigns_cpa [usubst]:
+  "\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<langle>\<rho>\<rangle>\<^sub>A\<^sub>B\<^sub>R = 
+   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> (\<not>$abrupt) \<triangleright>  (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))))"  
+   unfolding assigns_abr_def
    by (simp add: usubst unrest)
 
+lemma usubst_lift_cpa_assigns_cpa [usubst]:
+  "\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<langle>\<rho>\<rangle>\<^sub>A\<^sub>B\<^sub>R = 
+   (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<rho> \<circ> \<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> (\<not>$abrupt) \<triangleright>  (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"  
+   unfolding assigns_abr_def
+   by (simp add: usubst unrest)
+
+
+
+subsection {*Composition abrupt usubst*}
+named_theorems ucomp
+
+lemma abrupt_ok_simpl[ucomp]:
+  "($abrupt ;; Simpl\<^sub>A\<^sub>B\<^sub>R P) = $abrupt" "(\<not>$ok ;; Simpl\<^sub>A\<^sub>B\<^sub>R P) = (\<not>$ok)" 
+  "($abrupt ;; (P \<turnstile> Q)) = $abrupt"   "(\<not>$ok ;; (P \<turnstile> Q)) = (\<not>$ok)"
+  by rel_auto+
+
+lemma simpl_comp_rel_cpa[ucomp]:
+  "(Simpl\<^sub>A\<^sub>B\<^sub>R(P) ;; R) = 
+   (((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> P) ;; R) \<triangleleft> \<not>$abrupt \<triangleright> ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R);; R))"
+   by rel_auto blast
+thm design_composition
+lemma "((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R);; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) = \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>  (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R))"
+  apply rel_auto 
+lemma simpl_comp_rel_cpa[ucomp]:
+  "((P \<turnstile> Q) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R) ) = 
+   undefined"
+  oops
+
+lemma 
+  "(Simpl\<^sub>A\<^sub>B\<^sub>R(P) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) = 
+   (((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> P) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) \<triangleleft> \<not>$abrupt \<triangleright> ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R);; Simpl\<^sub>A\<^sub>B\<^sub>R(R)))"
+  by (simp add: simpl_comp_rel_cpa)
+
+
+
+lemma Simpl_abr_semir_closure:
+  assumes "P is Simpl\<^sub>A\<^sub>B\<^sub>R" "Q is Simpl\<^sub>A\<^sub>B\<^sub>R"
+  shows "(P ;; Q) is Simpl\<^sub>A\<^sub>B\<^sub>R"
+  using assms
+  by (metis  Healthy_def Simpl_abr_semir_form Simpl_abr_idem)
+
+
+lemma 
+   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> " "$abrupt \<sharp> \<sigma>" "$abrupt\<acute> \<sharp> \<sigma> "
+  shows 
+  "\<sigma> \<dagger> (P ;; Q ) = \<sigma> \<dagger> P ;; Q"
+ apply (insert assms) apply pred_auto apply transfer apply auto 
+ by (simp add: usubst unrest)
+
+subsection {*Composition abrupt*}
+
 lemma assigns_lift_cpa_comp_rel_cpa[usubst]:
-   "\<lbrakk>$ok \<sharp> P; $ok\<acute> \<sharp> P; $abrupt \<sharp> P; $abrupt\<acute> \<sharp> P\<rbrakk>\<Longrightarrow> 
-    (\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P)"
-   apply pred_auto apply transfer 
-   apply (metis cp_abr.surjective des_vars.surjective des_vars_ext_def fst_conv in\<alpha>_def lens.select_convs(1) lens.select_convs(2) old.prod.case snd_conv)
-   apply transfer
-   apply (smt cp_abr.simps(2) cp_abr_ext_def des_vars.select_convs(2) des_vars_ext_def fst_conv in\<alpha>_def lens.select_convs(1) lens.select_convs(2) mem_Collect_eq old.prod.case relcomp.simps snd_conv) 
+  assumes "$ok \<sharp> P" "$abrupt \<sharp> P"
+  shows  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P)"
+  apply (insert assms) 
+  apply pred_auto apply transfer 
+  apply (metis cp_abr.surjective des_vars.surjective des_vars_ext_def fst_conv in\<alpha>_def lens.select_convs(1) lens.select_convs(2) old.prod.case snd_conv)
+  apply transfer
+  apply (smt cp_abr.simps(2) cp_abr_ext_def des_vars.select_convs(2) des_vars_ext_def fst_conv in\<alpha>_def lens.select_convs(1) lens.select_convs(2) mem_Collect_eq old.prod.case relcomp.simps snd_conv) 
 done
+
+lemma assigns_lift_cpa_comp_rel_lift_cpa[usubst]: 
+  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+ by (simp add: usubst unrest) 
 
 lemma assigns_lift_cpa_comp_lift_cpa: 
   "(\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; P) = ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; P) \<triangleleft> \<not>$abrupt \<triangleright> P)"
   by rel_auto
 
 lemma assigns_lift_cpa_comp_des: 
-  assumes "$ok \<sharp> P" "$ok\<acute> \<sharp> P" "$ok \<sharp> Q" "$ok\<acute> \<sharp> Q"
+  assumes "$ok \<sharp> P"  "$ok \<sharp> Q" 
   shows "(\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; (P \<turnstile> Q)) = 
          (((true \<and> \<not> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; (\<not> P)) \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; Q))
           \<triangleleft> \<not>$abrupt \<triangleright> (P \<turnstile> Q))"
@@ -351,10 +379,10 @@ proof -
   have h0:"((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;; (P \<turnstile> Q)) = 
            ((\<not> (\<not> \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; true \<and> \<not> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; (\<not> P)) \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; Q))"
     by (insert assms,rel_auto) metis +
-  have h1:"$ok \<sharp> P \<Longrightarrow> $ok\<acute> \<sharp> P \<Longrightarrow> $ok \<sharp> Q \<Longrightarrow> $ok\<acute> \<sharp> Q \<Longrightarrow>
+  have h1:"$ok \<sharp> P \<Longrightarrow>  $ok \<sharp> Q \<Longrightarrow> 
            (\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; (P \<turnstile> Q)) = ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;; (P \<turnstile> Q)) \<triangleleft> \<not>$abrupt \<triangleright> (P \<turnstile> Q)"
      unfolding assigns_lift_cpa_comp_lift_cpa ..
-  also have h2: "$ok \<sharp> P \<Longrightarrow> $ok\<acute> \<sharp> P \<Longrightarrow> $ok \<sharp> Q \<Longrightarrow> $ok\<acute> \<sharp> Q \<Longrightarrow>
+  also have h2: "$ok \<sharp> P \<Longrightarrow>  $ok \<sharp> Q \<Longrightarrow> 
                  ... = ((\<not> (\<not> \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; true \<and> \<not> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; (\<not> P)) \<turnstile> ((\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; Q))
                         \<triangleleft> \<not>$abrupt \<triangleright> (P \<turnstile> Q)"
        by (subst h0) simp_all 
@@ -433,5 +461,12 @@ lemma lift_des_skip_dr_unit_abr [simp]:
   by (rel_auto)+
 
 
+
+
+subsection {*While abrupt usubst*}
+
+subsection {*black abrupt usubst*}
+
+subsection {*Catch abrupt usubst*}
 
 end
