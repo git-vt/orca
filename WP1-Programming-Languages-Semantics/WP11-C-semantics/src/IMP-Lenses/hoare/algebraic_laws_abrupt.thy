@@ -8,31 +8,36 @@ named_theorems symbolic_exec_cp
 
 subsection"Throw"
 
-lemma throw_not_ok_left_zero[simp]: 
+lemma throw_not_ok_left_zero[ucomp]: 
   "((\<not>$ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
   by rel_auto
 
-lemma throw_abr_left_zero[simp]: 
+lemma throw_ok_left_zero[ucomp]: 
+  "(($ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = ($ok)" 
+  by rel_auto
+
+lemma throw_not_abr_left_zero[ucomp]: 
+  "((\<not>$aburpt) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$aburpt)" 
+  by rel_auto 
+
+lemma throw_abr_left_zero[ucomp]: 
   "($aburpt ;; THROW\<^sub>A\<^sub>B\<^sub>R) = $aburpt" 
   by rel_auto 
 
-lemma throw_bot_left_zero[simp]: 
+lemma throw_bot_left_zero[ucomp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
   by rel_auto
 
-lemma throw_left_zero[simp]: 
-  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R (P)) = THROW\<^sub>A\<^sub>B\<^sub>R" 
-  by rel_auto 
-
-lemma throw_idem [simp]: 
+lemma throw_idem [ucomp]: 
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto
 
-lemma throw_right_zero_skip_abr[simp]: 
+lemma throw_right_zero_skip_abr[ucomp]: 
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto 
 
-lemma "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
+lemma catch_miss:
+  "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
   by rel_auto (metis (full_types))
 
 lemma "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
@@ -43,37 +48,37 @@ subsection"Skip"
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-lemma skip_abr_not_ok_left_zero[simp]: 
+lemma skip_abr_not_ok_left_zero[ucomp]: 
   "((\<not>$ok) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
   by rel_auto
 
-lemma skip_abr_left_zero[simp]: 
-  "($aburpt ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $aburpt" 
+lemma skip_abr_ok_left_zero[ucomp]: 
+  "($ok ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $ok" 
+  by rel_auto
+
+lemma skip_abr_abrupt_left_zero[ucomp]: 
+  "($abrupt ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $abrupt" 
   by rel_auto 
 
-lemma skip_abr_bot_left_zero[simp]: 
+lemma skip_abr_not_abrupt_left_zero[ucomp]: 
+  "((\<not>$abrupt) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$abrupt)" 
+  by rel_auto
+
+lemma skip_abr_bot_left_zero[ucomp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
   by rel_auto
 
-lemma skip_abr_idem [simp]:
+lemma skip_abr_idem [ucomp]:
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by rel_auto
 
-lemma skip_abr_left_unit[simp]: 
+lemma skip_abr_left_unit[ucomp]: 
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;;  Simpl\<^sub>A\<^sub>B\<^sub>R (P)) =  Simpl\<^sub>A\<^sub>B\<^sub>R (P)"
   by rel_auto 
 
-lemma skip_abr_right_unit[simp]: 
-  "(Simpl\<^sub>A\<^sub>B\<^sub>R (P)  ;;  SKIP\<^sub>A\<^sub>B\<^sub>R) =  Simpl\<^sub>A\<^sub>B\<^sub>R (P)"  
-  by rel_auto
-
-lemma skip_abr_lift_alpha_eq:
-  "\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R = ($\<Sigma>\<^sub>A\<^sub>B\<^sub>R\<acute> =\<^sub>u $\<Sigma>\<^sub>A\<^sub>B\<^sub>R)"
-  by rel_auto
-
 lemma skip_abr_alpha_eq:
   "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> ($\<Sigma>\<^sub>A\<^sub>B\<^sub>R\<acute> =\<^sub>u $\<Sigma>\<^sub>A\<^sub>B\<^sub>R))"
-  by (simp add: skip_abr_lift_alpha_eq skip_abr_def)
+  by (simp add: skip_lift_cpa_def skip_abr_def)
 
 lemma pre_skip_abr_post: 
   "(Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<and> SKIP\<^sub>A\<^sub>B\<^sub>R) = (SKIP\<^sub>A\<^sub>B\<^sub>R \<and> Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>>)"
@@ -84,44 +89,35 @@ lemma skip_abr_var:
   shows "(Simpl\<^sub>A\<^sub>B\<^sub>R $x \<and> SKIP\<^sub>A\<^sub>B\<^sub>R) = (SKIP\<^sub>A\<^sub>B\<^sub>R \<and> Simpl\<^sub>A\<^sub>B\<^sub>R $x\<acute>)"
   by rel_auto
 
-
 subsection {*Assignment Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the assignment
       statement.*}
 
-lemma usubst_c_cancel [usubst,symbolic_exec_cp]: 
+lemma usubst_abr_cancel [usubst,symbolic_exec_cp]: 
   assumes 1:"weak_lens v" 
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub></$v\<rbrakk>= \<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
   using 1
   by  rel_auto
 
-lemma usubst_c_lift_cancel[usubst,symbolic_exec_cp]: 
+lemma usubst_abr_lift_cancel[usubst,symbolic_exec_cp]: 
   assumes 1:"weak_lens v" 
   shows "\<lceil>($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub></$v\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R= \<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
   using 1
   by  rel_auto
 
-lemma assigns_c_id [simp]: "\<langle>id\<rangle>\<^sub>A\<^sub>B\<^sub>R = SKIP\<^sub>A\<^sub>B\<^sub>R"
+lemma assigns_abr_id [ucomp]: "SKIP\<^sub>A\<^sub>B\<^sub>R = \<langle>id\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+  unfolding skip_abr_def assigns_abr_def
   by (rel_auto)
 
-lemma assign_c_alt_def [symbolic_exec_cp]: 
-  "\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
-  by rel_auto
-
-
-lemma assign_test[symbolic_exec_cp]:
+lemma assign_test[ucomp]:
   assumes 1:"mwb_lens x" 
   shows     "(x \<Midarrow> \<guillemotleft>u\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>) = (x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   using 1   
-  by (simp add: assigns_c_comp subst_upd_comp subst_lit usubst_upd_idem)
-
-lemma assign_c_left_comp: 
-  "(\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<rceil>\<^sub>A\<^sub>B\<^sub>R)) = Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> Q\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
-  by rel_auto
+  by (simp add: usubst unrest ucomp)
 
 lemma assign_c_left_comp_subst[symbolic_exec_cp]: 
   "(x \<Midarrow> u ;; Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<rceil>\<^sub>A\<^sub>B\<^sub>R)) = Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R)" 
-  by rel_auto
+  by (simp add: ucomp usubst)
 
 lemma assign_c_twice[symbolic_exec_cp]: 
   assumes "mwb_lens x" and  "x \<sharp> f" 
