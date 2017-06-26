@@ -472,8 +472,8 @@ qed
 subsection {*Conditional Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the conditional
       statement.*}
-
-lemma cond_idem[symbolic_exec]:
+named_theorems urel_cond and urel_comp
+lemma cond_idem[urel_cond]:
   "(P \<triangleleft> b \<triangleright> P) = P" 
   by rel_auto
 
@@ -485,66 +485,71 @@ lemma cond_assoc:
   "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> b \<triangleright> R)) = ((P \<triangleleft> b \<triangleright> Q) \<triangleleft> b \<triangleright>  R)"  
   by rel_auto
 
-lemma cond_distr[symbolic_exec]: 
+lemma cond_distr[urel_cond]: 
   "((P \<triangleleft> b'\<triangleright> R) \<triangleleft> b \<triangleright> (Q \<triangleleft> b'\<triangleright> R))= ((P \<triangleleft> b \<triangleright> Q) \<triangleleft> b'\<triangleright> R)" 
   by rel_auto
 
-lemma cond_unit_T [symbolic_exec_ex]:
+lemma cond_unit_T:
   "(P \<triangleleft>true\<triangleright> Q) = P" 
   by auto
 
-lemma cond_unit_F [symbolic_exec_ex]:
+lemma cond_unit_F:
   "(P \<triangleleft>false\<triangleright> Q) = Q" 
   by auto
 
-lemma cond_and_T_integrate[symbolic_exec]:
+lemma cond_and_T_integrate[urel_cond]:
   "((P \<and> b) \<or> (Q \<triangleleft> b \<triangleright> R)) = ((P \<or> Q) \<triangleleft> b \<triangleright> R)"
   by rel_auto
 
-lemma cond_L6[symbolic_exec]: 
+lemma cond_L6[urel_cond]: 
   "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> b \<triangleright> R)) = (P \<triangleleft> b \<triangleright> R)" 
   by rel_auto
 
-lemma cond_L7[symbolic_exec]: 
+lemma cond_L7[urel_cond]: 
   "(P \<triangleleft> b \<triangleright> (P \<triangleleft> c \<triangleright> Q)) = (P \<triangleleft> b \<or> c \<triangleright> Q)"
   by rel_auto
 
-lemma cond_and_distr[symbolic_exec]: 
+lemma cond_and_distr[urel_cond]: 
   "((P \<and> Q) \<triangleleft> b \<triangleright> (R \<and> S)) = ((P \<triangleleft> b \<triangleright> R) \<and> (Q \<triangleleft> b \<triangleright> S))"  
   by rel_auto
 
-lemma cond_or_distr[symbolic_exec]: 
+lemma cond_or_distr[urel_cond]: 
   "((P \<or> Q) \<triangleleft> b \<triangleright> (R \<or> S)) = ((P \<triangleleft> b \<triangleright> R) \<or> (Q \<triangleleft> b \<triangleright> S))" 
   by rel_auto
 
-lemma cond_imp_distr[symbolic_exec]:
+lemma cond_imp_distr[urel_cond]:
   "((P \<Rightarrow> Q) \<triangleleft> b \<triangleright> (R \<Rightarrow> S)) = 
    ((P \<triangleleft> b \<triangleright> R) \<Rightarrow> (Q \<triangleleft> b \<triangleright> S))" 
   by rel_auto
 
-lemma cond_eq_distr[symbolic_exec]:
+lemma cond_eq_distr[urel_cond]:
   "((P \<Leftrightarrow> Q) \<triangleleft> b \<triangleright> (R \<Leftrightarrow> S)) = 
    ((P \<triangleleft> b \<triangleright> R) \<Leftrightarrow> (Q \<triangleleft> b \<triangleright> S))"
   by rel_auto
 
-lemma cond_conj_distr[symbolic_exec]:
-  "(P \<and> (Q \<triangleleft> b \<triangleright> S)) = ((P \<and> Q) \<triangleleft> b \<triangleright> (P \<and> S))"  
+lemma cond_ueq_distr[urel_cond]:
+  "((P =\<^sub>u Q) \<triangleleft> b \<triangleright> (R =\<^sub>u S)) = 
+   ((P \<triangleleft> b \<triangleright> R) =\<^sub>u (Q \<triangleleft> b \<triangleright> S))"
   by rel_auto
 
-lemma cond_disj_distr [symbolic_exec]:
-  "(P \<or> (Q \<triangleleft> b \<triangleright> S)) = ((P \<or> Q) \<triangleleft> b \<triangleright> (P \<or> S))" 
+lemma cond_conj_distr[urel_cond]:
+  "((P \<and> Q) \<triangleleft> b \<triangleright> (P \<and> S)) = (P \<and> (Q \<triangleleft> b \<triangleright> S))"  
+  by rel_auto
+
+lemma cond_disj_distr [urel_cond]:
+  "((P \<or> Q) \<triangleleft> b \<triangleright> (P \<or> S)) = (P \<or> (Q \<triangleleft> b \<triangleright> S))" 
   by rel_auto 
 
-lemma cond_neg[symbolic_exec]: 
+lemma cond_neg[urel_cond]: 
   "\<not> (P \<triangleleft> b \<triangleright> Q) = ((\<not> P) \<triangleleft> b \<triangleright> (\<not> Q))"
   by rel_auto 
 
-lemma cond_conj[symbolic_exec]: 
+lemma cond_conj[urel_cond]: 
   "(P \<triangleleft>b \<and> c\<triangleright> Q) = (P \<triangleleft> c \<triangleright> Q) \<triangleleft> b \<triangleright> Q"
   by rel_auto 
     
 (*IF Theorem by Hoare: It optimize nested IF*)
-theorem COND12[symbolic_exec]: 
+theorem COND12[urel_cond]: 
   "((C1 \<triangleleft>bexp2\<triangleright> C3) \<triangleleft>bexp1\<triangleright> (C2 \<triangleleft>bexp3\<triangleright> C3)) =
    ((C1 \<triangleleft>bexp1\<triangleright> C2) \<triangleleft>(bexp2 \<triangleleft>bexp1\<triangleright>bexp3)\<triangleright> C3)"
   by rel_auto 
@@ -553,29 +558,29 @@ lemma comp_cond_left_distr:
   "((P \<triangleleft> b \<triangleright>\<^sub>r Q) ;; R) = ((P ;; R) \<triangleleft> b \<triangleright>\<^sub>r (Q ;; R))"
   by rel_auto
  
-lemma cond_var_subst_left:
+lemma cond_var_subst_left[urel_cond]:
   assumes "vwb_lens x"
   shows "(P\<lbrakk>true/x\<rbrakk> \<triangleleft>&x \<triangleright> Q) = (P \<triangleleft>&x \<triangleright> Q)"
   using assms
   apply rel_auto apply transfer
   using vwb_lens.put_eq by fastforce 
 
-lemma cond_var_subst_right:
+lemma cond_var_subst_right[urel_cond]:
   assumes "vwb_lens x"
   shows "(P \<triangleleft>&x \<triangleright> Q\<lbrakk>false/x\<rbrakk>) = (P \<triangleleft>&x \<triangleright> Q)"
   using assms
   apply rel_auto apply transfer
   by (metis (full_types) vwb_lens.put_eq)
 
-lemma cond_var_split:
+lemma cond_var_split[urel_cond]:
   "vwb_lens x \<Longrightarrow> (P\<lbrakk>true/x\<rbrakk> \<triangleleft>&x \<triangleright> P\<lbrakk>false/x\<rbrakk>) = P"
   by (rel_auto, (metis (full_types) vwb_lens.put_eq)+)
 
-lemma cond_seq_left_distr:
+lemma cond_seq_left_distr[urel_comp]:
   "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<triangleleft> b \<triangleright> Q) ;; R) = ((P ;; R) \<triangleleft> b \<triangleright> (Q ;; R))"
   by rel_auto
 
-lemma cond_seq_right_distr:
+lemma cond_seq_right_distr[urel_comp]:
   "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<triangleleft> b \<triangleright> R)) = ((P ;; Q) \<triangleleft> b \<triangleright> (P ;; R))"
   by rel_auto
 
@@ -603,11 +608,11 @@ lemma seqr_right_zero [simp, symbolic_exec_ex]:
 lemma seqr_assoc: "P ;; (Q ;; R) = (P ;; Q) ;; R"
   by rel_auto
 
-lemma seqr_or_distl:
+lemma seqr_or_distl[urel_comp]:
   "((P \<or> Q) ;; R) = ((P ;; R) \<or> (Q ;; R))"
   by rel_auto
 
-lemma seqr_or_distr:
+lemma seqr_or_distr[urel_comp]:
   "(P ;; (Q \<or> R)) = ((P ;; Q) \<or> (P ;; R))"
   by rel_auto
 
@@ -626,31 +631,31 @@ lemma seqr_middle:
   apply (simp)
 done
 
-lemma seqr_left_one_point:
+lemma seqr_left_one_point[urel_comp]:
   assumes "vwb_lens x"
   shows "((P \<and> $x\<acute> =\<^sub>u \<guillemotleft>v\<guillemotright>) ;; Q) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>)"
   using assms
   by (rel_auto, metis vwb_lens_wb wb_lens.get_put)
 
-lemma seqr_right_one_point:
+lemma seqr_right_one_point[urel_comp]:
   assumes "vwb_lens x"
   shows "(P ;; ($x =\<^sub>u \<guillemotleft>v\<guillemotright> \<and> Q)) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>)"
   using assms
   by (rel_auto, metis vwb_lens_wb wb_lens.get_put)
 
-lemma seqr_insert_ident_left:
+lemma seqr_insert_ident_left[urel_comp]:
   assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
   shows "(($x\<acute> =\<^sub>u $x \<and> P) ;; Q) = (P ;; Q)"
   using assms
   by (rel_auto, meson vwb_lens_wb wb_lens_weak weak_lens.put_get)
 
-lemma seqr_insert_ident_right:
+lemma seqr_insert_ident_right[urel_comp]:
   assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
   shows "(P ;; ($x\<acute> =\<^sub>u $x \<and> Q)) = (P ;; Q)"
   using assms
   by (rel_auto, metis (no_types, hide_lams) vwb_lens_def wb_lens_def weak_lens.put_get)
 
-lemma seq_var_ident_lift:
+lemma seq_var_ident_lift[urel_comp]:
   assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
   shows "(($x\<acute> =\<^sub>u $x \<and> P) ;; ($x\<acute> =\<^sub>u $x \<and> Q)) = ($x\<acute> =\<^sub>u $x \<and> (P ;; Q))"
   using assms
@@ -734,10 +739,10 @@ done
 
 subsection {*assume and assert laws*}
 
-lemma assume_twice: "(b\<^sup>\<top> ;; c\<^sup>\<top>) = (b \<and> c)\<^sup>\<top>"
+lemma assume_twice[urel_comp]: "(b\<^sup>\<top> ;; c\<^sup>\<top>) = (b \<and> c)\<^sup>\<top>"
   by rel_auto
 
-lemma assert_twice: "(b\<^sub>\<bottom> ;; c\<^sub>\<bottom>) = (b \<and> c)\<^sub>\<bottom>" 
+lemma assert_twice[urel_comp]: "(b\<^sub>\<bottom> ;; c\<^sub>\<bottom>) = (b \<and> c)\<^sub>\<bottom>" 
   by rel_auto
 
 subsection {* Relation algebra laws *}
@@ -757,7 +762,7 @@ theorem RA4: "(P ;; Q)\<^sup>- = (Q\<^sup>- ;; P\<^sup>-)"
 theorem RA5: "(P \<or> Q)\<^sup>- = (P\<^sup>- \<or> Q\<^sup>-)"
   by (rel_auto)
 
-theorem RA6: "((P \<or> Q) ;; R) = ((P;;R) \<or> (Q;;R))"
+theorem RA6[urel_comp]: "((P \<or> Q) ;; R) = ((P;;R) \<or> (Q;;R))"
   using seqr_or_distl by blast
 
 theorem RA7: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"

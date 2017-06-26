@@ -4,87 +4,88 @@ theory algebraic_laws_abrupt
 imports algebraic_laws_abrupt_aux
 
 begin
-named_theorems symbolic_exec_cp
 
 subsection"Throw"
 
-lemma throw_not_ok_left_zero[ucomp]: 
+lemma throw_not_ok_left_zero[uabr_comp]: 
   "((\<not>$ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
   by rel_auto
 
-lemma throw_ok_left_zero[ucomp]: 
+lemma throw_ok_left_zero[uabr_comp]: 
   "(($ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = ($ok)" 
   by rel_auto
 
-lemma throw_not_abr_left_zero[ucomp]: 
+lemma throw_not_abr_left_zero[uabr_comp]: 
   "((\<not>$aburpt) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$aburpt)" 
   by rel_auto 
 
-lemma throw_abr_left_zero[ucomp]: 
+lemma throw_abr_left_zero[uabr_comp]: 
   "($aburpt ;; THROW\<^sub>A\<^sub>B\<^sub>R) = $aburpt" 
   by rel_auto 
 
-lemma throw_bot_left_zero[ucomp]: 
+lemma throw_bot_left_zero[uabr_comp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
   by rel_auto
 
-lemma throw_idem [ucomp]: 
+lemma throw_idem [uabr_comp]: 
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto
 
-lemma throw_right_zero_skip_abr[ucomp]: 
+lemma throw_right_zero_skip_abr[uabr_comp]: 
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto 
 
-lemma catch_miss:
+lemma catch_miss: (*needs more laws to be automatic*)
   "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
-  by rel_auto (metis (full_types))
-
-lemma "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
-  by rel_auto  (metis (no_types) option.distinct(1))+
+  apply (simp add:   uabr_comp) 
+  apply pred_simp 
+  apply rel_auto 
+done
+  
+lemma "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
+  apply (simp add: uabr_comp) 
+  apply pred_simp 
+  apply rel_blast
+done
 
 subsection"Skip"
 
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-lemma skip_abr_not_ok_left_zero[ucomp]: 
+lemma skip_abr_not_ok_left_zero[uabr_comp]: 
   "((\<not>$ok) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
   by rel_auto
 
-lemma skip_abr_ok_left_zero[ucomp]: 
+lemma skip_abr_ok_left_zero[uabr_comp]: 
   "($ok ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $ok" 
   by rel_auto
 
-lemma skip_abr_abrupt_left_zero[ucomp]: 
+lemma skip_abr_abrupt_left_zero[uabr_comp]: 
   "($abrupt ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $abrupt" 
   by rel_auto 
 
-lemma skip_abr_not_abrupt_left_zero[ucomp]: 
+lemma skip_abr_not_abrupt_left_zero[uabr_comp]: 
   "((\<not>$abrupt) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$abrupt)" 
   by rel_auto
 
-lemma skip_abr_bot_left_zero[ucomp]: 
+lemma skip_abr_bot_left_zero[uabr_comp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
   by rel_auto
 
-lemma skip_abr_idem [ucomp]:
+lemma skip_abr_idem [uabr_comp]:
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by rel_auto
-
-lemma skip_abr_left_unit[ucomp]: 
-  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;;  Simpl\<^sub>A\<^sub>B\<^sub>R (P)) =  Simpl\<^sub>A\<^sub>B\<^sub>R (P)"
-  by rel_auto 
 
 lemma skip_abr_alpha_eq:
   "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> ($\<Sigma>\<^sub>A\<^sub>B\<^sub>R\<acute> =\<^sub>u $\<Sigma>\<^sub>A\<^sub>B\<^sub>R))"
   by (simp add: skip_lift_cpa_def skip_abr_def)
 
-lemma pre_skip_abr_post: 
+lemma simpl_pre_skip_abr_post:
   "(Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<and> SKIP\<^sub>A\<^sub>B\<^sub>R) = (SKIP\<^sub>A\<^sub>B\<^sub>R \<and> Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>>)"
   by rel_auto 
 
-lemma skip_abr_var:
+lemma simpl_pre_skip_abr_var:
   fixes x :: "(bool,  ('b) cpa) uvar"
   shows "(Simpl\<^sub>A\<^sub>B\<^sub>R $x \<and> SKIP\<^sub>A\<^sub>B\<^sub>R) = (SKIP\<^sub>A\<^sub>B\<^sub>R \<and> Simpl\<^sub>A\<^sub>B\<^sub>R $x\<acute>)"
   by rel_auto
@@ -93,266 +94,238 @@ subsection {*Assignment Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the assignment
       statement.*}
 
-lemma usubst_abr_cancel [usubst,symbolic_exec_cp]: 
+lemma usubst_abr_cancel [usubst]: 
   assumes 1:"weak_lens v" 
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub></$v\<rbrakk>= \<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
   using 1
   by  rel_auto
 
-lemma usubst_abr_lift_cancel[usubst,symbolic_exec_cp]: 
+lemma usubst_abr_lift_cancel[usubst]: 
   assumes 1:"weak_lens v" 
   shows "\<lceil>($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub></$v\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R= \<lceil>expr\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
   using 1
   by  rel_auto
 
-lemma assigns_abr_id [ucomp]: "SKIP\<^sub>A\<^sub>B\<^sub>R = \<langle>id\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+lemma assigns_abr_id [uabr_simpl]: "SKIP\<^sub>A\<^sub>B\<^sub>R = \<langle>id\<rangle>\<^sub>A\<^sub>B\<^sub>R"
   unfolding skip_abr_def assigns_abr_def
   by (rel_auto)
 
-lemma assign_test[ucomp]:
+lemma assign_test[uabr_comp]:
   assumes 1:"mwb_lens x" 
   shows     "(x \<Midarrow> \<guillemotleft>u\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>) = (x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   using 1   
-  by (simp add: usubst unrest ucomp)
+  by (simp add: usubst unrest uabr_comp)
 
-lemma assign_c_left_comp_subst[symbolic_exec_cp]: 
+lemma assign_abr_left_comp_subst[uabr_comp]: 
   "(x \<Midarrow> u ;; Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<rceil>\<^sub>A\<^sub>B\<^sub>R)) = Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R)" 
-  by (simp add: ucomp usubst)
+  by (simp add: uabr_comp usubst)
 
-lemma assign_c_twice[symbolic_exec_cp]: 
+lemma assign_abr_twice[uabr_comp]: 
   assumes "mwb_lens x" and  "x \<sharp> f" 
   shows "(x \<Midarrow> e ;; x \<Midarrow> f) = (x \<Midarrow> f)" 
   using assms
-  by (simp add: assigns_c_comp usubst)
+  by (simp add: uabr_comp usubst)
    
-lemma assign_c_commute:
+lemma assign_abr_commute:
   assumes "x \<bowtie> y" "x \<sharp> f" "y \<sharp> e"
   shows "(x \<Midarrow> e ;; y \<Midarrow> f) = (y \<Midarrow> f ;; x \<Midarrow> e)"
-proof -
-  have "(x :== e ;; y :== f ) = y :== f ;; x :== e"
-    using assms assign_commute by auto 
-  then show ?thesis
-    using assigns_c_comp assigns_c_def utp_urel_laws.assigns_comp
-    by metis
-qed
+  using assms
+  by (simp add: uabr_comp usubst usubst_upd_comm)
 
-lemma assign_c_cond_c[symbolic_exec_cp]:
+lemma assign_abr_cond_abr[uabr_comp]: (*needs more laws to be automatic*)
   fixes x :: "('a, '\<alpha>) uvar"
-  shows "(x \<Midarrow> e ;; (bif b then P else Q eif)) = 
-         (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e ;; P)  else (x \<Midarrow> e ;; Q) eif)"
-  apply rel_auto
-oops
+  shows "(x \<Midarrow> e ;; (bif b then Simpl\<^sub>A\<^sub>B\<^sub>R P else Simpl\<^sub>A\<^sub>B\<^sub>R Q eif)) = 
+         (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e ;; Simpl\<^sub>A\<^sub>B\<^sub>R P)  else (x \<Midarrow> e ;; Simpl\<^sub>A\<^sub>B\<^sub>R Q) eif)"
+  apply (simp add: usubst uabr_comp)
+  apply pred_simp 
+done
 
-lemma assign_c_uop1[symbolic_exec_cp]: 
+lemma assign_c_uop1[uabr_comp]: 
   assumes 1: "mwb_lens v"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (uop F (&v))) = (v \<Midarrow> (uop F e1))"
-  by (simp add: assigns_c_comp assms subst_uop subst_upd_comp subst_var 
-                usubst_lookup_upd usubst_upd_idem)
+  by (simp add: usubst  uabr_comp assms)
 
-lemma assign_c_bop1[symbolic_exec_cp]: 
+lemma assign_c_bop1[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow>(bop bp (&v) e2)) = (v \<Midarrow> (bop bp e1 e2))"
-  using 1 2  
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
-
-lemma assign_c_bop2[symbolic_exec_cp]: 
+  by (simp add: usubst uabr_comp assms)
+ 
+lemma assign_c_bop2[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (bop bp e2 (&v))) = (v \<Midarrow> (bop bp e2 e1))"
-  using 1 2  
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_trop1[symbolic_exec_cp]: 
+lemma assign_c_trop1[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp (&v) e2 e3)) = 
          (v \<Midarrow> (trop tp e1 e2 e3))"
-  using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_trop2[symbolic_exec_cp]: 
+lemma assign_c_trop2[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp e2 (&v) e3)) = 
          (v \<Midarrow> (trop tp e2 e1 e3))"
-  using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_trop3[symbolic_exec_cp]: 
+lemma assign_c_trop3[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (trop tp e2 e3 (&v))) = 
          (v \<Midarrow> (trop tp e2 e3 e1))"
-  using 1 2 3
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_qtop1[symbolic_exec_cp]: 
+lemma assign_c_qtop1[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp (&v) e2 e3 e4)) = 
          (v \<Midarrow> (qtop tp e1 e2 e3 e4))"
-  using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_qtop2[symbolic_exec_cp]: 
+lemma assign_c_qtop2[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 (&v) e3 e4)) = 
          (v \<Midarrow> (qtop tp e2 e1 e3 e4))"
-  using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_qtop3[symbolic_exec_cp]: 
+lemma assign_c_qtop3[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 e3 (&v) e4)) = 
          (v \<Midarrow> (qtop tp e2 e3 e1 e4))"
-  using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
+  by (simp add: usubst uabr_comp assms)
 
-lemma assign_c_qtop4[symbolic_exec_cp]: 
+lemma assign_c_qtop4[uabr_comp]: 
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2" and 3:"v \<sharp> e3" and 4:"v \<sharp> e4"
   shows "(v \<Midarrow> e1 ;; v \<Midarrow> (qtop tp e2 e3 e4 (&v))) = 
          (v \<Midarrow> (qtop tp e2 e3 e4 e1))"
-  using 1 2 3 4
-  by rel_auto (metis mwb_lens.put_put mwb_lens_weak weak_lens.put_get)
-
-lemma assign_c_cond_seqr_dist[symbolic_exec_cp]:
-  "(bif (b\<lbrakk>e/v\<rbrakk>) then (v \<Midarrow> e ;; P) else (v \<Midarrow> e ;; Q) eif) = 
-   (v \<Midarrow> e ;; bif b then P else Q eif)"
-  by (metis assign_c_cond_c) 
-
+  by (simp add: usubst uabr_comp assms)
+                   
 text {*In the sequel we define assignment laws proposed by Hoare*}
 
-lemma assign_c_vwb_skip_c:
+lemma assign_abr_vwb_skip_abr[uabr_comp]:
   assumes 1: "vwb_lens v"
   shows "(v \<Midarrow> &v) = SKIP\<^sub>A\<^sub>B\<^sub>R"
-  by (simp add: assms  usubst_upd_var_id)
+  by (simp add: assms usubst uabr_simpl)
 
 lemma assign_c_simultaneous:
   assumes  1: "vwb_lens var2"
   and      2: "var1 \<bowtie> var2"
   shows "var1, var2 \<Midarrow> exp, &var2 = var1 \<Midarrow> exp"
-  by (simp add: "1" "2" usubst_upd_comm usubst_upd_var_id)
+  by (simp add: assms usubst_upd_comm usubst)
 
-lemma assign_c_seq:
+lemma assign_c_seq[uabr_comp]:
   assumes  1: "vwb_lens var2"
   shows"(var1 \<Midarrow> exp);; (var2 \<Midarrow> &var2) = (var1 \<Midarrow> exp)"
-  using 1 by rel_auto 
+  by (simp add: assms usubst uabr_comp)
 
-lemma assign_c_cond_c_uop[symbolic_exec_cp]:
+lemma assign_c_cond_c_uop[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v"
-  shows "bif uop F exp then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-          v \<Midarrow> exp ;; bif uop F (&v) then C1 else  C2 eif"
-proof -
-  have "uop F exp = uop F ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>)"
-    by (metis (no_types) assms  usubst_cancel)
-  then show ?thesis
-  by (smt assign_c_cond_seqr_dist subst_uop)  
-qed
+  shows "bif uop F exp then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+          v \<Midarrow> exp ;; bif uop F (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else  Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms weak_lens.put_get)+
+done
 
-lemma assign_c_cond_bop1[symbolic_exec_cp]:
+lemma assign_c_cond_bop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif bop bp exp exp2 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-          v \<Midarrow> exp ;; bif bop bp (&v) exp2 then C1 else C2 eif"
- proof -
-  have "bop bp exp exp2 = bop bp ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp2"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_bop
-    by (metis (no_types, hide_lams) "2" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif bop bp exp exp2 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+          v \<Midarrow> exp ;; bif bop bp (&v) exp2 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_c_cond_bop2[symbolic_exec_cp]:
+lemma assign_c_cond_bop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif bop bp exp2 exp then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-          v \<Midarrow> exp ;; bif bop bp  exp2 (&v) then C1 else C2 eif"
- proof -
-  have "bop bp exp2 exp  = bop bp  exp2 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>)"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_bop
-    by (metis (no_types, hide_lams) "2" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif bop bp exp2 exp then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+          v \<Midarrow> exp ;; bif bop bp  exp2 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_cond_trop1[symbolic_exec_cp]:
+lemma assign_cond_trop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp exp2 exp3 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif trop bp (&v) exp2 exp3 then C1 else C2 eif"
- proof -
-  have "trop bp exp exp2 exp3 = trop bp ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp2 exp3"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_trop
-    by (metis (no_types, hide_lams) "2" "3" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif trop bp exp exp2 exp3 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif trop bp (&v) exp2 exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_cond_trop2[symbolic_exec_cp]:
+lemma assign_cond_trop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp2 exp  exp3 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif trop bp  exp2 (&v) exp3 then C1 else C2 eif"
- proof -
-  have "trop bp exp2 exp exp3 = trop bp exp2 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp3"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_trop
-    by (metis (no_types, hide_lams) "2" "3" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif trop bp exp2 exp  exp3 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif trop bp  exp2 (&v) exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_cond_trop3[symbolic_exec_cp]:
+lemma assign_cond_trop3[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp2 exp3 exp then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif trop bp exp2 exp3 (&v)  then C1 else C2 eif"
- proof -
-  have "trop bp exp2 exp3 exp  = trop bp exp2 exp3 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>)"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_trop
-    by (metis (no_types, hide_lams) "2" "3" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif trop bp exp2 exp3 exp then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;;Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif trop bp exp2 exp3 (&v)  then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_cond_qtop1[symbolic_exec_cp]:
+lemma assign_cond_qtop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp exp2 exp3 exp4 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif qtop bp (&v) exp2 exp3 exp4 then C1 else C2 eif"
- proof -
-  have "qtop bp exp exp2 exp3 exp4 = qtop bp ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp2 exp3 exp4"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_qtop
-    by (metis (no_types, hide_lams) "2" "3" "4" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif qtop bp exp exp2 exp3 exp4 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif qtop bp (&v) exp2 exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_c_cond_qtop2[symbolic_exec_cp]:
+lemma assign_c_cond_qtop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp  exp3 exp4 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif qtop bp exp2 (&v) exp3 exp4 then C1 else C2 eif"
- proof -
-  have "qtop bp exp2 exp exp3 exp4 = qtop bp exp2 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp3 exp4"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_qtop
-    by (metis (no_types, hide_lams) "2" "3" "4" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif qtop bp exp2 exp  exp3 exp4 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif qtop bp exp2 (&v) exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_c_cond_qtop3[symbolic_exec_cp]:
+lemma assign_c_cond_qtop3[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp3 exp exp4 then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif qtop bp exp2  exp3 (&v) exp4 then C1 else C2 eif"
- proof -
-  have "qtop bp exp2 exp3 exp  exp4 = qtop bp exp2  exp3 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>) exp4"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_qtop
-    by (metis (no_types, hide_lams) "2" "3" "4" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif qtop bp exp2 exp3 exp exp4 then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif qtop bp exp2  exp3 (&v) exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl )
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_c_cond_qtop4[symbolic_exec_cp]:
+lemma assign_c_cond_qtop4[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp3 exp4 exp then (v \<Midarrow> exp ;; C1) else (v \<Midarrow> exp ;; C2) eif = 
-         v \<Midarrow> exp ;; bif qtop bp exp2  exp3 exp4 (&v)  then C1 else C2 eif"
- proof -
-  have "qtop bp exp2 exp3 exp4 exp = qtop bp exp2 exp3 exp4 ((&v::('a, 'b) uexpr)\<lbrakk>exp/v\<rbrakk>)"
-    by (metis (no_types) assms(1)  usubst_cancel)
-  then show ?thesis
-    using assign_c_cond_seqr_dist subst_qtop
-    by (metis (no_types, hide_lams) "2" "3" "4" id_subst pr_var_def subst_unrest)
-qed
+  shows "bif qtop bp exp2 exp3 exp4 exp then (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp ;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif = 
+         v \<Midarrow> exp ;; bif qtop bp exp2  exp3 exp4 (&v)  then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  apply (simp add: assms usubst uabr_comp uabr_simpl)
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+done
 
-lemma assign_c_cond_If [symbolic_exec_cp]:
+lemma assign_c_cond_If [uabr_cond]: 
   "(bif bexp then (v \<Midarrow> exp1) else (v \<Midarrow> exp2) eif) = 
    (v \<Midarrow> (trop If bexp exp1 exp2))" 
   by rel_auto
@@ -360,10 +333,6 @@ lemma assign_c_cond_If [symbolic_exec_cp]:
 subsection {*While laws*}
 text{*In this section we introduce the algebraic laws of programming related to the while
       statement.*}
-
-lemma if_mono:
-  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (bif b then P\<^sub>1 else Q\<^sub>1 eif) \<sqsubseteq> (bif b then P\<^sub>2 else Q\<^sub>2 eif)"
-  by rel_auto
 
 theorem while_unfold:
   "while b do P od = (bif b then (P ;; while b do P od) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
@@ -428,23 +397,22 @@ theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet>
 
 subsection {*assume laws*}
 
-lemma assume_twice: "(b\<^sup>\<top>\<^sup>C ;; c\<^sup>\<top>\<^sup>C) = (b \<and> c)\<^sup>\<top>\<^sup>C"
+lemma assume_twice[uabr_comp]: "(b\<^sup>\<top>\<^sup>C ;; c\<^sup>\<top>\<^sup>C) = (b \<and> c)\<^sup>\<top>\<^sup>C"
   apply pred_simp 
   apply auto
   apply (rel_simp)+
   apply blast
   apply (rel_simp)+
-  apply (metis (full_types) option.exhaust)
+  apply (metis (full_types))
 done
 
-lemma assert_twice: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\<^sub>C) = (b \<and> c)\<^sub>\<bottom>\<^sub>C" 
+lemma assert_twice[uabr_comp]: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\<^sub>C) = (b \<and> c)\<^sub>\<bottom>\<^sub>C" 
   apply pred_simp 
   apply auto
   apply (rel_simp)+
   apply blast
   apply (rel_simp)+
-  apply (metis (full_types) option.exhaust)
+  apply (metis (full_types))
 done
-
 
 end
