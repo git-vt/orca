@@ -13,7 +13,7 @@ text \<open>In this section we provide a set of examples for the use of Hoare lo
 
 text \<open>In the following examples:
       \begin{itemize}  
-         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a hoare triple for total 
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>A\<^sub>B\<^sub>R"} represent a hoare triple for total 
             correctness.
          \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
            where  @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
@@ -47,32 +47,35 @@ subsection \<open>Swap variables program\<close>
 lemma swap_test_manual:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
   and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
-  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-  z \<Midarrow> &x;;
-  x \<Midarrow> &y;;
-  y \<Midarrow> &z
-  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  shows 
+  "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
+    z \<Midarrow> &x;;
+    x \<Midarrow> &y;;
+    y \<Midarrow> &z
+   \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    defer
    apply (rule seq_hoare_r_t)
-    apply (rule assigns_hoare_r'_t)
-   apply (rule assigns_hoare_r'_t)
+    apply (rule assigns_abr_hoare_r'_t)
+   apply (rule assigns_abr_hoare_r'_t)
   apply rel_simp
   apply (simp add: lens_indep_sym)
-  apply blast
   done
 
 lemma swap_test:
   assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
   and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
-  shows "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-  z \<Midarrow> &x;;
-  x \<Midarrow> &y;;
-  y \<Midarrow> &z
-  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  shows 
+ "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
+   z \<Midarrow> &x;;
+   x \<Midarrow> &y;;
+   y \<Midarrow> &z
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   using assms
-  by rel_auto (simp add: lens_indep_sym)
+  apply (simp only: uabr_comp uabr_simpl lens_indep_def)
+  apply rel_simp
+done
 
 subsection {*Even count program*}
 
@@ -94,27 +97,27 @@ lemma even_count_total:
       bif &i mod 2 =\<^sub>u 0
         then j \<Midarrow> &j + 1
       else
-        SKIP
+        SKIP\<^sub>A\<^sub>B\<^sub>R
       eif;;
       i \<Midarrow> &i + 1
     od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>D"
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (rule seq_hoare_r_t)
    prefer 2
    apply (rule seq_hoare_r_t [of _ _ true])
-    apply (rule assigns_hoare_r'_t)
+    apply (rule assigns_abr_hoare_r'_t)
    apply (rule seq_hoare_r_t)
     apply (rule assume_hoare_r_t)
-     apply (rule skip_hoare_r_t)
+     apply (rule skip_abr_hoare_r_t)
     prefer 2
     apply (rule while_invr_hoare_r_t)
       apply (rule seq_hoare_r_t)
        prefer 2
-       apply (rule assigns_hoare_r'_t)
-      apply (rule cond_hoare_r_t)
-       apply (rule assigns_hoare_r_t)
+       apply (rule assigns_abr_hoare_r'_t)
+      apply (rule cond_abr_hoare_r_t)
+       apply (rule assigns_abr_hoare_r_t)
        prefer 6
-       apply (rule assigns_hoare_r_t)
+       apply (rule assigns_abr_hoare_r_t)
        unfolding lens_indep_def
        apply rel_auto
       apply rel_auto

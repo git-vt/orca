@@ -14,7 +14,7 @@ text{*In this section we provide a set of examples on the verification
 text{*
    In the following examples:
       \begin{itemize}  
-         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>D"} represent a hoare triple for total 
+         \<^item> The formal notation @{term "\<lbrace>Pre\<rbrace>prog\<lbrace>Post\<rbrace>\<^sub>A\<^sub>B\<^sub>R"} represent a hoare triple for total 
             correctness.
          \<^item> All variables are represented by lenses and have the type @{typ "'v \<Longrightarrow> 's"}:
            where @{typ "'v"} is the view type of the lens and @{typ "'s"} is the type of the state.
@@ -57,44 +57,66 @@ text{*Informally @{term "THROW"} statement will transform
       is a left zero under the assumption that the initial state is stable.*}
 
 lemma try_throw_zero:
-  "Simpl (try THROW catch SKIP end) = SKIP"
+  "(try THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by rel_blast 
 
 lemma try_throw_zero_hoare:
       "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
          i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
-         try THROW;; i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright> catch SKIP end
-       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
-  by rel_auto
+         try THROW\<^sub>A\<^sub>B\<^sub>R;; i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright> catch SKIP\<^sub>A\<^sub>B\<^sub>R end
+       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+     apply (simp only: uabr_comp usubst uabr_simpl simpl_abr_form)
+     apply rel_simp
+done 
 
-lemma try_not_throw_ignor_catch:
-  "Simpl (try \<langle>a\<rangle>\<^sub>C catch \<langle>b\<rangle>\<^sub>C end) = \<langle>a\<rangle>\<^sub>C"
-  by rel_blast 
 
 lemma try_not_throw_ignor_catch_hoare:
       "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
          try i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright> catch i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright> end
-       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>D"
-  by rel_auto
+       \<lbrace>&j =\<^sub>u \<guillemotleft>0::int\<guillemotright>\<and> &i =\<^sub>u \<guillemotleft>2::int\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+    apply (simp only: uabr_comp usubst uabr_simpl) 
+    apply rel_simp
+done
 
 lemma try_throw_zero':
-  "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) catch \<langle>b\<rangle>\<^sub>C end) = (\<langle>a\<rangle>\<^sub>C ;; \<langle>b\<rangle>\<^sub>C)"
+  "(try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;;THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto blast +  
 
 lemma try_throw_zero'_hoare:
       "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
-         try SKIP ;; i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;; THROW 
+         try SKIP\<^sub>A\<^sub>B\<^sub>R ;; i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;; THROW\<^sub>A\<^sub>B\<^sub>R 
          catch i \<Midarrow> \<guillemotleft>7::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>8::int\<guillemotright>  end
-       \<lbrace>&i =\<^sub>u \<guillemotleft>7::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>8::int\<guillemotright> \<rbrace>\<^sub>D"
-  by rel_auto
+       \<lbrace>&i =\<^sub>u \<guillemotleft>7::int\<guillemotright> \<and> &j =\<^sub>u \<guillemotleft>8::int\<guillemotright> \<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  apply (simp only: uabr_comp usubst uabr_simpl C3_abr_def) 
+  apply rel_simp
+done
 
-lemma "Simpl (try THROW ;; \<langle>a\<rangle>\<^sub>C catch SKIP end) = SKIP "
-  by rel_auto blast + 
+lemma "(try THROW\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
+  apply (simp only: uabr_comp usubst uabr_simpl) 
+  apply rel_simp
+done
 
-lemma "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C) catch SKIP end) =  \<langle>a\<rangle>\<^sub>C"
-  by rel_auto blast + 
+lemma "(try (SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R) catch SKIP\<^sub>A\<^sub>B\<^sub>R end) =  \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+  apply (simp only: uabr_comp usubst uabr_simpl) 
+  apply rel_simp
+done
 
-lemma "Simpl (try (SKIP ;; \<langle>a\<rangle>\<^sub>C;;THROW) catch SKIP end) = \<langle>a\<rangle>\<^sub>C"
+lemma "(try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; try  \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis (no_types))+
+done
+
+
+lemma "(try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; try  Simpl\<^sub>A\<^sub>B\<^sub>R P catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
+  apply pred_simp
+  apply rel_simp
+  apply auto
+  apply (metis (no_types))+
+done
+
+lemma "(try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
   by rel_auto blast +
 
 subsection {*block feature*}
@@ -110,7 +132,7 @@ text \<open>The normal restore/return functions were verbose, so it's good to ha
       to reduce duplicated code. Unfortunately, this does cause some parsing ambiguity, but Isabelle
       resolves that fairly well. It may reduce performance slightly, though.\<close>
 abbreviation cp_des where
-  "cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_vars.more \<circ> des_vars.more) s)\<guillemotright>"
+  "cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_abr.more \<circ> des_vars.more) s)\<guillemotright>"
 
 lemma   block_c_test1:
   shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
@@ -118,12 +140,12 @@ lemma   block_c_test1:
           bob
             INIT j \<Midarrow> 5;; i \<Midarrow> 5
             BODY II
-            RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
-                                j \<Midarrow> cp_des &j s
-            RETURN \<lambda> _ _. II
+            RESTORE (\<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                                j \<Midarrow> cp_des &j s)
+            RETURN (\<lambda> _ _. II)
           eob
-         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>D"
-  using assms by rel_simp
+         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  by rel_simp
 
 text {*block_test2 is similar to  block_test1 but the var i is a global var.
        In that case we can use restore function and the state t to set the variable to its
@@ -139,8 +161,9 @@ lemma   block_c_test2:
                                 j \<Midarrow> cp_des &j t
             RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
-  unfolding lens_indep_def by rel_simp
+         \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  unfolding lens_indep_def 
+  by rel_simp
 
 lemma  block_c_nested_test1:
   shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace>
@@ -158,8 +181,9 @@ lemma  block_c_nested_test1:
             RESTORE \<lambda> _ _. II
             RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u 5 \<and> &i =\<^sub>u 5\<rbrace>\<^sub>D"
-  unfolding lens_indep_def by rel_simp
+         \<lbrace>&j =\<^sub>u 5 \<and> &i =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  unfolding lens_indep_def 
+  by rel_simp
 
 lemma  block_c_nested_test2:
   shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace>
@@ -178,15 +202,9 @@ lemma  block_c_nested_test2:
                                 j \<Midarrow> cp_des &j s
             RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>D"
+         \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
     by rel_simp
-term "fault"
-term "SKIP"
-term "fault :== v"
-term "fault :== v;; (assign_r (f k) \<guillemotleft>val\<guillemotright>) "
-term "lens_comp "
-term "fault :== v;; (assign_r (add1  ;\<^sub>L field) val) ;; x\<Midarrow> val1"
-find_theorems name:".fault"
+
 section {*Separation Algebra by Calcagno*}
 subsection {*axioms*}
 named_theorems separation_algebra

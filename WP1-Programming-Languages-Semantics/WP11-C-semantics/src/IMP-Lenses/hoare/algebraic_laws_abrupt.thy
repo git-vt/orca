@@ -4,48 +4,84 @@ theory algebraic_laws_abrupt
 imports algebraic_laws_abrupt_aux
 
 begin
-
+(*TODO: add laws for assigns when composed with try catch...*)
 subsection"Throw"
 
-lemma throw_not_ok_left_zero[uabr_comp]: 
-  "((\<not>$ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
+lemma throw_cpa_left_zero_true_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; true) = (true)"
   by rel_auto
 
-lemma throw_ok_left_zero[uabr_comp]: 
-  "(($ok) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = ($ok)" 
+lemma throw_cpa_left_zero_true_lift_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto
 
-lemma throw_not_abr_left_zero[uabr_comp]: 
-  "((\<not>$aburpt) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<not>$aburpt)" 
+lemma throw_cpa_left_zero_false_lift_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma throw_cpa_left_zero_skip_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (THROW\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma throw_cpa_left_zero_assigns_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R) = (THROW\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma throw_cpa_left_zero_top_abr[uabr_comp]:
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; \<top>\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma throw_abr_not_ok_right_zero[uabr_comp]: 
+  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; (\<not>$ok)) = (\<not>$ok)" 
+  by rel_auto
+
+lemma not_abrupt_left_zero_throw_abr[uabr_comp]: 
+  "(($x) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = ($x)" 
   by rel_auto 
 
-lemma throw_abr_left_zero[uabr_comp]: 
+lemma abrupt_left_zero_throw_abr[uabr_comp]: 
   "($aburpt ;; THROW\<^sub>A\<^sub>B\<^sub>R) = $aburpt" 
   by rel_auto 
 
-lemma throw_bot_left_zero[uabr_comp]: 
+lemma bot_left_zero_throw_abr[uabr_comp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
   by rel_auto
 
-lemma throw_idem [uabr_comp]: 
+lemma throw_abr_idem [uabr_comp]: 
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto
 
-lemma throw_right_zero_skip_abr[uabr_comp]: 
+lemma throw_abr_right_zero_skip_abr[uabr_comp]: 
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto 
 
-lemma catch_miss: (*needs more laws to be automatic*)
+lemma throw_abr_catch_abr_simpl_miss[uabr_comp]: (*needs more laws to be automatic*)
   "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
   apply (simp add:   uabr_comp) 
   apply pred_simp 
   apply rel_auto 
 done
-  
-lemma "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
+
+lemma catch_abr_assigns_abr'[uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
   apply (simp add: uabr_comp) 
   apply pred_simp 
   apply rel_blast
+done
+
+lemma catch_abr_throw_abr'[uabr_comp]:
+  "try THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
+  apply (simp add: uabr_comp) 
+  apply pred_simp 
+  apply rel_blast
+done
+
+lemma catch_abr_assigns_abr[uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R  catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R )"(*needs more laws to be automatic*)
+  apply (simp add: uabr_comp) 
+  apply pred_simp 
+  apply rel_simp
+  apply auto
 done
 
 subsection"Skip"
@@ -53,21 +89,29 @@ subsection"Skip"
 text{*In this section we introduce the algebraic laws of programming related to the SKIP
       statement.*}
 
-lemma skip_abr_not_ok_left_zero[uabr_comp]: 
-  "((\<not>$ok) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$ok)" 
+lemma true_left_zero_skip_cpa_abr[uabr_comp]:
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; true) = (true)"
   by rel_auto
 
-lemma skip_abr_ok_left_zero[uabr_comp]: 
-  "($ok ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $ok" 
+lemma true_lift_abr_left_zero_skip_abr[uabr_comp]:
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma false_lift_abr_left_zero_skip_abr[uabr_comp]:
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>false\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma skip_abr_left_unit_assigns_abr[uabr_comp]:
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R) = (\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  by rel_auto
+
+lemma skip_abr_top_abr_left_zero[uabr_comp]:
+  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<top>\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto
 
 lemma skip_abr_abrupt_left_zero[uabr_comp]: 
-  "($abrupt ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $abrupt" 
+  "($x ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = $x" 
   by rel_auto 
-
-lemma skip_abr_not_abrupt_left_zero[uabr_comp]: 
-  "((\<not>$abrupt) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<not>$abrupt)" 
-  by rel_auto
 
 lemma skip_abr_bot_left_zero[uabr_comp]: 
   "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)" 
@@ -114,7 +158,7 @@ lemma assign_test[uabr_comp]:
   assumes 1:"mwb_lens x" 
   shows     "(x \<Midarrow> \<guillemotleft>u\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>) = (x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   using 1   
-  by (simp add: usubst unrest uabr_comp)
+  by (simp add: usubst uabr_comp)
 
 lemma assign_abr_left_comp_subst[uabr_comp]: 
   "(x \<Midarrow> u ;; Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<rceil>\<^sub>A\<^sub>B\<^sub>R)) = Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>A\<^sub>B\<^sub>R)" 
@@ -327,7 +371,7 @@ done
 
 lemma assign_c_cond_If [uabr_cond]: 
   "(bif bexp then (v \<Midarrow> exp1) else (v \<Midarrow> exp2) eif) = 
-   (v \<Midarrow> (trop If bexp exp1 exp2))" 
+   (v \<Midarrow> (exp1 \<triangleleft> bexp \<triangleright> exp2))" 
   by rel_auto
 
 subsection {*While laws*}
