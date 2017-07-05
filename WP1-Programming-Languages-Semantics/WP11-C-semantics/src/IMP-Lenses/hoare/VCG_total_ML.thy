@@ -8,9 +8,9 @@ text \<open>@{text \<open>infixl\<close>} rather than @{text \<open>infixr\<clos
 no_notation useq (infixr ";;" 51)
 notation useq (infixl ";;" 51)
 
-text \<open>@{thm seq_hoare_r_t}, @{thm assigns_hoare_r_t}, @{thm while_invr_hoare_r_t}, and
+text \<open>@{thm seq_hoare_r_t}, @{thm assigns_abr_hoare_r_t}, @{thm while_invr_hoare_r_t}, and
 @{thm cond_hoare_r_t} are handled separately as they could cause conflicts/failed proofs later on.\<close>
-lemmas vcg_rules = skip_hoare_r_t assigns_hoare_r'_t assert_hoare_r_t assume_hoare_r_t
+lemmas vcg_rules = skip_abr_hoare_r_t assigns_abr_hoare_r'_t assert_hoare_r_t assume_hoare_r_t
 while_hoare_r_t while_hoare_r'_t
 lemmas unfold_thms = lens_indep_def
 
@@ -22,8 +22,8 @@ hoare_rd |> Thm.concl_of |> HOLogic.dest_Trueprop |> HOLogic.dest_eq |> fst;
 val seqr = @{thm seqr.rep_eq};
 seqr |> Thm.concl_of |> HOLogic.dest_Trueprop |> HOLogic.dest_eq |> fst;
 
-val rassume_c = @{thm rassume_c_def};
-rassume_c |> Thm.concl_of |> HOLogic.dest_Trueprop |> HOLogic.dest_eq |> fst
+val rassume_abr = @{thm rassume_abr_def};
+rassume_abr |> Thm.concl_of |> HOLogic.dest_Trueprop |> HOLogic.dest_eq |> fst
 \<close>
 
 (* Need to start with seq splitting, applying the `seq_hoare_r_t[of _ _ true]` step when an
@@ -51,13 +51,13 @@ Subgoal.focus elements: {prems, params, asms, concl, context, schematics} *)
 fun vcg_seq_split ctxt goal = (REPEAT o CHANGED) (Subgoal.FOCUS (fn {concl, ...} =>
   case concl |> Thm.term_of |> HOLogic.dest_Trueprop |> dest_hoare_rd of
     Const (@{const_name seqr}, _) $ _ $
-      (Const (@{const_name rassume_c}, _) $ _)
+      (Const (@{const_name rassume_abr}, _) $ _)
         => resolve_tac ctxt [seq_hoare_r_t'] goal |
     _ => resolve_tac ctxt @{thms seq_hoare_r_t} goal)
   ctxt goal)
 
 (* Handles applying most Hoare rules, with the specific exclusion of seq_hoare_r_t and
-assigns_hoare_r_t [though one version calls through to it just in case]
+assigns_abr_hoare_r_t [though one version calls through to it just in case]
 (try match_tac (equivalent to `intro`) rather than resolve_tac (equivalent to `rule`)?)
 Using Subgoal.FOCUS
 messes up the behavior when goals should merge due to certain rules like the skip rule, etc. that
@@ -102,16 +102,16 @@ lemma increment_manual:
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    apply (rule seq_hoare_r_t[of _ _ true])
     apply rel_auto (* seq rule gives us a value of true in postcondition, which is trivial *)
    apply (rule assume_hoare_r_t)
-    apply (rule skip_hoare_r_t)
+    apply (rule skip_abr_hoare_r_t)
    apply rel_auto
   apply (rule while_invr_hoare_r_t)
-    apply (rule assigns_hoare_r_t)
+    apply (rule assigns_abr_hoare_r_t)
     unfolding lens_indep_def
     apply pred_auto
    apply pred_auto
@@ -127,7 +127,7 @@ lemma increment_tactic:
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)
   apply rel_auto
   apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)
@@ -136,9 +136,10 @@ lemma increment_tactic:
   apply rel_auto
 oops
 ML \<open>
-@{term "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>D"};
+@{term "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"};
 @{term "while b invr i do c od"};
-pprint_cterm @{context} @{cterm "\<lbrace>p\<rbrace>C;;c\<^sup>\<top>\<^sup>C\<lbrace>q\<rbrace>\<^sub>D"}
+pprint_cterm @{context} @{cterm "\<lbrace>p\<rbrace>C;;c\<^sup>\<top>\<^sup>C\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"}
 \<close>
+term "\<bottom>\<^sub>A\<^sub>B\<^sub>R"
 
 end
