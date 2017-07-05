@@ -169,7 +169,7 @@ where [urel_defs]:
 subsection{*Conditional*}
 
 abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")where
-  "bif b then P else Q eif \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
+  "bif b then P else Q eif \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
 
 subsection{*assert and assume*}
 
@@ -182,14 +182,14 @@ definition rassert_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cpa" (
 subsection{*Exceptions*}
 
 abbreviation catch_abr :: "('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("try (_) catch /(_) end")
-where "try P catch Q end \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
+where "try P catch Q end \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R(P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
 
 subsection{*Scoping*}
 
 definition block_abr ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
   "bob INIT init BODY body RESTORE restore RETURN return eob= 
-     Simpl\<^sub>A\<^sub>B\<^sub>R
+    C3_abr
     (Abs_uexpr (\<lambda>(s, s'). 
      \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                        \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II;; 

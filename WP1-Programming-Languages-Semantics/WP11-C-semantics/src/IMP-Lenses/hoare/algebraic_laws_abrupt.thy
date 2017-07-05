@@ -55,34 +55,9 @@ lemma throw_abr_right_zero_skip_abr[uabr_comp]:
   "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R" 
   by rel_auto 
 
-lemma throw_abr_catch_abr_simpl_miss[uabr_comp]: (*needs more laws to be automatic*)
-  "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
-  apply (simp add:   uabr_comp) 
-  apply pred_simp 
-  apply rel_auto 
-done
-
-lemma catch_abr_assigns_abr'[uabr_comp]:
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
-  apply (simp add: uabr_comp) 
-  apply pred_simp 
-  apply rel_blast
-done
-
-lemma catch_abr_throw_abr'[uabr_comp]:
-  "try THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
-  apply (simp add: uabr_comp) 
-  apply pred_simp 
-  apply rel_blast
-done
-
-lemma catch_abr_assigns_abr[uabr_comp]:
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R  catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R )"(*needs more laws to be automatic*)
-  apply (simp add: uabr_comp) 
-  apply pred_simp 
-  apply rel_simp
-  apply auto
-done
+lemma assigns_abr_throw_abr_right[uabr_comp]:
+  "\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R = (C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ($abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+  by rel_auto
 
 subsection"Skip"
 
@@ -181,7 +156,7 @@ lemma assign_abr_cond_abr[uabr_comp]: (*needs more laws to be automatic*)
   shows "(x \<Midarrow> e ;; (bif b then Simpl\<^sub>A\<^sub>B\<^sub>R P else Simpl\<^sub>A\<^sub>B\<^sub>R Q eif)) = 
          (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e ;; Simpl\<^sub>A\<^sub>B\<^sub>R P)  else (x \<Midarrow> e ;; Simpl\<^sub>A\<^sub>B\<^sub>R Q) eif)"
   apply (simp add: usubst uabr_comp)
-  apply pred_simp 
+  apply rel_auto
 done
 
 lemma assign_c_uop1[uabr_comp]: 
@@ -434,9 +409,9 @@ proof -
 qed
 
 theorem while_bot_false: "while\<^sub>\<bottom> false do P od = SKIP\<^sub>A\<^sub>B\<^sub>R"
-  by (simp add: While_bot_def mu_const alpha, rel_auto)
+  by (simp add: While_bot_def mu_const alpha)
 
-theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet> Simpl\<^sub>A\<^sub>B\<^sub>R (P ;; X))"
+theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet> (P ;; X))"
   by (simp add: While_bot_def alpha)
 
 subsection {*assume laws*}
@@ -458,5 +433,33 @@ lemma assert_twice[uabr_comp]: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\
   apply (rel_simp)+
   apply (metis (full_types))
 done
+
+subsection {*Try Catch laws*}
+
+lemma throw_abr_catch_abr_simpl_miss[uabr_comp]: (*needs more laws to be automatic*)
+  "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
+  apply (simp add:   uabr_comp) 
+  apply pred_simp 
+  apply rel_simp
+  apply blast 
+done
+
+lemma catch_abr_assigns_abr'[uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
+  apply (simp add: uabr_comp) 
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+lemma catch_abr_assigns_abr[uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R  catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R )"(*needs more laws to be automatic*)
+  apply (simp add: uabr_comp assigns_abr_def) 
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+
 
 end

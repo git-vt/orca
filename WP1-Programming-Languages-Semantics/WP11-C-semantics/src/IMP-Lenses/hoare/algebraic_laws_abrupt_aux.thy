@@ -437,7 +437,7 @@ lemma assigns_abr_comp[uabr_comp]:
 lemma usubst_cpa_des_cond_abr [usubst]:
   "\<lbrakk>$ok \<sharp> \<sigma>; $ok\<acute> \<sharp> \<sigma> \<rbrakk> \<Longrightarrow> 
     \<sigma> \<dagger> (R \<turnstile> bif b then P else Q eif) = 
-    (\<sigma> \<dagger> R \<turnstile>  ((\<sigma> \<dagger> \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> \<sigma> \<dagger> Q)) \<triangleleft> \<sigma> \<dagger> (\<not> $abrupt) \<triangleright> \<sigma> \<dagger> II))"
+    (\<sigma> \<dagger> R \<turnstile>  (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> \<sigma> \<dagger> Q))"
   by (simp add: usubst)
 
 lemma comp_cond_abr_left_distr[uabr_comp]:
