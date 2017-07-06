@@ -67,13 +67,11 @@ lemma increment_tactic2:
   do x \<Midarrow> &x + 1 od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (tactic \<open>vcg_rules_tac @{context}\<close>)
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
   done
 
 subsection \<open>Even count\<close>
-
 
 lemma even_count_method:
   assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
@@ -95,11 +93,10 @@ lemma even_count_method:
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (tactic \<open>vcg_rules_tac @{context}\<close>)
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
   apply vcg_autos
   apply vcg_autos
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
   done
