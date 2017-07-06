@@ -73,7 +73,8 @@ fun vcg_rule_tac ctxt goal = resolve_tac ctxt @{thms vcg_rules} goal
 fun vcg_allgoals_tac ctxt = (ALLGOALS o FIRST') [vcg_seq_split ctxt, vcg_rule_tac ctxt]
 fun vcg_rules_tac ctxt = ALLGOALS (fn goal => (REPEAT o CHANGED)
   (FIRST' [vcg_seq_split ctxt, vcg_rule_tac ctxt] goal))
-
+(*(ALLGOALS o REPEAT_ALL_NEW) 
+                            (CHANGED o TRY o FIRST' [vcg_seq_split ctxt, vcg_rule_tac ctxt])*)
 val vcg_pre_tac = vcg_insert_assms_tac THEN' vcg_insert_others_tac THEN' vcg_unfold_tac
 val vcg_tac = vcg_pre_tac (* THEN'
               (* apply rules, but with specific handling for the assumes/etc. cases;
