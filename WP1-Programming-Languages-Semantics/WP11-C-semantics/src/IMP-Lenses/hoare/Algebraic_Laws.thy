@@ -505,13 +505,6 @@ lemma cond_L6[urel_cond]:
   "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> b \<triangleright> R)) = (P \<triangleleft> b \<triangleright> R)" 
   by rel_auto
 
-lemma cond_L6x[urel_cond]: 
-  "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> \<not> b \<triangleright> R)) = (P \<triangleleft> b \<triangleright> Q)" 
-  by rel_auto
-
-lemma cond_L6y[urel_cond]: 
-  "((P \<triangleleft> \<not> b \<triangleright> Q) \<triangleleft> b \<triangleright> R) = (Q \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
 
 lemma cond_L7[urel_cond]: 
   "(P \<triangleleft> b \<triangleright> (P \<triangleleft> c \<triangleright> Q)) = (P \<triangleleft> b \<or> c \<triangleright> Q)"
