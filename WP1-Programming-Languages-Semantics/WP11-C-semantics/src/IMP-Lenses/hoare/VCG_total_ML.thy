@@ -68,12 +68,14 @@ fun vcg_seq_split ctxt goal = Subgoal.FOCUS (fn {concl, ...} =>
 Using Subgoal.FOCUS messes up the behavior when goals should merge due to certain rules like the
 skip rule, etc. that work fine when FOCUS is not used, so we stick with handling that here. *)
 (* fun vcg_rule_tac ctxt goal = (REPEAT o CHANGED) (resolve_tac ctxt @{thms vcg_rules} goal) *)
-fun vcg_rule_tac ctxt goal = resolve_tac ctxt @{thms vcg_rules} goal
+fun vcg_rule_tac ctxt = resolve_tac ctxt @{thms vcg_rules}
 
-fun vcg_allgoals_tac ctxt = (ALLGOALS o FIRST') [vcg_seq_split ctxt, vcg_rule_tac ctxt]
-fun vcg_rules_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW)
+fun vcg_rules_tac ctxt = (REPEAT o CHANGED  oo FIRST') [vcg_seq_split ctxt, vcg_rule_tac ctxt]
+fun vcg_rules_tac' ctxt = vcg_rules_tac ctxt 1
+
+fun vcg_rules_all_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW)
   (CHANGED o FIRST' [vcg_seq_split ctxt, vcg_rule_tac ctxt]) (* TRY doesn't seem of benefit *)
-fun vcg_rules_tac' ctxt = ALLGOALS (fn goal => (REPEAT o CHANGED) (* TRY doesn't help *)
+fun vcg_rules_all_tac' ctxt = ALLGOALS (fn goal => (REPEAT o CHANGED) (* TRY doesn't help *)
   (FIRST' [vcg_seq_split ctxt, vcg_rule_tac ctxt] goal))
 
 val vcg_pre_tac = vcg_insert_assms_tac THEN' vcg_insert_others_tac THEN' vcg_unfold_tac
@@ -82,10 +84,20 @@ val vcg_tac = vcg_pre_tac (* THEN'
               may also want to stick with partial rule application so we can
               do {pred,rel}_* on the way THEN' *)
               do stuff with {pred,rel}_* *)
+
+(* TODO: Figure out how to determine when all goals are predicates or otherwise not dischargable
+normally; at that point we need to start inserting assumptions/etc. and unfolding lemmas.  *)
 \<close>
 
-(* I'd prefer calling this from ML level using case matching on `Const (@{const_name taut}, _) $ _`
-but the ML interface for methods is not trivial to integrate with regular tactics. *)
-method vcg_autos = pred_auto|rel_auto
+text \<open>Tries discharging the leading subgoals with UTP *_auto methods, stops when it cannot. The
+failure is necessary to backtrack in cases where the VCG is applied to subgoals that have schematic
+variables and thus results in nasty transfer rules; we have to defer those subgoals and try again
+later after hopefully instantiating the schematic variables with the discharging of other subgoals.
+
+I'd prefer calling this from the ML level using case matching on
+@{text \<open>Const (@{const_name taut}, _) $ _\<close>} but the ML interface for methods is not trivial to
+integrate with regular tactics.\<close>
+method vcg_auto = (pred_auto|rel_auto); fail
+method vcg_autos = vcg_auto+
 
 end

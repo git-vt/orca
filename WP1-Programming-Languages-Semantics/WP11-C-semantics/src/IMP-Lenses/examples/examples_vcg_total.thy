@@ -66,14 +66,14 @@ lemma increment_tactic2:
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
   done
 
 subsection \<open>Even count\<close>
 
-lemma even_count_method:
+lemma even_count_tactic1:
   assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
   and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> endd" and "start \<bowtie> j" and "start \<bowtie> endd" and "j \<bowtie> endd"
   shows
@@ -92,13 +92,50 @@ lemma even_count_method:
       i \<Midarrow> &i + 1
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
-  apply (tactic \<open>vcg_rules_tac @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
   apply vcg_autos
   apply vcg_autos
-  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
-  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
+  done
+
+
+lemma even_count_tactic2:
+  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
+  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> endd" and "start \<bowtie> j" and "start \<bowtie> endd" and "j \<bowtie> endd"
+  shows
+  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
+    i \<Midarrow> &start;;
+    j \<Midarrow> 0;;
+    (&start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top>\<^sup>C;;
+    while &i <\<^sub>u &endd
+    invr &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
+    do
+      bif &i mod 2 =\<^sub>u 0 then
+        j \<Midarrow> &j + 1
+      else
+        SKIP\<^sub>A\<^sub>B\<^sub>R
+      eif;;
+      i \<Midarrow> &i + 1
+    od
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+  defer
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+  apply vcg_autos
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+  defer
+  apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
+(*   apply (tactic \<open>vcg_pre_tac @{context}\<close>) *)
+  apply (insert assms)
+  apply (unfold lens_indep_def)
+  using mod_pos_pos_trivial apply pred_auto
+  apply pred_auto
+  apply pred_auto
+  apply pred_auto
+  using mod_pos_pos_trivial apply pred_auto
   done
 
 end
