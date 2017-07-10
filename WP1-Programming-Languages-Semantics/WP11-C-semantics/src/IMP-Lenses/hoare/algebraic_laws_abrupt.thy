@@ -36,10 +36,6 @@ lemma throw_cpa_left_zero_top_abr[uabr_comp]:
   "(THROW\<^sub>A\<^sub>B\<^sub>R ;; \<top>\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto
 
-lemma throw_abr_not_ok_right_zero[uabr_comp]: 
-  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; (\<not>$ok)) = (\<not>$ok)" 
-  by rel_auto
-
 lemma not_abrupt_left_zero_throw_abr[uabr_comp]: 
   "(($x) ;; THROW\<^sub>A\<^sub>B\<^sub>R) = ($x)" 
   by rel_auto 
@@ -133,6 +129,61 @@ done
 subsection {*Assignment Laws*}
 text{*In this section we introduce the algebraic laws of programming related to the assignment
       statement.*}
+
+lemma [urel_cond]:
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>) ;; P \<triangleleft> \<not> $abrupt \<triangleright> Q) = 
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; Q)"
+  apply pred_simp
+  apply fastforce 
+done
+
+lemma [urel_cond]:
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute>) ;; P \<triangleleft> $abrupt \<triangleright> Q) = 
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute>);; P)"
+  apply pred_simp
+  apply fastforce 
+done
+
+lemma not_abrupt_assigns_abr_L6_left_des[urel_cond]:
+  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> $abrupt \<triangleright> Q))) \<triangleleft> \<not> $abrupt \<triangleright> R) = 
+   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Q)) \<triangleleft> \<not> $abrupt \<triangleright> R)"
+  unfolding assigns_abr_def 
+  apply (simp only: uabr_comp urel_cond)
+  apply pred_simp 
+  apply fastforce
+done
+
+lemma abrupt_assigns_abr_L6_left_des[urel_cond]:
+  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q))) \<triangleleft> $abrupt \<triangleright> R) = 
+   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Q)) \<triangleleft> $abrupt \<triangleright> R)"
+  unfolding assigns_abr_def 
+  by (simp only: urel_cond uabr_comp)
+
+lemma not_abrupt_assigns_abr_L6_right_des[urel_cond]:
+  "(R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> $abrupt \<triangleright> Q))) ) = 
+   ( R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P)))"
+  unfolding assigns_abr_def
+  by (simp only:urel_cond uabr_comp )
+
+lemma abrupt_assigns_abr_L6_right_des[urel_cond]:
+ "( R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q))) ) = 
+  ( R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P)) )"
+  apply pred_simp 
+  apply rel_simp
+  apply fastforce
+done
+
+lemma not_abrupt_left_assigns_abr_post_des[urel_cond]:
+  "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P))  = 
+   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>) ;; P))"
+  unfolding assigns_abr_def
+  by (simp only:urel_cond uabr_comp )
+
+lemma  not_abrupt_left_throw_abr_post_des[urel_cond]:
+  "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (THROW\<^sub>A\<^sub>B\<^sub>R;; P))  = 
+   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>) ;; P))"  
+  unfolding throw_abr_def
+  by (simp only:urel_cond uabr_comp)
 
 lemma usubst_abr_cancel [usubst]: 
   assumes 1:"weak_lens v" 
@@ -457,17 +508,48 @@ done
 
 subsection {*Try Catch laws*}
 
-lemma throw_abr_catch_abr_simpl_miss[uabr_comp]: (*needs more laws to be automatic*)
+lemma throw_abr_catch_abr_simpl_miss[uabr_comp]:
   "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
-  apply (simp add:   uabr_comp) 
+   by (simp only: uabr_comp uabr_cond uabr_simpl) 
+
+lemma "\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; C3_abr (P \<turnstile> Q) = C3_abr (\<lceil>a\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (P \<turnstile>  Q))"
+  by rel_auto
+
+
+lemma [uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R Q)"(*FIXEME:needs more laws to be automatic*)
+  apply (simp only: uabr_comp uabr_cond  uabr_simpl) 
   apply pred_simp 
   apply rel_simp
-  apply blast 
+  apply blast
 done
 
 lemma catch_abr_assigns_abr'[uabr_comp]:
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*needs more laws to be automatic*)
-  apply (simp add: uabr_comp) 
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*FIXEME:needs more laws to be automatic*)
+  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+ 
+lemma " ((P ;; Q) ;; R) = (P ;; Q ;; R)"
+  apply pred_simp 
+  apply blast
+done
+
+lemma "(THROW\<^sub>A\<^sub>B\<^sub>R ;; (abrupt :== (\<not> &abrupt)  ;;  C3_abr P) \<triangleleft> $abrupt \<triangleright> II) = 
+       (THROW\<^sub>A\<^sub>B\<^sub>R )"
+  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
+  apply pred_simp 
+  apply rel_simp
+  apply transfer
+  apply safe
+  apply simp_all
+oops
+
+lemma "C3_abr ((\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) ;; (abrupt :== (\<not> &abrupt)  ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = 
+       (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;;\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
   apply pred_simp 
   apply rel_simp
   apply blast
@@ -480,217 +562,11 @@ lemma catch_abr_assigns_abr[uabr_comp]:
   apply rel_simp
   apply blast
 done
-term " \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-    ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;;
-      (abrupt :== (\<not> &abrupt)  ;;
-       \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-          II) \<triangleleft> $abrupt \<triangleright>
-         II) \<triangleleft> \<not> $abrupt \<triangleright>
-        (II ;;
-         (abrupt :== (\<not> &abrupt)  ;;
-          \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-          (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-             II) \<triangleleft> $abrupt \<triangleright>
-            II)) \<triangleleft> \<not> $abrupt \<triangleright>
-       II"
 
-lemma upred_not_not[simp]:
-"\<not> \<not> P = P"
-  by rel_auto
+lemma assigns_abr_alpha:
+  "(abrupt :== (\<not> &abrupt)) = (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute> =\<^sub>u (\<not>$abrupt) \<and> $ok =\<^sub>u $ok\<acute>)"
+  "(ok :== (\<not> &ok)) = (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute> =\<^sub>u $abrupt \<and> $ok =\<^sub>u (\<not>$ok\<acute>))"
+  by rel_auto+
 
-lemma cond_not_cond_L6_right[urel_cond]: 
-  "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> \<not> b \<triangleright> R)) = (P \<triangleleft> b \<triangleright> Q)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_variant[urel_cond]: 
-  "(P \<triangleleft> \<not> b \<triangleright> (Q \<triangleleft>  b \<triangleright> R)) = (P \<triangleleft> \<not> b \<triangleright> Q)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left[urel_cond]: 
-  "((P \<triangleleft> b \<triangleright> Q) \<triangleleft> \<not> b \<triangleright> R) = (Q \<triangleleft>\<not> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left_variant[urel_cond]: 
-  "((P \<triangleleft> \<not> b \<triangleright> Q) \<triangleleft> b \<triangleright> R) = (Q \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_L6_left[urel_cond]: 
-  "((P \<triangleleft>  b \<triangleright> Q) \<triangleleft> b \<triangleright> R) = (P \<triangleleft>b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_L6_right_des[urel_cond]: 
-  "( R \<triangleleft> b \<triangleright> (S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) ) =  (R \<triangleleft> b \<triangleright> (S \<turnstile> Q))" 
-  by rel_auto
-
-lemma cond_L6_left_des[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft>  b \<triangleright> Q)) \<triangleleft> b \<triangleright> R) =  (S \<turnstile> P \<triangleleft>b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_des[urel_cond]: 
-  "( R \<triangleleft> \<not> b \<triangleright> (S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) ) =  (R \<triangleleft> \<not> b \<triangleright> (S \<turnstile> P))" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_des_variant[urel_cond]:
-  "R \<triangleleft> b \<triangleright> (S \<turnstile> (P \<triangleleft> \<not> b \<triangleright> Q)) = R \<triangleleft> b \<triangleright> (S \<turnstile> P)"
-  by rel_auto
-
-lemma cond_not_cond_L6_left_des[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) \<triangleleft> \<not> b \<triangleright> R) =  ((S \<turnstile> Q) \<triangleleft> \<not> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left_des_variant[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft> \<not> b \<triangleright> Q)) \<triangleleft> b \<triangleright> R) =  ((S \<turnstile> Q) \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
-
-lemma undep_imp_unrest[unrest]: (*FIXEME:This law should be used by alphabet to generate automatically unrest between different fields*)
-  assumes "x \<bowtie> y "
-  shows "$x \<sharp> $y" 
-  using assms unfolding lens_indep_def
-  by pred_auto
-
-lemma uabr_alphabet_unrest[unrest]:(*FIXEME:These laws should be generated automatically by alphabet backend since all the fields of alphabet are independant*)
-  "$ok\<acute> \<sharp> $abrupt\<acute>" "$ok \<sharp> $abrupt"
-  "$ok\<acute> \<sharp> $abrupt"  "$ok \<sharp> $abrupt\<acute>"
-  "$abrupt\<acute> \<sharp> $ok\<acute>" "$abrupt \<sharp> $ok "
-  "$abrupt \<sharp> $ok\<acute>"  "$abrupt\<acute> \<sharp> $ok"
-  by pred_simp+
-
-lemma not_abrupt_assigns_abr_L6_left_des[urel_cond]:
-  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> $abrupt \<triangleright> Q))) \<triangleleft> \<not> $abrupt \<triangleright> R) = 
-   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Q)) \<triangleleft> \<not> $abrupt \<triangleright> R)"
-  unfolding assigns_abr_def 
-  apply (simp only: uabr_comp)
-  apply pred_simp 
-  apply fastforce
-done
-
-lemma abrupt_assigns_abr_L6_left_des[urel_cond]:
-  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q))) \<triangleleft> $abrupt \<triangleright> R) = 
-   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Q)) \<triangleleft> $abrupt \<triangleright> R)"
-  unfolding assigns_abr_def 
-  by (simp only: urel_cond uabr_comp)
-  
-lemma not_abrupt_assigns_abr_L6_right_des[urel_cond]:
-  "(R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> $abrupt \<triangleright> Q))) ) = 
-   ( R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P)))"
-  unfolding assigns_abr_def
-  by (simp only:urel_cond uabr_comp )
-
-lemma abrupt_assigns_abr_L6_right_des[urel_cond]:
- "( R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q))) ) = 
-  ( R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P)) )"
-  apply pred_simp 
-  apply rel_simp
-  apply fastforce
-done
-
-lemma [urel_cond]:
-  "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P))  = 
-   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (SKIP\<^sub>A\<^sub>B\<^sub>R;; P))"
-  unfolding assigns_abr_def
-  by (simp only:urel_cond uabr_comp )
-
-lemma [urel_cond]:
-  "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (THROW\<^sub>A\<^sub>B\<^sub>R;; P))  = 
-   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (SKIP\<^sub>A\<^sub>B\<^sub>R;; P))"  
-  unfolding throw_abr_def
-  by (simp only:urel_cond uabr_comp )
-
-lemma 
-  "((abrupt :== (\<not> &abrupt) ;; ((\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<not> $abrupt \<triangleright> II)) 
-       \<triangleleft> $abrupt \<triangleright> II) =  \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II"
- by rel_auto
-
-lemma "(abrupt :== (\<not> &abrupt)) = (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute> =\<^sub>u (\<not>$abrupt) \<and> $ok =\<^sub>u $ok\<acute>)"
-  by rel_auto
-
-lemma 
-  "((abrupt :== (\<not> &abrupt) ;; (P \<triangleleft> \<not> $abrupt \<triangleright> II)) 
-       \<triangleleft> \<not> $abrupt \<triangleright> II) = ((\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and>  $abrupt\<acute> =\<^sub>u (\<not>$abrupt) \<and> $ok =\<^sub>u $ok\<acute>) \<triangleleft> \<not> $abrupt \<triangleright> II )"
-  apply pred_simp 
-  apply rel_simp
-  apply auto
-done
-lemma 
-  "(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-    (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;;
-     (abrupt :== (\<not> &abrupt)  ;;
-      \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-         II) \<triangleleft> $abrupt \<triangleright>
-        II)) \<triangleleft> \<not> $abrupt \<triangleright> II =
-   \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-    (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;; II) \<triangleleft> \<not> $abrupt \<triangleright> II"
-  apply (simp only:urel_cond uabr_comp)
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
-
-lemma 
-  "\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-    (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;;
-     (abrupt :== (\<not> &abrupt)  ;;
-      \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-         II) \<triangleleft> $abrupt \<triangleright>
-        II) \<triangleleft> \<not> $abrupt \<triangleright>
-       II =
-    \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright> II"
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
-lemma  
-  "(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-    ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;;
-      (abrupt :== (\<not> &abrupt)  ;;
-       \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-          II) \<triangleleft> $abrupt \<triangleright>
-         II) \<triangleleft> \<not> $abrupt \<triangleright>
-        (abrupt :== (\<not> &abrupt)  ;;
-         \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-         (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-            II))) \<triangleleft> \<not> $abrupt \<triangleright>
-       II =
-    \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright> II"
-  apply (simp only: cond_L7xx )
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
-term "bif b then bif b then P1 else P2 eif else Q eif"
-lemma
- "\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) ;;
-      (abrupt :== (\<not> &abrupt)  ;;
-       \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-          II) \<triangleleft> $abrupt \<triangleright>
-         II) \<triangleleft> \<not> $abrupt \<triangleright>
-        (II ;;
-         (abrupt :== (\<not> &abrupt)  ;;
-          \<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile>
-          (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>b\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright>
-             II) \<triangleleft> $abrupt \<triangleright>
-            II)) \<triangleleft> \<not> $abrupt \<triangleright> II =
-    (\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not> $abrupt\<acute> \<and> \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> \<not> $abrupt \<triangleright> II)"
-  apply (simp add : unrest  cond_L6x cond_L7x)
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
-lemma
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R  catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R )"(*needs more laws to be automatic*)
-  apply (simp only: uabr_comp)
-  apply (simp only: Algebraic_Laws.cond_seq_left_distr  unrest) 
-  apply (simp only: urel_cond usubst unrest uabr_cond uabr_comp uabr_simpl)
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
-
-lemma "(\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; ((abrupt:== (\<not> &abrupt) ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II)) =
-       (\<^bold>\<exists> v \<bullet> \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R\<lbrakk>\<guillemotleft>v\<guillemotright>/$abrupt\<acute>\<rbrakk> ;; 
-              ((abrupt :== (\<not> &abrupt)  ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II)\<lbrakk>\<guillemotleft>v\<guillemotright>/$abrupt\<rbrakk>)"
-  apply (intro seqr_middle)
-  apply simp
-done
 
 end

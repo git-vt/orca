@@ -134,7 +134,7 @@ subsection{*Healthiness conditions*}
 
 text {*Programs in fault or abrupt or stuck state do not progress*}
 definition C3_abr_def [upred_defs]: 
-  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> II)"
+  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>)))"
 
 abbreviation
  "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
