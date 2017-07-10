@@ -1,0 +1,17 @@
+structure ALPHA : sig
+  type ('a, 'b) uexpr
+  type ('a, 'b, 'c) lens_ext
+  val alpha_of : ('a, 'b) uexpr -> ('b, 'b, unit) lens_ext
+end = struct
+
+datatype ('a, 'b) uexpr = Abs_uexpr of ('b -> 'a);
+
+datatype ('a, 'b, 'c) lens_ext = Lens_ext of ('b -> 'a) * ('b -> 'a -> 'b) * 'c;
+
+fun id x = (fn xa => xa) x;
+
+val id_lens : ('a, 'a, unit) lens_ext = Lens_ext (id, (fn _ => id), ());
+
+fun alpha_of e = id_lens;
+
+end; (*struct ALPHA*)
