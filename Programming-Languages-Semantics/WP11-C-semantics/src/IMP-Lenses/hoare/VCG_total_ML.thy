@@ -70,7 +70,7 @@ skip rule, etc. that work fine when FOCUS is not used, so we stick with handling
 (* fun vcg_rule_tac ctxt goal = (REPEAT o CHANGED) (resolve_tac ctxt @{thms vcg_rules} goal) *)
 fun vcg_rule_tac ctxt = resolve_tac ctxt @{thms vcg_rules}
 
-fun vcg_rules_tac ctxt = (REPEAT o CHANGED  oo FIRST') [vcg_seq_split ctxt, vcg_rule_tac ctxt]
+fun vcg_rules_tac ctxt = (REPEAT o CHANGED oo FIRST') [vcg_seq_split ctxt, vcg_rule_tac ctxt]
 fun vcg_rules_tac' ctxt = vcg_rules_tac ctxt 1
 
 fun vcg_rules_all_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW)

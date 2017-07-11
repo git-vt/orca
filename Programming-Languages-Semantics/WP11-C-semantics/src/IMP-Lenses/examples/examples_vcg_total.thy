@@ -94,13 +94,11 @@ lemma even_count_tactic1:
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
   apply vcg_autos
-  apply vcg_autos
   apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
   apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
   done
-
 
 lemma even_count_tactic2:
   assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
