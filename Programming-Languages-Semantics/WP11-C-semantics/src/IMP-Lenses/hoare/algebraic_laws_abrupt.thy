@@ -507,53 +507,98 @@ lemma assert_twice[uabr_comp]: "(b\<^sub>\<bottom>\<^sub>C ;; c\<^sub>\<bottom>\
 done
 
 subsection {*Try Catch laws*}
-
+thm assigns_abr_throw_abr_right
+thm simpl_abr_R3_conj
 lemma throw_abr_catch_abr_simpl_miss[uabr_comp]:
   "try THROW\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = Simpl\<^sub>A\<^sub>B\<^sub>R Q"
    by (simp only: uabr_comp uabr_cond uabr_simpl) 
 
-lemma "\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; C3_abr (P \<turnstile> Q) = C3_abr (\<lceil>a\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (P \<turnstile>  Q))"
-  by rel_auto
+
+lemma [uabr_comp]:
+  "Simpl\<^sub>A\<^sub>B\<^sub>R ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;; Simpl\<^sub>A\<^sub>B\<^sub>R (Q)) \<triangleleft> $abrupt \<triangleright> II) =  C3_abr (\<lceil>a\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> Q))"
+  apply pred_simp 
+  apply rel_simp
+  apply safe
+  apply auto
+done
 
 
 lemma [uabr_comp]:
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R Q)"(*FIXEME:needs more laws to be automatic*)
-  apply (simp only: uabr_comp uabr_cond  uabr_simpl) 
+  "C3_abr ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;; Simpl\<^sub>A\<^sub>B\<^sub>R (Q)) \<triangleleft> $abrupt \<triangleright> II) =  C3_abr (\<lceil>a\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> Q))"
+  apply pred_simp 
+  apply rel_simp
+  apply safe
+  apply auto
+done
+
+lemma [uabr_comp]:
+  "Simpl\<^sub>A\<^sub>B\<^sub>R ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
   apply pred_simp 
   apply rel_simp
   apply blast
 done
 
-lemma catch_abr_assigns_abr'[uabr_comp]:
-  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*FIXEME:needs more laws to be automatic*)
-  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
+lemma [uabr_comp]:
+  "C3_abr ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
   apply pred_simp 
   apply rel_simp
   apply blast
 done
+
+lemma [uabr_comp]:
+  "Simpl\<^sub>A\<^sub>B\<^sub>R ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;SKIP\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+lemma [uabr_comp]:
+  "C3_abr ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;SKIP\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+lemma [uabr_comp]:
+  "Simpl\<^sub>A\<^sub>B\<^sub>R ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;;THROW\<^sub>A\<^sub>B\<^sub>R)"
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+lemma [uabr_comp]:
+  "C3_abr ((Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute>) \<and> (Simpl\<^sub>A\<^sub>B\<^sub>R \<lceil>\<langle>a\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) ;;
+   (abrupt :== (\<not> &abrupt)  ;;THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;;THROW\<^sub>A\<^sub>B\<^sub>R)"
+  apply pred_simp 
+  apply rel_simp
+  apply blast
+done
+
+lemma [uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch Simpl\<^sub>A\<^sub>B\<^sub>R Q end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R Q)"(*FIXEME:needs more laws to be automatic*)
+  by (simp only: uabr_comp uabr_cond  uabr_simpl) 
+
+lemma catch_abr_assigns_abr'[uabr_comp]:
+  "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"(*FIXEME:needs more laws to be automatic*)
+  by (simp only: uabr_comp uabr_cond uabr_simpl ) 
+
  
 lemma " ((P ;; Q) ;; R) = (P ;; Q ;; R)"
   apply pred_simp 
   apply blast
 done
 
-lemma "(THROW\<^sub>A\<^sub>B\<^sub>R ;; (abrupt :== (\<not> &abrupt)  ;;  C3_abr P) \<triangleleft> $abrupt \<triangleright> II) = 
-       (THROW\<^sub>A\<^sub>B\<^sub>R )"
-  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
-  apply pred_simp 
-  apply rel_simp
-  apply transfer
-  apply safe
-  apply simp_all
-oops
 
 lemma "C3_abr ((\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; THROW\<^sub>A\<^sub>B\<^sub>R) ;; (abrupt :== (\<not> &abrupt)  ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II) = 
        (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;;\<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
-  apply (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
-  apply pred_simp 
-  apply rel_simp
-  apply blast
-done
+  by (simp only: uabr_comp uabr_cond uabr_simpl unrest) 
 
 lemma catch_abr_assigns_abr[uabr_comp]:
   "try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R  catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R )"(*needs more laws to be automatic*)

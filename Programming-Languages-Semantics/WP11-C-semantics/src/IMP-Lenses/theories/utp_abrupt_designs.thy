@@ -84,13 +84,10 @@ syntax
 translations
   "P \<^sub>a\<^sub>f" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST abrupt) false) P"
   "P \<^sub>a\<^sub>t" \<rightleftharpoons> "CONST usubst (CONST subst_upd CONST id (CONST ivar CONST abrupt) true) P"
-  "\<top>\<^sub>A\<^sub>B\<^sub>R" => "CONST conj_upred 
-            (CONST not_upred (CONST utp_expr.var (CONST ivar CONST ok))) 
-            (CONST not_upred (CONST utp_expr.var (CONST ivar CONST abrupt)))
-                              "
+  "\<top>\<^sub>A\<^sub>B\<^sub>R" => "(CONST not_upred (CONST utp_expr.var (CONST ivar CONST ok)))"
   "\<bottom>\<^sub>A\<^sub>B\<^sub>R" => "true"
 
-lemma "\<top>\<^sub>A\<^sub>B\<^sub>R = ((\<not> $ok) \<and> (\<not> $abrupt))"
+lemma "\<top>\<^sub>A\<^sub>B\<^sub>R = ((\<not> $ok))"
   by auto
 
 subsection {*Substitution lift and drop*}
