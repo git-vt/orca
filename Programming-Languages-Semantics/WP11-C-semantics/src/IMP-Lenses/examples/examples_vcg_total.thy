@@ -126,14 +126,8 @@ lemma even_count_tactic2:
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
   defer
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
-(*   apply (tactic \<open>vcg_pre_tac @{context}\<close>) *)
-  apply (insert assms)
-  apply (unfold lens_indep_def)
-  using mod_pos_pos_trivial apply pred_auto
-  apply pred_auto
-  apply pred_auto
-  apply pred_auto
-  using mod_pos_pos_trivial apply pred_auto
+  apply (tactic \<open>vcg_pre_tac @{context}\<close>)
+  apply vcg_autos
   done
 
 end
