@@ -131,7 +131,7 @@ subsection{*Healthiness conditions*}
 
 text {*Programs in fault or abrupt or stuck state do not progress*}
 definition C3_abr_def [upred_defs]: 
-  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>)))"
+  "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> II)"
 
 abbreviation
  "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> C3_abr(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (P))"
@@ -157,7 +157,7 @@ subsection{*THROW*}
 
 definition throw_abr :: "('\<alpha>) hrel_cpa" ("THROW\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "THROW\<^sub>A\<^sub>B\<^sub>R = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
 
 definition assigns_abr :: " '\<alpha> usubst \<Rightarrow> ('\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
@@ -179,14 +179,13 @@ definition rassert_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cpa" (
 subsection{*Exceptions*}
 
 abbreviation catch_abr :: "('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("try (_) catch /(_) end")
-where "try P catch Q end \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R(P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
+where "try P catch Q end \<equiv> (P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
 
 subsection{*Scoping*}
 
 definition block_abr ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
   "bob INIT init BODY body RESTORE restore RETURN return eob= 
-    C3_abr
     (Abs_uexpr (\<lambda>(s, s'). 
      \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                        \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II;; 
