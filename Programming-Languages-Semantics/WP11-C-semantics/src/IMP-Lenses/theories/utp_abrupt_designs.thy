@@ -15,9 +15,7 @@ text {*In order to record the interaction of a sequential C program with its exe
 
 alphabet  cp_abr = des_vars +
   abrupt:: bool
- (* abrupt_aux :: "'a option" store the reason of the abrupt termination*)
-  (*wait :: bool*)
-update_uexpr_rep_eq_thms
+
 declare cp_abr.splits [alpha_splits]
 
 subsubsection {*Alphabet proofs*}
@@ -129,7 +127,7 @@ subsection {* Reactive lemmas *}
 
 subsection{*Healthiness conditions*}
 
-text {*Programs in fault or abrupt or stuck state do not progress*}
+text {*Programs in abrupt state do not progress*}
 definition C3_abr_def [upred_defs]: 
   "C3_abr(P) = (P \<triangleleft> \<not>$abrupt \<triangleright> II)"
 
@@ -138,16 +136,19 @@ abbreviation
 
 subsection{*Control flow statements*}
 
-text{*We introduce the known control-flow statements for C. Our semantics is restricted
-      to @{const C3_abr}. In other words It assumes:
-     \begin{itemize}   
-       \<^item>  an execution starting from initial stable state ie,@{term "$ok"},   
-       \<^item>  terminates a final state ie,@{term "$ok\<acute>"},
-       \<^item>  the final state is a normal state ie,
-          @{term "\<not>$abrupt"} and @{term "$fault_tr =\<^sub>u \<guillemotleft>None\<guillemotright>"},
-     \end{itemize}
-    Thus it capture Simpl semantics.
-    *}
+text
+{*
+  We introduce the known control-flow statements for C. Our semantics is restricted
+  to @{const C3_abr}. In other words It assumes:
+  \begin{itemize}   
+    \<^item>  If we start the execution of a program ie, @{term "$ok"}, from an initial stable state ie,
+       @{term "\<not>($abrupt)"},   
+    \<^item>  the program can terminates and has a final state ie,@{term "$ok\<acute>"},
+    \<^item>  the final state is a normal state if it terminates and the result of execution is 
+       @{term "\<not>$abrupt"},
+  \end{itemize}
+  Thus it capture Simpl semantics.
+*}
 
 definition skip_abr :: "('\<alpha>) hrel_cpa" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]:
@@ -157,7 +158,7 @@ subsection{*THROW*}
 
 definition throw_abr :: "('\<alpha>) hrel_cpa" ("THROW\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "THROW\<^sub>A\<^sub>B\<^sub>R = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  "THROW\<^sub>A\<^sub>B\<^sub>R = ((\<not>$abrupt)\<turnstile> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
 
 definition assigns_abr :: " '\<alpha> usubst \<Rightarrow> ('\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
@@ -165,8 +166,8 @@ where [urel_defs]:
 
 subsection{*Conditional*}
 
-abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")where
-  "bif b then P else Q eif \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
+abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")
+where "bif b then P else Q eif \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
 
 subsection{*assert and assume*}
 
@@ -192,6 +193,7 @@ definition block_abr ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") wher
          restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s')))" 
 
 subsection{*Loops*}
+
 purge_notation while ("while\<^sup>\<top> _ do _ od")
 
 definition While :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sup>\<top> _ do _ od") where
@@ -208,7 +210,7 @@ definition While_bot :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rig
 "while\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
 subsection{*While-loop inv*}
-text {* While loops with invariant decoration *}
+text {*While loops with invariant decoration*}
 
 purge_notation while_inv ("while _ invr _ do _ od" 70)
 
@@ -218,7 +220,6 @@ definition While_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarro
 declare While_def [urel_defs]
 declare While_inv_def [urel_defs]
 declare While_bot_def [urel_defs]
-
 
 syntax
   "_assignmentabr" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 55)
