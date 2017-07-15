@@ -237,102 +237,87 @@ lemma usubst_cpf_skip_cpf [usubst]:
   shows 
   "(\<sigma> \<dagger> SKIP\<^sub>F\<^sub>L\<^sub>T) = (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<sigma> \<dagger> (\<not>$fault\<acute> \<and> \<lceil>II\<rceil>\<^sub>F\<^sub>L\<^sub>T)) \<triangleleft> \<sigma> \<dagger> (\<not>$fault) \<triangleright> (\<sigma> \<dagger> (II)))"
   using assms unfolding skip_flt_def
-  by (simp add: usubst) 
+  by (simp add: usubst)  
 
-lemma usubst_cpa_throw_cpa [usubst]:
+lemma usubst_cpf_assigns_cpf [usubst]:
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
   shows 
-  "(\<sigma> \<dagger> THROW\<^sub>A\<^sub>B\<^sub>R) = (\<sigma> \<dagger> (\<not>$abrupt) \<turnstile> (\<sigma> \<dagger> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
-  using assms unfolding throw_abr_def 
-  by (simp add: usubst) 
-
-lemma usubst_cpa_assigns_cpa [usubst]:
-  assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
-  shows 
-  "\<sigma> \<dagger> \<langle>\<rho>\<rangle>\<^sub>A\<^sub>B\<^sub>R = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ((\<not>$abrupt\<acute>) \<and> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright>  (\<sigma> \<dagger> (II)))"  
-  using assms unfolding assigns_abr_def
+  "\<sigma> \<dagger> \<langle>\<rho>\<rangle>\<^sub>F\<^sub>L\<^sub>T = (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<sigma> \<dagger> ((\<not>$fault\<acute>) \<and> \<lceil>\<langle>\<rho>\<rangle>\<^sub>a\<rceil>\<^sub>F\<^sub>L\<^sub>T)) \<triangleleft> \<sigma> \<dagger> (\<not>$fault) \<triangleright>  (\<sigma> \<dagger> (II)))"  
+  using assms unfolding assigns_flt_def
   by (simp add: usubst)
 
-lemma simpl_comp_left_distr:
-  "(C3_abr (P) ;; R) = ((P;;R) \<triangleleft> \<not>$abrupt \<triangleright> (II ;; R))"
+lemma c3_flt_comp_left_distr:
+  "(C3_flt (P) ;; R) = ((P;;R) \<triangleleft> \<not>$fault \<triangleright> (II ;; R))"
   apply pred_simp
   apply rel_simp
   apply fastforce
 done
 
-lemma c3_abr_comp_semir:
-  "(C3_abr(P) ;; C3_abr(R)) = C3_abr (P ;; C3_abr(R))"
+lemma c3_flt_comp_semir:
+  "(C3_flt(P) ;; C3_flt(R)) = C3_flt (P ;; C3_flt(R))"
   by rel_auto
 
-lemma c3_abr_comp_simpl[uabr_comp]:
-  "(C3_abr(P) ;; C3_abr(R)) = ((P ;; C3_abr(R)) \<triangleleft> \<not>$abrupt \<triangleright> (II))"
+lemma c3_flt_comp_simpl[uflt_comp]:
+  "(C3_flt(P) ;; C3_flt(R)) = ((P ;; C3_flt(R)) \<triangleleft> \<not>$fault \<triangleright> (II))"
   by rel_auto
 
-lemma simpl_abr_comp_semir:
-  "(Simpl\<^sub>A\<^sub>B\<^sub>R(P) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) = Simpl\<^sub>A\<^sub>B\<^sub>R ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> P) ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R))"
+lemma simpl_flt_comp_semir:
+  "(Simpl\<^sub>F\<^sub>L\<^sub>T(P) ;; Simpl\<^sub>F\<^sub>L\<^sub>T(R)) = Simpl\<^sub>F\<^sub>L\<^sub>T ((\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> P) ;; Simpl\<^sub>F\<^sub>L\<^sub>T(R))"
   by rel_auto
 
-theorem design_top_abr_left_zero[uabr_comp]: 
-  "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; (P \<turnstile> Q)) = \<top>\<^sub>A\<^sub>B\<^sub>R"
+theorem design_top_flt_left_zero[uflt_comp]: 
+  "(\<top>\<^sub>F\<^sub>L\<^sub>T ;; (P \<turnstile> Q)) = \<top>\<^sub>F\<^sub>L\<^sub>T"
   by (rel_auto)
 
-theorem Simpl_abr_top_abr_left_zero[uabr_comp]: 
-  "(\<top>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R (P)) = \<top>\<^sub>A\<^sub>B\<^sub>R"
+theorem Simpl_flt_top_flt_left_zero[uflt_comp]: 
+  "(\<top>\<^sub>F\<^sub>L\<^sub>T ;; Simpl\<^sub>F\<^sub>L\<^sub>T (P)) = \<top>\<^sub>F\<^sub>L\<^sub>T"
   by (rel_auto)
 
-lemma assigns_lift_cpa_comp_rel_cpa[uabr_comp]:
-  assumes "$ok \<sharp> P" "$abrupt \<sharp> P"
-  shows  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P)"
+lemma assigns_lift_cpf_comp_rel_cpf[uflt_comp]:
+  assumes "$ok \<sharp> P" "$fault \<sharp> P"
+  shows  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>F\<^sub>L\<^sub>T ;; P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>F\<^sub>L\<^sub>T \<dagger> P)"
   apply (insert assms)
   apply pred_simp 
   apply rel_blast 
 done
 
-lemma lift_des_skip_dr_unit_abr [uabr_comp]:
-  "(\<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R) = \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R"
-  "(\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R ;; \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R) = \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R"
+lemma lift_des_skip_dr_unit_flt [uflt_comp]:
+  "(\<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T ;; \<lceil>II\<rceil>\<^sub>F\<^sub>L\<^sub>T) = \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
+  "(\<lceil>II\<rceil>\<^sub>F\<^sub>L\<^sub>T ;; \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T) = \<lceil>P\<rceil>\<^sub>F\<^sub>L\<^sub>T"
   by (rel_auto)+
 
-lemma skip_cpa_left_comp_simpl[uabr_comp]:
-  "(SKIP\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) = (Simpl\<^sub>A\<^sub>B\<^sub>R(R))"
+lemma skip_cpf_left_comp_simpl[uflt_comp]:
+  "(SKIP\<^sub>F\<^sub>L\<^sub>T ;; Simpl\<^sub>F\<^sub>L\<^sub>T(R)) = (Simpl\<^sub>F\<^sub>L\<^sub>T(R))"
   by rel_auto
 
-lemma skip_cpa_right_comp_simpl[uabr_comp]:
-  "(Simpl\<^sub>A\<^sub>B\<^sub>R(R) ;; SKIP\<^sub>A\<^sub>B\<^sub>R) = (Simpl\<^sub>A\<^sub>B\<^sub>R(R))"
+lemma skip_cpf_right_comp_simpl[uflt_comp]:
+  "(Simpl\<^sub>F\<^sub>L\<^sub>T(R) ;; SKIP\<^sub>F\<^sub>L\<^sub>T) = (Simpl\<^sub>F\<^sub>L\<^sub>T(R))"
   by rel_auto
 
-lemma throw_cpa_left_comp_simpl[uabr_comp]:
-  "(THROW\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R(R)) = (THROW\<^sub>A\<^sub>B\<^sub>R)"
+lemma assign_flt_alt_def: 
+  "\<langle>\<sigma>\<rangle>\<^sub>F\<^sub>L\<^sub>T = Simpl\<^sub>F\<^sub>L\<^sub>T (\<not>$fault\<acute> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>F\<^sub>L\<^sub>T)"
   by rel_auto
 
-lemma assign_abr_alt_def: 
-  "\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+lemma assign_flt_left_comp_c3[uflt_comp]:
+  "\<langle>a\<rangle>\<^sub>F\<^sub>L\<^sub>T ;; C3_flt (P \<turnstile> Q) = C3_flt (\<lceil>a\<rceil>\<^sub>s\<^sub>F\<^sub>L\<^sub>T \<dagger> (P \<turnstile>  Q))"
   by rel_auto
 
-lemma assign_abr_left_comp_c3[uabr_comp]:
-  "\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; C3_abr (P \<turnstile> Q) = C3_abr (\<lceil>a\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> (P \<turnstile>  Q))"
+lemma assigns_flt_comp[uflt_comp]: 
+  "(\<langle>f\<rangle>\<^sub>F\<^sub>L\<^sub>T ;; \<langle>g\<rangle>\<^sub>F\<^sub>L\<^sub>T) = \<langle>g \<circ> f\<rangle>\<^sub>F\<^sub>L\<^sub>T"
   by rel_auto
 
-
-lemma assigns_abr_comp[uabr_comp]: 
-  "(\<langle>f\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>g\<rangle>\<^sub>A\<^sub>B\<^sub>R) = \<langle>g \<circ> f\<rangle>\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto
-
-lemma usubst_cpa_des_cond_abr [usubst]:
+lemma usubst_cpf_des_cond_flt [usubst]:
   "\<lbrakk>$ok \<sharp> \<sigma>; $ok\<acute> \<sharp> \<sigma> \<rbrakk> \<Longrightarrow> 
     \<sigma> \<dagger> (R \<turnstile> bif b then P else Q eif) = 
-    (\<sigma> \<dagger> R \<turnstile>  (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> \<sigma> \<dagger> Q))"
+    (\<sigma> \<dagger> R \<turnstile>  (\<sigma> \<dagger> P \<triangleleft> \<sigma> \<dagger> \<lceil>b\<rceil>\<^sub>F\<^sub>L\<^sub>T\<^sub>< \<triangleright> \<sigma> \<dagger> Q))"
   by (simp add: usubst)
 
-lemma comp_cond_abr_left_distr[uabr_comp]:
-  "((bif b then Simpl\<^sub>A\<^sub>B\<^sub>R P else Simpl\<^sub>A\<^sub>B\<^sub>R Q eif) ;; Simpl\<^sub>A\<^sub>B\<^sub>R R) = 
-    (bif b then (Simpl\<^sub>A\<^sub>B\<^sub>R P ;; Simpl\<^sub>A\<^sub>B\<^sub>R R) else (Simpl\<^sub>A\<^sub>B\<^sub>R Q ;; Simpl\<^sub>A\<^sub>B\<^sub>R R) eif)"
-  apply (simp add: usubst uabr_comp)
+lemma comp_cond_flt_left_distr[uflt_comp]:
+  "((bif b then Simpl\<^sub>F\<^sub>L\<^sub>T P else Simpl\<^sub>F\<^sub>L\<^sub>T Q eif) ;; Simpl\<^sub>F\<^sub>L\<^sub>T R) = 
+    (bif b then (Simpl\<^sub>F\<^sub>L\<^sub>T P ;; Simpl\<^sub>F\<^sub>L\<^sub>T R) else (Simpl\<^sub>F\<^sub>L\<^sub>T Q ;; Simpl\<^sub>F\<^sub>L\<^sub>T R) eif)"
   apply pred_simp 
   apply rel_simp
-  apply auto
 done
-
 
 lemma if_mono:
   "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (bif b then P\<^sub>1 else Q\<^sub>1 eif) \<sqsubseteq> (bif b then P\<^sub>2 else Q\<^sub>2 eif)"
