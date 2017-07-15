@@ -1,89 +1,13 @@
 
 section "Auxiliary algebraic laws for abrupt designs"
 theory algebraic_laws_abrupt_aux
-imports "../theories/utp_abrupt_designs"
+imports "../theories/utp_abrupt_designs" "Algebraic_Laws_aux"
  
 begin
 
 named_theorems uabr_simpl and uabr_cond and uabr_comp and uabr_lens
 subsection {*THM setup*}
-lemmas [urel_cond] = design_condr
-
-subsection {*complementing laws for preds *}
-
-lemma upred_not_not[simp]:
-"\<not> \<not> P = P"
-  by rel_auto
-
-subsection {*complementing laws for urels *}
-
-lemma unrest_iuvar_not[unrest]: "out\<alpha> \<sharp> (\<not>$x)"
-  by rel_auto
-
-lemma unrest_ouvar_not[unrest]: "in\<alpha> \<sharp> (\<not>$x\<acute>)"
-  by rel_auto
-
-lemma assigns_r_usubst_skip_r[usubst]:
-  "(\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II) =  \<langle>\<sigma>\<rangle>\<^sub>a" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right[urel_cond]: 
-  "(P \<triangleleft> b \<triangleright> (Q \<triangleleft> \<not> b \<triangleright> R)) = (P \<triangleleft> b \<triangleright> Q)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_variant[urel_cond]: 
-  "(P \<triangleleft> \<not> b \<triangleright> (Q \<triangleleft>  b \<triangleright> R)) = (P \<triangleleft> \<not> b \<triangleright> Q)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left[urel_cond]: 
-  "((P \<triangleleft> b \<triangleright> Q) \<triangleleft> \<not> b \<triangleright> R) = (Q \<triangleleft>\<not> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left_variant[urel_cond]: 
-  "((P \<triangleleft> \<not> b \<triangleright> Q) \<triangleleft> b \<triangleright> R) = (Q \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_L6_left[urel_cond]: 
-  "((P \<triangleleft>  b \<triangleright> Q) \<triangleleft> b \<triangleright> R) = (P \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
-
-subsection {*Complementing laws for des*}
- 
-lemma usubst_d_true[usubst]: "\<sigma> \<dagger> \<lceil>true\<rceil>\<^sub>D = \<lceil>true\<rceil>\<^sub>D" 
-  by rel_auto
-
-lemma usubst_d_false[usubst]: "\<sigma> \<dagger> \<lceil>false\<rceil>\<^sub>D = \<lceil>false\<rceil>\<^sub>D" 
-  by rel_auto
-
-lemma usubst_des_skip_des [usubst]:
-  assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
-  shows "(\<sigma> \<dagger> II\<^sub>D) = (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<sigma> \<dagger> \<lceil>II\<rceil>\<^sub>D))"
-  using assms unfolding skip_d_def rdesign_def
-  by (simp add: assms usubst) 
-
-lemma cond_L6_right_des[urel_cond]: 
-  "( R \<triangleleft> b \<triangleright> (S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) ) =  (R \<triangleleft> b \<triangleright> (S \<turnstile> Q))" 
-  by rel_auto
-
-lemma cond_L6_left_des[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft>  b \<triangleright> Q)) \<triangleleft> b \<triangleright> R) =  (S \<turnstile> P \<triangleleft>b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_des[urel_cond]: 
-  "( R \<triangleleft> \<not> b \<triangleright> (S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) ) =  (R \<triangleleft> \<not> b \<triangleright> (S \<turnstile> P))" 
-  by rel_auto
-
-lemma cond_not_cond_L6_right_des_variant[urel_cond]:
-  "R \<triangleleft> b \<triangleright> (S \<turnstile> (P \<triangleleft> \<not> b \<triangleright> Q)) = R \<triangleleft> b \<triangleright> (S \<turnstile> P)"
-  by rel_auto
-
-lemma cond_not_cond_L6_left_des[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft> b \<triangleright> Q)) \<triangleleft> \<not> b \<triangleright> R) =  ((S \<turnstile> Q) \<triangleleft> \<not> b \<triangleright> R)" 
-  by rel_auto
-
-lemma cond_not_cond_L6_left_des_variant[urel_cond]: 
-  "((S \<turnstile> (P \<triangleleft> \<not> b \<triangleright> Q)) \<triangleleft> b \<triangleright> R) =  ((S \<turnstile> Q) \<triangleleft> b \<triangleright> R)" 
-  by rel_auto
+declare design_condr[urel_cond] 
 
 subsection {*abrupt alphabet behavior*}
 
@@ -96,18 +20,18 @@ lemma vwb_of_abrupt[simp]:
   "vwb_lens ok" "vwb_lens abrupt"
   by simp_all
 
-lemma unrest_pre_out\<alpha>_abr [unrest]: "out\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
+lemma unrest_pre_out\<alpha>_abr[unrest]: "out\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
   by (transfer, auto simp add: out\<alpha>_def lens_prod_def)
  
-lemma unrest_post_in\<alpha>_abr [unrest]: "in\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>>"
+lemma unrest_post_in\<alpha>_abr[unrest]: "in\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>>"
   by (transfer, auto simp add: in\<alpha>_def lens_prod_def)
 
-lemma unrest_ok_abrupt_rel_uexpr_lift_cpa [unrest]:
+lemma unrest_ok_abrupt_rel_uexpr_lift_cpa[unrest]:
   "$ok \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R" "$ok\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R"
   "$abrupt \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R" "$abrupt\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R"
   by (pred_auto)+
 
-lemma unrest_ok_abrupt_rel_usubst_lift_cpa [unrest]:
+lemma unrest_ok_abrupt_rel_usubst_lift_cpa[unrest]:
   "$ok\<acute> \<sharp> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R" "$ok \<sharp> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R"
   "$abrupt\<acute> \<sharp> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R" "$abrupt \<sharp> \<lceil>\<sigma>\<rceil>\<^sub>S\<^sub>A\<^sub>B\<^sub>R"               
   by rel_auto+
@@ -117,12 +41,6 @@ lemma unrest_in_out_rel_ok_abrupt_res_abr [unrest]:
   "$abrupt \<sharp> (P \<restriction>\<^sub>\<alpha> abrupt)" "$abrupt\<acute> \<sharp> (P \<restriction>\<^sub>\<alpha> abrupt)"
   by (simp_all add: rel_var_res_def unrest)
 
-lemma undep_imp_unrest[unrest]: (*FIXEME:This law should be used by alphabet to generate automatically unrest between different fields*)
-  assumes "x \<bowtie> y "
-  shows "$x \<sharp> $y" 
-  using assms unfolding lens_indep_def
-  by pred_auto
-
 lemma uabr_alphabet_unrest[unrest]:(*FIXEME:These laws should be generated automatically by alphabet backend since all the fields of alphabet are independant*)
   "$ok\<acute> \<sharp> $abrupt\<acute>" "$ok \<sharp> $abrupt"
   "$ok\<acute> \<sharp> $abrupt"  "$ok \<sharp> $abrupt\<acute>"
@@ -130,23 +48,9 @@ lemma uabr_alphabet_unrest[unrest]:(*FIXEME:These laws should be generated autom
   "$abrupt \<sharp> $ok\<acute>"  "$abrupt\<acute> \<sharp> $ok"
   by pred_simp+
 
-lemma bool_seqr_laws_ok [usubst]:
-    "\<And> P Q \<sigma>. \<sigma>($ok \<mapsto>\<^sub>s true) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P\<lbrakk>true/$ok\<rbrakk> ;; Q)"
-    "\<And> P Q \<sigma>. \<sigma>($ok \<mapsto>\<^sub>s false) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P\<lbrakk>false/$ok\<rbrakk> ;; Q)"
-    "\<And> P Q \<sigma>. \<sigma>($ok\<acute> \<mapsto>\<^sub>s true) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P ;; Q\<lbrakk>true/$ok\<acute>\<rbrakk>)"
-    "\<And> P Q \<sigma>. \<sigma>($ok\<acute> \<mapsto>\<^sub>s false) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P ;; Q\<lbrakk>false/$ok\<acute>\<rbrakk>)"
-    by (simp_all add: bool_seqr_laws)
-
-lemma bool_seqr_laws_abrupt [usubst]:
-    "\<And> P Q \<sigma>. \<sigma>($abrupt \<mapsto>\<^sub>s true) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P\<lbrakk>true/$abrupt\<rbrakk> ;; Q)"
-    "\<And> P Q \<sigma>. \<sigma>($abrupt \<mapsto>\<^sub>s false) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P\<lbrakk>false/$abrupt\<rbrakk> ;; Q)"
-    "\<And> P Q \<sigma>. \<sigma>($abrupt\<acute> \<mapsto>\<^sub>s true) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P ;; Q\<lbrakk>true/$abrupt\<acute>\<rbrakk>)"
-    "\<And> P Q \<sigma>. \<sigma>($abrupt\<acute> \<mapsto>\<^sub>s false) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P ;; Q\<lbrakk>false/$abrupt\<acute>\<rbrakk>)"
-    by (simp_all add: bool_seqr_laws)
-
 lemma cpa_ord [usubst]:
-  "$ok \<prec>\<^sub>v $ok\<acute>" "$abrupt \<prec>\<^sub>v $abrupt\<acute>" 
-  "$ok \<prec>\<^sub>v $abrupt\<acute>" "$ok \<prec>\<^sub>v $abrupt" "$ok\<acute> \<prec>\<^sub>v $abrupt\<acute>" "$ok\<acute> \<prec>\<^sub>v $abrupt" 
+  "$ok \<prec>\<^sub>v $ok\<acute>" "$abrupt \<prec>\<^sub>v $abrupt\<acute>" "$ok \<prec>\<^sub>v $abrupt\<acute>" 
+  "$ok \<prec>\<^sub>v $abrupt" "$ok\<acute> \<prec>\<^sub>v $abrupt\<acute>" "$ok\<acute> \<prec>\<^sub>v $abrupt" 
   by (simp_all add: var_name_ord_def)
 
 lemma rel_usubst_lift_cpa_in_out_abrupt_ok[usubst]:
@@ -166,12 +70,12 @@ lemma abrupt_ok_simpl[uabr_comp]:
   by rel_auto+
 
 lemma simpl_abr_in_ok:
-  "Simpl\<^sub>A\<^sub>B\<^sub>R ($ok) = ((\<not>$abrupt \<and> ($ok \<Rightarrow>$ok\<acute>))\<or> (II))" 
+  "Simpl\<^sub>A\<^sub>B\<^sub>R ($ok) = ((\<not>$abrupt \<and> ($ok \<Rightarrow>$ok\<acute>)) \<or> (II))" 
   by rel_auto
 
 lemma  simpl_abr_our_ok:
   "Simpl\<^sub>A\<^sub>B\<^sub>R ($ok\<acute>) = 
-   ((\<not>$abrupt \<and> ($ok \<Rightarrow>$ok\<acute>))\<or> (II))" 
+   ((\<not>$abrupt \<and> ($ok \<Rightarrow>$ok\<acute>)) \<or> (II))" 
   by rel_auto
 
 lemma simpl_abr_in_abrupt:
@@ -439,14 +343,15 @@ lemma usubst_lift_cpa_skip_lift_cpa[usubst]:
 lemma usubst_cpa_skip_cpa [usubst]:
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
   shows 
-  "(\<sigma> \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> (II)))"
+  "(\<sigma> \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ((\<not>$abrupt\<acute>) \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> (II)))"
   using assms unfolding skip_abr_def 
+  using [[simp_trace]]
   by (simp add: usubst) 
 
 lemma usubst_cpa_throw_cpa [usubst]:
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
   shows 
-  "(\<sigma> \<dagger> THROW\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
+  "(\<sigma> \<dagger> THROW\<^sub>A\<^sub>B\<^sub>R) = (\<sigma> \<dagger> (\<not>$abrupt) \<turnstile> (\<sigma> \<dagger> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)))"
   using assms unfolding throw_abr_def 
   by (simp add: usubst) 
 
