@@ -1,0 +1,33 @@
+This folder contains examples on the usage of  the specification and the verification framework based on UTP theory.
+The examples in this folder are based on an extension of Foster et al. UTP formalization with total correctness, faults, abrupts and
+new relational designs that captures a sophisticated control flow statements such as exceptions,
+scoping, guards etc. 
+
+The following files contain:
+
+ - control_flow_partial_examples: 
+   It contains proofs related to the different control flow statements in the framework 
+   using Hoare for partial correctness. This file is based on the already existing
+   Foster et al. UTP framework, where the control flow statements are the same as the once
+   used for IMP. At this level our contribution is small, we add scoping as a new UTP-relation.
+   Thus we have IMP + scoping.
+
+   
+ - control_flow_total_examples: 
+   It contains proofs related to the new control flow statements added to the UTP framework 
+   using Hoare for total correctness. 
+   This file is based on our contribution to UTP framework by  new theories (utp_fault_designs.thy, algebraic_laws_designs etc).
+   At this level our contribution is significant, we add UTP-designs such as scoping, guards, exceptions, and we redefine the basic UTP-relations
+   as UTP-designs to capture total correctness.
+	
+- examples_partial_correctness:
+    It contains specifications of real programs using the UTP relations and proofs 
+	using Hoare for partial correctness. 
+	The goal of these examples is to show how we can use the UTP framework to specify programs that uses 
+	the same features as in IMP.
+
+- examples_total_correctness
+  It contains specifications of real programs using the extended UTP framework with new 
+  relations and also proofs using Hoare for total correctness.
+  The goal of these examples is to show how we can use the extended UTP framework to specify programs that uses more features than the ones
+  existing for IMP.
