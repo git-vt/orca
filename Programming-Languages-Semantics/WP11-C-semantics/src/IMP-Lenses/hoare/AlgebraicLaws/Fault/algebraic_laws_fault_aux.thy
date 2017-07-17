@@ -1,7 +1,7 @@
 
 section "Auxiliary algebraic laws for abrupt designs"
 theory algebraic_laws_fault_aux
-imports "../theories/utp_fault_designs" "Algebraic_Laws_aux"
+imports "../theories/utp_fault_designs" 
  
 begin
 named_theorems uflt_simpl and uflt_cond and uflt_comp and uflt_lens
@@ -323,7 +323,19 @@ lemma if_mono:
   "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (bif b then P\<^sub>1 else Q\<^sub>1 eif) \<sqsubseteq> (bif b then P\<^sub>2 else Q\<^sub>2 eif)"
   by rel_auto
 
+lemma design_post_seqr_rcond_left_not_ivar[urel_cond]:
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<lceil>R\<rceil>\<^sub>F\<^sub>L\<^sub>T \<and> $x\<acute>) ;; P \<triangleleft> \<not> $x \<triangleright> Q) = 
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<lceil>R\<rceil>\<^sub>F\<^sub>L\<^sub>T \<and> $x\<acute>);; Q)"
+  apply pred_simp
+  apply fastforce 
+done
 
+lemma  design_post_seqr_rcond_left_ivar [urel_cond]:
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<lceil>R\<rceil>\<^sub>F\<^sub>L\<^sub>T \<and>  $x\<acute>) ;; P \<triangleleft> $x \<triangleright> Q) = 
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>F\<^sub>L\<^sub>T \<turnstile> (\<lceil>R\<rceil>\<^sub>F\<^sub>L\<^sub>T \<and>  $x\<acute>);; P)"
+  apply pred_simp
+  apply fastforce 
+done
 
 subsection {*While abrupt usubst*}
 

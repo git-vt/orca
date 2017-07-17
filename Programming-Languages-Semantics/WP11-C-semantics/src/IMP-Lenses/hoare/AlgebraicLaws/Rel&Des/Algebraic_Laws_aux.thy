@@ -101,4 +101,6 @@ lemma cond_not_cond_L6_left_des_variant[urel_cond]:
   "((S \<turnstile> (P \<triangleleft> \<not> b \<triangleright> Q)) \<triangleleft> b \<triangleright> R) =  ((S \<turnstile> Q) \<triangleleft> b \<triangleright> R)" 
   by rel_auto
 
+
+
 end
