@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory control_flow_partial_examples
-  imports "../hoare/utp_hoare"
+  imports "../../hoare/HoareLogic/PartialCorrectness/utp_hoare"
 begin
 section "Examples"
 
