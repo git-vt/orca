@@ -1,6 +1,6 @@
 
 theory examples_partial_correctness
-imports "../hoare/VCG"
+imports "../../hoare/HoareLogic/PartialCorrectness/VCG/VCG"
 begin
 section "Examples"
 
