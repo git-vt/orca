@@ -1,7 +1,7 @@
 section \<open>Examples using ML-level VCG for Total Correctness\<close>
 
 theory examples_vcg_total
-  imports "../hoare/VCG_total_ML"
+  imports "../../../hoare/HoareLogic/TotalCorrectness/Abrupt/VCG/VCG_total_ML"
 begin
 
 subsection Increment

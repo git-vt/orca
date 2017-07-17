@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory utp_hoare_total
-  imports algebraic_laws_abrupt
+  imports "../../../AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
 begin
 named_theorems hoare_total
 

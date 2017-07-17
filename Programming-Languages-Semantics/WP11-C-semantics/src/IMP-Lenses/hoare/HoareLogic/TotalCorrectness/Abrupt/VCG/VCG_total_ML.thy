@@ -1,7 +1,7 @@
 section \<open>ML-level Verification Condition Generator for Total Correctness\<close>
 
 theory VCG_total_ML
-  imports utp_hoare_total
+  imports "../utp_hoare_total"
 begin
 
 text \<open>@{text \<open>infixl\<close>} rather than @{text \<open>infixr\<close>} for @{text seq} may work better for tactics\<close>

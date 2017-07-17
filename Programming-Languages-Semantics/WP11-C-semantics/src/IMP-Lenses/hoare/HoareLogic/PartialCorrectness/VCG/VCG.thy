@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory VCG
-  imports "../hoare/utp_hoare"
+  imports "../utp_hoare"
 begin
 
 subsection \<open>Tactics for Theorem Proving\<close>

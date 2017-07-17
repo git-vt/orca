@@ -1,7 +1,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory control_flow_total_examples
-  imports "../hoare/utp_hoare_total"
+  imports "../../../hoare/HoareLogic/TotalCorrectness/Abrupt/utp_hoare_helper"
 begin 
 text{*In this section we provide a set of examples on the verification
       of programs that uses control flow statements
@@ -57,7 +57,7 @@ text{*Informally @{term "THROW"} statement will transform
       is a left zero under the assumption that the initial state is stable.*}
 
 lemma try_throw_zero:
-  "(try THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
+  "Simpl\<^sub>A\<^sub>B\<^sub>R (try THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by rel_blast 
 
 lemma try_throw_zero_hoare:
@@ -79,7 +79,7 @@ lemma try_not_throw_ignor_catch_hoare:
 done
 
 lemma try_throw_zero':
-  "(try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;;THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
+  "Simpl\<^sub>A\<^sub>B\<^sub>R (try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;;THROW\<^sub>A\<^sub>B\<^sub>R catch \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto blast +  
 
 lemma try_throw_zero'_hoare:
@@ -91,17 +91,17 @@ lemma try_throw_zero'_hoare:
   apply rel_simp
 done
 
-lemma "(try THROW\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
+lemma "Simpl\<^sub>A\<^sub>B\<^sub>R (try THROW\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = SKIP\<^sub>A\<^sub>B\<^sub>R"
   apply (simp only: uabr_comp usubst uabr_simpl) 
-  apply rel_simp
 done
 
-lemma "(try (SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R) catch SKIP\<^sub>A\<^sub>B\<^sub>R end) =  \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+lemma "Simpl\<^sub>A\<^sub>B\<^sub>R (try (SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R) catch SKIP\<^sub>A\<^sub>B\<^sub>R end) =  \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
   apply (simp only: uabr_comp usubst uabr_simpl) 
   apply rel_simp
+  apply blast
 done
 
-lemma "(try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; try  \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
+lemma "Simpl\<^sub>A\<^sub>B\<^sub>R (try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R try  \<langle>b\<rangle>\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
   apply pred_simp
   apply rel_simp
   apply auto
@@ -109,14 +109,14 @@ lemma "(try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; \<langle>b\<rangle>\<^
 done
 
 
-lemma "(try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; Simpl\<^sub>A\<^sub>B\<^sub>R P catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; try  Simpl\<^sub>A\<^sub>B\<^sub>R P catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
+lemma "Simpl\<^sub>A\<^sub>B\<^sub>R (try \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R ;; Simpl\<^sub>A\<^sub>B\<^sub>R try  P catch SKIP\<^sub>A\<^sub>B\<^sub>R end)"
   apply pred_simp
   apply rel_simp
   apply auto
   apply (metis (no_types))+
 done
 
-lemma "(try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+lemma "Simpl\<^sub>A\<^sub>B\<^sub>R (try SKIP\<^sub>A\<^sub>B\<^sub>R ;; \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R catch SKIP\<^sub>A\<^sub>B\<^sub>R end) = \<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R"
   by rel_auto blast +
 
 subsection {*block feature*}

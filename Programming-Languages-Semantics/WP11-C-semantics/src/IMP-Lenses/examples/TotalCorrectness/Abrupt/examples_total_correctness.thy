@@ -1,5 +1,5 @@
 theory examples_total_correctness
-  imports "../hoare/utp_hoare_total"
+  imports "../../../hoare/HoareLogic/TotalCorrectness/Abrupt/utp_hoare_total"
 begin
 
 section Examples

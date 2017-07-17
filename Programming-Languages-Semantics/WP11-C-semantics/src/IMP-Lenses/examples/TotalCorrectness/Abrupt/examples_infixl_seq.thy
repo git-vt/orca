@@ -1,7 +1,7 @@
 section \<open>Examples for infixl seq (;;)\<close>
 
 theory examples_infixl_seq
-  imports "../hoare/utp_hoare_total"
+  imports "../../../hoare/HoareLogic/TotalCorrectness/Abrupt/utp_hoare_total"
 begin
 
 text \<open>Burkhart Wolff suggests infixl rather than infixr (like how seL4 does it)\<close>
@@ -17,14 +17,14 @@ lemma swap_test1:
   z \<Midarrow> &x;;
   x \<Midarrow> &y;;
   y \<Midarrow> &z
-  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    apply (rule seq_hoare_r_t)
     defer
-    apply (rule assigns_hoare_r'_t)
-   apply (rule assigns_hoare_r'_t)
-  apply (rule assigns_hoare_r_t)
+    apply (rule assigns_abr_hoare_r'_t)
+   apply (rule assigns_abr_hoare_r'_t)
+  apply (rule assigns_abr_hoare_r_t)
   apply pred_simp
   apply (simp add: lens_indep_sym)
   done
@@ -36,15 +36,15 @@ lemma swap_test2:
   z \<Midarrow> &x;;
   x \<Midarrow> &y;;
   y \<Midarrow> &z
-  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    defer
-   apply (rule assigns_hoare_r'_t)
+   apply (rule assigns_abr_hoare_r'_t)
   apply (rule seq_hoare_r_t)
    defer
-   apply (rule assigns_hoare_r'_t)
-  apply (rule assigns_hoare_r_t)
+   apply (rule assigns_abr_hoare_r'_t)
+  apply (rule assigns_abr_hoare_r_t)
   apply pred_simp
   apply (simp add: lens_indep_sym)
   done
@@ -60,17 +60,17 @@ lemma increment:
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    apply (rule seq_hoare_r_t[of _ _ true])
-    apply (rule assigns_hoare_r_t)
+    apply (rule assigns_abr_hoare_r_t)
     apply pred_auto
    apply (rule assume_hoare_r_t)
-    apply (rule skip_hoare_r_t)
+    apply (rule skip_abr_hoare_r_t)
    apply rel_auto
   apply (rule while_invr_hoare_r_t)
-    apply (rule assigns_hoare_r_t)
+    apply (rule assigns_abr_hoare_r_t)
     unfolding lens_indep_def
     apply pred_auto
    apply pred_auto
@@ -86,12 +86,12 @@ lemma increment2:
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>D"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    defer
    apply (rule while_invr_hoare_r_t)
-     apply (rule assigns_hoare_r_t)
+     apply (rule assigns_abr_hoare_r_t)
      unfolding lens_indep_def
      apply pred_auto
     defer
@@ -99,10 +99,10 @@ lemma increment2:
    apply (rule seq_hoare_r_t)
     defer
     apply (rule assume_hoare_r_t)
-     apply (rule skip_hoare_r_t)
+     apply (rule skip_abr_hoare_r_t)
     apply rel_auto
    apply pred_auto
-  apply (rule assigns_hoare_r_t)
+  apply (rule assigns_abr_hoare_r_t)
   apply pred_auto
   oops (*  (rule seq_hoare_r_t[of _ _ true]) is necessary to instantiate ?s27 *)
 
