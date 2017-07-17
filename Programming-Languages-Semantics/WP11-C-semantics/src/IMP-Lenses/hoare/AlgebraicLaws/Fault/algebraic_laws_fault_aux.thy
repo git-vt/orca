@@ -1,7 +1,7 @@
 
 section "Auxiliary algebraic laws for abrupt designs"
 theory algebraic_laws_fault_aux
-imports "../theories/utp_fault_designs" 
+imports "../../../theories/Fault/utp_fault_designs"
  
 begin
 named_theorems uflt_simpl and uflt_cond and uflt_comp and uflt_lens

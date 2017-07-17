@@ -1,7 +1,7 @@
 section {* Relational operational semantics *}
 
 theory utp_rel_opsem
-  imports "../hoare/Algebraic_Laws"
+  imports "../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws"
 begin
 
 fun trel :: "'\<alpha> usubst \<times> '\<alpha> hrel \<Rightarrow> '\<alpha> usubst \<times> '\<alpha> hrel \<Rightarrow> bool" (infix "\<rightarrow>\<^sub>u" 85) where

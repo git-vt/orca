@@ -1,7 +1,7 @@
 subsection {* Weakest precondition calculus *}
 
 theory utp_wp
-imports "../hoare/utp_hoare"
+imports "../hoare/HoareLogic/PartialCorrectness/utp_hoare"
 begin
 
 text {* A very quick implementation of wp -- more laws still needed! *}

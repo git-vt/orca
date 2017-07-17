@@ -1,7 +1,7 @@
 section {* Concurrent programming *}
 
 theory utp_concurrency
-  imports "../hoare/Algebraic_Laws" utp_tactics
+  imports "../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws" utp_tactics
 begin
 
 text {* In parallel-by-merge constructions, a merge predicate defines the behaviour following execution of

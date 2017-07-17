@@ -493,6 +493,8 @@ proof -
   finally show ?thesis .
 qed
 
+term "while\<^sub>\<bottom> b do P od"
+
 theorem while_bot_false: "while\<^sub>\<bottom> false do P od = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by (simp add: While_bot_def mu_const alpha)
 

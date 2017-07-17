@@ -1,7 +1,7 @@
 
 section "Auxiliary algebraic laws for abrupt designs"
 theory algebraic_laws_abrupt_aux
-imports "../theories/utp_abrupt_designs" "Algebraic_Laws_aux"
+imports "../../../theories/Abrupt/utp_abrupt_designs"
  
 begin
 

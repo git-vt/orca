@@ -7,7 +7,7 @@ text{*In this section we introduce the semantic rules related to the different
       language, and this before any deductive proof verification activity or formal testing.*}
 
 theory Algebraic_Laws
-imports "../utp/utp_urel_laws"
+imports "../../../utp/utp_urel_laws"
 begin
 
 named_theorems symbolic_exec and symbolic_exec_assign_uop and symbolic_exec_assign_bop and 

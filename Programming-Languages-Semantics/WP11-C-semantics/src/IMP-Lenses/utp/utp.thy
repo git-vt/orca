@@ -19,7 +19,7 @@ imports
   utp_deduct
   utp_rel
   utp_tactics
-  "../hoare/utp_hoare"
+  "../hoare/HoareLogic/PartialCorrectness/utp_hoare"
   utp_wp
   utp_theory
   utp_concurrency

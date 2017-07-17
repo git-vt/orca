@@ -1,7 +1,7 @@
 subsection {* Relational Hoare calculus *}
 
 theory utp_hoare
-imports "Algebraic_Laws"
+imports "../../AlgebraicLaws/Rel&Des/Algebraic_Laws"
 begin
 
 named_theorems hoare

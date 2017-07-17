@@ -7,7 +7,7 @@ text{*In this section we introduce the semantic rules related to the different
       language, and this before any deductive proof verification activity or formal testing.*}
 
 theory Algebraic_Laws_aux
-imports "../theories/utp_designs"
+imports "../../../theories/utp_designs"
 begin
 
 subsection {*complementing usubst*}
