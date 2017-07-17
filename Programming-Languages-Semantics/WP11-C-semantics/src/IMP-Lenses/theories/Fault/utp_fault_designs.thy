@@ -1,5 +1,5 @@
 theory utp_fault_designs
-imports  "../utp/utp" utp_designs
+imports  "../utp/utp" utp_designs "../hoare/Algebraic_Laws_aux"
 begin
 
 subsection {*Sequential C-program alphabet*}
