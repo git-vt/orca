@@ -3,6 +3,7 @@ section {* UTP expressions *}
 theory utp_expr
 imports
   utp_var
+  "../utils/BitOps"
 begin
 
 purge_notation BNF_Def.convol ("\<langle>(_,/ _)\<rangle>")
@@ -335,11 +336,13 @@ syntax
   "_umap_minus" :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infixl "\<ominus>\<^sub>u" 85)
   "_udom_res"   :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infixl "\<lhd>\<^sub>u" 85)
   "_uran_res"   :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infixl "\<rhd>\<^sub>u" 85)
-  "_umaplet"    :: "[logic, logic] => umaplet" ("_ /\<mapsto>/ _")
-  ""            :: "umaplet => umaplets"             ("_")
-  "_UMaplets"   :: "[umaplet, umaplets] => umaplets" ("_,/ _")
-  "_UMapUpd"    :: "[logic, umaplets] => logic" ("_/'(_')\<^sub>u" [900,0] 900)
-  "_UMap"       :: "umaplets => logic" ("(1[_]\<^sub>u)")
+  "_umaplet"    :: "[logic, logic] \<Rightarrow> umaplet" ("_ /\<mapsto>/ _")
+  ""            :: "umaplet \<Rightarrow> umaplets"             ("_")
+  "_UMaplets"   :: "[umaplet, umaplets] \<Rightarrow> umaplets" ("_,/ _")
+  "_UMapUpd"    :: "[logic, umaplets] \<Rightarrow> logic" ("_/'(_')\<^sub>u" [900,0] 900)
+  "_UMap"       :: "umaplets \<Rightarrow> logic" ("(1[_]\<^sub>u)")
+  "_ubs_and"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>s" 85)
+  "_ubu_and"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>u" 85)
 
 translations
   "f\<lparr>v\<rparr>\<^sub>u" <= "CONST uapply f v"
@@ -414,6 +417,8 @@ translations
   "_UMap (_UMaplets ms1 ms2)"     <= "_UMapUpd (_UMap ms1) ms2"
   "_UMaplets ms1 (_UMaplets ms2 ms3)" <= "_UMaplets (_UMaplets ms1 ms2) ms3"
   "f\<lparr>x,y\<rparr>\<^sub>u"  == "CONST bop CONST uapply f (x,y)\<^sub>u"
+  "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
+  "_ubu_and" == "CONST bop (CONST u_bitop (op AND))"
 
 text {* Lifting set intervals *}
 
