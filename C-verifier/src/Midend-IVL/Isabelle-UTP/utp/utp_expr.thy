@@ -310,7 +310,7 @@ syntax
   "_umax"       :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("max\<^sub>u'(_, _')")
   "_ugcd"       :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("gcd\<^sub>u'(_, _')")
   "_uceil"      :: "logic \<Rightarrow> logic" ("\<lceil>_\<rceil>\<^sub>u")
-  "_ufloor"      :: "logic \<Rightarrow> logic" ("\<lfloor>_\<rfloor>\<^sub>u")
+  "_ufloor"     :: "logic \<Rightarrow> logic" ("\<lfloor>_\<rfloor>\<^sub>u")
   "_ufinite"    :: "logic \<Rightarrow> logic" ("finite\<^sub>u'(_')")
   "_uempset"    :: "('a set, '\<alpha>) uexpr" ("{}\<^sub>u")
   "_uset"       :: "args => ('a set, '\<alpha>) uexpr" ("{(_)}\<^sub>u")
@@ -320,8 +320,8 @@ syntax
   "_usubset"    :: "('a set, '\<alpha>) uexpr \<Rightarrow> ('a set, '\<alpha>) uexpr \<Rightarrow> (bool, '\<alpha>) uexpr" (infix "\<subset>\<^sub>u" 50)
   "_usubseteq"  :: "('a set, '\<alpha>) uexpr \<Rightarrow> ('a set, '\<alpha>) uexpr \<Rightarrow> (bool, '\<alpha>) uexpr" (infix "\<subseteq>\<^sub>u" 50)
   "_utuple"     :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('a * 'b, '\<alpha>) uexpr" ("(1'(_,/ _')\<^sub>u)")
-  "_utuple_arg"  :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args" ("_")
-  "_utuple_args" :: "('a, '\<alpha>) uexpr => utuple_args \<Rightarrow> utuple_args"     ("_,/ _")
+  "_utuple_arg" :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args" ("_")
+  "_utuple_args":: "('a, '\<alpha>) uexpr => utuple_args \<Rightarrow> utuple_args"     ("_,/ _")
   "_uunit"      :: "('a, '\<alpha>) uexpr" ("'(')\<^sub>u")
   "_ufst"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('a, '\<alpha>) uexpr" ("\<pi>\<^sub>1'(_')")
   "_usnd"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr" ("\<pi>\<^sub>2'(_')")
@@ -343,6 +343,12 @@ syntax
   "_UMap"       :: "umaplets \<Rightarrow> logic" ("(1[_]\<^sub>u)")
   "_ubs_and"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>s" 85)
   "_ubu_and"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>u" 85)
+  "_ubs_or"     :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<or>\<^sub>b\<^sub>s" 80)
+  "_ubu_or"     :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" (infixl "\<or>\<^sub>b\<^sub>u" 80)
+  "_ubs_lsh"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr"	("_ \<lless>\<^bsub>s'/_\<^esub> _" [100,100,101] 100)
+  "_ubu_lsh"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	("_ \<lless>\<^bsub>u'/_\<^esub> _" [100,100,101] 100)
+  "_ubs_rsh"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr"	("_ \<ggreater>\<^bsub>s'/_\<^esub> _" [100,100,101] 100)
+  "_ubu_rsh"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	("_ \<ggreater>\<^bsub>u'/_\<^esub> _" [100,100,101] 100)
 
 translations
   "f\<lparr>v\<rparr>\<^sub>u" <= "CONST uapply f v"
@@ -419,6 +425,13 @@ translations
   "f\<lparr>x,y\<rparr>\<^sub>u"  == "CONST bop CONST uapply f (x,y)\<^sub>u"
   "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
   "_ubu_and" == "CONST bop (CONST u_bitop (op AND))"
+  "_ubs_or" == "CONST bop (CONST s_bitop (op OR))"
+  "_ubu_or" == "CONST bop (CONST u_bitop (op OR))"
+  "_ubs_lsh" == "CONST trop CONST s_lsh"
+  "_ubu_lsh" == "CONST trop CONST u_lsh"
+  "_ubs_rsh" == "CONST trop CONST s_rsh"
+  "_ubu_rsh" == "CONST trop CONST u_rsh"
+
 
 text {* Lifting set intervals *}
 

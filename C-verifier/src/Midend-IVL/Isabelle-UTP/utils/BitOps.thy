@@ -68,7 +68,15 @@ definition bv_to_int :: "bit list \<Rightarrow> int" where
     (case bv_msb w of 0 \<Rightarrow> int (bv_to_nat w)
                     | 1 \<Rightarrow> - int (bv_to_nat (bv_not w) + 1))"
 
-subsection \<open>The base definitions\<close>
+-- \<open>convert int to bv of a desired length\<close>
+definition int2bvn :: "nat \<Rightarrow> int \<Rightarrow> bit list" where
+  "int2bvn n a = (let v = int_to_bv a in drop (length v - n) (bv_extend n (bv_msb v) v))"
+
+-- \<open>convert nat to bv of a desired length\<close>
+definition nat2bvn :: "nat \<Rightarrow> nat \<Rightarrow> bit list" where
+  "nat2bvn n a = (let v = nat_to_bv a in drop (length v - n) (bv_extend n (0::bit) v))"
+
+subsection \<open>Base definitions for AND/OR/XOR\<close>
 
 definition s_bitop :: "(bit \<Rightarrow> bit \<Rightarrow> bit) \<Rightarrow> int \<Rightarrow> int \<Rightarrow> int" where
   "s_bitop f x y \<equiv> let v = int_to_bv x; w = int_to_bv y in
@@ -76,10 +84,19 @@ definition s_bitop :: "(bit \<Rightarrow> bit \<Rightarrow> bit) \<Rightarrow> i
                     (zip (bv_extend (length w) (bv_msb v) v)
                          (bv_extend (length v) (bv_msb w) w)))"
 
-definition  u_bitop :: "(bit \<Rightarrow> bit \<Rightarrow> bit) \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat" where
+definition u_bitop :: "(bit \<Rightarrow> bit \<Rightarrow> bit) \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat" where
   "u_bitop f x y \<equiv> let v = nat_to_bv x; w = nat_to_bv y in
      bv_to_nat (map (\<lambda> (a, b). f a b)
                     (zip (bv_extend (length w) (0::bit) v)
                          (bv_extend (length v) (0::bit) w)))"
+
+subsection \<open>Bit shifting\<close>
+
+definition "s_lsh x w a \<equiv> bv_to_int ((drop a (int2bvn w x)) @ replicate a 0)"
+definition "u_lsh x w a \<equiv> bv_to_nat ((drop a (nat2bvn w x)) @ replicate a 0)"
+definition "s_rsh x w a \<equiv> if a > 0
+                           then int (bv_to_nat (take (w - a) (int2bvn w x)))
+                           else x"
+definition "u_rsh x w a \<equiv> bv_to_nat (take (length (nat_to_bv x) - a) (nat_to_bv x))"
 
 end
