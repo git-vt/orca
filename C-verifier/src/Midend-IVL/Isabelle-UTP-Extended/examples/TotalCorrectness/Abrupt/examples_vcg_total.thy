@@ -75,7 +75,7 @@ subsection \<open>Even count\<close>
 
 lemma even_count_tactic1:
   assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
-  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> endd" and "start \<bowtie> j" and "start \<bowtie> endd" and "j \<bowtie> endd"
+  and "lens_indep_all {i, start, j, endd}"
   shows
   "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -102,7 +102,7 @@ lemma even_count_tactic1:
 
 lemma even_count_tactic2:
   assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
-  and "i \<bowtie> start" and "i \<bowtie> j" and "i \<bowtie> endd" and "start \<bowtie> j" and "start \<bowtie> endd" and "j \<bowtie> endd"
+  and "lens_indep_all {i, start, j, endd}"
   shows
   "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -128,6 +128,6 @@ lemma even_count_tactic2:
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos
-  done
+  done (* lens_indep_all makes the proof work now, what the heck. *)
 
 end

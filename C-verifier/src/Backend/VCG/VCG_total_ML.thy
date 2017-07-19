@@ -8,12 +8,17 @@ text \<open>@{text \<open>infixl\<close>} rather than @{text \<open>infixr\<clos
 no_notation useq (infixr ";;" 51)
 notation useq (infixl ";;" 51)
 
+text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
+number of assumptions required increases greatly. The original formulation was @{text \<open>\<longrightarrow> a \<bowtie> b\<close>}
+but that didn't seem to work so plain conjunction was chosen instead.\<close>
+definition "lens_indep_all lenses \<equiv> \<forall>a b. a \<in> lenses \<and> b \<in> lenses \<and> a \<noteq> b \<and> a \<bowtie> b"
+
 text \<open>@{thm seq_hoare_r_t} is handled separately as naïve application could cause conflicts/failed
 proofs later on.\<close>
 lemmas vcg_rules = skip_abr_hoare_r_t assigns_abr_hoare_r'_t assigns_abr_hoare_r_t assert_hoare_r_t
 assume_hoare_r_t cond_abr_hoare_r_t cond_hoare_r_t while_invr_hoare_r_t while_hoare_r_t
 while_hoare_r'_t
-lemmas unfold_thms = lens_indep_def
+lemmas unfold_thms = lens_indep_def lens_indep_all_def
 lemmas others_to_insert = mod_pos_pos_trivial
 
 text \<open>Examples of breaking down theorem conclusions as terms\<close>

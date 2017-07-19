@@ -9,6 +9,8 @@ text \<open>sizeof(unsigned long) * 8\<close>
 abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>" (* assuming non-Windows 64-bit architecture *)
 abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_ULONG * 8"
 
+definition "lens_indep_all lenses \<equiv> \<forall>a b. a \<in> lenses \<and> b \<in> lenses \<and> a \<noteq> b \<longrightarrow> a \<bowtie> b"
+
 text \<open>Currently representing functions as individual definitions (without Hoare triples); this is
 slightly troublesome as it requires passing in local variables to have them treated as such, but
 that might just be an issue with my setup.\<close>
@@ -32,9 +34,9 @@ definition "map_alloc
     temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off);;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u;;
-    (true)\<^sup>\<top>\<^sup>C;; (* TODO: needs proper assumption *)
+    (&curr_idx =\<^sub>u &curr_idx_start \<and> true)\<^sup>\<top>\<^sup>C;; (* TODO: needs more assumption bits *)
     while &curr_idx + 1 <\<^sub>u &end_idx
-    invr (&curr_idx_start \<le>\<^sub>u &curr_idx) \<and>
+    invr (&curr_idx \<ge>\<^sub>u &curr_idx_start) \<and>
          (true) (* needs to be something involving mm_alloc_bitmap *)
     do
       curr_idx \<Midarrow> &curr_idx + 1;;
