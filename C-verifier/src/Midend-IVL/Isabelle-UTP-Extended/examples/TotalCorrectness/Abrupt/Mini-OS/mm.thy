@@ -6,8 +6,8 @@ imports
 begin
 
 text \<open>sizeof(unsigned long) * 8\<close>
-abbreviation "SIZEOF_UNSIGNED_LONG \<equiv> \<guillemotleft>64::nat\<guillemotright>" (* assuming non-Windows 64-bit architecture *)
-abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_UNSIGNED_LONG * 8"
+abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>" (* assuming non-Windows 64-bit architecture *)
+abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_ULONG * 8"
 
 text \<open>Currently representing functions as individual definitions (without Hoare triples); this is
 slightly troublesome as it requires passing in local variables to have them treated as such, but
@@ -23,8 +23,8 @@ definition "map_alloc
   end_off   \<Midarrow> (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1);;
 
   bif &curr_idx =\<^sub>u &end_idx then
-    temp \<Midarrow> (1 \<lless>\<^bsub>u/SIZEOF_UNSIGNED_LONG\<^esub> &end_off) - 1;;
-    (* ... *)
+    temp \<Midarrow> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off) - 1;;
+    temp \<Midarrow> &temp \<and>\<^sub>b\<^sub>u -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off);;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> (&mm_alloc_bitmap:\<^sub>u nat list)(&curr_idx \<mapsto> &temp)\<^sub>u
   else

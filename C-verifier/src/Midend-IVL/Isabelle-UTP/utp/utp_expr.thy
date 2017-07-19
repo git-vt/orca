@@ -349,6 +349,10 @@ syntax
   "_ubu_lsh"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	("_ \<lless>\<^bsub>u'/_\<^esub> _" [100,100,101] 100)
   "_ubs_rsh"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr"	("_ \<ggreater>\<^bsub>s'/_\<^esub> _" [100,100,101] 100)
   "_ubu_rsh"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	("_ \<ggreater>\<^bsub>u'/_\<^esub> _" [100,100,101] 100)
+  "_ubs_not"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" ("\<not>\<^bsub>s'/_\<^esub> _" [200, 150] 150)
+  "_ubu_not"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	 ("\<not>\<^bsub>u'/_\<^esub> _" [200, 150] 150)
+  "_ubu_neg"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	 ("-\<^bsub>u'/_\<^esub> _" [200, 150] 150)
+
 
 translations
   "f\<lparr>v\<rparr>\<^sub>u" <= "CONST uapply f v"
@@ -431,6 +435,9 @@ translations
   "_ubu_lsh" == "CONST trop CONST u_lsh"
   "_ubs_rsh" == "CONST trop CONST s_rsh"
   "_ubu_rsh" == "CONST trop CONST u_rsh"
+  "_ubs_not" == "CONST bop CONST s_not"
+  "_ubu_not" == "CONST bop CONST u_not"
+  "_ubu_neg" == "CONST bop CONST u_neg"
 
 
 text {* Lifting set intervals *}

@@ -99,4 +99,12 @@ definition "s_rsh x w a \<equiv> if a > 0
                            else x"
 definition "u_rsh x w a \<equiv> bv_to_nat (take (length (nat_to_bv x) - a) (nat_to_bv x))"
 
+subsection \<open>Negation\<close>
+text \<open>This subsection covers both plain bitwise NOT and two's-complement negation (only needed for
+unsigned/nat values?)\<close>
+
+definition "s_not w x \<equiv> bv_to_int (bv_not (int2bvn w x))"
+definition "u_not w x \<equiv> bv_to_nat (bv_not (nat2bvn w x))"
+definition "u_neg w x \<equiv> 1 + u_not w x"
+
 end
