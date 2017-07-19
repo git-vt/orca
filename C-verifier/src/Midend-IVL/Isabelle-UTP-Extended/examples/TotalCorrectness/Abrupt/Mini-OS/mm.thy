@@ -15,9 +15,10 @@ that might just be an issue with my setup.\<close>
 definition "map_alloc
   (*inputs*) first_page nr_pages
   (* global variables *) mm_alloc_bitmap nr_free_pages
-  (* local variables*) curr_idx start_off end_idx end_off temp
+  (* local variables*) curr_idx_start curr_idx start_off end_idx end_off temp
   =
-  curr_idx  \<Midarrow> &first_page div PAGES_PER_MAPWORD;;
+  curr_idx_start \<Midarrow> &first_page div PAGES_PER_MAPWORD;;
+  curr_idx  \<Midarrow> &curr_idx_start;;
   start_off \<Midarrow> &first_page \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1);;
   end_idx   \<Midarrow> (&first_page + &nr_pages) div PAGES_PER_MAPWORD;;
   end_off   \<Midarrow> (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1);;
@@ -28,7 +29,21 @@ definition "map_alloc
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> (&mm_alloc_bitmap:\<^sub>u nat list)(&curr_idx \<mapsto> &temp)\<^sub>u
   else
-    II
+    temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off);;
+    temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
+    mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u;;
+    (true)\<^sup>\<top>\<^sup>C;; (* TODO: needs proper assumption *)
+    while &curr_idx + 1 <\<^sub>u &end_idx
+    invr (&curr_idx_start \<le>\<^sub>u &curr_idx) \<and>
+         (true) (* needs to be something involving mm_alloc_bitmap *)
+    do
+      curr_idx \<Midarrow> &curr_idx + 1;;
+      mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> \<not>\<^bsub>u/SIZEOF_ULONG\<^esub> 0)\<^sub>u
+    od;;
+    curr_idx \<Midarrow> &curr_idx + 1;; (* needed for last increment *)
+    temp \<Midarrow> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off) - 1;;
+    temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
+    mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   eif;;
 
   nr_free_pages \<Midarrow> &nr_free_pages - &nr_pages (* Global, so should use :==? Only if in alphabet... *)
