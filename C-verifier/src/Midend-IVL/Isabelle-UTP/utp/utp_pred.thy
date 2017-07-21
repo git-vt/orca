@@ -83,7 +83,7 @@ subsection {* Predicate operators *}
 
 text {* We chose to maximally reuse definitions and laws built into HOL. For this reason,
         when introducing the core operators we proceed by lifting operators from the
-        polymorphic algebraic hiearchy of HOL. Thus the initial definitions take
+        polymorphic algebraic hierarchy of HOL. Thus the initial definitions take
         place in the context of type class instantiations. We first introduce our own
         class called \emph{refine} that will add the refinement operator syntax to
         the HOL partial order class. *}

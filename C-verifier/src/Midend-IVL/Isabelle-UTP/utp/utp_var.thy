@@ -135,7 +135,7 @@ abbreviation (input) univ_alpha :: "('\<alpha>, '\<alpha>) uvar" ("\<Sigma>") wh
     svid: is an identifier soely used for variables
     svar: is a potentially decorated variable (but does not need to be?!)
     salpha: is to construct alphabets (variable sets). This can only be done
-    through lense composition due to typing restrictions.
+    through lens composition due to typing restrictions.
 *)
 
 nonterminal svid and svar and salpha
