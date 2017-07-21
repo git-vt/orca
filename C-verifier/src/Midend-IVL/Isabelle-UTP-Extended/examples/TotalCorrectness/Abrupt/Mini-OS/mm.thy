@@ -121,4 +121,17 @@ definition "map_free
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   eif
   "
+
+(* init_page_allocator needs structs and pointers *)
+(* alloc_pages needs structs and pointers *)
+(* free_pages needs structs and pointers *)
+(* free_physical_pages needs structs, function calls *)
+(* map_frame_rw needs function calls *)
+(* sbrk needs function calls/pointers *)
+(* init_mm needs function calls *)
+
+definition "fini_mm \<equiv> II"
+
+(* sanity_check needs pointers, function calls *)
+
 end
