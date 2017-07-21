@@ -128,6 +128,6 @@ lemma even_count_tactic2:
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos
-  done (* lens_indep_all makes the proof work now, what the heck. *)
+  done
 
 end

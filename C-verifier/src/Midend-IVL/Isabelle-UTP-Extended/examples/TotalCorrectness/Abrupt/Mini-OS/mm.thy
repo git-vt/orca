@@ -5,8 +5,41 @@ imports
   "../../../../../../Backend/VCG/VCG_total_ML"
 begin
 
-text \<open>sizeof(unsigned long) * 8\<close>
-abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>" (* assuming non-Windows 64-bit architecture *)
+subsubsection \<open>From other header files\<close>
+
+text \<open>Implementation-dependent; assuming ARM for now.\<close>
+abbreviation "SIZEOF_INT \<equiv> \<guillemotleft>32\<guillemotright>" (* Necessary for the bitshifts *)
+
+abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12\<guillemotright>"
+abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"
+abbreviation "PAGE_MASK \<equiv> \<not>\<^bsub>u/SIZEOF_INT\<^esub> (PAGE_SIZE - 1)"
+
+subsubsection \<open>From header file @{text mm.h}}\<close>
+
+text \<open>sizeof(unsigned long); assuming non-Windows 64-bit architecture.\<close>
+abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>"
+
+abbreviation "round_pgdown p \<equiv> p \<and>\<^sub>b\<^sub>u PAGE_MASK"
+abbreviation "round_pgup p \<equiv> (p + PAGE_SIZE - 1) \<and>\<^sub>b\<^sub>u PAGE_MASK"
+
+definition "get_order
+  (* input *) size
+  (* local variables *) order
+  =
+  size \<Midarrow> (&size - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT;;
+  order \<Midarrow> \<guillemotleft>0\<guillemotright>;;
+  (* TODO: assumption *)
+  while &size \<noteq>\<^sub>u 0
+  invr true (* TODO: fix *)
+  do
+    II;;
+    order \<Midarrow> &order + 1
+  od
+  (* return order *)
+  "
+
+subsubsection \<open>From source file @{text mm.c}\<close>
+
 abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_ULONG * 8"
 
 abbreviation allocated_in_map :: "(nat list, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" where
@@ -18,9 +51,9 @@ text \<open>Currently representing functions as individual definitions (without 
 slightly troublesome as it requires passing in local variables to have them treated as such, but
 that might just be an issue with my setup.\<close>
 definition "map_alloc
-  (*inputs*) first_page nr_pages
+  (* inputs *) first_page nr_pages
   (* global variables *) mm_alloc_bitmap nr_free_pages
-  (* local variables*) curr_idx_start curr_idx start_off end_idx end_off temp
+  (* local variables *) curr_idx_start curr_idx start_off end_idx end_off temp
   =
   curr_idx_start \<Midarrow> &first_page div PAGES_PER_MAPWORD;;
   curr_idx  \<Midarrow> &curr_idx_start;;
@@ -70,9 +103,9 @@ definition "map_alloc
   "
 
 definition "map_free
-  (*inputs*) first_page nr_pages
+  (* inputs *) first_page nr_pages
   (* global variables *) mm_alloc_bitmap nr_free_pages
-  (* local variables*) curr_idx_start curr_idx start_off end_idx end_off temp
+  (* local variables *) curr_idx_start curr_idx start_off end_idx end_off temp
   =
   curr_idx_start \<Midarrow> &first_page div PAGES_PER_MAPWORD;;
   curr_idx  \<Midarrow> &curr_idx_start;;
