@@ -85,8 +85,8 @@ definition "map_free
    &curr_idx =\<^sub>u &curr_idx_start \<and>
    &start_off =\<^sub>u &first_page \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
    &end_idx =\<^sub>u (&first_page + &nr_pages) div PAGES_PER_MAPWORD \<and>
-   &end_off =\<^sub>u (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) (* \<and>
-   nr_free_pages =\<^sub>u ??? *)
+   &end_off =\<^sub>u (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
+   &nr_free_pages \<ge>\<^sub>u &nr_pages
   )\<^sup>\<top>\<^sup>C;;
   bif &curr_idx =\<^sub>u &end_idx then
     temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off);;
