@@ -29,7 +29,7 @@ definition "get_order
   (* local variables *) size_temp order
   =
   size_temp \<Midarrow> (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT;;
-  order \<Midarrow> 0;;
+  order \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
   (* TODO: assumption *)
   (&size_temp =\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT \<and> &order =\<^sub>u 0)\<^sup>\<top>\<^sup>C;;
   while &size_temp \<noteq>\<^sub>u 0
