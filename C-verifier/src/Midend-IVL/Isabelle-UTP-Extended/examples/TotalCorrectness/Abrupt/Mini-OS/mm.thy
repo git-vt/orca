@@ -7,10 +7,10 @@ begin
 
 subsubsection \<open>From other header files\<close>
 
-text \<open>Implementation-dependent; assuming ARM for now.\<close>
-abbreviation "SIZEOF_INT \<equiv> \<guillemotleft>32\<guillemotright>" (* Necessary for the bitshifts *)
+text \<open>Implementation-dependent in the Mini-OS source files; assuming ARM for now.\<close>
+abbreviation "SIZEOF_INT \<equiv> \<guillemotleft>32::nat\<guillemotright>" (* Necessary for the below page bitshifts *)
 
-abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12\<guillemotright>"
+abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12::nat\<guillemotright>"
 abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"
 abbreviation "PAGE_MASK \<equiv> \<not>\<^bsub>u/SIZEOF_INT\<^esub> (PAGE_SIZE - 1)"
 
@@ -22,17 +22,23 @@ abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>"
 abbreviation "round_pgdown p \<equiv> p \<and>\<^sub>b\<^sub>u PAGE_MASK"
 abbreviation "round_pgup p \<equiv> (p + PAGE_SIZE - 1) \<and>\<^sub>b\<^sub>u PAGE_MASK"
 
+text \<open>For some code, additional temporary variables will be introduced as they make verification
+checking easier as we do not seem to have an equivalent to Dafny's/Boogie's \texttt{old()} builtin.\<close>
 definition "get_order
-  (* input *) size
-  (* local variables *) order
+  (* input *) size' (* `size` is a reserved constant *)
+  (* local variables *) size_temp order
   =
-  size \<Midarrow> (&size - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT;;
-  order \<Midarrow> \<guillemotleft>0\<guillemotright>;;
+  size_temp \<Midarrow> (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT;;
+  order \<Midarrow> 0;;
   (* TODO: assumption *)
-  while &size \<noteq>\<^sub>u 0
-  invr true (* TODO: fix *)
+  (&size_temp =\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT \<and> &order =\<^sub>u 0)\<^sup>\<top>\<^sup>C;;
+  while &size_temp \<noteq>\<^sub>u 0
+  invr
+    &size_temp \<le>\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT \<and>
+    &size_temp \<ge>\<^sub>u 0 \<and>
+    &order \<ge>\<^sub>u 0
   do
-    II;;
+    size_temp \<Midarrow> &size_temp \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> 1;;
     order \<Midarrow> &order + 1
   od
   (* return order *)
