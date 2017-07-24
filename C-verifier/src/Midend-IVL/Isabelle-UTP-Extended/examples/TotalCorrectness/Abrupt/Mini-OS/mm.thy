@@ -1,4 +1,4 @@
-subsection \<open>Memory mapping\<close>
+subsection \<open>Memory mapping (architecture-independent)\<close>
 
 theory mm
 imports
