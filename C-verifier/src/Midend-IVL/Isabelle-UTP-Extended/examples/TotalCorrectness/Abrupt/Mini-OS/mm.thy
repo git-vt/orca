@@ -14,7 +14,7 @@ abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12::nat\<guillemotright>"
 abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"
 abbreviation "PAGE_MASK \<equiv> \<not>\<^bsub>u/SIZEOF_INT\<^esub> (PAGE_SIZE - 1)"
 
-subsubsection \<open>From header file @{text mm.h}}\<close>
+subsubsection \<open>From header file \texttt{mm.h}\<close>
 
 text \<open>sizeof(unsigned long); assuming non-Windows 64-bit architecture.\<close>
 abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>"
@@ -44,7 +44,7 @@ definition "get_order
   (* return order *)
   "
 
-subsubsection \<open>From source file @{text mm.c}\<close>
+subsubsection \<open>From source file \texttt{mm.c}\<close>
 
 abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_ULONG * 8"
 
