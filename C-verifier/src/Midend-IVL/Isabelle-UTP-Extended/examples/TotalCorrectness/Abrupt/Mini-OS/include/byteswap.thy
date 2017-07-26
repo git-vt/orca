@@ -2,11 +2,8 @@ subsection \<open>Byte swapping\<close>
 
 theory byteswap
 imports
-  "../../../../../../../Backend/VCG/VCG_total_ML"
+  "../../../../../../../Backend/VCG/VCG_total_ML" (* Might do some proofs here *)
 begin
-
-text \<open>Most of these require the input to be of a specific size, so those are masked with the right
-sizes.\<close>
 
 text \<open>These may be unnecessary, but could be useful for conversions\<close>
 abbreviation "to_uint8 x \<equiv> x \<and>\<^sub>b\<^sub>u 255" -- \<open>0xff\<close>

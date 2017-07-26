@@ -2,22 +2,19 @@ subsection \<open>Memory mapping (architecture-independent)\<close>
 
 theory mm
 imports
-  "../../../../../../Backend/VCG/VCG_total_ML"
+  helpers
 begin
 
 subsubsection \<open>From other header files\<close>
 
-text \<open>Implementation-dependent in the Mini-OS source files; assuming ARM for now.\<close>
-abbreviation "SIZEOF_INT \<equiv> \<guillemotleft>32::nat\<guillemotright>" (* Necessary for the below page bitshifts *)
+text \<open>Implementation-dependent in the Mini-OS source files; assuming 64-bit for now. ARM vs.\ x86
+doesn't seem to be that important for this bit, though.\<close>
 
 abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12::nat\<guillemotright>"
 abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"
 abbreviation "PAGE_MASK \<equiv> \<not>\<^bsub>u/SIZEOF_INT\<^esub> (PAGE_SIZE - 1)"
 
 subsubsection \<open>From header file \texttt{mm.h}\<close>
-
-text \<open>sizeof(unsigned long); assuming non-Windows 64-bit architecture.\<close>
-abbreviation "SIZEOF_ULONG \<equiv> \<guillemotleft>64::nat\<guillemotright>"
 
 abbreviation "round_pgdown p \<equiv> p \<and>\<^sub>b\<^sub>u PAGE_MASK"
 abbreviation "round_pgup p \<equiv> (p + PAGE_SIZE - 1) \<and>\<^sub>b\<^sub>u PAGE_MASK"

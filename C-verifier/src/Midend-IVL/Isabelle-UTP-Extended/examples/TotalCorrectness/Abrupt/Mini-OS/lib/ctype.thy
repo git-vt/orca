@@ -2,7 +2,7 @@ subsection \<open>Properties of characters\<close>
 
 theory ctype
 imports
-  "../../../../../../../Backend/VCG/VCG_total_ML"
+  "../../../../../../../Backend/VCG/VCG_total_ML" (* Needs some proofs *)
 begin
 
 text \<open>Apparently the Mini-OS \texttt{ctype} library is not conformant to the C standard in regards
