@@ -56,6 +56,7 @@ fun vcg_insert_others_tac ctxt = ALLGOALS (Method.insert_tac ctxt @{thms others_
 
 (* Must come before certain usages of {rel,pred}_*; may be simplest to unfold early on after
 assumptions have been inserted. *)
+(* TODO: allow supplying extra theorems to the tactic. *)
 fun vcg_unfold_tac ctxt = unfold_tac ctxt @{thms unfold_thms}
 
 (* Splits up programs using seq_hoare_r_t; applies  `seq_hoare_r_t[of _ _ true]` when an assumption

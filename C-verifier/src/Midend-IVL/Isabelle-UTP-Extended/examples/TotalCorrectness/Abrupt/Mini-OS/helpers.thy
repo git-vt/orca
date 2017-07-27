@@ -1,4 +1,4 @@
-subsection \<open>Helper constants\<close>
+subsection \<open>Helper constants and such\<close>
 
 theory helpers
 imports

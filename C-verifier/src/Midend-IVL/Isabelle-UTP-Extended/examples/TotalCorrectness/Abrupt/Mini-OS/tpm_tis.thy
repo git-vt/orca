@@ -396,6 +396,7 @@ abbreviation "TPM_RID t l \<equiv> \<guillemotleft>0\<guillemotright>"
 
 (* tpm_chip struct... *)
 
+paragraph \<open>Functions\<close>
 (* TODO: once we get structs and pointers, as well as external function calls w/nondeterminism
 static void __init_tpm_chip(struct tpm_chip* tpm)
 s_time_t tpm_calc_ordinal_duration(struct tpm_chip *chip, uint32_t ordinal)
