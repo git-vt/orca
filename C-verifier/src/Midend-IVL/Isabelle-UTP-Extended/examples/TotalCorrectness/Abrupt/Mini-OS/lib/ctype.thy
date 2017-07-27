@@ -18,8 +18,8 @@ abbreviation "S' \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- whitespac
 abbreviation "X' \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>hex digit\<close>
 abbreviation "SP' \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>hard space (0x20)\<close>
 
-abbreviation "ctype \<equiv>
-  \<langle>C', C', C', C', C', C', C', C', (* 0-7 *)
+definition "ctype = \<langle>
+  C', C', C', C', C', C', C', C', (* 0-7 *)
   C', C' \<or>\<^sub>b\<^sub>u S', C' \<or>\<^sub>b\<^sub>u S', C' \<or>\<^sub>b\<^sub>u S', C' \<or>\<^sub>b\<^sub>u S', C' \<or>\<^sub>b\<^sub>u S', C', C', (* 8-15 *)
   C', C', C', C', C', C', C', C', (* 16-23 *)
   C', C', C', C', C', C', C', C', (* 24-31 *)

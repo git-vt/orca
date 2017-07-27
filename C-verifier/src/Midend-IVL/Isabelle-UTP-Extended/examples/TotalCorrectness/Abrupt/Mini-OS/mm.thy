@@ -7,8 +7,8 @@ begin
 
 subsubsection \<open>From other header files\<close>
 
-text \<open>Implementation-dependent in the Mini-OS source files; assuming 64-bit for now. ARM vs.\ x86
-doesn't seem to be that important for this bit, though.\<close>
+text \<open>Implementation-dependent in the Mini-OS source files; assuming 64-bit for now. ARM vs.\ x86,
+etc.\ doesn't seem to be that important for this bit, though.\<close>
 
 abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12::nat\<guillemotright>"
 abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"

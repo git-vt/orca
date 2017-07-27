@@ -1,0 +1,431 @@
+subsection \<open>Derivations from Linux's \texttt{drivers/char/tpm.c}\<close>
+
+theory tpm_tis
+imports
+  "include/byteorder"
+(*   helpers *)
+begin
+
+subsubsection \<open>From header file \texttt{tpm_tis.h}\<close>
+
+text \<open>Bare numeric literals are (possibly signed) integers in C, and usually compilers try to fit
+the value in a larger type if regular \texttt{int} is too small.\<close>
+
+abbreviation "TPM_TIS_EN_LOCL0 \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- \<open>0b1\<close>
+abbreviation "TPM_TIS_EN_LOCL1 \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>1 << 1, 0b10\<close>
+abbreviation "TPM_TIS_EN_LOCL2 \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>1 << 2, 0b100\<close>
+abbreviation "TPM_TIS_EN_LOCL3 \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>1 << 3, 0b1000\<close>
+abbreviation "TPM_TIS_EN_LOCL4 \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>1 << 4, 0b10000\<close>
+abbreviation "TPM_TIS_EN_LOCLALL \<equiv>
+  TPM_TIS_EN_LOCL0 \<or>\<^sub>b\<^sub>u
+  TPM_TIS_EN_LOCL1 \<or>\<^sub>b\<^sub>u
+  TPM_TIS_EN_LOCL2 \<or>\<^sub>b\<^sub>u
+  TPM_TIS_EN_LOCL3 \<or>\<^sub>b\<^sub>u
+  TPM_TIS_EN_LOCL4"
+abbreviation "TPM_BASEADDR \<equiv> \<guillemotleft>4275306496::nat\<guillemotright>" -- \<open>0xFED40000\<close>
+abbreviation "TPM_PROBE_IRQ \<equiv> \<guillemotleft>65535::nat\<guillemotright>" -- \<open>0xFFFF\<close>
+abbreviation "TPM_TIS_LOCL_INT_TO_FLAG x \<equiv> 1 \<lless>\<^bsub>u/\<guillemotleft>32::nat\<guillemotright>\<^esub> x"
+
+subsubsection \<open>From source file \texttt{tpm_tis.c}\<close>
+
+text \<open>The source file provides a backup definition of \texttt{min}, but we can just use @{text
+min\<^sub>u}.\<close>
+
+text \<open>@{text timeout_no} not used here as we're leaving out the printk statements.\<close>
+abbreviation "ADJUST_TIMEOUTS_TO_STANDARD initial standard timeout_no \<equiv>
+  bif &initial <\<^sub>u &standard then
+    initial \<Midarrow> &standard
+  else
+    II
+  eif"
+
+abbreviation "TPM_HEADER_SIZE \<equiv> \<guillemotleft>10::nat\<guillemotright>"
+abbreviation "TPM_BUFSIZE \<equiv> \<guillemotleft>2048::nat\<guillemotright>"
+
+(* TODO: structs! They're all packed, too. *)
+
+text \<open>The following values are encoded in a single enum, \texttt{tpm_duration}, in
+\texttt{tpm_tis.c}, but the enum itself is never used again (the values are only stored in unsigned
+integers) so there's no need for enum support for this portion of the code.\<close>
+abbreviation "TPM_SHORT \<equiv> \<guillemotleft>0::nat\<guillemotright>"
+abbreviation "TPM_MEDIUM \<equiv> \<guillemotleft>1::nat\<guillemotright>"
+abbreviation "TPM_LONG \<equiv> \<guillemotleft>2::nat\<guillemotright>"
+abbreviation "TPM_UNDEFINED \<equiv> \<guillemotleft>3::nat\<guillemotright>"
+
+text \<open>The first two of these abbreviations defines the size of the later external-linkage global
+constant lists (arrays).\<close>
+abbreviation "TPM_MAX_PROTECTED_ORDINAL \<equiv> \<guillemotleft>12::nat\<guillemotright>"
+abbreviation "TPM_MAX_ORDINAL \<equiv> \<guillemotleft>243::nat\<guillemotright>"
+abbreviation "TPM_PROTECTED_ORDINAL_MASK \<equiv> \<guillemotleft>255::nat\<guillemotright>" -- \<open>0xFF\<close>
+
+abbreviation "TPM_DIGEST_SIZE \<equiv> \<guillemotleft>20::nat\<guillemotright>"
+abbreviation "TPM_ERROR_SIZE \<equiv> \<guillemotleft>10::nat\<guillemotright>"
+
+abbreviation "TPM_RET_CODE_IDX \<equiv> \<guillemotleft>6::nat\<guillemotright>"
+
+text \<open>@{text tmp_capabilities}\<close>
+abbreviation "TPM_CAP_FLAG \<equiv> cpu_to_be32 4"
+abbreviation "TPM_CAP_PROP \<equiv> cpu_to_be32 5"
+abbreviation "CAP_VERSION_1_1 \<equiv> cpu_to_be32 6"
+abbreviation "CAP_VERSION_1_2 \<equiv> cpu_to_be32 26" -- \<open>0x1A\<close>
+
+text \<open>@{text tpm_sub_capabilities}\<close>
+abbreviation "TPM_CAP_PROP_PCR \<equiv> cpu_to_be32 257" -- \<open>0x101\<close>
+abbreviation "TPM_CAP_PROP_MANUFACTURER \<equiv> cpu_to_be32 259" -- \<open>0x103\<close>
+abbreviation "TPM_CAP_FLAG_PERM \<equiv> cpu_to_be32 264" -- \<open>0x108\<close>
+abbreviation "TPM_CAP_FLAG_VOL \<equiv> cpu_to_be32 265" -- \<open>0x109\<close>
+abbreviation "TPM_CAP_PROP_OWNER \<equiv> cpu_to_be32 273" -- \<open>0x111\<close>
+abbreviation "TPM_CAP_PROP_TIS_TIMEOUT \<equiv> cpu_to_be32 277" -- \<open>0x115\<close>
+abbreviation "TPM_CAP_PROP_TIS_DURATION \<equiv> cpu_to_be32 288" -- \<open>0x120\<close>
+
+abbreviation "TPM_INTERNAL_RESULT_SIZE \<equiv> 200"
+abbreviation "TPM_TAG_RQU_COMMAND \<equiv> cpu_to_be16 193"
+abbreviation "TPM_ORD_GET_CAP \<equiv> cpu_to_be32 101"
+
+paragraph \<open>Constant arrays\<close>
+
+definition "tpm_protected_ordinal_duration = \<langle>
+  TPM_UNDEFINED,          (* 0 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 5 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 10 *)
+  TPM_SHORT
+\<rangle>"
+
+definition "tpm_ordinal_duration = \<langle>
+  TPM_UNDEFINED,          (* 0 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 5 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 10 *)
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_LONG,
+  TPM_LONG,
+  TPM_MEDIUM,             (* 15 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_LONG,
+  TPM_SHORT,              (* 20 *)
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_SHORT,              (* 25 *)
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_MEDIUM,             (* 30 *)
+  TPM_LONG,
+  TPM_MEDIUM,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,              (* 35 *)
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_MEDIUM,             (* 40 *)
+  TPM_LONG,
+  TPM_MEDIUM,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,              (* 45 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_LONG,
+  TPM_MEDIUM,             (* 50 *)
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 55 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_MEDIUM,             (* 60 *)
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_MEDIUM,             (* 65 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 70 *)
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 75 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_LONG,               (* 80 *)
+  TPM_UNDEFINED,
+  TPM_MEDIUM,
+  TPM_LONG,
+  TPM_SHORT,
+  TPM_UNDEFINED,          (* 85 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 90 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,          (* 95 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_MEDIUM,             (* 100 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 105 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 110 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,              (* 115 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_LONG,               (* 120 *)
+  TPM_LONG,
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_SHORT,
+  TPM_SHORT,              (* 125 *)
+  TPM_SHORT,
+  TPM_LONG,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,              (* 130 *)
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_UNDEFINED,          (* 135 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 140 *)
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 145 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 150 *)
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,          (* 155 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 160 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 165 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_LONG,               (* 170 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 175 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_MEDIUM,             (* 180 *)
+  TPM_SHORT,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_MEDIUM,             (* 185 *)
+  TPM_SHORT,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 190 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 195 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 200 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,
+  TPM_SHORT,              (* 205 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_MEDIUM,             (* 210 *)
+  TPM_UNDEFINED,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_MEDIUM,
+  TPM_UNDEFINED,          (* 215 *)
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,
+  TPM_SHORT,              (* 220 *)
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_SHORT,
+  TPM_UNDEFINED,          (* 225 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 230 *)
+  TPM_LONG,
+  TPM_MEDIUM,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,          (* 235 *)
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_UNDEFINED,
+  TPM_SHORT,              (* 240 *)
+  TPM_UNDEFINED,
+  TPM_MEDIUM
+\<rangle>"
+
+(* TODO: fit in extern const struct tpm_input_header tpm_getcap_header, initialize *)
+
+paragraph \<open>More enums that are never used by type.\<close>
+text \<open>\texttt{tis_access}\<close>
+abbreviation "TPM_ACCESS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x80\<close>
+abbreviation "TPM_ACCESS_ACTIVE_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(R) 0x20\<close>
+abbreviation "TPM_ACCESS_RELINQUISH_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
+abbreviation "TPM_ACCESS_REQUEST_PENDING \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>(W) 0x04\<close>
+abbreviation "TPM_ACCESS_REQUEST_USE \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>(W) 0x02\<close>
+
+text \<open>\texttt{tis_status}\<close>
+abbreviation "TPM_STS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>(R) 0x80\<close>
+abbreviation "TPM_STS_COMMAND_READY \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>(R) 0x40\<close>
+abbreviation "TPM_STS_DATA_AVAIL \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>(R) 0x10\<close>
+abbreviation "TPM_STS_DATA_EXPECT \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>(R) 0x08\<close>
+abbreviation "TPM_STS_DATA_GO \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
+
+text \<open>\texttt{tis_int_flags}\<close>
+abbreviation "TPM_GLOBAL_INT_ENABLE \<equiv> \<guillemotleft>2147483648::nat\<guillemotright>" -- \<open>0x80000000\<close>
+abbreviation "TPM_INTF_BURST_COUNT_STATIC \<equiv> \<guillemotleft>256::nat\<guillemotright>" -- \<open>0x100\<close>
+abbreviation "TPM_INTF_CMD_READY_INT \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x080\<close>
+abbreviation "TPM_INTF_INT_EDGE_FALLING \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>0x040\<close>
+abbreviation "TPM_INTF_INT_EDGE_RISING \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>0x020\<close>
+abbreviation "TPM_INTF_INT_LEVEL_LOW \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>0x010\<close>
+abbreviation "TPM_INTF_INT_LEVEL_HIGH \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>0x008\<close>
+abbreviation "TPM_INTF_LOCALITY_CHANGE_INT \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>0x004\<close>
+abbreviation "TPM_INTF_STS_VALID_INT \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>0x002\<close>
+abbreviation "TPM_INTF_DATA_AVAIL_INT \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- \<open>0x001\<close>
+
+text \<open>\texttt{tis_defaults}\<close>
+abbreviation "TIS_MEM_BASE \<equiv> \<guillemotleft>4275306496::nat\<guillemotright>" -- \<open>0xFED40000\<close>
+abbreviation "TIS_MEM_LEN \<equiv> \<guillemotleft>20480::nat\<guillemotright>" -- \<open>0x5000\<close>
+abbreviation "TIS_SHORT_TIMEOUT \<equiv> \<guillemotleft>750::nat\<guillemotright>" -- \<open>ms\<close>
+abbreviation "TIS_LONG_TIMEOUT \<equiv> \<guillemotleft>2000::nat\<guillemotright>" -- \<open>2 sec\<close>
+
+abbreviation "TPM_TIMEOUT \<equiv> \<guillemotleft>5::nat\<guillemotright>"
+
+paragraph \<open>pointer-struct accesses for later\<close>
+abbreviation "TPM_ACCESS t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_INT_ENABLE t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_INT_VECTOR t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_INT_STATUS t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_INTF_CAPS t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_STS t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_DATA_FIFO t l \<equiv> \<guillemotleft>0\<guillemotright>"
+
+abbreviation "TPM_DID_VID t l \<equiv> \<guillemotleft>0\<guillemotright>"
+abbreviation "TPM_RID t l \<equiv> \<guillemotleft>0\<guillemotright>"
+
+(* tpm_chip struct... *)
+
+(* TODO: once we get structs and pointers, as well as external function calls w/nondeterminism
+static void __init_tpm_chip(struct tpm_chip* tpm)
+s_time_t tpm_calc_ordinal_duration(struct tpm_chip *chip, uint32_t ordinal)
+static int locality_enabled(struct tpm_chip* tpm, int l)
+static int check_locality(struct tpm_chip* tpm, int l)
+void release_locality(struct tpm_chip* tpm, int l, int force)
+int tpm_tis_request_locality(struct tpm_chip* tpm, int l)
+static uint8_t tpm_tis_status(struct tpm_chip* tpm)
+static void tpm_tis_ready(struct tpm_chip* tpm)
+#define tpm_tis_cancel_cmd(v) tpm_tis_ready(v)
+static int get_burstcount(struct tpm_chip* tpm)
+static int wait_for_stat(struct tpm_chip* tpm, uint8_t mask, unsigned long timeout, struct wait_queue_head* queue)
+static int recv_data(struct tpm_chip* tpm, uint8_t* buf, size_t count)
+int tpm_tis_recv(struct tpm_chip* tpm, uint8_t* buf, size_t count)
+int tpm_tis_send(struct tpm_chip* tpm, uint8_t* buf, size_t len)
+static void tpm_tis_irq_handler(evtchn_port_t port, struct pt_regs *regs, void* data)
+static ssize_t tpm_transmit(struct tpm_chip *chip, const uint8_t *buf, size_t bufsiz)
+static ssize_t transmit_cmd(struct tpm_chip *chip, struct tpm_cmd_t *cmd, int len, const char *desc)
+int tpm_get_timeouts(struct tpm_chip *chip)
+void tpm_continue_selftest(struct tpm_chip* chip)
+ssize_t tpm_getcap(struct tpm_chip *chip, uint32_t subcap_id, cap_t *cap, const char *desc)
+struct tpm_chip* init_tpm_tis(unsigned long baseaddr, int localities, unsigned int irq)
+void shutdown_tpm_tis(struct tpm_chip* tpm)
+int tpm_tis_cmd(struct tpm_chip* tpm, uint8_t* req, size_t reqlen, uint8_t** resp, size_t* resplen)
+int tpm_tis_open(struct tpm_chip* tpm)
+int tpm_tis_posix_write(int fd, const uint8_t* buf, size_t count)
+int tpm_tis_posix_read(int fd, uint8_t* buf, size_t count)
+int tpm_tis_posix_fstat(int fd, struct stat* buf)
+static void tpm2_selftest(struct tpm_chip* chip)
+struct tpm_chip* init_tpm2_tis(unsigned long baseaddr, int localities, unsigned int irq)
+*)
+
+end
