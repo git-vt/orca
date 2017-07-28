@@ -5,15 +5,6 @@ imports
   helpers
 begin
 
-subsubsection \<open>From other header files\<close>
-
-text \<open>Implementation-dependent in the Mini-OS source files; assuming 64-bit for now. ARM vs.\ x86,
-etc.\ doesn't seem to be that important for this bit, though.\<close>
-
-abbreviation "PAGE_SHIFT \<equiv> \<guillemotleft>12::nat\<guillemotright>"
-abbreviation "PAGE_SIZE \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_INT\<^esub> PAGE_SHIFT"
-abbreviation "PAGE_MASK \<equiv> \<not>\<^bsub>u/SIZEOF_INT\<^esub> (PAGE_SIZE - 1)"
-
 subsubsection \<open>From header file \texttt{mm.h}\<close>
 
 abbreviation "round_pgdown p \<equiv> p \<and>\<^sub>b\<^sub>u PAGE_MASK"
@@ -25,17 +16,17 @@ definition "get_order
   (* input *) size' (* `size` is a reserved constant *)
   (* local variables *) size_temp order
   =
-  size_temp \<Midarrow> (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT;;
+  size_temp \<Midarrow> (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> PAGE_SHIFT;;
   order \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
   (* TODO: assumption *)
-  (&size_temp =\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT \<and> &order =\<^sub>u 0)\<^sup>\<top>\<^sup>C;;
+  (&size_temp =\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> PAGE_SHIFT \<and> &order =\<^sub>u 0)\<^sup>\<top>\<^sup>C;;
   while &size_temp \<noteq>\<^sub>u 0
   invr
-    &size_temp \<le>\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> PAGE_SHIFT \<and>
+    &size_temp \<le>\<^sub>u (&size' - 1) \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> PAGE_SHIFT \<and>
     &size_temp \<ge>\<^sub>u 0 \<and>
     &order \<ge>\<^sub>u 0
   do
-    size_temp \<Midarrow> &size_temp \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> 1;;
+    size_temp \<Midarrow> &size_temp \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> 1;;
     order \<Midarrow> &order + 1
   od
   (* return order *)
@@ -43,12 +34,12 @@ definition "get_order
 
 subsubsection \<open>From source file \texttt{mm.c}\<close>
 
-abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_ULONG * 8"
+abbreviation "PAGES_PER_MAPWORD \<equiv> SIZEOF_LONG * 8"
 
 abbreviation allocated_in_map :: "(nat list, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" where
   "allocated_in_map bitmap pn \<equiv>
     bitmap\<lparr>pn div PAGES_PER_MAPWORD\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u
-    1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> (pn \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1))"
+    1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> (pn \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1))"
 
 text \<open>Currently representing functions as individual definitions (without Hoare triples); this is
 slightly troublesome as it requires passing in local variables to have them treated as such, but
@@ -70,12 +61,12 @@ definition "map_alloc
    &end_idx =\<^sub>u (&first_page + &nr_pages) div PAGES_PER_MAPWORD \<and>
    &end_off =\<^sub>u (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1))\<^sup>\<top>\<^sup>C;;
   bif &curr_idx =\<^sub>u &end_idx then
-    temp \<Midarrow> 1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off - 1;;
-    temp \<Midarrow> &temp \<and>\<^sub>b\<^sub>u -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off);;
+    temp \<Midarrow> 1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &end_off - 1;;
+    temp \<Midarrow> &temp \<and>\<^sub>b\<^sub>u -\<^bsub>u/SIZEOF_LONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off);;
     temp \<Midarrow> (&mm_alloc_bitmap:\<^sub>u nat list)\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   else
-    temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off);;
+    temp \<Midarrow> -\<^bsub>u/SIZEOF_LONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off);;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u;;
     (&curr_idx_start =\<^sub>u &first_page div PAGES_PER_MAPWORD \<and>
@@ -83,7 +74,7 @@ definition "map_alloc
      &start_off =\<^sub>u &first_page \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
      &end_idx =\<^sub>u (&first_page + &nr_pages) div PAGES_PER_MAPWORD \<and>
      &end_off =\<^sub>u (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
-     &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off) =\<^sub>u -\<^bsub>u/SIZEOF_ULONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off)
+     &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u -\<^bsub>u/SIZEOF_LONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off) =\<^sub>u -\<^bsub>u/SIZEOF_LONG\<^esub>(1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off)
     )\<^sup>\<top>\<^sup>C;;
     while &curr_idx + 1 <\<^sub>u &end_idx
     invr
@@ -91,13 +82,13 @@ definition "map_alloc
       &curr_idx <\<^sub>u &end_idx \<and>
       (* TODO: may need a different formulation of the below if the set is not empty for
         &curr_idx_start =\<^sub>u &curr_idx *)
-      (\<^bold>\<forall> i \<in> {&curr_idx_start..&curr_idx}\<^sub>u \<bullet> &mm_alloc_bitmap\<lparr>\<guillemotleft>i\<guillemotright>\<rparr>\<^sub>u =\<^sub>u \<not>\<^bsub>u/SIZEOF_ULONG\<^esub> 0)
+      (\<^bold>\<forall> i \<in> {&curr_idx_start..&curr_idx}\<^sub>u \<bullet> &mm_alloc_bitmap\<lparr>\<guillemotleft>i\<guillemotright>\<rparr>\<^sub>u =\<^sub>u \<not>\<^bsub>u/SIZEOF_LONG\<^esub> 0)
     do
       curr_idx \<Midarrow> &curr_idx + 1;;
-      mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> \<not>\<^bsub>u/SIZEOF_ULONG\<^esub> 0)\<^sub>u
+      mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> \<not>\<^bsub>u/SIZEOF_LONG\<^esub> 0)\<^sub>u
     od;;
     curr_idx \<Midarrow> &curr_idx + 1;; (* needed for last increment *)
-    temp \<Midarrow> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off) - 1;;
+    temp \<Midarrow> (1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &end_off) - 1;;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   eif;;
@@ -125,12 +116,12 @@ definition "map_free
    &nr_free_pages \<ge>\<^sub>u &nr_pages
   )\<^sup>\<top>\<^sup>C;;
   bif &curr_idx =\<^sub>u &end_idx then
-    temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off);;
-    temp \<Midarrow> &temp \<or>\<^sub>b\<^sub>u (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off - 1);;
+    temp \<Midarrow> -\<^bsub>u/SIZEOF_LONG\<^esub> (1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &end_off);;
+    temp \<Midarrow> &temp \<or>\<^sub>b\<^sub>u (1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off - 1);;
     temp \<Midarrow> (&mm_alloc_bitmap:\<^sub>u nat list)\<lparr>&curr_idx\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   else
-    temp \<Midarrow> 1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off - 1;;
+    temp \<Midarrow> 1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off - 1;;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> (&mm_alloc_bitmap)(&curr_idx \<mapsto> &temp)\<^sub>u;;
     (&curr_idx_start =\<^sub>u &first_page div PAGES_PER_MAPWORD \<and>
@@ -138,7 +129,7 @@ definition "map_free
      &start_off =\<^sub>u &first_page \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
      &end_idx =\<^sub>u (&first_page + &nr_pages) div PAGES_PER_MAPWORD \<and>
      &end_off =\<^sub>u (&first_page + &nr_pages) \<and>\<^sub>b\<^sub>u (PAGES_PER_MAPWORD - 1) \<and>
-     &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off - 1) =\<^sub>u 1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &start_off - 1
+     &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<or>\<^sub>b\<^sub>u (1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off - 1) =\<^sub>u 1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &start_off - 1
     )\<^sup>\<top>\<^sup>C;;
     while &curr_idx + 1 <\<^sub>u &end_idx
     invr
@@ -152,7 +143,7 @@ definition "map_free
       mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> 0)\<^sub>u
     od;;
     curr_idx \<Midarrow> &curr_idx + 1;; (* needed for last increment *)
-    temp \<Midarrow> -\<^bsub>u/SIZEOF_ULONG\<^esub> (1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> &end_off);;
+    temp \<Midarrow> -\<^bsub>u/SIZEOF_LONG\<^esub> (1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> &end_off);;
     temp \<Midarrow> &mm_alloc_bitmap\<lparr>&curr_idx\<rparr>\<^sub>u \<and>\<^sub>b\<^sub>u &temp;;
     mm_alloc_bitmap \<Midarrow> &mm_alloc_bitmap(&curr_idx \<mapsto> &temp)\<^sub>u
   eif

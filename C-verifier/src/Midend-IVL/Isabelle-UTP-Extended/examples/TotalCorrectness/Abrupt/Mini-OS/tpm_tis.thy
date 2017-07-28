@@ -26,7 +26,7 @@ abbreviation "TPM_BASEADDR \<equiv> \<guillemotleft>4275306496::nat\<guillemotri
 abbreviation "TPM_PROBE_IRQ \<equiv> \<guillemotleft>65535::nat\<guillemotright>" -- \<open>0xFFFF\<close>
 abbreviation "TPM_TIS_LOCL_INT_TO_FLAG x \<equiv> 1 \<lless>\<^bsub>u/\<guillemotleft>32::nat\<guillemotright>\<^esub> x"
 
-subsubsection \<open>From source file \texttt{tpm_tis.c}\<close>
+subsubsection \<open>From source file \texttt{tpm\_tis.c}\<close>
 
 text \<open>The source file provides a backup definition of \texttt{min}, but we can just use @{text
 min\<^sub>u}.\<close>
@@ -44,8 +44,8 @@ abbreviation "TPM_BUFSIZE \<equiv> \<guillemotleft>2048::nat\<guillemotright>"
 
 (* TODO: structs! They're all packed, too. *)
 
-text \<open>The following values are encoded in a single enum, \texttt{tpm_duration}, in
-\texttt{tpm_tis.c}, but the enum itself is never used again (the values are only stored in unsigned
+text \<open>The following values are encoded in a single enum, \texttt{tpm\_duration}, in
+\texttt{tpm\_tis.c}, but the enum itself is never used again (the values are only stored in unsigned
 integers) so there's no need for enum support for this portion of the code.\<close>
 abbreviation "TPM_SHORT \<equiv> \<guillemotleft>0::nat\<guillemotright>"
 abbreviation "TPM_MEDIUM \<equiv> \<guillemotleft>1::nat\<guillemotright>"
@@ -348,21 +348,21 @@ definition "tpm_ordinal_duration = \<langle>
 (* TODO: fit in extern const struct tpm_input_header tpm_getcap_header, initialize *)
 
 paragraph \<open>More enums that are never used by type.\<close>
-text \<open>\texttt{tis_access}\<close>
+text \<open>\texttt{tis\_access}\<close>
 abbreviation "TPM_ACCESS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x80\<close>
 abbreviation "TPM_ACCESS_ACTIVE_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(R) 0x20\<close>
 abbreviation "TPM_ACCESS_RELINQUISH_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
 abbreviation "TPM_ACCESS_REQUEST_PENDING \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>(W) 0x04\<close>
 abbreviation "TPM_ACCESS_REQUEST_USE \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>(W) 0x02\<close>
 
-text \<open>\texttt{tis_status}\<close>
+text \<open>\texttt{tis\_status}\<close>
 abbreviation "TPM_STS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>(R) 0x80\<close>
 abbreviation "TPM_STS_COMMAND_READY \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>(R) 0x40\<close>
 abbreviation "TPM_STS_DATA_AVAIL \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>(R) 0x10\<close>
 abbreviation "TPM_STS_DATA_EXPECT \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>(R) 0x08\<close>
 abbreviation "TPM_STS_DATA_GO \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
 
-text \<open>\texttt{tis_int_flags}\<close>
+text \<open>\texttt{tis\_int\_flags}\<close>
 abbreviation "TPM_GLOBAL_INT_ENABLE \<equiv> \<guillemotleft>2147483648::nat\<guillemotright>" -- \<open>0x80000000\<close>
 abbreviation "TPM_INTF_BURST_COUNT_STATIC \<equiv> \<guillemotleft>256::nat\<guillemotright>" -- \<open>0x100\<close>
 abbreviation "TPM_INTF_CMD_READY_INT \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x080\<close>
@@ -374,7 +374,7 @@ abbreviation "TPM_INTF_LOCALITY_CHANGE_INT \<equiv> \<guillemotleft>4::nat\<guil
 abbreviation "TPM_INTF_STS_VALID_INT \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>0x002\<close>
 abbreviation "TPM_INTF_DATA_AVAIL_INT \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- \<open>0x001\<close>
 
-text \<open>\texttt{tis_defaults}\<close>
+text \<open>\texttt{tis\_defaults}\<close>
 abbreviation "TIS_MEM_BASE \<equiv> \<guillemotleft>4275306496::nat\<guillemotright>" -- \<open>0xFED40000\<close>
 abbreviation "TIS_MEM_LEN \<equiv> \<guillemotleft>20480::nat\<guillemotright>" -- \<open>0x5000\<close>
 abbreviation "TIS_SHORT_TIMEOUT \<equiv> \<guillemotleft>750::nat\<guillemotright>" -- \<open>ms\<close>

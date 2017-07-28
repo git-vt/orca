@@ -17,22 +17,22 @@ abbreviation pfn_to_mfn  :: "(nat list, '\<alpha>) uexpr \<Rightarrow> (nat, '\<
 abbreviation "P2M_SHIFT \<equiv> \<guillemotleft>9::nat\<guillemotright>" -- \<open>For x86-64\<close>
 abbreviation "P2M_SHIFT' \<equiv> \<guillemotleft>10::nat\<guillemotright>" -- \<open>For others; currently unused for verification\<close>
 
-abbreviation "P2M_ENTRIES \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_ULONG\<^esub> P2M_SHIFT" -- \<open>1UL in source, so ulong\<close>
+abbreviation "P2M_ENTRIES \<equiv> 1 \<lless>\<^bsub>u/SIZEOF_LONG\<^esub> P2M_SHIFT" -- \<open>1UL in source, so ulong\<close>
 abbreviation "P2M_MASK \<equiv> P2M_ENTRIES - 1"
 abbreviation "L1_P2M_SHIFT \<equiv> P2M_SHIFT"
 abbreviation "L2_P2M_SHIFT \<equiv> 2 * P2M_SHIFT"
 abbreviation "L3_P2M_SHIFT \<equiv> 3 * P2M_SHIFT"
 abbreviation "L1_P2M_IDX pfn \<equiv> pfn \<and>\<^sub>b\<^sub>u P2M_MASK"
-abbreviation "L2_P2M_IDX pfn \<equiv> (pfn \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> L1_P2M_SHIFT) \<and>\<^sub>b\<^sub>u P2M_MASK"
-abbreviation "L3_P2M_IDX pfn \<equiv> (pfn \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> L2_P2M_SHIFT) \<and>\<^sub>b\<^sub>u P2M_MASK"
-abbreviation "INVALID_P2M_ENTRY \<equiv> \<not>\<^bsub>u/SIZEOF_ULONG\<^esub> 0" -- \<open>~0UL in source\<close>
+abbreviation "L2_P2M_IDX pfn \<equiv> (pfn \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> L1_P2M_SHIFT) \<and>\<^sub>b\<^sub>u P2M_MASK"
+abbreviation "L3_P2M_IDX pfn \<equiv> (pfn \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> L2_P2M_SHIFT) \<and>\<^sub>b\<^sub>u P2M_MASK"
+abbreviation "INVALID_P2M_ENTRY \<equiv> \<not>\<^bsub>u/SIZEOF_LONG\<^esub> 0" -- \<open>~0UL in source\<close>
 
 (* functions that are merely declared in paravirt.h:
 void p2m_chk_pfn(unsigned long pfn);
 void arch_init_p2m(unsigned long max_pfn_p);
 *)
 
-definition "p2m_pages pages = (pages + P2M_ENTRIES - 1) \<ggreater>\<^bsub>u/SIZEOF_ULONG\<^esub> L1_P2M_SHIFT"
+definition "p2m_pages pages = (pages + P2M_ENTRIES - 1) \<ggreater>\<^bsub>u/SIZEOF_LONG\<^esub> L1_P2M_SHIFT"
 
 subsubsection \<open>Paravirt disabled\<close>
 
