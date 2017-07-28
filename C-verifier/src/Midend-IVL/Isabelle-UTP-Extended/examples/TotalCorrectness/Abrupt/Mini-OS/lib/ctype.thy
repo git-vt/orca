@@ -9,14 +9,14 @@ text \<open>Apparently the Mini-OS \texttt{ctype} library is not conformant to t
 to EOF handling.\<close>
 
 (* Explicit nats not necessarily needed but useful to keep track of things. *)
-abbreviation "U' \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- upper
-abbreviation "L' \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- lower
-abbreviation "D' \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- digit
-abbreviation "C' \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- cntrl
-abbreviation "P' \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- punct
-abbreviation "S' \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- whitespace
-abbreviation "X' \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>hex digit\<close>
-abbreviation "SP' \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>hard space (0x20)\<close>
+abbreviation "U' \<equiv> \<guillemotleft>0x01::nat\<guillemotright>" -- upper
+abbreviation "L' \<equiv> \<guillemotleft>0x02::nat\<guillemotright>" -- lower
+abbreviation "D' \<equiv> \<guillemotleft>0x04::nat\<guillemotright>" -- digit
+abbreviation "C' \<equiv> \<guillemotleft>0x08::nat\<guillemotright>" -- cntrl
+abbreviation "P' \<equiv> \<guillemotleft>0x10::nat\<guillemotright>" -- punct
+abbreviation "S' \<equiv> \<guillemotleft>0x20::nat\<guillemotright>" -- whitespace
+abbreviation "X' \<equiv> \<guillemotleft>0x40::nat\<guillemotright>" -- \<open>hex digit\<close>
+abbreviation "SP' \<equiv> \<guillemotleft>0x80::nat\<guillemotright>" -- \<open>hard space (0x20)\<close>
 
 definition "ctype = \<langle>
   C', C', C', C', C', C', C', C', (* 0-7 *)
@@ -47,7 +47,7 @@ definition "ctype = \<langle>
 
 text \<open>The original definition uses a cast to \texttt{unsigned char}, as that type could potentially
 have a size other than eight bits, but for our purposes we'll stick with eight-bit bytes.\<close>
-abbreviation "ismask' x \<equiv> ctype\<lparr>x \<and>\<^sub>b\<^sub>u 255\<rparr>\<^sub>u"
+abbreviation "ismask' x \<equiv> ctype\<lparr>x \<and>\<^sub>b\<^sub>u 0xff\<rparr>\<^sub>u"
 
 abbreviation "isalnum c \<equiv> ismask' c \<and>\<^sub>b\<^sub>u (U' \<or>\<^sub>b\<^sub>u L' \<or>\<^sub>b\<^sub>u D') \<noteq>\<^sub>u 0"
 abbreviation "isalpha c \<equiv> ismask' c \<and>\<^sub>b\<^sub>u (U' \<or>\<^sub>b\<^sub>u L') \<noteq>\<^sub>u 0"
@@ -61,8 +61,8 @@ abbreviation "isspace c \<equiv> ismask' c \<and>\<^sub>b\<^sub>u S' \<noteq>\<^
 abbreviation "isupper c \<equiv> ismask' c \<and>\<^sub>b\<^sub>u U' \<noteq>\<^sub>u 0"
 abbreviation "isxdigit c \<equiv> ismask' c \<and>\<^sub>b\<^sub>u (D' \<or>\<^sub>b\<^sub>u X') \<noteq>\<^sub>u 0"
 
-abbreviation "isascii c \<equiv> c \<le>\<^sub>u 127"
-abbreviation "toascii c \<equiv> c \<and>\<^sub>b\<^sub>u 127"
+abbreviation "isascii c \<equiv> c \<le>\<^sub>u 0x7f"
+abbreviation "toascii c \<equiv> c \<and>\<^sub>b\<^sub>u 0x7f"
 
 text \<open>The ASCII value of `A' is 65 while the value of `a' is 97. Thus, `A - a' is -32 while `a - A'
 is 32.\<close>

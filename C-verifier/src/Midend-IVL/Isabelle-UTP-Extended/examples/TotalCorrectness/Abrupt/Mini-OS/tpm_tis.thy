@@ -11,19 +11,19 @@ subsubsection \<open>From header file \texttt{tpm_tis.h}\<close>
 text \<open>Bare numeric literals are (possibly signed) integers in C, and usually compilers try to fit
 the value in a larger type if regular \texttt{int} is too small.\<close>
 
-abbreviation "TPM_TIS_EN_LOCL0 \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- \<open>0b1\<close>
-abbreviation "TPM_TIS_EN_LOCL1 \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>1 << 1, 0b10\<close>
-abbreviation "TPM_TIS_EN_LOCL2 \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>1 << 2, 0b100\<close>
-abbreviation "TPM_TIS_EN_LOCL3 \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>1 << 3, 0b1000\<close>
-abbreviation "TPM_TIS_EN_LOCL4 \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>1 << 4, 0b10000\<close>
+abbreviation "TPM_TIS_EN_LOCL0 \<equiv> \<guillemotleft>0b00001::nat\<guillemotright>" -- \<open>1 << 0\<close>
+abbreviation "TPM_TIS_EN_LOCL1 \<equiv> \<guillemotleft>0b00010::nat\<guillemotright>" -- \<open>1 << 1\<close>
+abbreviation "TPM_TIS_EN_LOCL2 \<equiv> \<guillemotleft>0b00100::nat\<guillemotright>" -- \<open>1 << 2\<close>
+abbreviation "TPM_TIS_EN_LOCL3 \<equiv> \<guillemotleft>0b01000::nat\<guillemotright>" -- \<open>1 << 3\<close>
+abbreviation "TPM_TIS_EN_LOCL4 \<equiv> \<guillemotleft>0b10000::nat\<guillemotright>" -- \<open>1 << 4\<close>
 abbreviation "TPM_TIS_EN_LOCLALL \<equiv>
   TPM_TIS_EN_LOCL0 \<or>\<^sub>b\<^sub>u
   TPM_TIS_EN_LOCL1 \<or>\<^sub>b\<^sub>u
   TPM_TIS_EN_LOCL2 \<or>\<^sub>b\<^sub>u
   TPM_TIS_EN_LOCL3 \<or>\<^sub>b\<^sub>u
   TPM_TIS_EN_LOCL4"
-abbreviation "TPM_BASEADDR \<equiv> \<guillemotleft>4275306496::nat\<guillemotright>" -- \<open>0xFED40000\<close>
-abbreviation "TPM_PROBE_IRQ \<equiv> \<guillemotleft>65535::nat\<guillemotright>" -- \<open>0xFFFF\<close>
+abbreviation "TPM_BASEADDR \<equiv> \<guillemotleft>0xFED40000::nat\<guillemotright>"
+abbreviation "TPM_PROBE_IRQ \<equiv> \<guillemotleft>0xFFFF::nat\<guillemotright>"
 abbreviation "TPM_TIS_LOCL_INT_TO_FLAG x \<equiv> 1 \<lless>\<^bsub>u/\<guillemotleft>32::nat\<guillemotright>\<^esub> x"
 
 subsubsection \<open>From source file \texttt{tpm\_tis.c}\<close>
@@ -55,8 +55,8 @@ abbreviation "TPM_UNDEFINED \<equiv> \<guillemotleft>3::nat\<guillemotright>"
 text \<open>The first two of these abbreviations defines the size of the later external-linkage global
 constant lists (arrays).\<close>
 abbreviation "TPM_MAX_PROTECTED_ORDINAL \<equiv> \<guillemotleft>12::nat\<guillemotright>"
-abbreviation "TPM_MAX_ORDINAL \<equiv> \<guillemotleft>243::nat\<guillemotright>"
-abbreviation "TPM_PROTECTED_ORDINAL_MASK \<equiv> \<guillemotleft>255::nat\<guillemotright>" -- \<open>0xFF\<close>
+abbreviation "TPM_MAX_ORDINAL \<equiv> \<guillemotleft>0xF3::nat\<guillemotright>"
+abbreviation "TPM_PROTECTED_ORDINAL_MASK \<equiv> \<guillemotleft>0xFF::nat\<guillemotright>"
 
 abbreviation "TPM_DIGEST_SIZE \<equiv> \<guillemotleft>20::nat\<guillemotright>"
 abbreviation "TPM_ERROR_SIZE \<equiv> \<guillemotleft>10::nat\<guillemotright>"
@@ -67,20 +67,20 @@ text \<open>@{text tmp_capabilities}\<close>
 abbreviation "TPM_CAP_FLAG \<equiv> cpu_to_be32 4"
 abbreviation "TPM_CAP_PROP \<equiv> cpu_to_be32 5"
 abbreviation "CAP_VERSION_1_1 \<equiv> cpu_to_be32 6"
-abbreviation "CAP_VERSION_1_2 \<equiv> cpu_to_be32 26" -- \<open>0x1A\<close>
+abbreviation "CAP_VERSION_1_2 \<equiv> cpu_to_be32 0x1A"
 
 text \<open>@{text tpm_sub_capabilities}\<close>
-abbreviation "TPM_CAP_PROP_PCR \<equiv> cpu_to_be32 257" -- \<open>0x101\<close>
-abbreviation "TPM_CAP_PROP_MANUFACTURER \<equiv> cpu_to_be32 259" -- \<open>0x103\<close>
-abbreviation "TPM_CAP_FLAG_PERM \<equiv> cpu_to_be32 264" -- \<open>0x108\<close>
-abbreviation "TPM_CAP_FLAG_VOL \<equiv> cpu_to_be32 265" -- \<open>0x109\<close>
-abbreviation "TPM_CAP_PROP_OWNER \<equiv> cpu_to_be32 273" -- \<open>0x111\<close>
-abbreviation "TPM_CAP_PROP_TIS_TIMEOUT \<equiv> cpu_to_be32 277" -- \<open>0x115\<close>
-abbreviation "TPM_CAP_PROP_TIS_DURATION \<equiv> cpu_to_be32 288" -- \<open>0x120\<close>
+abbreviation "TPM_CAP_PROP_PCR \<equiv> cpu_to_be32 0x101"
+abbreviation "TPM_CAP_PROP_MANUFACTURER \<equiv> cpu_to_be32 0x103"
+abbreviation "TPM_CAP_FLAG_PERM \<equiv> cpu_to_be32 0x108"
+abbreviation "TPM_CAP_FLAG_VOL \<equiv> cpu_to_be32 0x109"
+abbreviation "TPM_CAP_PROP_OWNER \<equiv> cpu_to_be32 0x111"
+abbreviation "TPM_CAP_PROP_TIS_TIMEOUT \<equiv> cpu_to_be32 0x115"
+abbreviation "TPM_CAP_PROP_TIS_DURATION \<equiv> cpu_to_be32 0x120"
 
 abbreviation "TPM_INTERNAL_RESULT_SIZE \<equiv> 200"
-abbreviation "TPM_TAG_RQU_COMMAND \<equiv> cpu_to_be16 193"
-abbreviation "TPM_ORD_GET_CAP \<equiv> cpu_to_be32 101"
+abbreviation "TPM_TAG_RQU_COMMAND \<equiv> cpu_to_be16 0xC1"
+abbreviation "TPM_ORD_GET_CAP \<equiv> cpu_to_be32 0x65"
 
 paragraph \<open>Constant arrays\<close>
 
@@ -349,34 +349,34 @@ definition "tpm_ordinal_duration = \<langle>
 
 paragraph \<open>More enums that are never used by type.\<close>
 text \<open>\texttt{tis\_access}\<close>
-abbreviation "TPM_ACCESS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x80\<close>
-abbreviation "TPM_ACCESS_ACTIVE_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(R) 0x20\<close>
-abbreviation "TPM_ACCESS_RELINQUISH_LOCALITY \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
-abbreviation "TPM_ACCESS_REQUEST_PENDING \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>(W) 0x04\<close>
-abbreviation "TPM_ACCESS_REQUEST_USE \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>(W) 0x02\<close>
+abbreviation "TPM_ACCESS_VALID \<equiv> \<guillemotleft>0x80::nat\<guillemotright>"
+abbreviation "TPM_ACCESS_ACTIVE_LOCALITY \<equiv> \<guillemotleft>0x20::nat\<guillemotright>" -- R
+abbreviation "TPM_ACCESS_RELINQUISH_LOCALITY \<equiv> \<guillemotleft>0x20::nat\<guillemotright>" -- W
+abbreviation "TPM_ACCESS_REQUEST_PENDING \<equiv> \<guillemotleft>0x04::nat\<guillemotright>" -- W
+abbreviation "TPM_ACCESS_REQUEST_USE \<equiv> \<guillemotleft>0x02::nat\<guillemotright>" -- W
 
 text \<open>\texttt{tis\_status}\<close>
-abbreviation "TPM_STS_VALID \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>(R) 0x80\<close>
-abbreviation "TPM_STS_COMMAND_READY \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>(R) 0x40\<close>
-abbreviation "TPM_STS_DATA_AVAIL \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>(R) 0x10\<close>
-abbreviation "TPM_STS_DATA_EXPECT \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>(R) 0x08\<close>
-abbreviation "TPM_STS_DATA_GO \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>(W) 0x20\<close>
+abbreviation "TPM_STS_VALID \<equiv> \<guillemotleft>0x80::nat\<guillemotright>" -- R
+abbreviation "TPM_STS_COMMAND_READY \<equiv> \<guillemotleft>0x40::nat\<guillemotright>" -- R
+abbreviation "TPM_STS_DATA_AVAIL \<equiv> \<guillemotleft>0x10::nat\<guillemotright>" -- R
+abbreviation "TPM_STS_DATA_EXPECT \<equiv> \<guillemotleft>0x08::nat\<guillemotright>" -- R
+abbreviation "TPM_STS_DATA_GO \<equiv> \<guillemotleft>0x20::nat\<guillemotright>" -- W
 
 text \<open>\texttt{tis\_int\_flags}\<close>
-abbreviation "TPM_GLOBAL_INT_ENABLE \<equiv> \<guillemotleft>2147483648::nat\<guillemotright>" -- \<open>0x80000000\<close>
-abbreviation "TPM_INTF_BURST_COUNT_STATIC \<equiv> \<guillemotleft>256::nat\<guillemotright>" -- \<open>0x100\<close>
-abbreviation "TPM_INTF_CMD_READY_INT \<equiv> \<guillemotleft>128::nat\<guillemotright>" -- \<open>0x080\<close>
-abbreviation "TPM_INTF_INT_EDGE_FALLING \<equiv> \<guillemotleft>64::nat\<guillemotright>" -- \<open>0x040\<close>
-abbreviation "TPM_INTF_INT_EDGE_RISING \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>0x020\<close>
-abbreviation "TPM_INTF_INT_LEVEL_LOW \<equiv> \<guillemotleft>16::nat\<guillemotright>" -- \<open>0x010\<close>
-abbreviation "TPM_INTF_INT_LEVEL_HIGH \<equiv> \<guillemotleft>8::nat\<guillemotright>" -- \<open>0x008\<close>
-abbreviation "TPM_INTF_LOCALITY_CHANGE_INT \<equiv> \<guillemotleft>4::nat\<guillemotright>" -- \<open>0x004\<close>
-abbreviation "TPM_INTF_STS_VALID_INT \<equiv> \<guillemotleft>2::nat\<guillemotright>" -- \<open>0x002\<close>
-abbreviation "TPM_INTF_DATA_AVAIL_INT \<equiv> \<guillemotleft>1::nat\<guillemotright>" -- \<open>0x001\<close>
+abbreviation "TPM_GLOBAL_INT_ENABLE \<equiv> \<guillemotleft>0x80000000::nat\<guillemotright>"
+abbreviation "TPM_INTF_BURST_COUNT_STATIC \<equiv> \<guillemotleft>0x100::nat\<guillemotright>"
+abbreviation "TPM_INTF_CMD_READY_INT \<equiv> \<guillemotleft>0x080::nat\<guillemotright>"
+abbreviation "TPM_INTF_INT_EDGE_FALLING \<equiv> \<guillemotleft>0x040::nat\<guillemotright>"
+abbreviation "TPM_INTF_INT_EDGE_RISING \<equiv> \<guillemotleft>0x020::nat\<guillemotright>"
+abbreviation "TPM_INTF_INT_LEVEL_LOW \<equiv> \<guillemotleft>0x010::nat\<guillemotright>"
+abbreviation "TPM_INTF_INT_LEVEL_HIGH \<equiv> \<guillemotleft>0x008::nat\<guillemotright>"
+abbreviation "TPM_INTF_LOCALITY_CHANGE_INT \<equiv> \<guillemotleft>0x004::nat\<guillemotright>"
+abbreviation "TPM_INTF_STS_VALID_INT \<equiv> \<guillemotleft>0x002::nat\<guillemotright>"
+abbreviation "TPM_INTF_DATA_AVAIL_INT \<equiv> \<guillemotleft>0x001::nat\<guillemotright>"
 
 text \<open>\texttt{tis\_defaults}\<close>
-abbreviation "TIS_MEM_BASE \<equiv> \<guillemotleft>4275306496::nat\<guillemotright>" -- \<open>0xFED40000\<close>
-abbreviation "TIS_MEM_LEN \<equiv> \<guillemotleft>20480::nat\<guillemotright>" -- \<open>0x5000\<close>
+abbreviation "TIS_MEM_BASE \<equiv> \<guillemotleft>0xFED40000::nat\<guillemotright>"
+abbreviation "TIS_MEM_LEN \<equiv> \<guillemotleft>0x5000::nat\<guillemotright>"
 abbreviation "TIS_SHORT_TIMEOUT \<equiv> \<guillemotleft>750::nat\<guillemotright>" -- \<open>ms\<close>
 abbreviation "TIS_LONG_TIMEOUT \<equiv> \<guillemotleft>2000::nat\<guillemotright>" -- \<open>2 sec\<close>
 
