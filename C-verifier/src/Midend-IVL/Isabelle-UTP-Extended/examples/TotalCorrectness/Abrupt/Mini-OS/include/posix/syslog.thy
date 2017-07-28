@@ -2,7 +2,7 @@ subsection \<open>System logging\<close>
 
 theory syslog
 imports
-  "../../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
+  "../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
 begin
 
 abbreviation "LOG_PID \<equiv> \<guillemotleft>0::nat\<guillemotright>"

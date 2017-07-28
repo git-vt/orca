@@ -1,8 +1,8 @@
-subsection \<open>Terminal I/O\<close>
+ subsection \<open>Terminal I/O\<close>
 
 theory termios
 imports
-  "../../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
+  "../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
 begin
 
 abbreviation "NCC \<equiv> \<guillemotleft>32::nat\<guillemotright>" -- \<open>Used for length of \texttt{c\_cc} array in \texttt{termios}

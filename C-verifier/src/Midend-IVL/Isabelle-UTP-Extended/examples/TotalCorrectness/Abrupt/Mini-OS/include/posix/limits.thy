@@ -2,7 +2,7 @@ subsection \<open>Integral limits\<close>
 
 theory limits
 imports
-  "../../../helpers"
+  "../../helpers"
 begin
 
 text \<open>Assuming 64-bit system; for our purposes, @{const SIZEOF_INT} versus @{const SIZEOF_LONG} is

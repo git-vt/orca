@@ -2,7 +2,7 @@ subsection \<open>File descriptor control\<close>
 
 theory fcntl
 imports
-  "../../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
+  "../../../../../../hoare/AlgebraicLaws/Abrupt/algebraic_laws_abrupt"
 begin
 
 abbreviation "F_UNLOCK \<equiv> \<guillemotleft>0::nat\<guillemotright>"
