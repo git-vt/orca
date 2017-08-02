@@ -42,7 +42,106 @@ abbreviation "ADJUST_TIMEOUTS_TO_STANDARD initial standard timeout_no \<equiv>
 abbreviation "TPM_HEADER_SIZE \<equiv> \<guillemotleft>10::nat\<guillemotright>"
 abbreviation "TPM_BUFSIZE \<equiv> \<guillemotleft>2048::nat\<guillemotright>"
 
-(* TODO: structs! They're all packed, too. *)
+(* FOr now, implementing structs as records of lenses; this ignores packed status, unfortunately. *)
+record tpm_input_header =
+  tag :: nat -- 16
+  length :: nat -- 32
+  ordinal :: nat -- 32
+
+record tpm_output_header =
+  tag :: nat -- 16
+  length :: nat -- 32
+  return_code :: nat -- 32
+
+record stclear_flags_t =
+  tag :: nat -- 16
+  deactivated :: nat -- 8
+  disableForceClear :: nat -- 8
+  physicalPresence :: nat -- 8
+  physicalPresenceLock :: nat -- 8
+  bGlobalLock :: nat -- 8
+
+record tpm_version_t =
+  Major :: nat -- 8
+  Minor :: nat -- 8
+  revMajor :: nat -- 8
+  revMinor :: nat -- 8
+
+record tpm_version_1_2_t =
+  tag :: nat -- 16
+  Major :: nat -- 8
+  Minor :: nat -- 8
+  revMajor :: nat -- 8
+  revMinor :: nat -- 8
+
+record timeout_t =
+  a :: nat -- 32
+  b :: nat -- 32
+  c :: nat -- 32
+  d :: nat -- 32
+
+record duration_t =
+  tpm_short :: nat -- 32
+  tpm_medium :: nat -- 32
+  tpm_long :: nat -- 32
+
+record permanent_flags_t =
+  tag :: nat -- 16
+  disable :: nat -- 8
+  ownership :: nat -- 8
+  deactivated :: nat -- 8
+  readPubek :: nat -- 8
+  disableOwnerClear :: nat -- 8
+  allowMaintenance :: nat -- 8
+  physicalPresenceLifetimeLock :: nat -- 8
+  physicalPresenceHWEnable :: nat -- 8
+  physicalPresenceCMDEnable :: nat -- 8
+  CEKPUsed :: nat -- 8
+  TPMpost :: nat -- 8
+  TPMpostLock :: nat -- 8
+  FIPS :: nat -- 8
+  operator :: nat -- 8
+  enableRevokeEK :: nat -- 8
+  nvLocked :: nat -- 8
+  readSRKPub :: nat -- 8
+  tpmEstablished :: nat -- 8
+  maintenanceDone :: nat -- 8
+  disableFullDALogicInfo :: nat -- 8
+
+(* TODO: union cap_t of all the previous structs *)
+
+record tpm_getcap_params_in =
+  cap :: nat -- 32
+  subcap_size :: nat -- 32
+  subcap :: nat -- 32
+
+(* TODO: tpm_getcap_params_out needs cap_t *)
+
+record tpm_readpubek_params_out =
+  algorithm :: "nat list" -- \<open>8[4]\<close>
+  encscheme :: "nat list" -- \<open>8[2]\<close>
+  sigscheme :: "nat list" -- \<open>8[2]\<close>
+  paramsize :: nat -- 32
+  parameters :: "nat list" -- \<open>8[12]\<close> (* assumes RSA *)
+  keysize :: nat -- 32
+  modulus :: "nat list" -- \<open>8[256]\<close>
+  checksum :: "nat list" -- \<open>8[20]\<close>
+
+(* TODO: tpm_cmd_header union of in/out header structs *)
+
+abbreviation "TPM_DIGEST_SIZE \<equiv> \<guillemotleft>20::nat\<guillemotright>"
+
+record tpm_pcrread_out =
+  pcr_result :: "nat list" -- \<open>8[TPM_DIGEST_SIZE]\<close>
+
+record tpm_pcrread_in =
+  pcr_idx :: nat -- 32
+
+record tpm_pcrextend_in =
+  pcr_idx :: nat -- 32
+  hash :: "nat list" -- \<open>8[TPM_DIGEST_SIZE]\<close>
+
+(* TODO: tpm_cmd_params union; needed by tpm_cmd_t struct *)
 
 text \<open>The following values are encoded in a single enum, \texttt{tpm\_duration}, in
 \texttt{tpm\_tis.c}, but the enum itself is never used again (the values are only stored in unsigned
@@ -58,7 +157,6 @@ abbreviation "TPM_MAX_PROTECTED_ORDINAL \<equiv> \<guillemotleft>12::nat\<guille
 abbreviation "TPM_MAX_ORDINAL \<equiv> \<guillemotleft>0xF3::nat\<guillemotright>"
 abbreviation "TPM_PROTECTED_ORDINAL_MASK \<equiv> \<guillemotleft>0xFF::nat\<guillemotright>"
 
-abbreviation "TPM_DIGEST_SIZE \<equiv> \<guillemotleft>20::nat\<guillemotright>"
 abbreviation "TPM_ERROR_SIZE \<equiv> \<guillemotleft>10::nat\<guillemotright>"
 
 abbreviation "TPM_RET_CODE_IDX \<equiv> \<guillemotleft>6::nat\<guillemotright>"
@@ -82,7 +180,7 @@ abbreviation "TPM_INTERNAL_RESULT_SIZE \<equiv> 200"
 abbreviation "TPM_TAG_RQU_COMMAND \<equiv> cpu_to_be16 0xC1"
 abbreviation "TPM_ORD_GET_CAP \<equiv> cpu_to_be32 0x65"
 
-paragraph \<open>Constant arrays\<close>
+paragraph \<open>Constant arrays (eight-bit entries)\<close>
 
 definition "tpm_protected_ordinal_duration = \<langle>
   TPM_UNDEFINED,          (* 0 *)
@@ -345,7 +443,7 @@ definition "tpm_ordinal_duration = \<langle>
   TPM_MEDIUM
 \<rangle>"
 
-(* TODO: fit in extern const struct tpm_input_header tpm_getcap_header, initialize *)
+(* TODO: fit in extern const struct tpm_input_header tpm_getcap_header(, initialize?) *)
 
 paragraph \<open>More enums that are never used by type.\<close>
 text \<open>\texttt{tis\_access}\<close>
@@ -383,6 +481,8 @@ abbreviation "TIS_LONG_TIMEOUT \<equiv> \<guillemotleft>2000::nat\<guillemotrigh
 abbreviation "TPM_TIMEOUT \<equiv> \<guillemotleft>5::nat\<guillemotright>"
 
 paragraph \<open>pointer-struct accesses for later\<close>
+text \<open>These are messy as they are basically offsets with pointer arithmetic that force conversion
+between types and such.\<close>
 abbreviation "TPM_ACCESS t l \<equiv> \<guillemotleft>0\<guillemotright>"
 abbreviation "TPM_INT_ENABLE t l \<equiv> \<guillemotleft>0\<guillemotright>"
 abbreviation "TPM_INT_VECTOR t l \<equiv> \<guillemotleft>0\<guillemotright>"
@@ -394,13 +494,71 @@ abbreviation "TPM_DATA_FIFO t l \<equiv> \<guillemotleft>0\<guillemotright>"
 abbreviation "TPM_DID_VID t l \<equiv> \<guillemotleft>0\<guillemotright>"
 abbreviation "TPM_RID t l \<equiv> \<guillemotleft>0\<guillemotright>"
 
-(* tpm_chip struct... *)
+text \<open>This is the struct on which the above defines are supposed to operate (specifically, the pages
+field, which is supposed to be an array of pointers to eight-bit integers that are then accessed by
+offset. Nasty. \<close>
+record tpm_chip =
+  enabled_localities :: int -- 32
+  locality :: int -- 32
+  baseaddr :: nat -- SIZEOF_LONG
+(*   pages :: "'a list" -- \<open>need representation for uint8_t* !\<close> *)
+  did :: int -- 32
+  vid :: int -- 32
+  rid :: int -- 32
+  data_buffer :: "nat list" -- \<open>8[TPM_BUFSIZE]\<close>
+  data_len :: int -- 32
+(*   timeout_a :: s_time_t -- \<open>Need s_time_t definition\<close>
+  timeout_b :: s_time_t
+  timeout_c :: s_time_t
+  timeout_d :: s_time_t
+  duration :: "s_time_t list" -- \<open>[3]\<close> *)
+  fd :: int -- \<open>32, assuming HAVE_LIBC for this bit\<close>
+  irq :: nat -- 32
+(*   read_queue :: wait_queue_head -- \<open>need struct\<close>
+  int_queue :: wait_queue_head *)
 
 paragraph \<open>Functions\<close>
-(* TODO: once we get structs and pointers, as well as external function calls w/nondeterminism
-static void __init_tpm_chip(struct tpm_chip* tpm)
-s_time_t tpm_calc_ordinal_duration(struct tpm_chip *chip, uint32_t ordinal)
-static int locality_enabled(struct tpm_chip* tpm, int l)
+
+definition "init_tpm_chip'' tpm =
+  tpm \<Midarrow> (&tpm:\<^sub>u tpm_chip)(enabled_localities_update \<mapsto> TPM_TIS_EN_LOCLALL)\<^sub>u
+  "
+
+definition "tpm_calc_ordinal_duration
+  (* inputs *) chip ordinal'
+  (* local variables*) duration_idx duration protected_ordinal
+  =
+  duration_idx \<Midarrow> TPM_UNDEFINED;;
+  duration \<Midarrow> \<guillemotleft>0\<guillemotright>;; (* s_time_t *)
+  (* TODO: annotation *)
+  bif &ordinal' <\<^sub>u TPM_MAX_ORDINAL then
+    duration_idx \<Midarrow> tpm_ordinal_duration\<lparr>&ordinal'\<rparr>\<^sub>u
+  else
+    protected_ordinal \<Midarrow> &ordinal' \<and>\<^sub>b\<^sub>u TPM_PROTECTED_ORDINAL_MASK;;
+    (* TODO: annotation *)
+    bif &protected_ordinal <\<^sub>u TPM_MAX_PROTECTED_ORDINAL then
+      duration_idx \<Midarrow> tpm_ordinal_duration\<lparr>&protected_ordinal\<rparr>\<^sub>u
+    else
+      II
+    eif
+  eif;;
+  (* TODO: annotation *)
+  bif &duration_idx \<noteq>\<^sub>u TPM_UNDEFINED then
+    (* duration = chip->duration[duration_idx] *) II
+  else
+    II
+  eif;;
+  bif &duration \<le>\<^sub>u 0 then
+    II (* TODO: return SECONDS(120) *)
+  else
+    II (* TODO: return duration *)
+  eif
+  "
+
+definition "locality_enabled tpm l =
+  (&l \<ge>\<^sub>u \<guillemotleft>0::int\<guillemotright>) \<and> (enabled_localities &tpm)...
+  "
+
+(* TODO: once we get (structs and) pointers, as well as external function calls w/nondeterminism
 static int check_locality(struct tpm_chip* tpm, int l)
 void release_locality(struct tpm_chip* tpm, int l, int force)
 int tpm_tis_request_locality(struct tpm_chip* tpm, int l)

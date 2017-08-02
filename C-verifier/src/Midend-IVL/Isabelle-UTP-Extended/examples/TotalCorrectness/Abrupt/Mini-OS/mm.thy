@@ -157,7 +157,7 @@ definition "map_free
 (* sbrk needs function calls/pointers *)
 (* init_mm needs function calls *)
 
-definition "fini_mm \<equiv> II"
+definition "fini_mm = II"
 
 (* sanity_check needs pointers, function calls *)
 
