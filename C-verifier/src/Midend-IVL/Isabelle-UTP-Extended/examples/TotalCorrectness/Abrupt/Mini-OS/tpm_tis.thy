@@ -3,24 +3,25 @@ subsection \<open>Derivations from Linux's \texttt{drivers/char/tpm.c}\<close>
 theory tpm_tis
 imports
   "include/byteorder"
-(*   helpers *)
+   helpers
 begin
 
 subsubsection \<open>From header file \texttt{tpm_tis.h}\<close>
 
 text \<open>Bare numeric literals are (possibly signed) integers in C, and usually compilers try to fit
-the value in a larger type if regular \texttt{int} is too small.\<close>
+the value in a larger type if regular \texttt{int} is too small. In this case, the locality
+constants need to be signed to match the signedness of the variables/fields they are used with.\<close>
 
-abbreviation "TPM_TIS_EN_LOCL0 \<equiv> \<guillemotleft>0b00001::nat\<guillemotright>" -- \<open>1 << 0\<close>
-abbreviation "TPM_TIS_EN_LOCL1 \<equiv> \<guillemotleft>0b00010::nat\<guillemotright>" -- \<open>1 << 1\<close>
-abbreviation "TPM_TIS_EN_LOCL2 \<equiv> \<guillemotleft>0b00100::nat\<guillemotright>" -- \<open>1 << 2\<close>
-abbreviation "TPM_TIS_EN_LOCL3 \<equiv> \<guillemotleft>0b01000::nat\<guillemotright>" -- \<open>1 << 3\<close>
-abbreviation "TPM_TIS_EN_LOCL4 \<equiv> \<guillemotleft>0b10000::nat\<guillemotright>" -- \<open>1 << 4\<close>
+abbreviation "TPM_TIS_EN_LOCL0 \<equiv> \<guillemotleft>0b00001::int\<guillemotright>" -- \<open>1 << 0\<close>
+abbreviation "TPM_TIS_EN_LOCL1 \<equiv> \<guillemotleft>0b00010::int\<guillemotright>" -- \<open>1 << 1\<close>
+abbreviation "TPM_TIS_EN_LOCL2 \<equiv> \<guillemotleft>0b00100::int\<guillemotright>" -- \<open>1 << 2\<close>
+abbreviation "TPM_TIS_EN_LOCL3 \<equiv> \<guillemotleft>0b01000::int\<guillemotright>" -- \<open>1 << 3\<close>
+abbreviation "TPM_TIS_EN_LOCL4 \<equiv> \<guillemotleft>0b10000::int\<guillemotright>" -- \<open>1 << 4\<close>
 abbreviation "TPM_TIS_EN_LOCLALL \<equiv>
-  TPM_TIS_EN_LOCL0 \<or>\<^sub>b\<^sub>u
-  TPM_TIS_EN_LOCL1 \<or>\<^sub>b\<^sub>u
-  TPM_TIS_EN_LOCL2 \<or>\<^sub>b\<^sub>u
-  TPM_TIS_EN_LOCL3 \<or>\<^sub>b\<^sub>u
+  TPM_TIS_EN_LOCL0 \<or>\<^sub>b\<^sub>s
+  TPM_TIS_EN_LOCL1 \<or>\<^sub>b\<^sub>s
+  TPM_TIS_EN_LOCL2 \<or>\<^sub>b\<^sub>s
+  TPM_TIS_EN_LOCL3 \<or>\<^sub>b\<^sub>s
   TPM_TIS_EN_LOCL4"
 abbreviation "TPM_BASEADDR \<equiv> \<guillemotleft>0xFED40000::nat\<guillemotright>"
 abbreviation "TPM_PROBE_IRQ \<equiv> \<guillemotleft>0xFFFF::nat\<guillemotright>"
@@ -520,7 +521,16 @@ record tpm_chip =
 paragraph \<open>Functions\<close>
 
 definition "init_tpm_chip'' tpm =
-  tpm \<Midarrow> (&tpm:\<^sub>u tpm_chip)(enabled_localities_update \<mapsto> TPM_TIS_EN_LOCLALL)\<^sub>u
+  tpm \<Midarrow> &tpm(enabled_localities_update \<mapsto> TPM_TIS_EN_LOCLALL)\<^sub>r;;
+  tpm \<Midarrow> &tpm(locality_update \<mapsto> -1)\<^sub>r;;
+  tpm \<Midarrow> &tpm(baseaddr_update \<mapsto> 0)\<^sub>r;;
+  (* TODO: pages set to NULL/0 *)
+  tpm \<Midarrow> &tpm(vid_update \<mapsto> 0)\<^sub>r;;
+  tpm \<Midarrow> &tpm(did_update \<mapsto> 0)\<^sub>r;;
+  tpm \<Midarrow> &tpm(irq_update \<mapsto> 0)\<^sub>r;;
+  (* TODO: init queue heads with init_waitqueue_head *)
+  tpm \<Midarrow> &tpm(data_len_update \<mapsto> -1)\<^sub>r;;
+  tpm \<Midarrow> &tpm(fd_update \<mapsto> -1)\<^sub>r (* only if HAVE_LIBC is set *)
   "
 
 definition "tpm_calc_ordinal_duration
@@ -555,8 +565,8 @@ definition "tpm_calc_ordinal_duration
   "
 
 definition "locality_enabled tpm l =
-  (&l \<ge>\<^sub>u \<guillemotleft>0::int\<guillemotright>) \<and> (enabled_localities &tpm)...
-  "
+  (&l \<ge>\<^sub>u 0) \<and> (&tpm\<lparr>enabled_localities\<rparr>\<^sub>r \<and>\<^sub>b\<^sub>s (1 \<lless>\<^bsub>s/SIZEOF_INT\<^esub> &l))
+  "                                                           
 
 (* TODO: once we get (structs and) pointers, as well as external function calls w/nondeterminism
 static int check_locality(struct tpm_chip* tpm, int l)

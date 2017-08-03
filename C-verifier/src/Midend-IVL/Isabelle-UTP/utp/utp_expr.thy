@@ -47,8 +47,8 @@ lift_definition lit :: "'t \<Rightarrow> ('t, '\<alpha>) uexpr"
 text {* We define lifting for unary, binary, and ternary functions, that simply apply
         the function to all possible results of the expressions. *}
 
-lift_definition uop :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr"
-  is "\<lambda> f e b. f (e b)" .
+lift_definition uop :: "('a \<Rightarrow> 'b) \<Rightarrow> ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr" is
+  "\<lambda> f e b. f (e b)" .
 lift_definition bop ::
   "('a \<Rightarrow> 'b \<Rightarrow> 'c) \<Rightarrow> ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('c, '\<alpha>) uexpr"
   is "\<lambda> f u v b. f (u b) (v b)" .
@@ -61,10 +61,15 @@ lift_definition qtop ::
    ('e, '\<alpha>) uexpr"
   is "\<lambda> f u v w x b. f (u b) (v b) (w b) (x b)" .
 
-text {* We also define a UTP expression version of function abstract *}
+text \<open>We also define a UTP expression version of function abstract\<close>
 
-lift_definition ulambda :: "('a \<Rightarrow> ('b, '\<alpha>) uexpr) \<Rightarrow> ('a \<Rightarrow> 'b, '\<alpha>) uexpr"
-is "\<lambda> f A x. f x A" .
+lift_definition ulambda :: "('a \<Rightarrow> ('b, '\<alpha>) uexpr) \<Rightarrow> ('a \<Rightarrow> 'b, '\<alpha>) uexpr" is
+  "\<lambda> f A x. f x A" .
+
+text \<open>And we also have a helper function for record updating.\<close>
+
+lift_definition rec_update_wrapper :: "('a, '\<alpha>) uexpr \<Rightarrow> ('a \<Rightarrow> 'a, '\<alpha>) uexpr" is
+  "\<lambda>v s _. v s" .
 
 text {* We define syntax for expressions using adhoc overloading -- this allows us to later define
         operators on different types if necessary (e.g. when adding types for new UTP theories). *}
@@ -319,13 +324,14 @@ syntax
   "_umem"       :: "('a, '\<alpha>) uexpr \<Rightarrow> ('a set, '\<alpha>) uexpr \<Rightarrow> (bool, '\<alpha>) uexpr" (infix "\<in>\<^sub>u" 50)
   "_usubset"    :: "('a set, '\<alpha>) uexpr \<Rightarrow> ('a set, '\<alpha>) uexpr \<Rightarrow> (bool, '\<alpha>) uexpr" (infix "\<subset>\<^sub>u" 50)
   "_usubseteq"  :: "('a set, '\<alpha>) uexpr \<Rightarrow> ('a set, '\<alpha>) uexpr \<Rightarrow> (bool, '\<alpha>) uexpr" (infix "\<subseteq>\<^sub>u" 50)
-  "_utuple"     :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('a * 'b, '\<alpha>) uexpr" ("(1'(_,/ _')\<^sub>u)")
+  "_utuple"     :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('a \<times> 'b, '\<alpha>) uexpr" ("(1'(_,/ _')\<^sub>u)")
   "_utuple_arg" :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args" ("_")
   "_utuple_args":: "('a, '\<alpha>) uexpr => utuple_args \<Rightarrow> utuple_args"     ("_,/ _")
   "_uunit"      :: "('a, '\<alpha>) uexpr" ("'(')\<^sub>u")
   "_ufst"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('a, '\<alpha>) uexpr" ("\<pi>\<^sub>1'(_')")
   "_usnd"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr" ("\<pi>\<^sub>2'(_')")
   "_uapply"     :: "('a \<Rightarrow> 'b, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('b, '\<alpha>) uexpr" ("_\<lparr>_\<rparr>\<^sub>u" [999,0] 999)
+  "_uapply_rec" :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('b, '\<alpha>) uexpr" ("_\<lparr>_\<rparr>\<^sub>r" [999,0] 999)
   "_ulamba"     :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<lambda> _ \<bullet> _" [0, 10] 10)
   "_udom"       :: "logic \<Rightarrow> logic" ("dom\<^sub>u'(_')")
   "_uran"       :: "logic \<Rightarrow> logic" ("ran\<^sub>u'(_')")
@@ -341,6 +347,7 @@ syntax
   "_UMaplets"   :: "[umaplet, umaplets] \<Rightarrow> umaplets" ("_,/ _")
   "_UMapUpd"    :: "[logic, umaplets] \<Rightarrow> logic" ("_/'(_')\<^sub>u" [900,0] 900)
   "_UMap"       :: "umaplets \<Rightarrow> logic" ("(1[_]\<^sub>u)")
+  "_uupd_rec"   :: "('a, '\<alpha>) uexpr \<Rightarrow> (('b \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('a, '\<alpha>) uexpr" ("_/'(_ /\<mapsto>/ _')\<^sub>r" [900,0,0] 900)
   "_ubs_and"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>s" 85)
   "_ubu_and"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>u" 85)
   "_ubs_or"     :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<or>\<^sub>b\<^sub>s" 80)
@@ -353,15 +360,16 @@ syntax
   "_ubu_not"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	 ("\<not>\<^bsub>u'/_\<^esub> _" [200, 150] 150)
   "_ubu_neg"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr"	 ("-\<^bsub>u'/_\<^esub> _" [200, 150] 150)
 
-
 translations
   "f\<lparr>v\<rparr>\<^sub>u" <= "CONST uapply f v"
+  "f\<lparr>kf\<rparr>\<^sub>r" == "CONST uop kf f"
   "dom\<^sub>u(f)" <= "CONST udom f"
   "ran\<^sub>u(f)" <= "CONST uran f"
   "A \<lhd>\<^sub>u f" <= "CONST udomres A f"
   "f \<rhd>\<^sub>u A" <= "CONST uranres f A"
   "#\<^sub>u(f)" <= "CONST ucard f"
   "f(k \<mapsto> v)\<^sub>u" <= "CONST uupd f k v"
+  "f(k \<mapsto> v)\<^sub>r" == "CONST bop k (CONST rec_update_wrapper v) f"
 
 translations
   "x :\<^sub>u 'a" == "x :: ('a, _) uexpr"
