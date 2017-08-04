@@ -7,6 +7,10 @@ begin
 
 subsubsection \<open>System time\<close>
 
+type_synonym s_time_t = int -- int64_t
+type_synonym time_t = int -- long
+type_synonym suseconds_t = int -- long
+
 abbreviation "NOW \<equiv> monotonic_clock" (* TODO: need nondeterministic function results/etc.; we know
 monotonic_clock always increases, though. *)
 text \<open>While the multipliers/divisors are unsigned in the source header, the times are of type
@@ -30,15 +34,15 @@ text \<open>Mostly from \texttt{sys/time.h}; in this context, timespec is only u
 other setups (C99 or later?) timespec can also be used for system time measured by a monotonic
 clock.\<close>
 record timespec =
-  tv_sec :: int -- \<open>\texttt{time\_t} (\texttt{long})\<close>
+  tv_sec :: time_t
   tv_nsec :: int -- \<open>\texttt{long}\<close>
 
 (* TODO: struct timezone is empty, meaning it's invalid according to the C standard (though gcc
 allows empty structs *)
 
 record timeval =
-  tv_sec :: int -- \<open>\texttt{time\_t} (\texttt{long})\<close>
-  tv_usec :: int -- \<open>\texttt{suseconds\_t} ({long}), microseconds\<close>
+  tv_sec :: time_t
+  tv_usec :: suseconds_t -- microseconds
 
 (* TODO: Use gettimeofday function somehow? Note that it's technically monotonic time on ARM as
 ARM apparently doesn't support wall-clock time directly. (Usually the OS provides wall-clock time

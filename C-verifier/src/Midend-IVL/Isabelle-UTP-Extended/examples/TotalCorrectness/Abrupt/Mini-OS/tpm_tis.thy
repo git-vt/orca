@@ -3,6 +3,7 @@ subsection \<open>Derivations from Linux's \texttt{drivers/char/tpm.c}\<close>
 theory tpm_tis
 imports
   "include/byteorder"
+  "include/time"
    helpers
 begin
 
@@ -498,24 +499,24 @@ abbreviation "TPM_RID t l \<equiv> \<guillemotleft>0\<guillemotright>"
 text \<open>This is the struct on which the above defines are supposed to operate (specifically, the pages
 field, which is supposed to be an array of pointers to eight-bit integers that are then accessed by
 offset. Nasty. \<close>
-record tpm_chip =
+record '\<alpha> tpm_chip =
   enabled_localities :: int -- 32
   locality :: int -- 32
   baseaddr :: nat -- SIZEOF_LONG
-(*   pages :: "'a list" -- \<open>need representation for uint8_t* !\<close> *)
+  pages :: "(int \<Longrightarrow> '\<alpha>) list" -- \<open>uint8_t*[5]\<close>
   did :: int -- 32
   vid :: int -- 32
   rid :: int -- 32
   data_buffer :: "nat list" -- \<open>8[TPM_BUFSIZE]\<close>
   data_len :: int -- 32
-(*   timeout_a :: s_time_t -- \<open>Need s_time_t definition\<close>
+  timeout_a :: s_time_t
   timeout_b :: s_time_t
   timeout_c :: s_time_t
   timeout_d :: s_time_t
-  duration :: "s_time_t list" -- \<open>[3]\<close> *)
+  duration :: "s_time_t list" -- \<open>[3]\<close>
   fd :: int -- \<open>32, assuming HAVE_LIBC for this bit\<close>
   irq :: nat -- 32
-(*   read_queue :: wait_queue_head -- \<open>need struct\<close>
+(*   read_queue :: wait_queue_head -- \<open>need struct, must have recursive pointers\<close>
   int_queue :: wait_queue_head *)
 
 paragraph \<open>Functions\<close>
@@ -524,7 +525,7 @@ definition "init_tpm_chip'' tpm =
   tpm \<Midarrow> &tpm(enabled_localities_update \<mapsto> TPM_TIS_EN_LOCLALL)\<^sub>r;;
   tpm \<Midarrow> &tpm(locality_update \<mapsto> -1)\<^sub>r;;
   tpm \<Midarrow> &tpm(baseaddr_update \<mapsto> 0)\<^sub>r;;
-  (* TODO: pages set to NULL/0 *)
+  (* TODO: pages set to NULL/0; need a null lens? *)
   tpm \<Midarrow> &tpm(vid_update \<mapsto> 0)\<^sub>r;;
   tpm \<Midarrow> &tpm(did_update \<mapsto> 0)\<^sub>r;;
   tpm \<Midarrow> &tpm(irq_update \<mapsto> 0)\<^sub>r;;
@@ -533,12 +534,14 @@ definition "init_tpm_chip'' tpm =
   tpm \<Midarrow> &tpm(fd_update \<mapsto> -1)\<^sub>r (* only if HAVE_LIBC is set *)
   "
 
+text \<open>@{const ordinal} and @{const duration} are in-use names so we must use slightly different
+names to get things to work.\<close>
 definition "tpm_calc_ordinal_duration
   (* inputs *) chip ordinal'
-  (* local variables*) duration_idx duration protected_ordinal
+  (* local variables*) duration_idx duration' protected_ordinal
   =
   duration_idx \<Midarrow> TPM_UNDEFINED;;
-  duration \<Midarrow> \<guillemotleft>0\<guillemotright>;; (* s_time_t *)
+  duration' \<Midarrow> \<guillemotleft>0\<guillemotright>;; (* s_time_t *)
   (* TODO: annotation *)
   bif &ordinal' <\<^sub>u TPM_MAX_ORDINAL then
     duration_idx \<Midarrow> tpm_ordinal_duration\<lparr>&ordinal'\<rparr>\<^sub>u
@@ -553,14 +556,14 @@ definition "tpm_calc_ordinal_duration
   eif;;
   (* TODO: annotation *)
   bif &duration_idx \<noteq>\<^sub>u TPM_UNDEFINED then
-    (* duration = chip->duration[duration_idx] *) II
+    (* duration' = chip->duration[duration_idx] *) II
   else
     II
   eif;;
-  bif &duration \<le>\<^sub>u 0 then
+  bif &duration' \<le>\<^sub>u 0 then
     II (* TODO: return SECONDS(120) *)
   else
-    II (* TODO: return duration *)
+    II (* TODO: return duration' *)
   eif
   "
 

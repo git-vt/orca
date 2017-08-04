@@ -149,6 +149,18 @@ definition "map_free
   eif
   "
 
+paragraph \<open>Binary Buddy Allocator\<close>
+
+(* TODO: chunk_head_t struct has references to itself (i.e. recursive type) but Isabelle doesn't
+allow that in records. *)
+record '\<alpha> chunk_head_t =
+  "next" :: "'\<alpha> chunk_head_t \<Longrightarrow> '\<alpha>"
+  pprev :: "('\<alpha> chunk_head_t \<Longrightarrow> '\<alpha>) \<Longrightarrow> '\<alpha>"
+  level :: int -- 32
+
+record chunk_tail_t =
+  level :: int -- 32
+
 (* init_page_allocator needs structs and pointers *)
 (* alloc_pages needs structs and pointers *)
 (* free_pages needs structs and pointers *)
