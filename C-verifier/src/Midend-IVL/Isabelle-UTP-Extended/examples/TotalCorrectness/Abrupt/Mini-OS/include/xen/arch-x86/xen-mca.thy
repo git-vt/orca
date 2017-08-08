@@ -141,7 +141,10 @@ record mc_info_t =
   mi_nentries :: nat -- \<open>32, number of \texttt{mcinfo\_*} entries in \texttt{mi_data}\<close>
   flags :: nat -- 32
   mi_data :: "nat list" -- \<open>64[(@{const MCINFO_MAXSIZE} - 1) div 8]\<close>
-(* TODO: guest handle? *)
+
+text \<open>\texttt{DEFINE\_XEN\_GUEST\_HANDLE(mc\_info\_t)}\<close>
+record '\<alpha> guest_handle_mc_info_t'' =
+  p :: "mc_info_t \<Longrightarrow> '\<alpha>"
 
 abbreviation "MC_MSR_ARRAYSIZE'' \<equiv> \<guillemotleft>8::nat\<guillemotright>"
 abbreviation "MC_NMSRS''         \<equiv> \<guillemotleft>1::nat\<guillemotright>"
@@ -179,6 +182,10 @@ record mcinfo_logical_cpu =
 
 type_synonym xen_mc_logical_cpu_t = mcinfo_logical_cpu
 
+text \<open>\texttt{DEFINE\_XEN\_GUEST\_HANDLE(xen\_mc\_logical\_cpu\_t)}\<close>
+record '\<alpha> guest_handle_xen_mc_logical_cpu_t'' =
+  p :: "xen_mc_logical_cpu_t \<Longrightarrow> '\<alpha>"
+
 (* TODO: struct access defines x86_mcinfo_nentries, x86_mcinfo_first, x86_mcinfo_next,
 x86_mcinfo_lookup; some may be tricky due to icky typecasting to use pointer arithmetic. *)
 
@@ -188,7 +195,8 @@ text \<open>Use cases:
 \<^enum> Fetch machine check data from hypervisor.
 The last hypercall is special because both Dom0 and DomU must use it.\<close>
 abbreviation "XEN_MC_fetch \<equiv> \<guillemotleft>1::nat\<guillemotright>"
-record xen_mc_fetch_t =
+
+record '\<alpha> xen_mc_fetch_t =
   -- \<open>IN/OUT variables\<close>
   flags :: nat -- \<open>32, IN: @{const XEN_MC_NONURGENT}, @{const XEN_MC_URGENT}, @{const XEN_MC_ACK} if
                    ack'ing an earlier fetch\<close>
@@ -197,8 +205,7 @@ record xen_mc_fetch_t =
   pad0' :: nat -- 32
   fetch_id :: nat -- \<open>64, IN: id we are ack'ing, OUT: id for ack\<close>
   -- \<open>OUT variable\<close>
-  data :: XEN_GUEST_HANDLE(mc_info_t)
-(* TODO: Xen guest handle for the above struct? *)
+  data :: "'\<alpha> guest_handle_mc_info_t''"
 
 text \<open>Additional use case: tells the hypervisor to notify a DomU about machine check error.\<close>
 abbreviation "XEN_MC_notifydomain \<equiv> \<guillemotleft>2::nat\<guillemotright>"
@@ -214,12 +221,12 @@ record xen_mc_notifydomain_t =
 (* TODO: Xen guest handle for the above struct? *)
 
 abbreviation "XEN_MC_physcpuinfo \<equiv> \<guillemotleft>3::nat\<guillemotright>"
-record xen_mc_physcpuinfo =
+record '\<alpha> xen_mc_physcpuinfo =
   -- \<open>IN/OUT\<close>
   ncpus :: nat -- 32
   pad0' :: nat -- 32
   -- OUT
-  info :: XEN_GUEST_HANDLE(xen_mc_logical_cpu_t)
+  info :: "'\<alpha> guest_handle_xen_mc_logical_cpu_t''"
 
 abbreviation "XEN_MC_msrinject \<equiv> \<guillemotleft>4::nat\<guillemotright>"
 abbreviation "MC_MSRINJ_MAXMSRS \<equiv> \<guillemotleft>8::nat\<guillemotright>"
