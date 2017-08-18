@@ -45,7 +45,7 @@ apply (rule injI)
 apply (clarsimp)
 done
 
-
+find_theorems name: cp_abr
 subsubsection {*Type lifting*}
 
 type_synonym  ('\<alpha>) cpa = "('\<alpha>) cp_abr_scheme des"
@@ -58,7 +58,7 @@ translations
   (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_scheme des"
   (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_ext des"
   (type) "('\<alpha>,'\<beta>) rel_cpa" <= (type) "(('\<alpha>) cpa, ('\<beta>) cpa) rel"
-
+term "cp_abr_child_lens\<^sub>a"
 notation cp_abr_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
 notation cp_abr_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
 
