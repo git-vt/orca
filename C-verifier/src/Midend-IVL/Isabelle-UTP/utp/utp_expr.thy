@@ -148,7 +148,7 @@ begin
 instance ..
 end
 
-instantiation uexpr :: (Divides.div, type) Divides.div
+instantiation uexpr :: (modulo, type) modulo
 begin
   definition mod_uexpr_def: "u mod v = bop (op mod) u v"
 instance ..

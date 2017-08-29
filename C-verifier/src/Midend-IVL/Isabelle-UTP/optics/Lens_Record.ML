@@ -212,10 +212,10 @@ fun add_alphabet_cmd _ (raw_params, binding) raw_parent raw_fields thy =
          |> Named_Target.theory_map (snd o Specification.theorems_cmd "" [((Binding.empty, []), [(Facts.named (tname ^ splits_suffix), alpha_splits)])] [] false)
             (* Add definitions for each of the lenses corresponding to each record field in-situ *)
          |> Named_Target.theory_map
-              (fold (fn x => snd o Specification.definition_cmd (NONE, (lens_defs, x)) true) (ldefs @ [mldef]))
+              (fold (fn x => snd o Specification.definition_cmd NONE [] [] (lens_defs, x) true) (ldefs @ [mldef]))
             (* Add definitions for each of the lenses corresponding to each record field augmented with the parent's child lens *)
          |> Named_Target.theory_map
-              (fold (fn x => snd o Specification.definition_cmd (NONE,  (lens_defs, x)) true) pldefs)
+              (fold (fn x => snd o Specification.definition_cmd NONE [] [] (lens_defs, x) true) pldefs)
             (* Add a vwb lens proof for each in-situ lens *)
          |> fold (fn x => fn thy => snd (Global_Theory.add_thm ((Binding.make (x ^ vwb_lens_suffix, Position.none), lens_proof x thy), [Simplifier.simp_add]) thy)) ((map ldef_name lnames) @ [mldef_name])
          |> (fn thy => snd (Global_Theory.add_thmss

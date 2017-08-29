@@ -441,20 +441,21 @@ theorem while_unfold:
 proof -
   have m:"mono (\<lambda>X. bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (auto intro: monoI seqr_mono if_mono)
-  have "(while b do P od) = (\<nu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+  have "(while b do P od) = (\<mu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (simp add: While_def)
-  also have "... = (bif b then (P;; (\<nu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
-    by (subst lfp_unfold,simp_all add:m)
+  also have "... = (bif b then (P;; (\<mu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+    by (subst gfp_unfold,simp_all add:m)
   also have "... = (bif b then (P;; while b do P od) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (simp add: While_def)
   finally show ?thesis .
 qed
 
 (*lemma while_true:
-  shows "(while true do P od) = \<top>\<^sub>A\<^sub>B\<^sub>R"
+  shows "(while true do (P\<turnstile>Q) od) = \<top>\<^sub>A\<^sub>B\<^sub>R"
   apply (simp add: While_def alpha)
   apply (rule antisym)
-  apply (simp_all)
+  prefer 2
+  apply (simp_all add:design_top_abr)
   apply (rule conjI)
   apply (rule lfp_lowerbound)
   apply (simp add: C3_abr_def design_def cond_def)

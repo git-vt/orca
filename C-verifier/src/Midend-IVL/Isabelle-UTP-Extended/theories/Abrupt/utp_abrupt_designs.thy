@@ -58,7 +58,7 @@ translations
   (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_scheme des"
   (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_ext des"
   (type) "('\<alpha>,'\<beta>) rel_cpa" <= (type) "(('\<alpha>) cpa, ('\<beta>) cpa) rel"
-term "cp_abr_child_lens\<^sub>a"
+
 notation cp_abr_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
 notation cp_abr_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
 
@@ -199,7 +199,7 @@ subsection{*Loops*}
 purge_notation while ("while\<^sup>\<top> _ do _ od")
 
 definition While :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sup>\<top> _ do _ od") where
-"While b C = (\<nu> X \<bullet> bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+"While b C = (\<mu> X \<bullet> bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
 purge_notation while_top ("while _ do _ od")
 

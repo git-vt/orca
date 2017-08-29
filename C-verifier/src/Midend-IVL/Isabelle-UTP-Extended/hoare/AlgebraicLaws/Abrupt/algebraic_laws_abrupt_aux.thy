@@ -245,9 +245,7 @@ definition design_abr_sup :: "('\<alpha>,'\<beta>) rel_cpa set \<Rightarrow> ('\
 "\<Sqinter>\<^sub>A\<^sub>B\<^sub>R A = (if (A = {}) then \<top>\<^sub>A\<^sub>B\<^sub>R else \<Sqinter> A)"
 
 lemma simpl_abr_Continuous: "Continuous Simpl\<^sub>A\<^sub>B\<^sub>R"
-  unfolding Continuous_def SUP_def apply rel_simp
-  unfolding  SUP_def
-  apply transfer apply auto
+  apply rel_auto
 done
 
 lemma simpl_abr_R3_conj:

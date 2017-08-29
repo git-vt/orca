@@ -185,12 +185,10 @@ translations
   "\<nu> X \<bullet> P" == "CONST lfp (\<lambda> X. P)"
   "\<mu> X \<bullet> P" == "CONST gfp (\<lambda> X. P)"
 
-instance uexpr :: (complete_distrib_lattice, type) complete_distrib_lattice
-  apply (intro_classes)
-  unfolding INF_def
+instance uexpr :: (complete_distrib_lattice, type) complete_distrib_lattice  
+  apply (intro_classes) apply transfer apply auto
   apply (transfer, rule ext, auto) 
   using sup_INF apply fastforce
-  unfolding SUP_def
   apply (transfer, rule ext, auto)
   using inf_SUP apply fastforce
 done
@@ -622,7 +620,6 @@ lemma USUP_as_Sup_collect: "(\<Sqinter>P\<in>A \<bullet> f(P)) = (\<Sqinter>P\<i
   apply (simp add: upred_defs bop.rep_eq lit.rep_eq Sup_uexpr_def )
   apply (pred_simp)
   apply (simp add: Setcompr_eq_image )
-  unfolding SUP_def apply transfer apply auto
 done
 
 lemma USUP_as_Sup_image: "(\<Sqinter> P | \<guillemotleft>P\<guillemotright> \<in>\<^sub>u \<guillemotleft>A\<guillemotright> \<bullet> f(P)) = \<Sqinter> (f ` A)"
@@ -641,7 +638,6 @@ lemma UINF_as_Inf_collect: "(\<Squnion>P\<in>A \<bullet> f(P)) = (\<Squnion>P\<i
   apply (simp add: upred_defs bop.rep_eq lit.rep_eq Sup_uexpr_def)
   apply (pred_simp)
   apply (simp add: Setcompr_eq_image)
-  unfolding INF_def apply transfer apply auto
 done
 
 lemma UINF_as_Inf_image: "(\<Squnion> P \<in> \<P> \<bullet> f(P)) = \<Squnion> (f ` \<P>)"

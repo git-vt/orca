@@ -128,4 +128,33 @@ lemma even_count_total:
   apply rel_auto
   done
 
+lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e (s, s') = ((get \<^bsub>ok\<^esub> s) )"
+  by rel_auto
+
+term "\<lceil>\<guillemotleft>get\<^bsub>ok\<^esub> s\<guillemotright>\<rceil>\<^sub><"
+
+lemma "\<lbrakk>\<not>$ok\<rbrakk>\<^sub>e (s, s') = (\<not>(get \<^bsub>ok\<^esub> s) )"
+  by rel_auto
+
+lemma "$ok = (\<lceil>&ok\<rceil>\<^sub><)" 
+  by rel_auto 
+
+lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e (s, s') = get\<^bsub>ok\<^esub> (get\<^bsub>fst\<^sub>L\<^esub> (s,s'))"
+  by rel_auto
+
+lemma "(get\<^bsub>fst\<^sub>L\<^esub> (s,s')) = s"
+  by auto
+
+term "bop (op \<le>) (&x) (\<guillemotleft>5\<guillemotright>)"
+term "x \<le> 5"
+
+term "(\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
+term "(\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
+
+term "(\<nu> X \<bullet> F(X, Y))"
+term "(\<mu> Y \<bullet> P (Y) \<Rightarrow> G (P(Y),Y))"
+
+term "(\<mu> X \<bullet> \<mu> Y \<bullet> F (X,Y) \<turnstile> G (X,Y))"
+
+term "(\<mu> X \<bullet> \<mu> Y \<bullet> C ;; (X \<turnstile> Y) )"
 end

@@ -5,6 +5,7 @@ imports
   Main
   "~~/src/HOL/Library/Sublist"
   "~~/src/HOL/Library/Monad_Syntax"
+  "~~/src/HOL/Library/Prefix_Order"
 begin
 
 subsection {* Extra list functions *}
@@ -64,19 +65,20 @@ done
 
 lemma sorted_map: "\<lbrakk> sorted xs; mono f \<rbrakk> \<Longrightarrow> sorted (map f xs)"
   by (simp add: monoD sorted_equals_nth_mono)
- 
+
 lemma prefix_length_eq:
-  "\<lbrakk> length xs = length ys; prefixeq xs ys \<rbrakk> \<Longrightarrow> xs = ys"
-  using not_equal_is_parallel by auto
- 
+  "\<lbrakk> length xs = length ys; prefix xs ys \<rbrakk> \<Longrightarrow> xs = ys"
+  by (metis not_equal_is_parallel parallel_def)
+
 lemma prefix_Cons_elim [elim]:
-  assumes "prefixeq (x # xs) ys"
-  obtains ys' where "ys = x # ys'" "prefixeq xs ys'"
-  using assms by (auto elim!: prefixeqE)
+  assumes "prefix (x # xs) ys"
+  obtains ys' where "ys = x # ys'" "prefix xs ys'"
+  using assms
+  by (metis Sublist.Cons_prefix_Cons prefix_code(1) prefix_order.eq_iff prefixes.cases) 
 
 lemma prefix_map_inj:
-  "\<lbrakk> inj_on f (set xs \<union> set ys); prefixeq (map f xs) (map f ys) \<rbrakk> \<Longrightarrow>
-   prefixeq xs ys"
+  "\<lbrakk> inj_on f (set xs \<union> set ys); prefix (map f xs) (map f ys) \<rbrakk> \<Longrightarrow>
+   prefix xs ys"
   apply (induct xs arbitrary:ys)
   apply (simp_all)
   apply (erule prefix_Cons_elim)
@@ -86,28 +88,39 @@ done
 
 lemma prefix_map_inj_eq [simp]:
   "inj_on f (set xs \<union> set ys) \<Longrightarrow>
-   prefixeq (map f xs) (map f ys) \<longleftrightarrow> prefixeq xs ys"
-  by (metis map_prefixeqI prefix_map_inj)
+   prefix (map f xs) (map f ys) \<longleftrightarrow> prefix xs ys"
+  by (metis map_prefixI prefix_map_inj)
 
-lemma strict_prefix_Cons_elim:
-  assumes "prefixeq (x # xs) ys"
-  obtains ys' where "ys = x # ys'" "prefixeq xs ys'"
-  using assms by auto
+lemma strict_prefix_Cons_elim [elim]:
+  assumes "strict_prefix (x # xs) ys"
+  obtains ys' where "ys = x # ys'" "strict_prefix xs ys'"
+  using assms
+  by (metis Sublist.strict_prefixE' Sublist.strict_prefixI' append_Cons)
 
 lemma strict_prefix_map_inj:
-  "\<lbrakk> inj_on f (set xs \<union> set ys); prefixeq (map f xs) (map f ys) \<rbrakk> \<Longrightarrow>
-   prefixeq xs ys" by auto
+  "\<lbrakk> inj_on f (set xs \<union> set ys); strict_prefix (map f xs) (map f ys) \<rbrakk> \<Longrightarrow>
+   strict_prefix xs ys"
+  apply (induct xs arbitrary:ys)
+  apply (auto)
+  using prefix_bot.bot.not_eq_extremum apply fastforce
+  apply (erule strict_prefix_Cons_elim)
+  apply (auto)
+  apply (metis (hide_lams, full_types) image_insert insertI1 insert_Diff_if singletonE)
+done
 
-lemma strict_prefix_map_inj_eq:
+lemma strict_prefix_map_inj_eq [simp]:
   "inj_on f (set xs \<union> set ys) \<Longrightarrow>
-   prefixeq (map f xs) (map f ys) \<longleftrightarrow> prefixeq xs ys"
-   by auto
+   strict_prefix (map f xs) (map f ys) \<longleftrightarrow> strict_prefix xs ys"
+  by (metis inj_on_map_eq_map map_prefixI prefix_map_inj prefix_order.less_le)
 
 lemma prefix_drop:
-  "\<lbrakk> drop (length xs) ys = zs; prefixeq xs ys \<rbrakk>
+  "\<lbrakk> drop (length xs) ys = zs; prefix xs ys \<rbrakk>
    \<Longrightarrow> ys = xs @ zs"
-  by (metis append_eq_conv_conj prefixeq_def)
+  by (metis append_eq_conv_conj prefix_def)
 
+lemma list_append_prefixD: "x @ y \<le> z \<Longrightarrow> x \<le> z"
+  using append_prefixD less_eq_list_def by blast
+    
 subsection {* Minus on lists *}
 
 instantiation list :: (type) minus
@@ -117,7 +130,7 @@ text {* We define list minus so that if the second list is not a prefix of the f
         list longer than the combined length is produced. Thus we can always determined from the output
         whether the minus is defined or not. *}
 
-definition "xs - ys = (if (prefixeq ys xs) then drop (length ys) xs else [])"
+definition "xs - ys = (if (prefix ys xs) then drop (length ys) xs else [])"
 
 instance ..
 end
@@ -134,6 +147,9 @@ lemma minus_right_nil [simp]: "xs - [] = xs"
 lemma list_concat_minus_list_concat: "(s @ t) - (s @ z) = t - z"
   by (simp add: minus_list_def)
 
+lemma length_minus_list: "y \<le> x \<Longrightarrow> length(x - y) = length(x) - length(y)"
+  by (simp add: less_eq_list_def minus_list_def)
+    
 lemma length_gt_zero_butlast_concat:
   assumes "length ys > 0"
   shows "butlast (xs @ ys) = xs @ (butlast ys)"
@@ -305,7 +321,6 @@ lemma sorted_list_of_set_alt [simp]:
   apply (auto simp add: sorted_list_of_set_alt_def is_sorted_list_of_set_alt_def sorted_list_of_set_other_def)
 done
 
-
 text {* Greatest common prefix *}
 
 fun gcp :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
@@ -319,28 +334,28 @@ lemma gcp_right [simp]: "gcp xs [] = []"
 lemma gcp_append [simp]: "gcp (xs @ ys) (xs @ zs) = xs @ gcp ys zs"
   by (induct xs, auto)
 
-lemma gcp_lb1: "prefixeq (gcp xs ys) xs"
+lemma gcp_lb1: "prefix (gcp xs ys) xs"
   apply (induct xs arbitrary: ys, auto)
   apply (case_tac ys, auto)
 done
 
-lemma gcp_lb2: "prefixeq (gcp xs ys) ys"
+lemma gcp_lb2: "prefix (gcp xs ys) ys"
   apply (induct ys arbitrary: xs, auto)
   apply (case_tac xs, auto)
 done
 
-interpretation prefix_semilattice: semilattice_inf gcp prefixeq prefix
-proof (unfold_locales)
+interpretation prefix_semilattice: semilattice_inf gcp prefix strict_prefix
+proof
   fix xs ys :: "'a list"
-  show "prefixeq (gcp xs ys) xs"
+  show "prefix (gcp xs ys) xs"
     by (induct xs arbitrary: ys, auto, case_tac ys, auto)
-  show "prefixeq (gcp xs ys) ys"
+  show "prefix (gcp xs ys) ys"
     by (induct ys arbitrary: xs, auto, case_tac xs, auto)
 next
   fix xs ys zs :: "'a list"
-  assume "prefixeq xs ys" "prefixeq xs zs"
-  thus "prefixeq xs (gcp ys zs)"
-    by (simp add: prefixeq_def, auto)
+  assume "prefix xs ys" "prefix xs zs"
+  thus "prefix xs (gcp ys zs)"
+    by (simp add: prefix_def, auto)
 qed
 
 text {* Extra laws to do with prefix and order *}
@@ -376,17 +391,16 @@ next
 qed
 
 lemma strict_prefix_lexord_rel:
-  "prefix xs ys \<Longrightarrow> (xs, ys) \<in> lexord R"
-  by (metis lexord_append_rightI prefixE')
+  "strict_prefix xs ys \<Longrightarrow> (xs, ys) \<in> lexord R"
+  by (metis Sublist.strict_prefixE' lexord_append_rightI)
 
 lemma strict_prefix_lexord_left:
-  assumes "trans R" "(xs, ys) \<in> lexord R" "prefix xs' xs"
+  assumes "trans R" "(xs, ys) \<in> lexord R" "strict_prefix xs' xs"
   shows "(xs', ys) \<in> lexord R"
-  using assms lexord_trans strict_prefix_lexord_rel by blast
-
+  by (metis assms lexord_trans strict_prefix_lexord_rel)
 
 lemma prefix_lexord_right:
-  assumes "trans R" "(xs, ys) \<in> lexord R" "prefix ys ys'"
+  assumes "trans R" "(xs, ys) \<in> lexord R" "strict_prefix ys ys'"
   shows "(xs, ys') \<in> lexord R"
   by (metis assms lexord_trans strict_prefix_lexord_rel)
 
@@ -435,19 +449,19 @@ qed
 text {* Extra lemmas about @{term prefix} and @{term strict_prefix} *}
 
 lemma prefix_concat_minus:
-  assumes "prefixeq xs ys"
+  assumes "prefix xs ys"
   shows "xs @ (ys - xs) = ys"
   using assms by (metis minus_list_def prefix_drop)
 
 lemma prefix_minus_concat:
-  assumes "prefixeq s t"
+  assumes "prefix s t"
   shows "(t - s) @ z = (t @ z) - s"
-  using assms by (simp add: minus_list_def prefixeq_length_le)
+  using assms by (simp add: Sublist.prefix_length_le minus_list_def) 
 
 lemma strict_prefix_minus_not_empty:
-  assumes "prefix xs ys"
+  assumes "strict_prefix xs ys"
   shows "ys - xs \<noteq> []"
-  using assms  by (metis append_Nil2 prefixE prefix_concat_minus)
+  using assms by (metis append_Nil2 prefix_concat_minus strict_prefix_def) 
 
 lemma strict_prefix_diff_minus:
   assumes "prefix xs ys" and "xs \<noteq> ys"
@@ -455,122 +469,114 @@ lemma strict_prefix_diff_minus:
   using assms by (simp add: strict_prefix_minus_not_empty)
 
 lemma prefix_not_empty:
-  assumes "prefix xs ys" and "xs \<noteq> []"
+  assumes "strict_prefix xs ys" and "xs \<noteq> []"
   shows "ys \<noteq> []"
-  using assms prefix_simps(1) by blast
+  using Sublist.strict_prefix_simps(1) assms(1) by blast
 
 lemma prefix_not_empty_length_gt_zero:
-  assumes "prefix xs ys" and "xs \<noteq> []"
+  assumes "strict_prefix xs ys" and "xs \<noteq> []"
   shows "length ys > 0"
   using assms prefix_not_empty by auto
 
 lemma butlast_prefix_suffix_not_empty:
-  assumes "prefix (butlast xs) ys"
+  assumes "strict_prefix (butlast xs) ys"
   shows "ys \<noteq> []"
   using assms prefix_not_empty_length_gt_zero by fastforce
 
 lemma length_tl_list_minus_butlast_gt_zero:
-  assumes "length s < length t" and "prefix (butlast s) t" and "length s > 0"
+  assumes "length s < length t" and "strict_prefix (butlast s) t" and "length s > 0"
   shows "length (tl (t - (butlast s))) > 0"
   using assms
   by (metis Nitpick.size_list_simp(2) butlast_snoc hd_Cons_tl length_butlast length_greater_0_conv length_tl less_trans nat_neq_iff strict_prefix_minus_not_empty prefix_order.dual_order.strict_implies_order prefix_concat_minus)
 
 lemma prefix_and_concat_prefix_is_concat_prefix:
-  assumes "prefixeq s t" "prefixeq (e @ t) u"
-  shows "prefixeq (e @ s) u"
-  using assms prefix_order.dual_order.trans same_prefixeq_prefixeq by blast
+  assumes "prefix s t" "prefix (e @ t) u"
+  shows "prefix (e @ s) u"
+  using Sublist.same_prefix_prefix assms(1) assms(2) prefix_order.dual_order.trans by blast
 
 lemma list_minus_butlast_eq_butlast_list:
-  assumes "length t = length s" and "prefix (butlast s) t"
+  assumes "length t = length s" and "strict_prefix (butlast s) t"
   shows "t - (butlast s) = [last t]"
   using assms
-  by (metis append_butlast_last_id append_eq_append_conv butlast.simps(1) length_butlast less_numeral_extra(3) list.size(3) prefix_order.dual_order.strict_implies_order prefix_concat_minus prefixeq_length_less)
+  by (metis append_butlast_last_id append_eq_append_conv butlast.simps(1) length_butlast less_numeral_extra(3) list.size(3) prefix_order.dual_order.strict_implies_order prefix_concat_minus prefix_length_less)
 
 lemma strict_prefix_eq_exists:
-  "prefix s t \<longleftrightarrow> (\<exists>xs . s @ xs = t \<and> (length xs) > 0)"
-  by (metis append_minus length_greater_0_conv minus_list_def prefixE' prefix_def self_append_conv)
+  "strict_prefix s t \<longleftrightarrow> (\<exists>xs . s @ xs = t \<and> (length xs) > 0)"
+  by (metis append_minus length_greater_0_conv prefix_def strict_prefix_minus_not_empty strict_prefix_def)
 
 lemma prefix_eq_exists:
-  "prefixeq s t \<longleftrightarrow> (\<exists>xs . s @ xs = t)"
+  "prefix s t \<longleftrightarrow> (\<exists>xs . s @ xs = t)"
   using prefix_concat_minus by auto
 
 lemma butlast_strict_prefix_eq_butlast:
-  assumes "length s = length t" and "prefix (butlast s) t"
-  shows "prefix (butlast s) t \<longleftrightarrow> (butlast s) = (butlast t)"
+  assumes "length s = length t" and "strict_prefix (butlast s) t"
+  shows "strict_prefix (butlast s) t \<longleftrightarrow> (butlast s) = (butlast t)"
   by (metis append_butlast_last_id append_eq_append_conv assms(1) assms(2) length_0_conv length_butlast strict_prefix_eq_exists)
 
 lemma butlast_eq_if_eq_length_and_prefix:
   assumes "length s > 0" "length z > 0"
-          "length s = length z" "prefix (butlast s) t" "prefix (butlast z) t"
+          "length s = length z" "strict_prefix (butlast s) t" "strict_prefix (butlast z) t"
   shows   "(butlast s) = (butlast z)"
   using assms by (auto simp add:strict_prefix_eq_exists)
 
 lemma prefix_imp_length_lteq:
-  assumes "prefixeq s t"
+  assumes "prefix s t"
   shows "length s \<le> length t"
-  using assms by (simp add:prefixeq_length_le)
+  using assms by (simp add: Sublist.prefix_length_le) 
 
 lemma prefix_imp_length_not_gt:
-  assumes "prefixeq s t"
+  assumes "prefix s t"
   shows "\<not> length t < length s"
-  using assms by (simp add: leD prefixeq_length_le)
+  using assms by (simp add: Sublist.prefix_length_le leD) 
 
 lemma prefix_and_eq_length_imp_eq_list:
-  assumes "prefixeq s t" and "length t = length s"
+  assumes "prefix s t" and "length t = length s"
   shows "s=t"
   using assms by (simp add: prefix_length_eq)
 
 lemma butlast_strict_prefix_length_lt_imp_last_tl_minus_butlast_eq_last:
-  assumes "length s > 0" "prefix (butlast s) t" "length s < length t"
+  assumes "length s > 0" "strict_prefix (butlast s) t" "length s < length t"
   shows "last (tl (t - (butlast s))) = (last t)"
   using assms by (metis last_append last_tl length_tl_list_minus_butlast_gt_zero less_numeral_extra(3) list.size(3) append_minus strict_prefix_eq_exists)
 
 lemma tl_list_minus_butlast_not_empty:
-  assumes "prefixeq (butlast s) t" and "length s > 0" and "length t > length s"
+  assumes "strict_prefix (butlast s) t" and "length s > 0" and "length t > length s"
   shows "tl (t - (butlast s)) \<noteq> []"
-  using assms length_tl_list_minus_butlast_gt_zero
-proof -
-  have "butlast s \<noteq> t"
-    by (metis (full_types) assms(3) diff_le_self leD length_butlast)
-  then have "prefix (butlast s) t"
-    by (metis assms(1) prefix_order.le_imp_less_or_eq)
-  then show ?thesis
-    by (metis (full_types) assms(2) assms(3) length_tl_list_minus_butlast_gt_zero less_numeral_extra(3) list.size(3))
-qed 
+  using assms length_tl_list_minus_butlast_gt_zero by fastforce
 
 lemma tl_list_minus_butlast_empty:
-  assumes "prefix (butlast s) t" and "length s > 0" and "length t = length s"
+  assumes "strict_prefix (butlast s) t" and "length s > 0" and "length t = length s"
   shows "tl (t - (butlast s)) = []"
   using assms by (simp add: list_minus_butlast_eq_butlast_list)
 
 lemma concat_minus_list_concat_butlast_eq_list_minus_butlast:
-  assumes "prefixeq (butlast u) s"
-  shows "(t @ s) - (t @ (butlast u)) = s - (butlast u)" 
-  using List_extra.list_concat_minus_list_concat by auto
+  assumes "prefix (butlast u) s"
+  shows "(t @ s) - (t @ (butlast u)) = s - (butlast u)"
+  using assms by (metis append_assoc prefix_concat_minus append_minus)
 
 lemma tl_list_minus_butlast_eq_empty:
-  assumes "prefix (butlast s) t" and "length s = length t"
+  assumes "strict_prefix (butlast s) t" and "length s = length t"
   shows "tl (t - (butlast s)) = []"
   using assms by (metis list.sel(3) list_minus_butlast_eq_butlast_list)
 
 (* this can be shown using length_tl, but care is needed when list is empty? *)
 lemma prefix_length_tl_minus:
-  assumes "prefix s t"
+  assumes "strict_prefix s t"
   shows "length (tl (t-s)) = (length (t-s)) - 1"
-  by auto
+  by (auto)
 
 lemma length_list_minus:
-  assumes "prefix s t"
+  assumes "strict_prefix s t"
   shows "length(t - s) = length(t) - length(s)"
   using assms by (simp add: minus_list_def prefix_order.dual_order.strict_implies_order)
 
 lemma butlast_prefix_imp_length_not_gt:
-  assumes "length s > 0" "prefix (butlast s) t"
+  assumes "length s > 0" "strict_prefix (butlast s) t"
   shows "\<not> (length t < length s)"
-  using assms prefixeq_length_less by fastforce
+  using assms prefix_length_less by fastforce
 
 lemma length_not_gt_iff_eq_length:
-  assumes "length s > 0" and "prefix (butlast s) t"
+  assumes "length s > 0" and "strict_prefix (butlast s) t"
   shows "(\<not> (length s < length t)) = (length s = length t)"
 proof -
   have "(\<not> (length s < length t)) = ((length t < length s) \<or> (length s = length t))"
@@ -578,6 +584,7 @@ proof -
   also have "... = (length s = length t)"
       using assms
       by (simp add:butlast_prefix_imp_length_not_gt)
+
   finally show ?thesis .
 qed
 
@@ -605,7 +612,7 @@ lemma set_dropWhile_le:
   using sorted_Cons apply auto
 done
 
-lemma set_takeWhile_less_sorted: 
+lemma set_takeWhile_less_sorted:
   "\<lbrakk> sorted I; x \<in> set I; x < n \<rbrakk> \<Longrightarrow> x \<in> set (takeWhile (\<lambda>x. x < n) I)"
 proof (induct I arbitrary: x)
   case Nil thus ?case

@@ -95,6 +95,7 @@ text{*In order to specify while loops we need a concept that refers to the resul
       Now we need to reason on the next state space to see if we continue the execution of the body
       or we skip it.*}
 
+term "(\<nu> X \<bullet> (C ;; X))"
 definition while :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sup>\<top> _ do _ od") where
 "while b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
 

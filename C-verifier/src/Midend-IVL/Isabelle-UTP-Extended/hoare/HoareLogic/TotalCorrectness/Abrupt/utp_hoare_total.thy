@@ -108,6 +108,8 @@ lemma while_hoare_r_t [hoare_total]:
   assumes "\<lbrace>p \<and> b \<rbrace> C\<lbrace>p\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   using assms
+  apply (simp add: While_def hoare_rd_def)
+  apply (rule_tac gfp_upperbound)
   by (simp add: While_def hoare_rd_def, rule_tac lfp_lowerbound)(rel_blast) 
 
 lemma while_hoare_r'_t [hoare_total]:

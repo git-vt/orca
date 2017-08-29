@@ -44,21 +44,21 @@ struct
     | mixfix_ctor_num (Infixl _) = 3
     | mixfix_ctor_num (Infixr _) = 4
     | mixfix_ctor_num (Binder _) = 5
-    | mixfix_ctor_num (Structure) = 6
+    | mixfix_ctor_num (Structure _) = 6
     in int_ord o (apply2 mixfix_ctor_num) end;
   in
-  fun mixfix_ord (Mixfix (sy, ps, p), Mixfix (sy', ps', p')) =
+  fun mixfix_ord (Mixfix (sy, ps, p, _), Mixfix (sy', ps', p', _)) =
     (prod_ord source_ord (prod_ord (list_ord int_ord) int_ord))
-      ((Input.string sy, (ps, p)), (Input.string sy', (ps', p')))
-  | mixfix_ord (Infix (sy, p), Infix (sy', p')) =
-      (prod_ord source_ord int_ord) ((Input.string sy, p), (Input.string sy', p'))
-  | mixfix_ord (Infixl (sy, p), Infixl (sy', p')) =
-      (prod_ord source_ord int_ord) ((Input.string sy, p), (Input.string sy', p'))
-  | mixfix_ord (Infixr (sy, p), Infixr (sy', p')) =
-      (prod_ord source_ord int_ord) ((Input.string sy, p), (Input.string sy', p'))
-  | mixfix_ord (Binder (sy, p, q), Binder (sy', p', q')) =
+      ((sy, (ps, p)), (sy', (ps', p')))
+  | mixfix_ord (Infix (sy, p, _), Infix (sy', p', _)) =
+      (prod_ord source_ord int_ord) ((sy, p), (sy', p'))
+  | mixfix_ord (Infixl (sy, p, _), Infixl (sy', p', _)) =
+      (prod_ord source_ord int_ord) ((sy, p), (sy', p'))
+  | mixfix_ord (Infixr (sy, p, _), Infixr (sy', p', _)) =
+      (prod_ord source_ord int_ord) ((sy, p), (sy', p'))
+  | mixfix_ord (Binder (sy, p, q, _), Binder (sy', p', q', _)) =
     (prod_ord source_ord (prod_ord int_ord int_ord))
-      ((Input.string sy, (p, q)), (Input.string sy', (p', q')))
+      ((sy, (p, q)), (sy', (p', q')))
   | mixfix_ord (m1, m2) = mixfix_ctor_ord (m1, m2);
   end;
 end;
