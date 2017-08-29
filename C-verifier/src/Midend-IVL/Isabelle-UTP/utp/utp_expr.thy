@@ -66,7 +66,7 @@ text \<open>We also define a UTP expression version of function abstract\<close>
 lift_definition ulambda :: "('a \<Rightarrow> ('b, '\<alpha>) uexpr) \<Rightarrow> ('a \<Rightarrow> 'b, '\<alpha>) uexpr" is
   "\<lambda> f A x. f x A" .
 
-text \<open>And we also have a helper function for record updating.\<close>
+text \<open>As an extension to Isabelle/UTP, we also have a helper function for record updating.\<close>
 
 lift_definition rec_update_wrapper :: "('a, '\<alpha>) uexpr \<Rightarrow> ('a \<Rightarrow> 'a, '\<alpha>) uexpr" is
   "\<lambda>v s _. v s" .
@@ -331,7 +331,6 @@ syntax
   "_ufst"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('a, '\<alpha>) uexpr" ("\<pi>\<^sub>1'(_')")
   "_usnd"       :: "('a \<times> 'b, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr" ("\<pi>\<^sub>2'(_')")
   "_uapply"     :: "('a \<Rightarrow> 'b, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('b, '\<alpha>) uexpr" ("_\<lparr>_\<rparr>\<^sub>u" [999,0] 999)
-  "_uapply_rec" :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('b, '\<alpha>) uexpr" ("_\<lparr>_\<rparr>\<^sub>r" [999,0] 999)
   "_ulamba"     :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<lambda> _ \<bullet> _" [0, 10] 10)
   "_udom"       :: "logic \<Rightarrow> logic" ("dom\<^sub>u'(_')")
   "_uran"       :: "logic \<Rightarrow> logic" ("ran\<^sub>u'(_')")
@@ -347,6 +346,11 @@ syntax
   "_UMaplets"   :: "[umaplet, umaplets] \<Rightarrow> umaplets" ("_,/ _")
   "_UMapUpd"    :: "[logic, umaplets] \<Rightarrow> logic" ("_/'(_')\<^sub>u" [900,0] 900)
   "_UMap"       :: "umaplets \<Rightarrow> logic" ("(1[_]\<^sub>u)")
+
+text \<open>Extensions to Isabelle/UTP syntax (placed here as trying to use an additional file for the
+extensions was causing ambiguous syntax with \<and> (specifically the UTP overload) somehow).\<close>
+syntax
+  "_uapply_rec" :: "('a, '\<alpha>) uexpr \<Rightarrow> utuple_args \<Rightarrow> ('b, '\<alpha>) uexpr" ("_\<lparr>_\<rparr>\<^sub>r" [999,0] 999)
   "_uupd_rec"   :: "('a, '\<alpha>) uexpr \<Rightarrow> (('b \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('a, '\<alpha>) uexpr" ("_/'(_ /\<mapsto>/ _')\<^sub>r" [900,0,0] 900)
   "_ubs_and"    :: "(int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>s" 85)
   "_ubu_and"    :: "(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr" (infixl "\<and>\<^sub>b\<^sub>u" 85)
@@ -362,16 +366,12 @@ syntax
 
 translations
   "f\<lparr>v\<rparr>\<^sub>u" <= "CONST uapply f v"
-  "f\<lparr>kf\<rparr>\<^sub>r" == "CONST uop kf f"
   "dom\<^sub>u(f)" <= "CONST udom f"
   "ran\<^sub>u(f)" <= "CONST uran f"
   "A \<lhd>\<^sub>u f" <= "CONST udomres A f"
   "f \<rhd>\<^sub>u A" <= "CONST uranres f A"
   "#\<^sub>u(f)" <= "CONST ucard f"
   "f(k \<mapsto> v)\<^sub>u" <= "CONST uupd f k v"
-  "f(k \<mapsto> v)\<^sub>r" == "CONST bop k (CONST rec_update_wrapper v) f"
-
-translations
   "x :\<^sub>u 'a" == "x :: ('a, _) uexpr"
   "\<langle>\<rangle>"       == "\<guillemotleft>[]\<guillemotright>"
   "\<langle>x, xs\<rangle>"  == "CONST bop (op #) x \<langle>xs\<rangle>"
@@ -435,6 +435,11 @@ translations
   "_UMap (_UMaplets ms1 ms2)"     <= "_UMapUpd (_UMap ms1) ms2"
   "_UMaplets ms1 (_UMaplets ms2 ms3)" <= "_UMaplets (_UMaplets ms1 ms2) ms3"
   "f\<lparr>x,y\<rparr>\<^sub>u"  == "CONST bop CONST uapply f (x,y)\<^sub>u"
+
+text \<open>Additional translations as extensions of Isabelle/UTP (same issue as the above syntax stuff).\<close>
+translations
+  "f\<lparr>kf\<rparr>\<^sub>r" == "CONST uop kf f"
+  "f(k \<mapsto> v)\<^sub>r" == "CONST bop k (CONST rec_update_wrapper v) f"
   "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
   "_ubu_and" == "CONST bop (CONST u_bitop (op AND))"
   "_ubs_or" == "CONST bop (CONST s_bitop (op OR))"
@@ -446,7 +451,6 @@ translations
   "_ubs_not" == "CONST bop CONST s_not"
   "_ubu_not" == "CONST bop CONST u_not"
   "_ubu_neg" == "CONST bop CONST u_neg"
-
 
 text {* Lifting set intervals *}
 

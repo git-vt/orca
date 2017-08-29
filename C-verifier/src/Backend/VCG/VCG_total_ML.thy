@@ -11,7 +11,7 @@ notation useq (infixl ";;" 51)
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
 number of assumptions required increases greatly. The original formulation was @{text \<open>\<longrightarrow> a \<bowtie> b\<close>}
 but that didn't seem to work so plain conjunction was chosen instead.\<close>
-definition "lens_indep_all lenses \<equiv> \<forall>a b. a \<in> lenses \<and> b \<in> lenses \<and> a \<noteq> b \<and> a \<bowtie> b" 
+definition "lens_indep_all lenses \<equiv> \<forall>a b. a \<in> lenses \<and> b \<in> lenses \<and> a \<noteq> b \<and> a \<bowtie> b"
 (* Definition "lens_indep_all lenses \<equiv> \<forall>a b. {a, b} \<subset> lenses \<and> a \<bowtie> b" is shorter but doesn't work
 as well. *)
 
