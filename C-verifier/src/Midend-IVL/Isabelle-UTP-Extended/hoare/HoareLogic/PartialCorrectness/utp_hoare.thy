@@ -75,7 +75,7 @@ lemma assigns_naive_rule:
     
 lemma assigns_floyd_r [hoare]:
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> (p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>) \<and> &x=\<^sub>u(e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<rbrace>\<^sub>u\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply pred_simp
   apply transfer
@@ -83,7 +83,7 @@ lemma assigns_floyd_r [hoare]:
   (*subgoal for a x p e
    apply (rule exI[where x="get\<^bsub>x\<^esub> a"])*)
   apply auto
-done
+  done
 
 subsection {*Hoare for Sequential Composition*}
 
