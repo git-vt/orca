@@ -16,9 +16,9 @@ definition \<open>lens_indep_all lenses \<equiv> \<forall>a b. {a, b} \<subset> 
 
 text \<open>@{thm seq_hoare_r_t} is handled separately as naïve application could cause conflicts/failed
 proofs later on.\<close>
-lemmas vcg_rules = skip_abr_hoare_r_t assigns_abr_hoare_r'_t assigns_abr_hoare_r_t assert_hoare_r_t
-assume_hoare_r_t cond_abr_hoare_r_t cond_hoare_r_t while_invr_hoare_r_t while_hoare_r_t
-while_hoare_r'_t
+lemmas vcg_rules = (*hoare_true_assisgns_abr_t hoare_true_skip_abr_t*) skip_abr_hoare_r_t
+assigns_abr_hoare_r'_t assigns_abr_hoare_r_t assert_hoare_r_t assume_hoare_r_t cond_abr_hoare_r_t
+while_invr_hoare_r_t while_hoare_r_t while_hoare_r'_t
 lemmas unfold_thms = lens_indep_def lens_indep_all_def
 lemmas others_to_insert = mod_pos_pos_trivial
 
@@ -43,11 +43,6 @@ fun pprint_cterm ctxt cterm = pprint_term ctxt (Thm.term_of cterm)
 fun dest_hoare_rd (Const (@{const_name hoare_rd}, _) $ _ $ P $ _) = P
   | dest_hoare_rd t = raise TERM ("dest_hoare_rd", [t]);
 
-(* ML-level version of `seq_hoare_r_t[of _ _ true]`; there's also (Drule.)infer_instantiate', but
-that requires a proof context. *)
-val seq_hoare_r_t' =
-  Thm.instantiate' [SOME @{ctyp 'a}] [NONE, NONE, SOME @{cterm true}] @{thm seq_hoare_r_t}
-
 (* Equivalent to `apply (insert assms)`; not needed for rule application, only some {rel,pred}_*
 usage *)
 fun vcg_insert_assms_tac ctxt = ALLGOALS (Method.insert_tac ctxt (Assumption.all_prems_of ctxt))
@@ -57,6 +52,13 @@ fun vcg_insert_others_tac ctxt = ALLGOALS (Method.insert_tac ctxt @{thms others_
 assumptions have been inserted. *)
 (* TODO: allow supplying extra theorems to the tactic. *)
 fun vcg_unfold_tac ctxt = unfold_tac ctxt @{thms unfold_thms}
+
+val vcg_pre_tac = vcg_insert_assms_tac THEN' vcg_insert_others_tac THEN' vcg_unfold_tac
+
+(* ML-level version of `seq_hoare_r_t[of _ _ true]`; there's also (Drule.)infer_instantiate', but
+that requires a proof context. *)
+val seq_hoare_r_t' =
+  Thm.instantiate' [SOME @{ctyp 'a}] [NONE, NONE, SOME @{cterm true}] @{thm seq_hoare_r_t}
 
 (* Splits up programs using seq_hoare_r_t; applies  `seq_hoare_r_t[of _ _ true]` when an assumption
 is the last command in a goal.
@@ -85,7 +87,6 @@ fun vcg_rules_all_tac ctxt = (ALLGOALS o REPEAT_ALL_NEW)
 fun vcg_rules_all_tac' ctxt = ALLGOALS (fn goal => (REPEAT o CHANGED) (* TRY doesn't help *)
   (FIRST' [vcg_seq_split ctxt, vcg_rule_tac ctxt] goal))
 
-val vcg_pre_tac = vcg_insert_assms_tac THEN' vcg_insert_others_tac THEN' vcg_unfold_tac
 val vcg_tac = vcg_pre_tac (* THEN'
               (* apply rules, but with specific handling for the assumes/etc. cases;
               may also want to stick with partial rule application so we can

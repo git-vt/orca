@@ -19,13 +19,13 @@ lemma increment_manual:
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    apply (rule seq_hoare_r_t[of _ _ true])
-    apply rel_auto (* seq rule gives us a value of true in postcondition, which is trivial *)
+    apply (rule hoare_true_assisgns_abr_t)
    apply (rule assume_hoare_r_t)
     apply (rule skip_abr_hoare_r_t)
    apply rel_auto
   apply (rule while_invr_hoare_r_t)
     apply (rule assigns_abr_hoare_r_t)
-    unfolding lens_indep_def
+  unfolding lens_indep_def
     apply pred_auto
    apply pred_auto
   apply pred_auto
@@ -43,16 +43,14 @@ lemma increment_tactic1:
   do x \<Midarrow> &x + 1 od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)+
-  apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-  defer
-  apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-  apply rel_auto
-  defer
-  apply rel_auto
-  apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-  apply (tactic \<open>vcg_insert_assms_tac @{context}\<close>)
-  apply (tactic \<open>vcg_unfold_tac @{context}\<close>)
-  apply pred_auto+
+     apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
+    defer
+     apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
+  apply pred_auto
+   apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
+     apply (tactic \<open>vcg_insert_assms_tac @{context}\<close>)
+     apply (tactic \<open>vcg_unfold_tac @{context}\<close>)
+     apply pred_auto+
   done
 
 lemma increment_tactic2:
@@ -67,8 +65,8 @@ lemma increment_tactic2:
   do x \<Midarrow> &x + 1 od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
-  apply (tactic \<open>vcg_pre_tac @{context}\<close>)
-  apply vcg_autos
+      apply (tactic \<open>vcg_pre_tac @{context}\<close>)
+      apply vcg_autos
   done
 
 subsection \<open>Even count\<close>
@@ -93,11 +91,11 @@ lemma even_count_tactic0:
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)+
-     apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)
+     apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
     defer
      apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-    apply vcg_auto
-   apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)
+    apply vcg_autos
+   apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
      apply (tactic \<open>vcg_seq_split @{context} 1\<close>)
       apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
     defer
@@ -128,8 +126,8 @@ lemma even_count_tactic1:
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
       apply vcg_autos
-    apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
-      apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
+  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
      apply (tactic \<open>vcg_pre_tac @{context}\<close>)
      apply vcg_autos
   done

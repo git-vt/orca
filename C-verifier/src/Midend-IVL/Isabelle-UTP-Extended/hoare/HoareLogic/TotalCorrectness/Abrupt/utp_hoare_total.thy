@@ -46,7 +46,7 @@ lemma hoare_post_weak_t[hoare_total]:
 subsection {*Hoare and assertion logic*}
 
 lemma hoare_r_conj_t [hoare_total]: 
-  assumes"\<lbrace>p\<rbrace>C\<lbrace>r\<rbrace>\<^sub>A\<^sub>B\<^sub>R" and "\<lbrace>p\<rbrace>C\<lbrace>s\<rbrace>\<^sub>A\<^sub>B\<^sub>R"  
+  assumes"\<lbrace>p\<rbrace>C\<lbrace>r\<rbrace>\<^sub>A\<^sub>B\<^sub>R" and "\<lbrace>p\<rbrace>C\<lbrace>s\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   shows "\<lbrace>p\<rbrace>C\<lbrace>r \<and> s\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   by (insert assms) rel_auto
 
@@ -66,6 +66,16 @@ lemma assigns_abr_hoare_r_t [hoare_total]:
 lemma assigns_abr_hoare_r'_t [hoare_total]: 
   "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R\<lbrace>p\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   by rel_auto
+
+lemma assigns_abr_floyd_r_t [hoare_total]:
+  assumes \<open>vwb_lens x\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x \<Midarrow> e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  apply (insert assms)
+  apply rel_simp
+  apply transfer
+  apply (rule_tac x = \<open>get\<^bsub>xa\<^esub> more\<close> in exI)
+  apply auto
+  done
 
 subsection {*Hoare for Sequential Composition*}
 
