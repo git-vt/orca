@@ -67,6 +67,24 @@ lemma assigns_hoare_r [hoare]:
 lemma assigns_hoare_r' [hoare]: "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>p\<rbrace>\<^sub>u"
   by rel_auto
 
+lemma assigns_naive_rule:
+  assumes "x\<sharp>e" and "weak_lens x" 
+  shows   "\<lbrace>p\<rbrace>x :== e\<lbrace>&x=\<^sub>ue\<rbrace>\<^sub>u"
+  using assms
+  by pred_simp   
+    
+lemma assigns_floyd_r [hoare]:
+  assumes "vwb_lens x"
+  shows   "\<lbrace>p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> (p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>) \<and> &x=\<^sub>u(e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)  \<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply pred_simp
+  apply transfer  
+  apply (rule_tac x = "get\<^bsub>x\<^esub> a" in exI)    
+  (*subgoal for a x p e
+   apply (rule exI[where x="get\<^bsub>x\<^esub> a"])*)
+  apply auto
+done    
+
 subsection {*Hoare for Sequential Composition*}
 
 lemma seq_hoare_r [hoare]:
