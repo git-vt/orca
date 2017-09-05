@@ -7,15 +7,15 @@ begin
 subsection Increment
 
 lemma increment_manual:
-  assumes "vwb_lens x" and "x \<bowtie> y"
+  assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
-  "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
+  \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
   x \<Midarrow> 0;;
   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>\<^sup>C;;
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply (rule seq_hoare_r_t)
    apply (rule seq_hoare_r_t[of _ _ true])
@@ -32,16 +32,16 @@ lemma increment_manual:
   done
 
 lemma increment_tactic1:
-  assumes "vwb_lens x" and "x \<bowtie> y"
+  assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
-  "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
+  \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
   x \<Midarrow> 0;;
   x \<Midarrow> 0;;
   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>\<^sup>C;;
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)+
   apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
   defer
@@ -56,16 +56,16 @@ lemma increment_tactic1:
   done
 
 lemma increment_tactic2:
-  assumes "vwb_lens x" and "x \<bowtie> y"
+  assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
-  "\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
+  \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
   x \<Midarrow> 0;;
   x \<Midarrow> 0;;
   (&x =\<^sub>u 0 \<and> &y =\<^sub>u 5)\<^sup>\<top>\<^sup>C;;
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> &x + 1 od
-  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
   apply (tactic \<open>vcg_pre_tac @{context}\<close>)
   apply vcg_autos+
@@ -74,10 +74,10 @@ lemma increment_tactic2:
 subsection \<open>Even count\<close>
 
 lemma even_count_tactic1:
-  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
-  and "lens_indep_all {i, start, j, endd}"
+  assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
+  and \<open>lens_indep_all {i, start, j, endd}\<close>
   shows
-  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
+  \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
     j \<Midarrow> 0;;
     (&start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top>\<^sup>C;;
@@ -91,7 +91,7 @@ lemma even_count_tactic1:
       eif;;
       i \<Midarrow> &i + 1
     od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
   apply vcg_autos
   apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
@@ -101,10 +101,10 @@ lemma even_count_tactic1:
   done
 
 lemma even_count_tactic2:
-  assumes "vwb_lens i" and "weak_lens start" and "vwb_lens j" and "weak_lens endd"
-  and "lens_indep_all {i, start, j, endd}"
+  assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
+  and \<open>lens_indep_all {i, start, j, endd}\<close>
   shows
-  "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
+  \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
     j \<Midarrow> 0;;
     (&start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u 0 \<and> &i =\<^sub>u &start)\<^sup>\<top>\<^sup>C;;
@@ -118,7 +118,7 @@ lemma even_count_tactic2:
       eif;;
       i \<Midarrow> &i + 1
     od
-  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
   defer
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
