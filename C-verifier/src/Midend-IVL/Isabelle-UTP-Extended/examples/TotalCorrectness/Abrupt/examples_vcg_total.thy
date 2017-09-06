@@ -44,9 +44,9 @@ lemma increment_tactic1:
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)+
      apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-    defer
+     defer
      apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-  apply pred_auto
+    apply pred_auto
    apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
      apply (tactic \<open>vcg_insert_assms_tac @{context}\<close>)
      apply (tactic \<open>vcg_unfold_tac @{context}\<close>)
@@ -73,7 +73,7 @@ subsection \<open>Even count\<close>
 
 lemma even_count_tactic0:
   assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
-  and \<open>lens_indep_all {i, start, j, endd}\<close>
+  and \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -92,22 +92,22 @@ lemma even_count_tactic0:
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_seq_split @{context} 1\<close>)+
      apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-    defer
+     defer
      apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
     apply vcg_autos
    apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
      apply (tactic \<open>vcg_seq_split @{context} 1\<close>)
       apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
-    defer
+       defer
        apply (tactic \<open>vcg_rule_tac @{context} 1\<close>)+
       apply (tactic \<open>vcg_pre_tac @{context}\<close>)
       apply vcg_autos
   apply pred_simp
-  by (metis weak_lens.put_get)
+  oops
 
 lemma even_count_tactic1:
   assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
-  and \<open>lens_indep_all {i, start, j, endd}\<close>
+  and \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -126,8 +126,8 @@ lemma even_count_tactic1:
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_all_tac @{context}\<close>)
       apply vcg_autos
-  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
-  apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
+    apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
+      apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
      apply (tactic \<open>vcg_pre_tac @{context}\<close>)
      apply vcg_autos
   done
@@ -135,7 +135,7 @@ lemma even_count_tactic1:
 lemma even_count_tactic2:
   assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
   and \<open>i \<bowtie> start\<close> and \<open>i \<bowtie> j\<close>
-  and \<open>lens_indep_all {i, start, j, endd}\<close>
+  and \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -153,15 +153,15 @@ lemma even_count_tactic2:
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
-    defer
+     defer
      apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
     apply vcg_autos
    apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
-    defer
+       defer
        apply (tactic \<open>vcg_rules_tac' @{context}\<close>)
       apply (tactic \<open>vcg_pre_tac @{context}\<close>)
       apply vcg_autos
   apply vcg_simp
-  by (metis weak_lens.put_get)
+  oops
 
 end

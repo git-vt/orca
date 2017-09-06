@@ -9,10 +9,9 @@ no_notation useq (infixr ";;" 51)
 notation useq (infixl ";;" 51)
 
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
-number of assumptions required increases greatly. However, in some cases usage ends up requiring
-additional proof steps near the end due to nesting of quantifiers such as
-@{text \<open>metis weak_lens.put_get\<close>}.\<close>
-definition \<open>lens_indep_all lenses \<equiv> \<forall>a b. {a, b} \<subset> lenses \<and> a \<bowtie> b\<close>
+number of assumptions required increases greatly.\<close>
+definition \<open>lens_indep_all lenses \<equiv>
+   distinct lenses \<and> (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. a \<noteq> b \<longrightarrow> a \<bowtie> b)\<close>
 
 text \<open>@{thm seq_hoare_r_t} is handled separately as naïve application could cause conflicts/failed
 proofs later on.\<close>

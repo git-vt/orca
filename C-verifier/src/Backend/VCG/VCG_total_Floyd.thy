@@ -7,7 +7,7 @@ begin
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
 number of assumptions required increases greatly.\<close>
 definition \<open>lens_indep_all lenses \<equiv>
-  distinct lenses \<and> (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. a \<noteq> b \<longrightarrow> a \<bowtie> b)\<close>
+   distinct lenses \<and> (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. a \<noteq> b \<longrightarrow> a \<bowtie> b)\<close>
 
 lemma assert_hoare_r_t':
   assumes \<open>`p \<Rightarrow> c`\<close>
@@ -61,8 +61,8 @@ lemmas extra_simps =
   lens_indep.lens_put_irr2
   lens_indep_all_def
 
-method solve_vcg = assumption|(pred_simp; (simp add: extra_simps)?)
-method exp_vcg_step = rule hoare_rules|(solve_vcg; fail)
+method solve_vcg = assumption|pred_simp, (simp add: extra_simps)?
+method exp_vcg_step = rule hoare_rules|solve_vcg; fail
 method exp_vcg =
   (simp only: seqr_assoc[symmetric])?,
   rule hoare_post_weak_t,
