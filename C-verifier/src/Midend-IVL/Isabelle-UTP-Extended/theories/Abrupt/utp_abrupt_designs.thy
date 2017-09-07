@@ -199,7 +199,7 @@ subsection{*Loops*}
 purge_notation while ("while\<^sup>\<top> _ do _ od")
 
 definition While :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sup>\<top> _ do _ od") where
-"While b C = (\<mu> X \<bullet> bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+"While b C = (\<nu> X \<bullet> bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
 purge_notation while_top ("while _ do _ od")
 
@@ -209,7 +209,7 @@ abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<R
 purge_notation while_bot ("while\<^sub>\<bottom> _ do _ od")
 
 definition While_bot :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sub>\<bottom> _ do _ od") where
-"while\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+"while\<^sub>\<bottom> b do P od =  (\<nu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
 subsection{*While-loop inv*}
 text {*While loops with invariant decoration*}

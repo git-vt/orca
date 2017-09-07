@@ -6,8 +6,20 @@ begin
 
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
 number of assumptions required increases greatly.\<close>
-definition \<open>lens_indep_all lenses \<equiv>
-   distinct lenses \<and> (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. a \<noteq> b \<longrightarrow> a \<bowtie> b)\<close>
+
+    
+definition "lens_indep_all lenses  \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and> 
+                                        (\<forall> i j. i < length lenses \<and> j < length lenses \<and>  
+                                                i \<noteq> j \<longrightarrow> lenses!i \<bowtie> lenses!j)"
+lemma lens_indep_all_alt:
+  "lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and> 
+                              distinct lenses \<and> 
+                             (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. (a \<noteq> b \<longrightarrow> a \<bowtie> b))"
+  unfolding lens_indep_all_def distinct_conv_nth
+  apply (safe; simp?) 
+  apply (metis lens_indep_quasi_irrefl nth_mem vwb_lens_wb)
+  apply (metis in_set_conv_nth)
+  done
 
 lemma assert_hoare_r_t':
   assumes \<open>`p \<Rightarrow> c`\<close>
@@ -39,8 +51,9 @@ lemma cond_assert_abr_hoare_r_t:
    apply (rule hoare_pre_str_t[where p\<^sub>2 = A])
     apply (simp add: impl_alt_def utp_pred.sup_commute)
    apply assumption
-  by simp
-
+  apply simp
+  done
+    
 lemma while_invr_hoare_r_t':
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close> and \<open>`p' \<Rightarrow> p`\<close>
   shows \<open>\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
@@ -59,13 +72,11 @@ lemmas hoare_rules =
 lemmas extra_simps = 
   lens_indep.lens_put_irr1
   lens_indep.lens_put_irr2
-  lens_indep_all_def
+  lens_indep_all_alt
 
-method solve_vcg = assumption|pred_simp, (simp add: extra_simps)?
-method exp_vcg_step = rule hoare_rules|solve_vcg; fail
-method exp_vcg =
-  (simp only: seqr_assoc[symmetric])?,
-  rule hoare_post_weak_t,
-  exp_vcg_step+
+method solve_vcg = assumption|(pred_simp?; (simp add: extra_simps)?)
+method exp_vcg_step = rule hoare_rules|(solve_vcg; fail)
+method exp_vcg_pre =  (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak_t 
+method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
 end

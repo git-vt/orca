@@ -41,9 +41,8 @@ lemma increment_method:
   by exp_vcg
 
 lemma even_count_method:
-  assumes \<open>vwb_lens i\<close> and \<open>weak_lens start\<close> and \<open>vwb_lens j\<close> and \<open>weak_lens endd\<close>
-  and \<open>lens_indep_all [i, start, j, endd]\<close>
-  shows
+  assumes  \<open>lens_indep_all [i, start, j, endd]\<close>
+  shows            
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
     j \<Midarrow> 0;;
@@ -58,13 +57,14 @@ lemma even_count_method:
       i \<Midarrow> &i + 1
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-  apply (insert assms)
+  apply (insert assms) unfolding lens_indep_all_alt
   apply exp_vcg
-   apply solve_vcg
+   apply solve_vcg 
    apply (elim disjE conjE)
     apply simp
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
-  by solve_vcg
-
+  apply solve_vcg
+  done
+    
 end
