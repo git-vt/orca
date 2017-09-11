@@ -72,8 +72,7 @@ lemma increment_tactic2:
 subsection \<open>Even count\<close>
 
 lemma even_count_tactic0:
-  assumes \<open>vwb_lens i\<close> and \<open>vwb_lens j\<close>
-  and \<open>lens_indep_all [i, start, j, endd]\<close>
+  assumes \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -106,8 +105,7 @@ lemma even_count_tactic0:
   oops
 
 lemma even_count_tactic1:
-  assumes \<open>vwb_lens i\<close> and \<open>vwb_lens j\<close>
-  and \<open>lens_indep_all [i, start, j, endd]\<close>
+  assumes \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
@@ -129,13 +127,10 @@ lemma even_count_tactic1:
     apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
       apply (tactic \<open>vcg_rules_all_tac' @{context}\<close>)
      apply (tactic \<open>vcg_pre_tac @{context}\<close>)
-     apply vcg_autos
-  done
+  oops
 
 lemma even_count_tactic2:
-  assumes \<open>vwb_lens i\<close> and \<open>vwb_lens j\<close>
-  and \<open>i \<bowtie> start\<close> and \<open>i \<bowtie> j\<close>
-  and \<open>lens_indep_all [i, start, j, endd]\<close>
+  assumes \<open>lens_indep_all [i, start, j, endd]\<close>
   shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;

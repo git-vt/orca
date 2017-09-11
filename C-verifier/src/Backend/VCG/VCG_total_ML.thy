@@ -10,8 +10,18 @@ notation useq (infixl ";;" 51)
 
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
 number of assumptions required increases greatly.\<close>
-definition \<open>lens_indep_all lenses \<equiv>
-   distinct lenses \<and> (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. a \<noteq> b \<longrightarrow> a \<bowtie> b)\<close>
+definition \<open>lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and>
+                                      (\<forall> i j. i < length lenses \<and> j < length lenses \<and>
+                                               i \<noteq> j \<longrightarrow> lenses!i \<bowtie> lenses!j)\<close>
+lemma lens_indep_all_alt:
+  \<open>lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and>
+                              distinct lenses \<and>
+                             (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. (a \<noteq> b \<longrightarrow> a \<bowtie> b))\<close>
+  unfolding lens_indep_all_def distinct_conv_nth
+  apply (safe; simp?) 
+   apply (metis lens_indep_quasi_irrefl nth_mem vwb_lens_wb)
+  apply (metis in_set_conv_nth)
+  done
 
 text \<open>@{thm seq_hoare_r_t} is handled separately as naïve application could cause conflicts/failed
 proofs later on.\<close>

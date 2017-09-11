@@ -6,8 +6,6 @@ begin
 
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
 number of assumptions required increases greatly.\<close>
-
-    
 definition \<open>lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and>
                                       (\<forall> i j. i < length lenses \<and> j < length lenses \<and>
                                                i \<noteq> j \<longrightarrow> lenses!i \<bowtie> lenses!j)\<close>
