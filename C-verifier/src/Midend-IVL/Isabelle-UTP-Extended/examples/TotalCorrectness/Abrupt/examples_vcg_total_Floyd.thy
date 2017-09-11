@@ -41,7 +41,7 @@ lemma increment_method:
   by exp_vcg
 
 lemma even_count_method:
-  assumes  \<open>lens_indep_all [i, start, j, endd]\<close>
+  assumes \<open>lens_indep_all [i, start, j, endd]\<close>
   shows            
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;

@@ -8,16 +8,16 @@ text \<open>The below definition helps in asserting independence for a group of 
 number of assumptions required increases greatly.\<close>
 
     
-definition "lens_indep_all lenses  \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and> 
-                                        (\<forall> i j. i < length lenses \<and> j < length lenses \<and>  
-                                                i \<noteq> j \<longrightarrow> lenses!i \<bowtie> lenses!j)"
+definition \<open>lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and>
+                                      (\<forall> i j. i < length lenses \<and> j < length lenses \<and>
+                                               i \<noteq> j \<longrightarrow> lenses!i \<bowtie> lenses!j)\<close>
 lemma lens_indep_all_alt:
-  "lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and> 
-                              distinct lenses \<and> 
-                             (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. (a \<noteq> b \<longrightarrow> a \<bowtie> b))"
+  \<open>lens_indep_all lenses \<longleftrightarrow> (\<forall>l \<in> set lenses. vwb_lens l \<and> eff_lens l) \<and>
+                              distinct lenses \<and>
+                             (\<forall>a \<in> set lenses. \<forall>b \<in> set lenses. (a \<noteq> b \<longrightarrow> a \<bowtie> b))\<close>
   unfolding lens_indep_all_def distinct_conv_nth
   apply (safe; simp?) 
-  apply (metis lens_indep_quasi_irrefl nth_mem vwb_lens_wb)
+   apply (metis lens_indep_quasi_irrefl nth_mem vwb_lens_wb)
   apply (metis in_set_conv_nth)
   done
 
@@ -74,8 +74,8 @@ lemmas extra_simps =
   lens_indep.lens_put_irr2
   lens_indep_all_alt
 
-method solve_vcg = assumption|(pred_simp?; (simp add: extra_simps)?)
-method exp_vcg_step = rule hoare_rules|(solve_vcg; fail)
+method solve_vcg = assumption|pred_simp?; (simp add: extra_simps)?
+method exp_vcg_step = rule hoare_rules|solve_vcg; fail
 method exp_vcg_pre =  (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak_t 
 method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
