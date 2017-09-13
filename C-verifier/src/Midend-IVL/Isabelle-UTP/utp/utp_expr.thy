@@ -438,8 +438,8 @@ translations
 
 text \<open>Additional translations as extensions of Isabelle/UTP (same issue as the above syntax stuff).\<close>
 translations
-  "f\<lparr>kf\<rparr>\<^sub>r" == "CONST uop kf f"
-  "f(k \<mapsto> v)\<^sub>r" == "CONST bop k (CONST rec_update_wrapper v) f"
+  "f\<lparr>kf\<rparr>\<^sub>r" => "CONST uop kf f"
+  "f(k \<mapsto> v)\<^sub>r" => "CONST bop k (CONST rec_update_wrapper v) f"
   "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
   "_ubu_and" == "CONST bop (CONST u_bitop (op AND))"
   "_ubs_or" == "CONST bop (CONST s_bitop (op OR))"

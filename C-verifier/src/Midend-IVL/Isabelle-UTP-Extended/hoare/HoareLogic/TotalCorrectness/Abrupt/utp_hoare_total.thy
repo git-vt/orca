@@ -8,7 +8,7 @@ named_theorems hoare_total
 subsection {*Hoare triple definition*}
 
 definition hoare_rd :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_cpa \<Rightarrow> '\<alpha> cond \<Rightarrow> bool" ("\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>A\<^sub>B\<^sub>R") where
-[upred_defs]:"\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>A\<^sub>B\<^sub>R = 
+[upred_defs]:"\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>A\<^sub>B\<^sub>R =
   ((\<lceil>p\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<and> $ok \<and> \<not>$abrupt  \<Rightarrow> \<lceil>r\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>> \<and> $ok\<acute> \<and> \<not>$abrupt\<acute>) \<sqsubseteq> Q)"
 
 lemma hoare_true_t [hoare_total]:
