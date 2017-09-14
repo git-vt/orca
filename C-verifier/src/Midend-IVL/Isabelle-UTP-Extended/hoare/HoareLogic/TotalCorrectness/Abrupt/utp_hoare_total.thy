@@ -69,7 +69,7 @@ lemma assigns_abr_hoare_r'_t [hoare_total]:
 
 lemma assigns_abr_floyd_r_t [hoare_total]:
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x \<Midarrow> e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  shows \<open>\<lbrace>p\<rbrace>x \<Midarrow> e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply rel_simp
   apply transfer

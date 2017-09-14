@@ -35,7 +35,6 @@ lemma cond_abr_hoare_r_t':
   shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q \<or> s\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms, rel_auto) metis+ 
 
-(* TODO: Needs version for end of program (no P) *)
 lemma cond_assert_abr_hoare_r_t:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>

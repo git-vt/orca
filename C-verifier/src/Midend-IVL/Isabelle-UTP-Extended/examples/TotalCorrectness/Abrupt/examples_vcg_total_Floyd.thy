@@ -63,7 +63,7 @@ lemma even_count_method:
   apply (insert assms)
   apply exp_vcg
    apply solve_vcg
-   apply (elim disjE conjE) (* auto goes faster with this *)
+   apply (elim disjE conjE) (* auto seems to go faster with this *)
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
   apply solve_vcg
