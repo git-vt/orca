@@ -84,9 +84,6 @@ translations
   "int\<^sub>u(n)" == "CONST uop CONST int n"
   "nat\<^sub>u(i)" == "CONST uop CONST nat i"
 
-lemma "sorted (as @ [b, c]) \<Longrightarrow> sorted (as @ [b, b])"
-  by (simp add: sorted_append)
-  
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, x]\<close>
       and \<open>lens_indep_all [array, old_array]\<close>
@@ -97,16 +94,15 @@ lemma insertion_sort:
   shows
   \<open>\<lbrace>#\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
   i \<Midarrow> 1;;
-  j \<Midarrow> int\<^sub>u(&i - 1);;
   while &i <\<^sub>u #\<^sub>u(&array)
   invr &i >\<^sub>u 0 \<and> #\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(take\<^sub>u(&i-1, &array)) do
     x \<Midarrow> &array\<lparr>&i\<rparr>\<^sub>u;;
     j \<Midarrow> int\<^sub>u(&i - 1);;
     while &j \<ge>\<^sub>u 0 \<and> &x <\<^sub>u &array\<lparr>nat\<^sub>u(&j)\<rparr>\<^sub>u
-    invr &i >\<^sub>u 0 \<and> &i >\<^sub>u nat\<^sub>u(&j) \<and> #\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> sorted\<^sub>u(take\<^sub>u(&i-1, &array)) do
+    invr &i <\<^sub>u #\<^sub>u(&array) \<and> &i >\<^sub>u 0 \<and> &i >\<^sub>u nat\<^sub>u(&j) \<and> #\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> sorted\<^sub>u(take\<^sub>u(&i-1, &array)) do
       array \<Midarrow> &array(nat\<^sub>u(&j+1) \<mapsto> &array\<lparr>nat\<^sub>u(&j)\<rparr>\<^sub>u)\<^sub>u;;
       j \<Midarrow> &j - 1
-    od ;;
+    od;;
     array \<Midarrow> &array(nat\<^sub>u(&j+1) \<mapsto> &x)\<^sub>u;;
     i \<Midarrow> &i + 1
   od
@@ -115,6 +111,6 @@ lemma insertion_sort:
   apply exp_vcg
      apply solve_vcg
      apply (elim disjE conjE) (* makes auto slightly faster here *)
-     apply auto[1]
+     apply auto[1] (* simp: sorted_list_dupl doesn't help *)
 
 end
