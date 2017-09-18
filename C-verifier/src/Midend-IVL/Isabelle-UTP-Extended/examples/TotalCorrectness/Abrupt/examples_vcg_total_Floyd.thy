@@ -138,7 +138,6 @@ lemma outer_invr_init[extra_simps]:
   using assms by auto
 
 term \<open>&i <\<^sub>u #\<^sub>u(&array) \<and> &i >\<^sub>u 0 \<and> &i >\<^sub>u nat\<^sub>u(&j) \<and> #\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> sorted\<^sub>u(take\<^sub>u(&i-1, &array))\<close>
-
 definition \<open>inner_invr' i j n array old_array \<equiv>
   i < length array \<and> i > 0 \<and> i > nat j \<and> length array = n \<and> sorted (take (i - 1) array)\<close>
 abbreviation \<open>inner_invr \<equiv> qiop inner_invr'\<close>

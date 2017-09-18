@@ -4,7 +4,10 @@ theory cJSON
   imports helpers
 begin
 
-text \<open>Project version\<close>
+subsection \<open>From header file \texttt{cJSON.h}\<close>
+
+text \<open>Project version; used in souce code for a compile-time check that is intended to verify that
+the header file and source file match up.\<close>
 abbreviation \<open>CJSON_VERSION_MAJOR \<equiv> \<guillemotleft>1::nat\<guillemotright>\<close>
 abbreviation \<open>CJSON_VERSION_MINOR \<equiv> \<guillemotleft>5::nat\<guillemotright>\<close>
 abbreviation \<open>CJSON_VERSION_PATCH \<equiv> \<guillemotleft>8::nat\<guillemotright>\<close>
@@ -43,5 +46,20 @@ datatype cJSON_tree =
 
 (* I'd prefer to use bool but cJSON doesn't use the C99 bool type. *)
 type_synonym cJSON_bool = int
+
+subsection \<open>From source file \texttt{cJSON.c}\<close>
+
+abbreviation \<open>true' \<equiv> \<guillemotleft>1::cJSON_bool\<guillemotright>\<close>
+abbreviation \<open>false' \<equiv> \<guillemotleft>0::cJSON_bool\<guillemotright>\<close>
+
+record error =
+  json :: string
+  position :: size_t \<comment> \<open>Index into JSON string\<close>
+abbreviation \<open>global_error \<equiv> \<guillemotleft>\<lparr>json = '''', position = 0\<rparr>\<guillemotright>\<close> (* TODO: fix up, must be a lens *)
+
+(* Creating a new alphabet to add global_error as a global variable would be a pain as it would
+require a lot of manual copypasting, so going with good old pass-as-argument style. *)
+definition \<open>cJSON_GetErrorPtr g = drop\<^sub>u(&g\<lparr>position\<rparr>\<^sub>r, &g\<lparr>json\<rparr>\<^sub>r)\<close>
+definition \<open>cJSON_Version = shows_nat CJSON_VERSION_MAJOR @ ''.'' \<close>
 
 end

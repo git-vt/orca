@@ -25,4 +25,31 @@ abbreviation "SIZEOF_LONG \<equiv> \<guillemotleft>64::nat\<guillemotright>"
 text \<open>\texttt{sizeof(void*); assuming 64-bit systems.\<close>
 abbreviation "SIZEOF_VOIDP \<equiv> \<guillemotleft>64::nat\<guillemotright>"
 
+type_synonym size_t = nat
+
+abbreviation \<open>NULL \<equiv> \<guillemotleft>0\<guillemotright>\<close>
+
+text \<open>Borrowed from the @{typ nat} implementation of \texttt{shows} from the Real_Impl theory set
+in the Archive of Formal Proofs (\url{https://www.isa-afp.org/entries/Real_Impl.html}); some slight
+modifications were done for my own personal preferences.\<close>
+
+definition string_of_digit :: \<open>nat \<Rightarrow> string\<close> where
+  \<open>string_of_digit n =
+    (if n = 0 then ''0''
+    else if n = 1 then ''1''
+    else if n = 2 then ''2''
+    else if n = 3 then ''3''
+    else if n = 4 then ''4''
+    else if n = 5 then ''5''
+    else if n = 6 then ''6''
+    else if n = 7 then ''7''
+    else if n = 8 then ''8''
+    else ''9'')\<close>
+
+fun shows_nat' :: \<open>string \<Rightarrow> nat \<Rightarrow> string\<close> where
+  \<open>shows_nat' p n =
+  (if n < 10 then string_of_digit n
+  else shows_nat' p (n div 10) @ string_of_digit (n mod 10))\<close>
+abbreviation \<open>shows_nat n \<equiv> shows_nat' '''' n\<close>
+
 end
