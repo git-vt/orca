@@ -37,7 +37,7 @@ text \<open>As we do not currently have a proper memory model for pointers and r
 deferred types, we must use a separate structure for that kind of thing that holds cJSON items.\<close>
 datatype cJSON_tree =
   Leaf
-| Node (nextt: cJSON) (prev: cJSON) (child: cJSON)
+| Node (data: cJSON) (nextt: cJSON) (prev: cJSON) (child: cJSON)
 
 (* TODO: cJSON_Hooks is a struct holding functions *)
 

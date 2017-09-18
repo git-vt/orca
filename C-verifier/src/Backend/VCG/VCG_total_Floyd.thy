@@ -84,14 +84,17 @@ lemmas hoare_rules =
   cond_abr_hoare_r_t'
   while_invr_hoare_r_t'
 
-lemmas extra_simps = 
+named_theorems extra_simps
+lemmas [extra_simps] =
   lens_indep.lens_put_irr1
   lens_indep.lens_put_irr2
   lens_indep_all_alt
 
-method solve_vcg = assumption|pred_simp?, (simp add: extra_simps)?
-method exp_vcg_step = rule hoare_rules|solve_vcg; fail
+named_theorems hoare_rules_extra
+
 method exp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak_t
+method solve_vcg = assumption|pred_simp?, (simp add: extra_simps)?
+method exp_vcg_step = rule hoare_rules_extra|rule hoare_rules|solve_vcg; fail
 method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
 end
