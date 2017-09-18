@@ -558,5 +558,4 @@ lemma aext_seq [alpha]:
   "wb_lens a \<Longrightarrow> ((P ;; Q) \<oplus>\<^sub>p (a \<times>\<^sub>L a)) = ((P \<oplus>\<^sub>p (a \<times>\<^sub>L a)) ;; (Q \<oplus>\<^sub>p (a \<times>\<^sub>L a)))"
   by (rel_simp, metis wb_lens_weak weak_lens.put_get)
 
-
 end

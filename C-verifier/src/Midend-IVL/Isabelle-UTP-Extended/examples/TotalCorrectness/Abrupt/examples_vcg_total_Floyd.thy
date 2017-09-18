@@ -89,16 +89,28 @@ translations
 
 subsubsection \<open>Extra stuff to work five-arg functions into UTP\<close>
 
-text \<open>@{const qiop} and @{thm qiop_ueval} were placed in @{theory utp_expr} to allow placement in
-@{thm ueval}.\<close>
+lift_definition qiop ::
+  \<open>('a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> 'e \<Rightarrow> 'f) \<Rightarrow>
+   ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('c, '\<alpha>) uexpr \<Rightarrow> ('d, '\<alpha>) uexpr \<Rightarrow> ('e, '\<alpha>) uexpr \<Rightarrow>
+   ('f, '\<alpha>) uexpr\<close>
+  is \<open>\<lambda>f u v w x y b. f (u b) (v b) (w b) (x b) (y b)\<close> .
+update_uexpr_rep_eq_thms \<comment> \<open>Necessary to get the above utilized by {pred,rel}_{auto,simp}\<close>
+
+text \<open>The below lemmas do not seem useful in general but are included for completeness.\<close>
+lemma qiop_ueval [ueval]: \<open>\<lbrakk>qiop f v x y z w\<rbrakk>\<^sub>eb = f (\<lbrakk>v\<rbrakk>\<^sub>eb) (\<lbrakk>x\<rbrakk>\<^sub>eb) (\<lbrakk>y\<rbrakk>\<^sub>eb) (\<lbrakk>z\<rbrakk>\<^sub>eb) (\<lbrakk>w\<rbrakk>\<^sub>eb)\<close>
+  by transfer simp
+
 lemma subst_qiop [usubst]: \<open>\<sigma> \<dagger> qiop f t u v w x = qiop f (\<sigma> \<dagger> t) (\<sigma> \<dagger> u) (\<sigma> \<dagger> v) (\<sigma> \<dagger> w) (\<sigma> \<dagger> x)\<close>
   by transfer simp
 
 lemma unrest_qiop [unrest]: \<open>\<lbrakk>x \<sharp> t; x \<sharp> u; x \<sharp> v; x \<sharp> w; x \<sharp> y\<rbrakk> \<Longrightarrow> x \<sharp> qiop f t u v w y\<close>
   by transfer simp
 
-(* pred_auto worked for the qtop version but not qiop... *)
 lemma aext_qiop [alpha]: \<open>qiop f t u v w x \<oplus>\<^sub>p a = qiop f (t \<oplus>\<^sub>p a) (u \<oplus>\<^sub>p a) (v \<oplus>\<^sub>p a) (w \<oplus>\<^sub>p a) (x \<oplus>\<^sub>p a)\<close>
+  by pred_auto
+
+lemma lit_qiop_simp [lit_simps]:
+  \<open>\<guillemotleft>i x y z u t\<guillemotright> = qiop i \<guillemotleft>x\<guillemotright> \<guillemotleft>y\<guillemotright> \<guillemotleft>z\<guillemotright> \<guillemotleft>u\<guillemotright> \<guillemotleft>t\<guillemotright>\<close>
   by transfer simp
 
 subsubsection \<open>Actual proofs\<close>
@@ -130,7 +142,7 @@ definition \<open>outer_invr' i n array old_array \<equiv>
   i > 0 \<and> length array = n \<and> mset array = mset old_array \<and> sorted (take (i - 1) array)\<close>
 abbreviation \<open>outer_invr \<equiv> qtop outer_invr'\<close>
 
-lemma outer_invr_init[extra_simps]:
+lemma outer_invr_init[vcg_simps]:
   assumes \<open>length array = n\<close>
       and \<open>mset array = mset old_array\<close>
   shows \<open>outer_invr' (Suc 0) n array old_array\<close>
@@ -142,7 +154,7 @@ definition \<open>inner_invr' i j n array old_array \<equiv>
   i < length array \<and> i > 0 \<and> i > nat j \<and> length array = n \<and> sorted (take (i - 1) array)\<close>
 abbreviation \<open>inner_invr \<equiv> qiop inner_invr'\<close>
 
-lemma inner_invr_init[extra_simps]:
+lemma inner_invr_init[vcg_simps]:
   assumes \<open>outer_invr' i n array old_array\<close>
       and \<open>nat j = i - 1\<close>
       and \<open>i < length array\<close>
@@ -150,14 +162,14 @@ lemma inner_invr_init[extra_simps]:
   using assms unfolding inner_invr'_def outer_invr'_def
   by auto
 
-lemma inner_invr_step[extra_simps]:
+lemma inner_invr_step[vcg_simps]:
   assumes \<open>inner_invr' i j n array old_array\<close>
     and \<open>j \<ge> 0\<close>
   shows \<open>inner_invr' i (j - 1) n (array[nat (j+1) := array!(nat j)]) old_array\<close>
   using assms unfolding inner_invr'_def
   by auto (smt Suc_eq_plus1 Suc_lessD Suc_nat_eq_nat_zadd1 not_less sorted_update_take_plus_one take_update_cancel)
 
-lemma outer_invr_step[extra_simps]:
+lemma outer_invr_step[vcg_simps]:
   assumes \<open>inner_invr' i j n array old_array\<close>
       and \<open>0 \<le> j \<longrightarrow> \<not> x < array!(nat j)\<close>
     shows \<open>outer_invr' (Suc i) n (array[nat (j + 1) :=x]) old_array\<close>
@@ -178,9 +190,9 @@ lemma inner_loop_r_t:
     od
   \<lbrace>undefined post\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   sorry
-
+(* 
 lemmas [hoare_rules_extra] =
-  inner_loop_r_t[THEN hoare_pre_str_t[rotated]]
+  inner_loop_r_t[THEN hoare_pre_str_t[rotated]] *)
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, x]\<close>

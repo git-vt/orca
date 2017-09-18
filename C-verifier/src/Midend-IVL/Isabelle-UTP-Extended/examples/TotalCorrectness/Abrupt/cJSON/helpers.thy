@@ -46,10 +46,15 @@ definition string_of_digit :: \<open>nat \<Rightarrow> string\<close> where
     else if n = 8 then ''8''
     else ''9'')\<close>
 
-fun shows_nat' :: \<open>string \<Rightarrow> nat \<Rightarrow> string\<close> where
-  \<open>shows_nat' p n =
+fun shows' :: \<open>string \<Rightarrow> nat \<Rightarrow> string\<close> where
+  \<open>shows' p n =
   (if n < 10 then string_of_digit n
-  else shows_nat' p (n div 10) @ string_of_digit (n mod 10))\<close>
-abbreviation \<open>shows_nat n \<equiv> shows_nat' '''' n\<close>
+  else shows' p (n div 10) @ string_of_digit (n mod 10))\<close>
+abbreviation \<open>shows n \<equiv> shows' '''' n\<close>
+
+syntax
+  "_ushows" :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (string, '\<alpha>) uexpr\<close> ("shows\<^sub>u'(_')")
+translations
+  "shows\<^sub>u(n)" == "CONST uop CONST shows n"
 
 end

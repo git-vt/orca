@@ -53,13 +53,17 @@ abbreviation \<open>true' \<equiv> \<guillemotleft>1::cJSON_bool\<guillemotright
 abbreviation \<open>false' \<equiv> \<guillemotleft>0::cJSON_bool\<guillemotright>\<close>
 
 record error =
-  json :: string
+  json :: \<open>string option\<close> \<comment> \<open>Using option type to emulate null strings/pointers\<close>
   position :: size_t \<comment> \<open>Index into JSON string\<close>
-abbreviation \<open>global_error \<equiv> \<guillemotleft>\<lparr>json = '''', position = 0\<rparr>\<guillemotright>\<close> (* TODO: fix up, must be a lens *)
+abbreviation \<open>global_error \<equiv> \<guillemotleft>\<lparr>json = None, position = 0\<rparr>\<guillemotright>\<close> (* TODO: fix up, must be a lens *)
 
 (* Creating a new alphabet to add global_error as a global variable would be a pain as it would
 require a lot of manual copypasting, so going with good old pass-as-argument style. *)
 definition \<open>cJSON_GetErrorPtr g = drop\<^sub>u(&g\<lparr>position\<rparr>\<^sub>r, &g\<lparr>json\<rparr>\<^sub>r)\<close>
-definition \<open>cJSON_Version = shows_nat CJSON_VERSION_MAJOR @ ''.'' \<close>
+(* TODO: Need to figure out how to use option type on the UTP level. *)
+
+definition \<open>cJSON_Version = shows\<^sub>u(CJSON_VERSION_MAJOR) ^\<^sub>u \<guillemotleft>''.''\<guillemotright> ^\<^sub>u
+                            shows\<^sub>u(CJSON_VERSION_MINOR) ^\<^sub>u \<guillemotleft>''.''\<guillemotright> ^\<^sub>u
+                            shows\<^sub>u(CJSON_VERSION_PATCH)\<close>
 
 end
