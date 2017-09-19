@@ -90,10 +90,11 @@ lemmas [vcg_simps] =
   lens_indep.lens_put_irr2
   lens_indep_all_alt
 
-named_theorems hoare_rules_extra
+named_theorems hoare_rules_extra and vcg_dests
 
 method exp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak_t
-method solve_vcg = assumption|pred_simp?, (simp add: vcg_simps)?
+method solve_dests = safe?; simp?; drule vcg_dests; assumption?; (simp add: vcg_simps)?
+method solve_vcg = assumption|pred_simp?, ((simp add: vcg_simps)?;(solve_dests; fail)?)
 method exp_vcg_step = rule hoare_rules_extra|rule hoare_rules|solve_vcg; fail
 method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
