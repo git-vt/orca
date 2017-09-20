@@ -7,7 +7,7 @@
 (* LAST REVIEWED: 7/12/2016 *)
 
 section {* Profiling Tool *}
- 
+
 theory Profiling
 imports "~~/src/HOL/Eisbach/Eisbach"
 keywords "profile" :: prf_script

@@ -16,26 +16,28 @@ keywords
 begin
 
 subsection {* ML File Import *}
-                   
+
 ML_file "TotalRecall.ML"
+
+subsection {* Outer Commands *}
 
 ML {*
   val _ =
     Outer_Syntax.command @{command_keyword purge_syntax}
       "purge raw syntax clauses"
-      ((Scan.repeat1 Parse.const_decl) >> 
-        (Toplevel.theory o  (fn args => 
-          (TotalRecall.record_no_syntax Syntax.mode_input args) o 
-          (Sign.del_syntax_cmd Syntax.mode_input args))));
+      ((Parse.syntax_mode -- Scan.repeat1 Parse.const_decl) >>
+        (Toplevel.theory o (fn (mode, args) =>
+          (TotalRecall.record_no_syntax mode args) o
+          (Sign.del_syntax_cmd mode args))));
 
   val _ =
     Outer_Syntax.local_theory @{command_keyword purge_notation}
       "purge concrete syntax for constants / fixed variables"
-      ((Parse.and_list1 (Parse.const -- Parse.mixfix)) >>
-        (fn args =>
+      ((Parse.syntax_mode -- Parse.and_list1 (Parse.const -- Parse.mixfix)) >>
+        (fn (mode, args) =>
           (Local_Theory.background_theory
-            (TotalRecall.record_no_notation Syntax.mode_input args)) o
-          (Specification.notation_cmd false Syntax.mode_input args)));
+            (TotalRecall.record_no_notation mode args)) o
+          (Specification.notation_cmd false mode args)));
 
   val _ =
     Outer_Syntax.command @{command_keyword recall_syntax}

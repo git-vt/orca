@@ -15,8 +15,6 @@ lemma add_mono:
 
 end
 
-thm cancel_semigroup_add_axioms
-
 class left_cancel_monoid = monoid_add +
   assumes add_left_imp_eq: "a + b = a + c \<Longrightarrow> b = c"
 
@@ -44,11 +42,13 @@ where "a \<le>\<^sub>m b \<longleftrightarrow> (\<exists>c. b = a + c)"
 definition monoid_subtract (infixl "-\<^sub>m" 65)
 where "a -\<^sub>m b = (if (b \<le>\<^sub>m a) then THE c. a = b + c else 0)"
 
-end
+end 
 
-class cancel_monoid = left_cancel_monoid + right_cancel_monoid + monoid_sum_0
+class pre_trace = left_cancel_monoid + monoid_sum_0 +
+  assumes
+  sum_eq_sum_conv: "(a + b) = (c + d) \<Longrightarrow> \<exists> e . a = c + e \<and> e + b = d \<or> a + e = c \<and> b = e + d"
 begin
-
+  
 lemma monoid_le_least_zero: "0 \<le>\<^sub>m a"
   by (simp add: monoid_le_def)
 
@@ -95,20 +95,11 @@ lemma add_monoid_diff_cancel_left [simp]: "(a + b) -\<^sub>m a = b"
 done
 
 end
-
-class ordered_cancel_monoid_diff = cancel_monoid + ord + minus +
+  
+class trace = pre_trace + ord + minus +
   assumes le_is_monoid_le: "a \<le> b \<longleftrightarrow> (a \<le>\<^sub>m b)"
   and less_iff: "a < b \<longleftrightarrow> a \<le> b \<and> \<not> (b \<le> a)"
   and minus_def: "a - b = a -\<^sub>m b"
-
-instance ordered_cancel_monoid_diff \<subseteq> order
-  apply (intro_classes)
-  apply (simp_all add: less_iff le_is_monoid_le monoid_le_refl)
-  using monoid_le_trans apply blast
-  apply (simp add: monoid_le_antisym)
-done
-
-context ordered_cancel_monoid_diff
 begin
 
   lemma le_iff_add: "a \<le> b \<longleftrightarrow> (\<exists> c. b = a + c)"
@@ -137,11 +128,11 @@ begin
 
   lemma add_le_imp_le_left: "c + a \<le> c + b \<Longrightarrow> a \<le> b"
     by (auto simp add: le_iff_add, metis add_assoc local.add_diff_cancel_left)
-
+      
   lemma add_diff_cancel_left' [simp]:  "(c + a) - (c + b) = a - b"
   proof (cases "b \<le> a")
     case True thus ?thesis
-      by (metis add_assoc local.add_diff_cancel_left local.le_iff_add local.monoid_le_def)
+      by (metis add_assoc local.add_diff_cancel_left local.le_iff_add)
   next
     case False thus ?thesis
       using local.add_le_imp_le_left not_le_minus by blast
@@ -153,7 +144,56 @@ begin
   lemma diff_add_cancel_left': "a \<le> b \<Longrightarrow> a + (b - a) = b"
     using local.le_iff_add local.monoid_le_def by auto
 
+  lemma add_left_strict_mono: "\<lbrakk> a + b < a + c \<rbrakk> \<Longrightarrow> b < c"
+    using local.add_le_imp_le_left local.add_left_mono local.less_iff by blast
+      
+  lemma sum_minus_left: "c \<le> a \<Longrightarrow> (a + b) - c = (a - c) + b"
+    by (metis add_assoc diff_add_cancel_left' local.add_monoid_diff_cancel_left local.minus_def)      
+      
+  lemma neq_zero_impl_greater:
+    "x \<noteq> 0 \<Longrightarrow> 0 < x"
+    using le_is_monoid_le less_iff monoid_le_antisym monoid_le_least_zero by auto
+ 
+  lemma minus_cancel_le:
+    "\<lbrakk> x \<le> y; y \<le> z \<rbrakk> \<Longrightarrow> y - x \<le> z - x"
+    using add_assoc le_iff_add by auto
+
+  text {* The set subtraces of a common trace $c$ is totally ordered *} 
+  lemma le_common_total: "\<lbrakk> a \<le> c; b \<le> c \<rbrakk> \<Longrightarrow> a \<le> b \<or> b \<le> a"
+    by (metis diff_add_cancel_left' le_add local.sum_eq_sum_conv)
+  
+  lemma le_sum_cases: "a \<le> b + c \<Longrightarrow> a \<le> b \<or> b \<le> a"
+    by (simp add: le_common_total)
+            
+  lemma le_sum_cases':
+    "a \<le> b + c \<Longrightarrow> a \<le> b \<or> b \<le> a \<and> a - b \<le> c"
+    by (auto, metis le_sum_cases, metis minus_def le_is_monoid_le add_monoid_diff_cancel_left monoid_le_def sum_eq_sum_conv)
+
+  lemma le_sum_iff: "a \<le> b + c \<longleftrightarrow> a \<le> b \<or> b \<le> a \<and> a - b \<le> c"
+    by (metis le_sum_cases' add_monoid_diff_cancel_left le_is_monoid_le minus_def monoid_le_add_left_mono monoid_le_def monoid_le_trans)
+    
+  lemma sum_minus_right: "c \<ge> a \<Longrightarrow> a + b - c = b - (c - a)"
+    by (metis diff_add_cancel_left' local.add_diff_cancel_left')
+
+  lemma minus_gr_zero_iff [simp]:
+    "0 < x - y \<longleftrightarrow> y < x"
+    by (metis diff_cancel le_is_monoid_le least_zero less_iff minus_zero_eq monoid_le_antisym not_le_minus)
+
+  lemma le_zero_iff [simp]: "x \<le> 0 \<longleftrightarrow> x = 0"
+    using local.le_iff_add local.zero_sum by auto
+            
+  lemma minus_assoc [simp]: "x - y - z = x - (y + z)"
+    by (metis local.add_diff_cancel_left' local.diff_add_cancel_left' local.le_add local.le_sum_iff 
+        local.not_le_minus local.zero_sum_right)
+      
 end
+
+instance trace \<subseteq> order
+  apply (intro_classes)
+  apply (simp_all add: less_iff le_is_monoid_le monoid_le_refl)
+  using monoid_le_trans apply blast
+  apply (simp add: monoid_le_antisym)
+done
 
 instantiation list :: (type) monoid_add
 begin
@@ -179,8 +219,9 @@ lemma monoid_subtract_list:
   apply (simp_all add: zero_list_def plus_list_def prefix_drop)
 done
 
-instance list :: (type) ordered_cancel_monoid_diff
+instance list :: (type) trace
   apply (intro_classes, simp_all add: zero_list_def plus_list_def monoid_le_def monoid_subtract_list)
+  apply (simp add: append_eq_append_conv2)
   using Prefix_Order.prefixE Prefix_Order.prefixI apply blast
   apply (simp add: less_list_def)
 done
@@ -193,9 +234,10 @@ lemma monoid_subtract_nat:
   "(x :: nat) -\<^sub>m y = x - y"
   by (auto simp add: monoid_subtract_def monoid_le_nat)
 
-instance nat :: ordered_cancel_monoid_diff
+instance nat :: trace
   apply (intro_classes, simp_all add: monoid_subtract_nat)
+  apply (metis Nat.diff_add_assoc Nat.diff_add_assoc2 add_diff_cancel_right' add_le_cancel_left add_le_cancel_right add_less_mono cancel_ab_semigroup_add_class.add_diff_cancel_left' less_irrefl not_le)
   apply (simp add: nat_le_iff_add monoid_le_def)
-  apply linarith
+  apply linarith+
 done
 end

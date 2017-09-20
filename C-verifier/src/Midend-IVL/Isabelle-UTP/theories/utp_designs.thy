@@ -62,19 +62,18 @@ lemma ok_des_bij_lens: "bij_lens (ok +\<^sub>L \<Sigma>\<^sub>D)"
   by (unfold_locales, simp_all add: ok_def des_vars_child_lens_def lens_plus_def prod.case_eq_if)
 
 text {* Define the lens functor for designs *}
-
+  
 definition lmap_des_vars :: "('\<alpha> \<Longrightarrow> '\<beta>) \<Rightarrow> ('\<alpha> des_vars_scheme \<Longrightarrow> '\<beta> des_vars_scheme)" ("lmap\<^sub>D")
-  where "lmap_des_vars f = \<lparr> lens_get = \<lambda> v. extend (truncate v) (get\<^bsub>f\<^esub> (more v))
-                           , lens_put = \<lambda> s v. extend (truncate v) (put\<^bsub>f\<^esub> (more s) (more v)) \<rparr>"
+where [lens_defs]: "lmap_des_vars = lmap[des_vars]"
 
 lemma lmap_des_vars: "vwb_lens f \<Longrightarrow> vwb_lens (lmap_des_vars f)"
-  by (unfold_locales, simp_all add: lmap_des_vars_def extend_def truncate_def)
+  by (unfold_locales, auto simp add: lens_defs des_vars.defs)
 
 lemma lmap_id: "lmap\<^sub>D 1\<^sub>L = 1\<^sub>L"
-  by (simp add: lmap_des_vars_def id_lens_def extend_def truncate_def fun_eq_iff)
+  by (simp add: lens_defs des_vars.defs fun_eq_iff)
 
 lemma lmap_comp: "lmap\<^sub>D (f ;\<^sub>L g) = lmap\<^sub>D f ;\<^sub>L lmap\<^sub>D g"
-  by (simp add: lmap_des_vars_def id_lens_def lens_comp_def extend_def truncate_def fun_eq_iff)
+  by (simp add: lens_defs des_vars.defs fun_eq_iff)
 
 text {* The following notations define liftings from non-design predicates into design
   predicates using alphabet extensions. *}
@@ -112,7 +111,7 @@ definition assigns_d :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel_des" ("\<
 where "assigns_d \<sigma> = (true \<turnstile>\<^sub>r assigns_r \<sigma>)"
 
 syntax
-  "_assignmentd" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr ":=\<^sub>D" 72)
+  "_assignmentd" :: "svids \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr ":=\<^sub>D" 72)
 
 translations
   "_assignmentd xs vs" => "CONST assigns_d (_mk_usubst (CONST id) xs vs)"
@@ -200,9 +199,8 @@ qed
 
 subsection {* Design laws *}
 
-lemma unrest_out_des_lift [unrest]:
-  "out\<alpha> \<sharp> p \<Longrightarrow> out\<alpha> \<sharp> \<lceil>p\<rceil>\<^sub>D"
-  by (rel_auto)
+lemma unrest_out_des_lift [unrest]: "out\<alpha> \<sharp> p \<Longrightarrow> out\<alpha> \<sharp> \<lceil>p\<rceil>\<^sub>D"
+  by (pred_simp)
 
 lemma lift_dist_seq [simp]:
   "\<lceil>P ;; Q\<rceil>\<^sub>D = (\<lceil>P\<rceil>\<^sub>D ;; \<lceil>Q\<rceil>\<^sub>D)"
@@ -231,6 +229,10 @@ lemma ndesign_false_pre:
   "(false \<turnstile>\<^sub>n P) = true"
   by (rel_auto)
 
+lemma ndesign_miracle:
+  "(true \<turnstile>\<^sub>n false) = \<top>\<^sub>D"
+  by (rel_auto)
+    
 theorem design_refinement:
   assumes
     "$ok \<sharp> P1" "$ok\<acute> \<sharp> P1" "$ok \<sharp> P2" "$ok\<acute> \<sharp> P2"
@@ -295,8 +297,8 @@ theorem design_npre:
 theorem design_pre:
   "\<not> (P \<turnstile> Q)\<^sup>f = ($ok \<and> P\<^sup>f)"
   by (simp add: design_def, subst_tac)
-     (metis (no_types, hide_lams) not_conj_deMorgans true_not_false(2) utp_pred.compl_top_eq
-            utp_pred.sup.idem utp_pred.sup_compl_top)
+     (metis (no_types, hide_lams) not_conj_deMorgans true_not_false(2) utp_pred_laws.compl_top_eq
+            utp_pred_laws.sup.idem utp_pred_laws.sup_compl_top)
 
 theorem design_post:
   "(P \<turnstile> Q)\<^sup>t = (($ok \<and> P\<^sup>t) \<Rightarrow> Q\<^sup>t)"
@@ -413,13 +415,13 @@ lemma runrest_ident_var:
   shows "($x \<and> P) = (P \<and> $x\<acute>)"
 proof -
   have "P = ($x\<acute> =\<^sub>u $x \<and> P)"
-    by (metis RID_def assms unrest_relation_def utp_pred.inf.cobounded2 utp_pred.inf_absorb2)
+    by (metis RID_def assms unrest_relation_def utp_pred_laws.inf.cobounded2 utp_pred_laws.inf_absorb2)
   moreover have "($x\<acute> =\<^sub>u $x \<and> ($x \<and> P)) = ($x\<acute> =\<^sub>u $x \<and> (P \<and> $x\<acute>))"
     by (rel_auto)
   ultimately show ?thesis
-    by (metis utp_pred.inf.assoc utp_pred.inf_left_commute)
+    by (metis utp_pred_laws.inf.assoc utp_pred_laws.inf_left_commute)
 qed
-
+  
 theorem design_composition_runrest:
   assumes
     "$ok\<acute> \<sharp> P1" "$ok \<sharp> P2" "ok \<sharp>\<sharp> Q1" "ok \<sharp>\<sharp> Q2"
@@ -432,9 +434,9 @@ proof -
     also have "... = ((Q1 \<and> $ok\<acute>) ;; ($ok \<and> Q2))"
       by (simp add: assms(3) assms(4) runrest_ident_var)
     also have "... = (Q1\<^sup>t ;; Q2\<lbrakk>true/$ok\<rbrakk>)"
-      by (metis ok_vwb_lens seqr_left_one_point seqr_right_one_point true_alt_def upred_eq_true utp_pred.inf.absorb_iff2 utp_pred.inf.cobounded1 utp_pred.inf.commute)
+      by (metis ok_vwb_lens seqr_pre_transfer seqr_right_one_point true_alt_def uovar_convr upred_eq_true utp_pred_laws.inf.left_idem unrest_ouvar vwb_lens_mwb)
     finally show ?thesis
-      by (metis utp_pred.inf.left_commute utp_pred.inf_left_idem)
+      by (metis utp_pred_laws.inf.left_commute utp_pred_laws.inf_left_idem)
   qed
   moreover have "(\<not> (\<not> P1 ;; true) \<and> \<not> (Q1\<^sup>t ;; (\<not> P2))) \<turnstile> (Q1\<^sup>t ;; Q2\<lbrakk>true/$ok\<rbrakk>) =
                  (\<not> (\<not> P1 ;; true) \<and> \<not> (Q1\<^sup>t ;; (\<not> P2))) \<turnstile> ($ok \<and> $ok\<acute> \<and> (Q1\<^sup>t ;; Q2\<lbrakk>true/$ok\<rbrakk>))"
@@ -482,6 +484,40 @@ theorem ndesign_composition_wp:
   "((p1 \<turnstile>\<^sub>n Q1) ;; (p2 \<turnstile>\<^sub>n Q2)) = ((p1 \<and> Q1 wp p2) \<turnstile>\<^sub>n (Q1 ;; Q2))"
   by (rel_blast)
 
+lemma wp_USUP_pre [wp]: "P wp (\<Squnion>i\<in>{0..n} \<bullet> Q(i)) = (\<Squnion>i\<in>{0..n} \<bullet> P wp Q(i))"
+  by (rel_auto)
+
+lemma UINF_where_false [simp]: "(\<Squnion> i | false \<bullet> P(i)) = true"
+  by (pred_auto)
+    
+theorem ndesign_iteration_wp:
+  "(p \<turnstile>\<^sub>n Q) ;; (p \<turnstile>\<^sub>n Q) \<^bold>^ n = ((\<And> i\<in>{0..n} \<bullet> (Q \<^bold>^ i) wp p) \<turnstile>\<^sub>n (Q \<^bold>^ Suc n))"
+proof (induct n)
+  case 0
+  then show ?case by (simp add: wp true_upred_def)
+next
+  case (Suc n) note hyp = this
+  have "(p \<turnstile>\<^sub>n Q) ;; (p \<turnstile>\<^sub>n Q) \<^bold>^ Suc n = (p \<turnstile>\<^sub>n Q) ;; (p \<turnstile>\<^sub>n Q) ;; (p \<turnstile>\<^sub>n Q) \<^bold>^ n"
+    by (simp)
+  also have "... = (p \<turnstile>\<^sub>n Q) ;; ((\<Squnion> i \<in> {0..n} \<bullet> Q \<^bold>^ i wp p) \<turnstile>\<^sub>n (Q \<^bold>^ Suc n))"
+    by (simp add: hyp)
+  also have "... = (p \<and> Q wp (\<Squnion> i \<in> {0..n} \<bullet> Q \<^bold>^ i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (simp add: ndesign_composition_wp seqr_assoc)
+  also have "... = (p \<and> (\<Squnion> i \<in> {0..n} \<bullet> Q \<^bold>^ Suc i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (simp add: wp)
+  also have "... = (p \<and> (\<Squnion> i \<in> {0..n}. Q \<^bold>^ Suc i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (simp add: USUP_as_Inf_image)
+  also have "... = (p \<and> (\<Squnion> i \<in> {1..Suc n}. Q \<^bold>^ i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (metis (no_types, lifting) One_nat_def image_Suc_atLeastAtMost image_cong image_image)  
+  also have "... = (Q \<^bold>^ 0 wp p \<and> (\<Squnion> i \<in> {1..Suc n}. Q \<^bold>^ i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (simp add: wp)
+  also have "... = ((\<Squnion> i \<in> {0..Suc n}. Q \<^bold>^ i wp p)) \<turnstile>\<^sub>n (Q ;; Q) ;; Q \<^bold>^ n"
+    by (simp add: Iic_Suc_eq_insert_0 atLeast0AtMost conj_upred_def image_Suc_atMost)      
+  also have "... = (\<Squnion> i \<in> {0..Suc n} \<bullet> Q \<^bold>^ i wp p) \<turnstile>\<^sub>n Q \<^bold>^ Suc (Suc n)"
+    by (simp add: USUP_as_Inf_image upred_semiring.mult_assoc)
+  finally show ?case .
+qed
+    
 theorem rdesign_wp [wp]:
   "(\<lceil>p\<rceil>\<^sub>< \<turnstile>\<^sub>r Q) wp\<^sub>D r = (p \<and> Q wp r)"
   by (rel_auto)
@@ -514,7 +550,7 @@ proof -
   have "(P \<turnstile> Q) = (($ok \<and> P) \<turnstile> ($ok \<and> $ok\<acute> \<and> Q))"
     by (pred_auto)
   also have "... = (($ok \<and> P\<lbrakk>true/$ok\<rbrakk>) \<turnstile> ($ok \<and> ($ok\<acute> \<and> Q\<lbrakk>true/$ok\<acute>\<rbrakk>)\<lbrakk>true/$ok\<rbrakk>))"
-    by (metis conj_eq_out_var_subst conj_pos_var_subst upred_eq_true utp_pred.inf_commute ok_vwb_lens)
+    by (metis conj_eq_out_var_subst conj_pos_var_subst upred_eq_true utp_pred_laws.inf_commute ok_vwb_lens)
   also have "... = (($ok \<and> P\<lbrakk>true/$ok\<rbrakk>) \<turnstile> ($ok \<and> $ok\<acute> \<and> Q\<lbrakk>true,true/$ok,$ok\<acute>\<rbrakk>))"
     by (simp add: usubst)
   also have "... = (P\<lbrakk>true/$ok\<rbrakk> \<turnstile> Q\<lbrakk>true,true/$ok,$ok\<acute>\<rbrakk>)"
@@ -528,7 +564,7 @@ proof -
   have "(P \<turnstile> Q) = (P \<turnstile> ($ok\<acute> \<and> Q))"
     by (pred_auto)
   also have "... = (P \<turnstile> ($ok\<acute> \<and> Q\<lbrakk>true/$ok\<acute>\<rbrakk>))"
-    by (metis conj_eq_out_var_subst upred_eq_true utp_pred.inf_commute ok_vwb_lens)
+    by (metis conj_eq_out_var_subst upred_eq_true utp_pred_laws.inf_commute ok_vwb_lens)
   also have "... = (P \<turnstile> Q\<lbrakk>true/$ok\<acute>\<rbrakk>)"
     by (pred_auto)
   finally show ?thesis ..
@@ -748,7 +784,7 @@ proof -
   from assms(2) have "H1 ` A = A"
     by (auto simp add: Healthy_def rev_image_eqI)
   with H1_USUP[of A id, OF assms(1)] show ?thesis
-    by (simp add: USUP_as_Sup_image Healthy_def, presburger)
+    by (simp add: UINF_as_Sup_image Healthy_def, presburger)
 qed
 
 lemma H1_UINF:
@@ -762,7 +798,7 @@ proof -
   from assms have "H1 ` A = A"
     by (auto simp add: Healthy_def rev_image_eqI)
   with H1_UINF[of A id] show ?thesis
-    by (simp add: UINF_as_Inf_image Healthy_def, presburger)
+    by (simp add: USUP_as_Inf_image Healthy_def, presburger)
 qed
 
 subsection {* H2: A specification cannot require non-termination *}
@@ -974,7 +1010,7 @@ lemma H1_H2_Idempotent [closure]: "Idempotent \<^bold>H"
   by (simp add: Idempotent_def H1_H2_idempotent)
 
 lemma H1_H2_monotonic [closure]: "Monotonic \<^bold>H"
-  by rel_auto blast+
+  by (simp add: H1_monotone H2_def mono_def seqr_mono)
 
 lemma H1_H2_Continuous [closure]: "Continuous \<^bold>H"
   by (simp add: Continuous_comp H1_Continuous H1_H2_comp H2_Continuous)
@@ -1027,7 +1063,7 @@ proof -
   from assms have A: "A = H1_H2 ` A"
     by (auto simp add: Healthy_def rev_image_eqI)
   also have "(\<Sqinter> ...) = (\<Sqinter> P \<in> A \<bullet> H1_H2(P))"
-    by (simp add: USUP_as_Sup_collect)
+    by (simp add: UINF_as_Sup_collect)
   also have "... = (\<Sqinter> P \<in> A \<bullet> (\<not> P\<^sup>f) \<turnstile> P\<^sup>t)"
     by (meson H1_H2_eq_design)
   also have "... = (\<Squnion> P \<in> A \<bullet> \<not> P\<^sup>f) \<turnstile> (\<Sqinter> P \<in> A \<bullet> P\<^sup>t)"
@@ -1061,7 +1097,7 @@ proof -
   from assms have A: "A = \<^bold>H ` A"
     by (auto simp add: Healthy_def rev_image_eqI)
   also have "(\<Squnion> ...) = (\<Squnion> P \<in> A \<bullet> \<^bold>H(P))"
-    by (simp add: UINF_as_Inf_collect)
+    by (simp add: USUP_as_Inf_collect)
   also have "... = (\<Squnion> P \<in> A \<bullet> (\<not> P\<^sup>f) \<turnstile> P\<^sup>t)"
     by (meson H1_H2_eq_design)
   also have "... = (\<Sqinter> P \<in> A \<bullet> \<not> P\<^sup>f) \<turnstile> (\<Squnion> P \<in> A \<bullet> \<not> P\<^sup>f \<Rightarrow> P\<^sup>t)"
@@ -1098,7 +1134,7 @@ theorem H3_mono:
 
 theorem H3_Monotonic:
   "Monotonic H3"
-  by (rel_blast)
+  by (simp add: H3_mono mono_def)
 
 theorem H3_Continuous: "Continuous H3"
   by (rel_auto)
@@ -1232,7 +1268,7 @@ lemma H1_H3_Idempotent: "Idempotent \<^bold>N"
   by (simp add: Idempotent_def H1_H3_idempotent)
 
 lemma H1_H3_monotonic: "Monotonic \<^bold>N"
-  by rel_blast
+  by (simp add: H1_monotone H3_mono mono_def)
 
 lemma H1_H3_Continuous: "Continuous \<^bold>N"
   by (simp add: Continuous_comp H1_Continuous H1_H3_comp H3_Continuous)
@@ -1281,6 +1317,28 @@ lemma seq_r_H1_H3_closed [closure]:
   shows "(P ;; Q) is \<^bold>N"
   by (metis (no_types) H1_H2_eq_design H1_H3_eq_design_d_comp H1_H3_impl_H2 Healthy_def assms(1) assms(2) seq_r_H1_H2_closed seqr_assoc)
 
+lemma ndes_seqr_miracle:
+  assumes "P is \<^bold>N"
+  shows "(P ;; \<top>\<^sub>D) = \<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n false"
+proof -
+  have "(P ;; \<top>\<^sub>D) = ((\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D(P)) ;; (true \<turnstile>\<^sub>n false))"
+    by (simp add: assms ndesign_form ndesign_miracle)
+  also have "... = \<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n false"
+    by (simp add:  ndesign_composition_wp wp alpha)
+  finally show ?thesis .
+qed
+    
+lemma ndes_seqr_abort: 
+  assumes "P is \<^bold>N"
+  shows "P ;; \<bottom>\<^sub>D = (\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<and> post\<^sub>D P wp false) \<turnstile>\<^sub>n false"
+proof -
+  have "P ;; \<bottom>\<^sub>D = (\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D(P)) ;; (false \<turnstile>\<^sub>n false)"
+    by (simp add: assms ndesign_false_pre ndesign_form)
+  also have "... = (\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<and> post\<^sub>D P wp false) \<turnstile>\<^sub>n false"
+    by (simp add: ndesign_composition_wp alpha)
+  finally show ?thesis .
+qed
+      
 lemma wp_assigns_d [wp]: "\<langle>\<sigma>\<rangle>\<^sub>D wp\<^sub>D r = \<sigma> \<dagger> r"
   by (rel_auto)
 
@@ -1293,9 +1351,9 @@ theorem wpd_seq_r_H1_H3 [wp]:
 text {* If two normal designs have the same weakest precondition for any given postcondition, then
   the two designs are equivalent. *}
 
-theorem wpd_eq_intro: "\<lbrakk> \<And> r. (p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) wp\<^sub>D r = (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) wp\<^sub>D r \<rbrakk> \<Longrightarrow> (p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) = (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2)"
-apply (rel_simp robust; metis curry_conv)
-done
+theorem wpd_eq_intro: 
+  "\<lbrakk> \<And> r. (p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) wp\<^sub>D r = (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) wp\<^sub>D r \<rbrakk> \<Longrightarrow> (p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) = (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2)"
+  by (rel_simp robust; metis curry_conv)
 
 theorem wpd_H3_eq_intro: "\<lbrakk> P is H1_H3; Q is H1_H3; \<And> r. P wp\<^sub>D r = Q wp\<^sub>D r \<rbrakk> \<Longrightarrow> P = Q"
   by (metis H1_H3_commute H1_H3_is_normal_design H3_idem Healthy_def' wpd_eq_intro)
@@ -1380,11 +1438,12 @@ interpretation design_theory_continuous: utp_theory_continuous DES
   and "eq (uthy_order DES) = op ="
   by (unfold_locales, simp_all add: des_hcond_def H1_H2_Continuous utp_order_def)
 
-interpretation normal_design_theory_mono: utp_theory_continuous NDES
+interpretation normal_design_theory_continuous: utp_theory_continuous NDES
   rewrites "\<And> P. P \<in> carrier (uthy_order NDES) \<longleftrightarrow> P is \<^bold>N"
   and "carrier (uthy_order NDES) \<rightarrow> carrier (uthy_order NDES) \<equiv> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
   and "le (uthy_order NDES) = op \<sqsubseteq>"
-  and "eq (uthy_order NDES) = op ="
+  and "A \<subseteq> carrier (uthy_order NDES) \<longleftrightarrow> A \<subseteq> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
+  and "eq (uthy_order NDES) = op ="  
   by (unfold_locales, simp_all add: ndes_hcond_def H1_H3_Continuous utp_order_def)
 
 thm design_theory_continuous.healthy_top
@@ -1395,6 +1454,12 @@ lemma design_lat_top: "\<^bold>\<top>\<^bsub>DES\<^esub> = \<^bold>H(false)"
 lemma design_lat_bottom: "\<^bold>\<bottom>\<^bsub>DES\<^esub> = \<^bold>H(true)"
   by (simp add: design_theory_continuous.healthy_bottom, simp add: des_hcond_def)
 
+lemma ndesign_lat_top: "\<^bold>\<top>\<^bsub>NDES\<^esub> = \<^bold>N(false)"
+  by (metis ndes_hcond_def normal_design_theory_continuous.healthy_top)
+
+lemma ndesign_lat_bottom: "\<^bold>\<bottom>\<^bsub>NDES\<^esub> = \<^bold>N(true)"
+  by (metis ndes_hcond_def normal_design_theory_continuous.healthy_bottom)
+    
 abbreviation design_lfp :: "('\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des) \<Rightarrow> '\<alpha> hrel_des" ("\<mu>\<^sub>D") where
 "\<mu>\<^sub>D F \<equiv> \<^bold>\<mu>\<^bsub>DES\<^esub> F"
 
@@ -1459,12 +1524,12 @@ text {* Weakest precondition laws for design variable scopes *}
 lemma wpd_var_begin [wp]:
   fixes x :: "'a list \<Longrightarrow> '\<alpha>" and r :: "'\<alpha> upred"
   shows "(var_begin NDES x) wp\<^sub>D r = r\<lbrakk>\<langle>\<guillemotleft>undefined\<guillemotright>\<rangle> ^\<^sub>u &x/x\<rbrakk>"
-  by (simp add: var_begin_def ndes_assigns_def wp)
+  by (simp add: var_begin_def ndes_assigns_def wp usubst)
 
 lemma wpd_var_end [wp]:
   fixes x :: "'a list \<Longrightarrow> '\<alpha>" and r :: "'\<alpha> upred"
   shows "(var_end NDES x) wp\<^sub>D r = r\<lbrakk>tail\<^sub>u(&x)/x\<rbrakk>"
-  by (simp add: var_end_def ndes_assigns_def wp)
+  by (simp add: var_end_def ndes_assigns_def wp usubst)
 
 text {* Example Galois connection between designs and relations. Based on Jim's example in COMPASS
         deliverable D23.5. *}
@@ -1569,8 +1634,8 @@ begin
   lemma mono_design_iter: "mono (\<lambda>X. pre\<^sub>D (F X) \<turnstile>\<^sub>r post\<^sub>D (F X))"
     apply (rule monoI)
     apply (rule rdesign_refine_intro')
-    apply (metis design_pre_choice mono_F mono_def semilattice_sup_class.le_iff_sup utp_pred.inf.absorb_iff2)
-    apply (metis (no_types, lifting) design_post_choice mono_F semilattice_inf_class.inf.absorb2 semilattice_inf_class.inf.orderE semilattice_sup_class.mono_sup semilattice_sup_class.sup.orderE semilattice_sup_class.sup_ge1 utp_pred.le_infI2 utp_pred.sup.order_iff)
+    apply (metis design_pre_choice mono_F mono_def semilattice_sup_class.le_iff_sup utp_pred_laws.inf.absorb_iff2)
+    apply (metis (no_types, lifting) design_post_choice mono_F semilattice_inf_class.inf.absorb2 semilattice_inf_class.inf.orderE semilattice_sup_class.mono_sup semilattice_sup_class.sup.orderE semilattice_sup_class.sup_ge1 utp_pred_laws.le_infI2 utp_pred_laws.sup.order_iff)
   done
 
   lemma mu_design_iter:
