@@ -66,7 +66,8 @@ lemma cond_assert_last_abr_hoare_r_t:
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
    apply (rule assert_hoare_r_t')
   using impl_disjI apply blast
-  by (metis conj_comm refBy_order utp_pred_laws.le_infI1)
+  apply (metis conj_comm refBy_order utp_pred_laws.le_infI1)
+ done   
 
 lemma while_invr_hoare_r_t':
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close> and \<open>`p' \<Rightarrow> p`\<close>

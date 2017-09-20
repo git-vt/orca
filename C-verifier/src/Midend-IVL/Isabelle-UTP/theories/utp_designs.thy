@@ -93,6 +93,16 @@ where "\<lfloor>P\<rfloor>\<^sub>D \<equiv> P \<restriction>\<^sub>p (\<Sigma>\<
 definition design::"('\<alpha>, '\<beta>) rel_des \<Rightarrow> ('\<alpha>, '\<beta>) rel_des \<Rightarrow> ('\<alpha>, '\<beta>) rel_des" (infixl "\<turnstile>" 60)
 where "P \<turnstile> Q = ($ok \<and> P \<Rightarrow> $ok\<acute> \<and> Q)"
 
+lemma "Rep_uexpr(P \<Rightarrow> Q) (s, s1) = (Rep_uexpr P (s, s1) \<longrightarrow> Rep_uexpr Q (s, s1))"
+  by rel_auto
+    
+lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e(s, s1) = get\<^bsub>ok\<^esub>(get \<^bsub>fst\<^sub>L\<^esub> (s,s1))"
+  by rel_auto
+
+lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e(s, s1) = get\<^bsub>ok\<^esub>(s)"
+  by rel_auto
+
+
 text {* An rdesign is a design that uses the Isabelle type system to prevent reference to ok in the
         assumption and commitment. *}
 
@@ -489,6 +499,12 @@ lemma wp_USUP_pre [wp]: "P wp (\<Squnion>i\<in>{0..n} \<bullet> Q(i)) = (\<Squni
 
 lemma UINF_where_false [simp]: "(\<Squnion> i | false \<bullet> P(i)) = true"
   by (pred_auto)
+    
+lemma "false \<squnion> s = false" by pred_simp   
+    (* top, miracle *)
+lemma "true \<sqinter> s = true" by pred_simp
+    (* bot, abort *)
+
     
 theorem ndesign_iteration_wp:
   "(p \<turnstile>\<^sub>n Q) ;; (p \<turnstile>\<^sub>n Q) \<^bold>^ n = ((\<And> i\<in>{0..n} \<bullet> (Q \<^bold>^ i) wp p) \<turnstile>\<^sub>n (Q \<^bold>^ Suc n))"
@@ -1605,6 +1621,17 @@ proof -
     by (rel_auto, metis (no_types, lifting))
 qed
 
+term "f \<dagger>C"
+term ""  
+lemma rec_intro:
+  fixes R :: "('a \<times> 'a)set" and f::"'s \<Rightarrow>'a"
+  assumes "wf R"  
+  assumes "$ok\<acute> \<sharp> Pre" "$ok\<acute> \<sharp> M"  
+  assumes "\<And>a. (Pre \<turnstile> M) \<sqsubseteq> body(Pre \<turnstile> M)" 
+  (*assumes "`C \<Rightarrow> (\<mu>\<^sub>D F \<Leftrightarrow> \<nu>\<^sub>D F)`"*)
+  shows "(Pre \<turnstile> M) \<sqsubseteq> \<mu>\<^sub>D body"
+  oops
+  
 lemma rdesign_mu_refine_intro:
   assumes "(C \<turnstile>\<^sub>r S) \<sqsubseteq> F(C \<turnstile>\<^sub>r S)" "`\<lceil>C\<rceil>\<^sub>D \<Rightarrow> (\<mu>\<^sub>D F \<Leftrightarrow> \<nu>\<^sub>D F)`"
   shows "(C \<turnstile>\<^sub>r S) \<sqsubseteq> \<mu>\<^sub>D F"
