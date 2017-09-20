@@ -29,7 +29,7 @@ lemma increment_semimanual:
     apply (rule assigns_abr_floyd_r_t)
     apply solve_vcg
    apply solve_vcg
-   apply pred_simp(*  what is going wrong with "apply solve_vcg"*)
+  apply solve_vcg
   done
 
 lemma increment_method:
@@ -41,8 +41,7 @@ lemma increment_method:
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> (&x + 1) od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-  by (insert assms) (exp_vcg, pred_simp) (*something is going wrong wrt last version,
-                                           exp_vcg was enough to discharge this*)
+  by (insert assms) exp_vcg
 
 subsection \<open>Even count\<close>
 
@@ -69,7 +68,7 @@ lemma even_count_method:
    apply (elim disjE conjE) (* auto seems to go faster with this *)
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
-  apply pred_simp (*again "  apply solve_vcg" was working fine before*)
+   apply solve_vcg
   done
 
 subsection Sorting
@@ -130,7 +129,7 @@ lemma outer_invr_init[vcg_simps]:
   unfolding outer_invr'_def
   using assms
   by (metis One_nat_def sorted_single sorted_take take_0 take_Suc zero_less_one)
-text \<open>USIMPL: an extension of Isabelle/UTP by Isabelle/SIMPL\<close>
+
 definition \<open>inner_invr' i j n array old_array \<equiv>
   i < length array
 \<and> i > 0
@@ -139,8 +138,6 @@ definition \<open>inner_invr' i j n array old_array \<equiv>
 \<and> mset array = mset old_array
 \<and> (let xs\<^sub>1 = take j array; x = array!j; xs\<^sub>2 = drop (Suc j) (take (Suc i) array) in
   sorted (xs\<^sub>1 @ xs\<^sub>2) \<and> (\<forall>y \<in> set xs\<^sub>2. x < y))
-(* everything below j is sorted; item at j must be swapped down *)
-(* \<and> sorted (drop (j + 1) (take i array)) (* everything from j+1 to i is sorted *) *)
 \<close>
 abbreviation \<open>inner_invr \<equiv> qiop inner_invr'\<close>
 
@@ -209,7 +206,7 @@ next
       by (smt "2"(3) "2"(4) "2"(8) One_nat_def \<open>x \<in> set (drop j (take (Suc i) (swap_at' j array)))\<close> assms(3) diff_le_self le_less_trans length_list_update nth_list_update_eq set_ConsD swap_at'_def xs\<^sub>2_def y y_concat_xs\<^sub>2)
   }
 qed
-  
+
 lemma disjE1:
   assumes \<open>P \<or> Q\<close>
     and \<open>P \<Longrightarrow> R\<close>
@@ -240,7 +237,7 @@ lemma outer_invr_step[vcg_simps]:
   using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
     id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
   apply (auto simp: min_def)
-done    
+done
 
 lemma outer_invr_final[vcg_dests]:
   assumes \<open>outer_invr' i n array old_array\<close>
@@ -250,7 +247,7 @@ lemma outer_invr_final[vcg_dests]:
       and \<open>mset array = mset old_array\<close>
   using assms unfolding outer_invr'_def
   by auto
-   
+
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
       and \<open>lens_indep_all [array, old_array]\<close>

@@ -24,8 +24,9 @@ lemma assert_hoare_r_t':
   assumes \<open>`p \<Rightarrow> c`\<close>
   shows \<open>\<lbrace>p\<rbrace>c\<^sub>\<bottom>\<^sub>C\<lbrace>p \<and> c\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   using assms
-   by rel_auto
- 
+  by (metis assert_hoare_r_t conj_comm hoare_false_t refBy_order skip_abr_hoare_r_t
+utp_pred_laws.inf.orderE utp_pred_laws.inf_compl_bot_left1)
+
 lemma assume_hoare_r_t': 
   shows \<open>\<lbrace>p\<rbrace>c\<^sup>\<top>\<^sup>C\<lbrace>p \<and> c\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by rel_simp
@@ -46,9 +47,9 @@ lemma cond_assert_abr_hoare_r_t:
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
     apply (rule assert_hoare_r_t')
-    apply (metis impl_alt_def subsumption1 utp_pred_laws.double_compl utp_pred_laws.sup_assoc utp_pred_laws.sup_compl_top_left2)
+  using impl_disjI apply blast
    apply (rule hoare_pre_str_t[where p\<^sub>2 = A])
-    apply (simp add: impl_alt_def utp_pred_laws.sup_commute)
+    apply (simp add: disj_comm impl_alt_def)
    apply assumption
   apply simp
   done
@@ -64,10 +65,8 @@ lemma cond_assert_last_abr_hoare_r_t:
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
    apply (rule assert_hoare_r_t')
-   apply (metis impl_alt_def subsumption1 utp_pred_laws.double_compl utp_pred_laws.sup_assoc utp_pred_laws.sup_compl_top_left2)
-  apply (meson impl.rep_eq taut.rep_eq upred_ref_iff utp_pred_laws.inf.cobounded2)
- done   
-(* or by (metis conj_disj_abs refBy_order subsumption1 utp_pred.inf_le2 utp_pred.sup_assoc) *)
+  using impl_disjI apply blast
+  by (metis conj_comm refBy_order utp_pred_laws.le_infI1)
 
 lemma while_invr_hoare_r_t':
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close> and \<open>`p' \<Rightarrow> p`\<close>
@@ -95,7 +94,7 @@ named_theorems hoare_rules_extra and vcg_dests
 
 method exp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak_t
 method solve_dests = safe?; simp?; drule vcg_dests; assumption?; (simp add: vcg_simps)?
-method solve_vcg = assumption|pred_simp?, ((simp add: vcg_simps)?;(solve_dests; fail)?)
+method solve_vcg = assumption|pred_simp?, ((simp add: vcg_simps)?;(solve_dests; fail)?)?
 method exp_vcg_step = rule hoare_rules_extra|rule hoare_rules|solve_vcg; fail
 method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
