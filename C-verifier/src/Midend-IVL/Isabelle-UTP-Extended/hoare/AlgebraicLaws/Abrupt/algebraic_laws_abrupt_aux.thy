@@ -153,7 +153,7 @@ lemma simpl_abr_throw_abr_comp_abrupt_cond_skip_abr[uabr_simpl]:
 done
 
 lemma simpl_abr_throw_abr_comp_abrupt_cond_assigns_abr[uabr_simpl]:
-  "Simpl\<^sub>A\<^sub>B\<^sub>R (THROW\<^sub>A\<^sub>B\<^sub>R;; ((abrupt :== (\<not> &abrupt);; \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II)) = \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R"
+  "Simpl\<^sub>A\<^sub>B\<^sub>R (THROW\<^sub>A\<^sub>B\<^sub>R;; (abrupt :== (\<not> &abrupt);; \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R \<triangleleft> $abrupt \<triangleright> II)) = \<langle>\<sigma>\<rangle>\<^sub>A\<^sub>B\<^sub>R"
    apply pred_simp
    apply rel_simp
    apply auto

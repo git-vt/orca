@@ -14,10 +14,10 @@ lemma increment_semimanual:
   assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
   \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-  (x \<Midarrow> 0;;
+  x \<Midarrow> 0;;
   while &x <\<^sub>u &y
   invr (&x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5)
-  do x \<Midarrow> (&x + 1) od)
+  do x \<Midarrow> (&x + 1) od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply (rule hoare_post_weak_t)
@@ -29,7 +29,7 @@ lemma increment_semimanual:
     apply (rule assigns_abr_floyd_r_t)
     apply solve_vcg
    apply solve_vcg
-   apply pred_simp (*  what is going wrong with "apply solve_vcg"*)
+   apply pred_simp(*  what is going wrong with "apply solve_vcg"*)
   done
 
 lemma increment_method:
