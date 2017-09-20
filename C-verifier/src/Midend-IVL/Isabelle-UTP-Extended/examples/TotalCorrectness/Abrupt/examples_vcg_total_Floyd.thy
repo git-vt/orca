@@ -7,17 +7,17 @@ imports
 begin
 
 recall_syntax \<comment> \<open>Fixes notation issue with inclusion of HOL libraries.\<close>
-
+ (*TODO @Yakoub: Fix the F** of the priorities of the syntax*)
 subsection Increment
 
 lemma increment_semimanual:
   assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
   \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
-  x \<Midarrow> 0;;
+  (x \<Midarrow> 0;;
   while &x <\<^sub>u &y
-  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-  do x \<Midarrow> &x + 1 od
+  invr (&x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5)
+  do x \<Midarrow> (&x + 1) od)
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply (rule hoare_post_weak_t)
@@ -29,7 +29,7 @@ lemma increment_semimanual:
     apply (rule assigns_abr_floyd_r_t)
     apply solve_vcg
    apply solve_vcg
-  apply solve_vcg
+   apply pred_simp (*  what is going wrong with "apply solve_vcg"*)
   done
 
 lemma increment_method:
@@ -39,9 +39,10 @@ lemma increment_method:
   x \<Midarrow> 0;;
   while &x <\<^sub>u &y
   invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
-  do x \<Midarrow> &x + 1 od
+  do x \<Midarrow> (&x + 1) od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-  by (insert assms) exp_vcg
+  by (insert assms) (exp_vcg, pred_simp) (*something is going wrong wrt last version,
+                                           exp_vcg was enough to discharge this*)
 
 subsection \<open>Even count\<close>
 
@@ -55,11 +56,11 @@ lemma even_count_method:
     invr &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
     do
       bif &i mod 2 =\<^sub>u 0 then
-        j \<Midarrow> &j + 1
+        j \<Midarrow> (&j + 1)
       else
         SKIP\<^sub>A\<^sub>B\<^sub>R
       eif;;
-      i \<Midarrow> &i + 1
+      i \<Midarrow> (&i + 1)
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
@@ -68,7 +69,7 @@ lemma even_count_method:
    apply (elim disjE conjE) (* auto seems to go faster with this *)
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
-  apply solve_vcg
+  apply pred_simp (*again "  apply solve_vcg" was working fine before*)
   done
 
 subsection Sorting
@@ -185,7 +186,8 @@ next
     apply (subst butlast_take[symmetric,simplified])
     using 2 apply simp
     apply (fold xs\<^sub>1_def)
-    by (simp add: xs_last)
+    apply (simp add: xs_last)
+  done
   have y: \<open>y = array ! (j - Suc 0)\<close>
     by (metis (no_types, lifting) "2"(3) "2"(4) Cons_nth_drop_Suc One_nat_def Suc_pred assms(2) diff_le_self le_less_trans list.sel(1) nth_append_length take_hd_drop xs\<^sub>1_def xs_butlast xs_last)
   have xs\<^sub>1'_is_a_taker: \<open>xs\<^sub>1' = take (j - Suc 0) (swap_at' j array)\<close>
@@ -194,10 +196,12 @@ next
     using \<open>j > 0\<close> apply (auto simp: swap_at'_def drop_take list_update_swap)
     apply (fold y)
     using \<open>j \<le> i\<close> apply (simp add: take_drop)
-    by (metis "2"(3) Cons_nth_drop_Suc Suc_leI drop_update_cancel le_imp_less_Suc length_list_update length_take lessI min.absorb2 nth_list_update_eq take_update_swap xs\<^sub>2_def)
+    apply (metis "2"(3) Cons_nth_drop_Suc Suc_leI drop_update_cancel le_imp_less_Suc length_list_update length_take lessI min.absorb2 nth_list_update_eq take_update_swap xs\<^sub>2_def)
+  done
   from 2 show \<open>sorted (take (j - Suc 0) (swap_at' j array) @ drop j (take (Suc i) (swap_at' j array)))\<close>
     apply (fold xs\<^sub>1_def xs\<^sub>2_def xs_butlast xs\<^sub>1'_is_a_taker y_concat_xs\<^sub>2)
-    by (simp add: xs_last)
+    apply (simp add: xs_last)
+  done   
   {
     fix x
     assume \<open>x \<in> set (drop j (take (Suc i) (swap_at' j array)))\<close>
@@ -235,7 +239,8 @@ lemma outer_invr_step[vcg_simps]:
    apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3) min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
   using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
     id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
-  by (auto simp: min_def)
+  apply (auto simp: min_def)
+done    
 
 lemma outer_invr_final[vcg_dests]:
   assumes \<open>outer_invr' i n array old_array\<close>
@@ -245,7 +250,7 @@ lemma outer_invr_final[vcg_dests]:
       and \<open>mset array = mset old_array\<close>
   using assms unfolding outer_invr'_def
   by auto
-
+   
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
       and \<open>lens_indep_all [array, old_array]\<close>
@@ -257,20 +262,21 @@ lemma insertion_sort:
   \<open>\<lbrace>#\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
   i \<Midarrow> 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr &i \<guillemotleft>n\<guillemotright> &array &old_array do
+  invr outer_invr (&i) \<guillemotleft>n\<guillemotright> (&array) (&old_array) do
     j \<Midarrow> &i;;
-    while &j >\<^sub>u 0 \<and> &array\<lparr>&j - 1\<rparr>\<^sub>u >\<^sub>u &array\<lparr>&j\<rparr>\<^sub>u
-    invr inner_invr &i &j \<guillemotleft>n\<guillemotright> &array &old_array do
-      array \<Midarrow> swap_at &j &array;;
-      j \<Midarrow> &j - 1
+    while (&j) >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
+    invr inner_invr (&i) (&j) \<guillemotleft>n\<guillemotright> (&array) (&old_array) do
+      array \<Midarrow> (swap_at (&j) (&array));;
+      j \<Midarrow> (&j - 1)
     od;;
-    i \<Midarrow> &i + 1
+    i \<Midarrow> (&i + 1)
   od
   \<lbrace>#\<^sub>u(&array) =\<^sub>u \<guillemotleft>n\<guillemotright> \<and> sorted\<^sub>u(&array) \<and> mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms) exp_vcg
 
 subsubsection \<open>Other insertion sort try (not working)\<close>
 
+ (*TODO @Josh: CLEANUP! ! !*)
 definition \<open>outer_invr' i n array old_array \<equiv>
   i > 0 \<and> length array = n \<and> mset array = mset old_array \<and> sorted (take (i - 1) array)\<close>
 abbreviation \<open>outer_invr \<equiv> qtop outer_invr'\<close>
