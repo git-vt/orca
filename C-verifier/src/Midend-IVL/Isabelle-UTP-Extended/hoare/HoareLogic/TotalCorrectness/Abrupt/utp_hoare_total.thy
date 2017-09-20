@@ -96,6 +96,11 @@ lemma cond_abr_hoare_r_t [hoare_total]:
   shows "\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif \<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   by (insert assms, rel_auto) metis+ 
 
+lemma cond_abr_hoare_r'_t [hoare_total]: 
+  assumes "\<lbrace>p\<rbrace>\<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<and> C\<^sub>1\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R" and "\<lbrace>p\<rbrace>\<lceil>\<not>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<and> C\<^sub>2\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R" 
+  shows "\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif \<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  by (insert assms, rel_auto) 
+    
 subsection {*Hoare for assert*}
 
 lemma assert_hoare_r_t [hoare_total]: 

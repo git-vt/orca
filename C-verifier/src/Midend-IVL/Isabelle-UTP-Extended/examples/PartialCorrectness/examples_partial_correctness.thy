@@ -82,6 +82,7 @@ lemma swap_test_method:
   x :== &y;;
   y :== &z
   \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+    
   using assms
   by vcg
 

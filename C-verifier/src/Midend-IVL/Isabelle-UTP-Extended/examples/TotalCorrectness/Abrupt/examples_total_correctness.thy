@@ -78,7 +78,7 @@ lemma swap_test:
 done
 
 subsection {*Even count program*}
-
+term "j \<Midarrow> ((&j) + 1)"
 lemma even_count_total:
   "\<lbrace>&a =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &n =\<^sub>u 1 \<and>
     \<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens a\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>weak_lens n\<guillemotright> \<and>
@@ -95,11 +95,11 @@ lemma even_count_total:
          &j =\<^sub>u (((&i + 1) - &a) div 2) \<and> &i \<le>\<^sub>u &n \<and>  &i \<ge>\<^sub>u &a
     do
       bif &i mod 2 =\<^sub>u 0
-        then j \<Midarrow> &j + 1
+        then j \<Midarrow> ((&j) + 1)
       else
         SKIP\<^sub>A\<^sub>B\<^sub>R
       eif;;
-      i \<Midarrow> &i + 1
+      i \<Midarrow> (&i + 1)
     od
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   apply (rule seq_hoare_r_t)
@@ -128,33 +128,33 @@ lemma even_count_total:
   apply rel_auto
   done
 
-lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e (s, s') = ((get \<^bsub>ok\<^esub> s) )"
-  by rel_auto
+lemma 
+ "\<lbrace>true\<rbrace>
+   while true invr true do SKIP\<^sub>A\<^sub>B\<^sub>R od
+  \<lbrace>Q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  apply (rule while_invr_hoare_r_t)
+  apply rel_auto
+  apply auto
+  done
+    
 
-term "\<lceil>\<guillemotleft>get\<^bsub>ok\<^esub> s\<guillemotright>\<rceil>\<^sub><"
+lemma "while true invr true do SKIP\<^sub>A\<^sub>B\<^sub>R od = false"
+   apply (simp add: While_inv_def While_def alpha)
+   apply (rule antisym)
+  apply (simp_all)
+  apply (rule lfp_lowerbound)
+  apply (simp)
+done
 
-lemma "\<lbrakk>\<not>$ok\<rbrakk>\<^sub>e (s, s') = (\<not>(get \<^bsub>ok\<^esub> s) )"
-  by rel_auto
-
-lemma "$ok = (\<lceil>&ok\<rceil>\<^sub><)" 
-  by rel_auto 
-
-lemma "\<lbrakk>$ok\<rbrakk>\<^sub>e (s, s') = get\<^bsub>ok\<^esub> (get\<^bsub>fst\<^sub>L\<^esub> (s,s'))"
-  by rel_auto
-
-lemma "(get\<^bsub>fst\<^sub>L\<^esub> (s,s')) = s"
-  by auto
-
-term "bop (op \<le>) (&x) (\<guillemotleft>5\<guillemotright>)"
-term "x \<le> 5"
-
-term "(\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-term "(\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-
-term "(\<nu> X \<bullet> F(X, Y))"
-term "(\<mu> Y \<bullet> P (Y) \<Rightarrow> G (P(Y),Y))"
-
-term "(\<mu> X \<bullet> \<mu> Y \<bullet> F (X,Y) \<turnstile> G (X,Y))"
-
-term "(\<mu> X \<bullet> \<mu> Y \<bullet> C ;; (X \<turnstile> Y) )"
+lemma 
+ "\<lbrace>true\<rbrace>
+   false
+  \<lbrace>Q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  apply rel_auto
+  done
+    
+lemma "while b do C od = lfp (\<lambda>X .bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"    
+  unfolding While_def
+  by (rule refl)
+term "gfp (\<lambda>x. f)"
 end

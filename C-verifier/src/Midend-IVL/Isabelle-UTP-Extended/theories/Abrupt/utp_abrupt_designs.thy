@@ -209,14 +209,14 @@ abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<R
 purge_notation while_bot ("while\<^sub>\<bottom> _ do _ od")
 
 definition While_bot :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sub>\<bottom> _ do _ od") where
-"while\<^sub>\<bottom> b do P od =  (\<nu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+"while\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
 subsection{*While-loop inv*}
 text {*While loops with invariant decoration*}
 
-purge_notation while_inv ("while _ invr _ do _ od" 70)
+purge_notation while_inv ("while _ invr _ do _ od" 71)
 
-definition While_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while _ invr _ do _ od" 70) where
+definition While_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while _ invr _ do _ od") where
 "while b invr p do S od = while b do S od"
 
 declare While_def [urel_defs]
@@ -224,7 +224,7 @@ declare While_inv_def [urel_defs]
 declare While_bot_def [urel_defs]
 
 syntax
-  "_assignmentabr" :: "svid_list \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 55)
+  "_assignmentabr" :: "svids \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 72)
 
 translations
   "_assignmentabr xs vs" => "CONST assigns_abr (_mk_usubst (CONST id) xs vs)"

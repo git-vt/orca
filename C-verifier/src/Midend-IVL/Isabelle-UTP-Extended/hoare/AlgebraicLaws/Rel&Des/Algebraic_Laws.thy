@@ -18,24 +18,16 @@ subsection \<open>SKIP Laws\<close>
 text \<open>In this section we introduce the algebraic laws of programming related to the SKIP
       statement.\<close>
 
-lemma seqr_left_unit [simp, symbolic_exec_ex]:
-  "II ;; P = P"
-  by rel_auto
-
-lemma seqr_right_unit [simp, symbolic_exec_ex]:
-  "P ;; II = P"
-  by rel_auto
-
 lemma pre_skip_post: "(\<lceil>b\<rceil>\<^sub>< \<and> II) = (II \<and> \<lceil>b\<rceil>\<^sub>>)"
   by rel_auto
 
 lemma skip_var:
-  fixes x :: "(bool, '\<alpha>) uvar"
+  fixes x :: "(bool \<Longrightarrow> '\<alpha>)"
   shows "($x \<and> II) = (II \<and> $x\<acute>)"
   by rel_auto
 
 lemma assign_r_alt_def [symbolic_exec]:
-  fixes x :: "('a, '\<alpha>) uvar"
+  fixes x :: "('a \<Longrightarrow>'\<alpha>)"
   shows "x :== v = II\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
   by rel_auto
 
@@ -84,14 +76,14 @@ lemma assign_commute:
   by (rel_auto, simp_all add: lens_indep_comm)
 
 lemma assign_cond:
-  fixes x :: "('a, '\<alpha>) uvar"
+  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "out\<alpha> \<sharp> b"
   shows "(x :== e ;; (P \<triangleleft> b \<triangleright> Q)) =
          ((x :== e ;; P) \<triangleleft>(b\<lbrakk>\<lceil>e\<rceil>\<^sub></$x\<rbrakk>)\<triangleright> (x :== e ;; Q))"
   by rel_auto
 
 lemma assign_rcond[symbolic_exec]:
-  fixes x :: "('a, '\<alpha>) uvar"
+  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   shows "(x :== e ;; (P \<triangleleft> b \<triangleright>\<^sub>r Q)) = ((x :== e ;; P) \<triangleleft> (b\<lbrakk>e/x\<rbrakk>) \<triangleright>\<^sub>r (x :== e ;; Q))"
   by rel_auto
 
@@ -162,10 +154,9 @@ lemma assign_qtop4[symbolic_exec_assign_qtop]:
   using 1 2 3 4
   by rel_auto
 
-lemma assign_cond_seqr_dist[symbolic_exec]:
-  "((v :== e ;; P) \<triangleleft> (b\<lbrakk>\<lceil>e\<rceil>\<^sub></$v\<rbrakk>) \<triangleright> (v :== e ;; Q)) =
-   (v :== e ;; P \<triangleleft> b \<triangleright> Q)"
-  by rel_auto
+lemma assign_cond_seqr_dist:
+  "(v :== e ;; (P \<triangleleft> b \<triangleright> Q)) = ((v :== e ;; P) \<triangleleft> b\<lbrakk>\<lceil>e\<rceil>\<^sub></$v\<rbrakk> \<triangleright> (v :== e ;; Q))"
+  by rel_auto 
 
 text \<open>In the sequel we find assignment laws proposed by Hoare\<close>
 
@@ -173,84 +164,84 @@ lemma assign_vwb_skip:
   assumes 1: "vwb_lens v"
   shows "(v :== &v) = II"
   by (simp add: assms skip_r_def usubst_upd_var_id)
-
+  
 lemma assign_simultaneous:
-  assumes  1: "vwb_lens var2"
-  and      2: "var1 \<bowtie> var2"
-  shows "(var1, var2 :== exp, &var2) = (var1 :== exp)"
+  assumes  1: "vwb_lens v2"
+  and      2: "v1 \<bowtie> v2"
+  shows "(v1,v2 :== e, (&v2)) =  (v1 :== e)"
   by (simp add: "1" "2" usubst_upd_comm usubst_upd_var_id)
 
 lemma assign_seq:
   assumes  1: "vwb_lens var2"
-  shows"(var1:== exp);; (var2 :== &var2) = (var1:== exp)"
+  shows"(var1:== expr);; (var2 :== &var2) = (var1:== expr)"
   using 1 by rel_auto
 
 lemma assign_cond_uop[symbolic_exec_assign_uop]:
   assumes 1: "weak_lens v"
-  shows "(v :== exp ;; C1) \<triangleleft>uop F exp\<triangleright>\<^sub>r (v :== exp ;; C2) =
-          v :== exp ;; C1 \<triangleleft>uop F (&v)\<triangleright>\<^sub>r  C2"
+  shows "v :== expr ;; (C1 \<triangleleft>uop F (&v)\<triangleright>\<^sub>r  C2)  =
+         (v :== expr ;; C1) \<triangleleft>uop F expr\<triangleright>\<^sub>r (v :== expr ;; C2)"
   using 1
   by rel_auto
 
 lemma assign_cond_bop1[symbolic_exec_assign_bop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "(v :== exp ;; C1 \<triangleleft>(bop bp (&v) exp2)\<triangleright>\<^sub>r C2) =
-         ((v :== exp ;; C1) \<triangleleft>(bop bp exp exp2)\<triangleright>\<^sub>r  (v :== exp ;; C2))"
+  shows "(v :== expr ;; (C1 \<triangleleft>(bop bp (&v) exp2)\<triangleright>\<^sub>r C2)) =
+         ((v :== expr ;; C1) \<triangleleft>(bop bp expr exp2)\<triangleright>\<^sub>r  (v :== expr ;; C2))"
   using 1 2
   by rel_auto
 
 lemma assign_cond_bop2[symbolic_exec_assign_bop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(bop bp exp2 (&v))\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(bop bp exp2 (&v))\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(bop bp exp2 exp1)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2
   by rel_auto
 
 lemma assign_cond_trop1[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "(v :== exp ;; C1 \<triangleleft>(trop tp (&v) exp2 exp3)\<triangleright>\<^sub>r C2) =
-         ((v :== exp ;; C1) \<triangleleft>(trop tp exp exp2 exp3)\<triangleright>\<^sub>r (v :== exp ;; C2))"
+  shows "(v :== expr ;; (C1 \<triangleleft>(trop tp (&v) exp2 exp3)\<triangleright>\<^sub>r C2)) =
+         ((v :== expr ;; C1) \<triangleleft>(trop tp expr exp2 exp3)\<triangleright>\<^sub>r (v :== expr ;; C2))"
   using 1 2 3
   by rel_auto
 
 lemma assign_cond_trop2[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(trop tp exp2 (&v) exp3)\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(trop tp exp2 (&v) exp3)\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(trop tp exp2 exp1 exp3)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2 3
   by rel_auto
 
 lemma assign_cond_trop3[symbolic_exec_assign_trop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(trop bp exp2 exp3 (&v))\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(trop bp exp2 exp3 (&v))\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(trop bp exp2 exp3 exp1)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2 3
   by rel_auto
 
 lemma assign_cond_qtop1[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "(v :== exp1 ;;  C1 \<triangleleft>(qtop tp (&v) exp2 exp3 exp4)\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(qtop tp (&v) exp2 exp3 exp4)\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(qtop tp exp1 exp2 exp3  exp4)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop2[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(qtop tp exp2 (&v) exp3 exp4)\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(qtop tp exp2 (&v) exp3 exp4)\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(qtop tp exp2 exp1 exp3 exp4)\<triangleright>\<^sub>r  (v :== exp1 ;; C2))"
   using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop3[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(qtop bp exp2 exp3 (&v) exp4)\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(qtop bp exp2 exp3 (&v) exp4)\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(qtop bp exp2 exp3 exp1  exp4)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2 3 4
   by rel_auto
 
 lemma assign_cond_qtop4[symbolic_exec_assign_qtop]:
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "(v :== exp1 ;; C1 \<triangleleft>(qtop bp exp2 exp3 exp4 (&v))\<triangleright>\<^sub>r C2) =
+  shows "(v :== exp1 ;; (C1 \<triangleleft>(qtop bp exp2 exp3 exp4 (&v))\<triangleright>\<^sub>r C2)) =
          ((v :== exp1 ;; C1) \<triangleleft>(qtop bp exp2 exp3  exp4 exp1)\<triangleright>\<^sub>r (v :== exp1 ;; C2))"
   using 1 2 3 4
   by rel_auto
@@ -263,7 +254,7 @@ lemma assign_cond_If [symbolic_exec]:
 lemma assign_cond_If_uop[symbolic_exec_assign_uop]:
   assumes 1: "mwb_lens v"
   shows "(v :== E;;
-         (v :== uop F (&v)) \<triangleleft>uop F (&v)\<triangleright>\<^sub>r (v :== uop G (&v))) =
+         ((v :== uop F (&v)) \<triangleleft>uop F (&v)\<triangleright>\<^sub>r (v :== uop G (&v)))) =
          (v :== trop If (uop F E) (uop F E) (uop G E))"
   using 1
 proof (rel_simp, transfer)
@@ -277,10 +268,10 @@ proof (rel_simp, transfer)
 qed
 
 lemma assign_cond_If_bop[symbolic_exec_assign_bop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp"
+  assumes 1: "mwb_lens v" and 2:"v \<sharp> expr"
   shows "((v :== E);;
-          (v :== (bop F exp (&v))) \<triangleleft>bop F exp (&v)\<triangleright>\<^sub>r (v :== (bop G exp (&v)))) =
-         (v :== (trop If (bop F exp E) (bop F exp E) (bop G exp E)))"
+          ((v :== (bop F expr (&v))) \<triangleleft>bop F expr (&v)\<triangleright>\<^sub>r (v :== (bop G expr (&v))))) =
+         (v :== (trop If (bop F expr E) (bop F expr E) (bop G expr E)))"
   using 1 2
 proof (rel_simp, transfer)
   fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
@@ -293,10 +284,10 @@ proof (rel_simp, transfer)
 qed
 
 lemma assign_cond_If_bop1[symbolic_exec_assign_bop]:
-  assumes 1: "mwb_lens v" and 2:"v \<sharp> exp"
+  assumes 1: "mwb_lens v" and 2:"v \<sharp> expr"
   shows "((v :== E);;
-          (v :== (bop F (&v) exp)) \<triangleleft>bop F (&v) exp\<triangleright>\<^sub>r (v :== (bop G (&v) exp))) =
-         (v :== (trop If (bop F E exp) (bop F E exp) (bop G E exp)))"
+          ((v :== (bop F (&v) expr)) \<triangleleft>bop F (&v) expr\<triangleright>\<^sub>r (v :== (bop G (&v) expr)))) =
+         (v :== (trop If (bop F E expr) (bop F E expr) (bop G E expr)))"
   using 1 2
 proof (rel_simp, transfer)
   fix a :: 'a and b :: 'a and va :: "bool \<Longrightarrow> 'a" and Fa :: "bool \<Rightarrow> bool" and Ea :: "'a \<Rightarrow> bool" and Ga :: "bool \<Rightarrow> bool"
@@ -311,7 +302,7 @@ qed
 lemma assign_cond_If_bop2[symbolic_exec_assign_bop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v :== (bop G (&v) exp2))) =
+          ((v :== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v :== (bop G (&v) exp2)))) =
          (v :== (trop If (bop F E exp1) (bop F E exp1) (bop G E exp2)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -327,7 +318,7 @@ qed
 lemma assign_cond_If_bop4[symbolic_exec_assign_bop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v :== (bop G exp2 (&v)))) =
+          ((v :== (bop F (&v) exp1)) \<triangleleft>bop F (&v) exp1\<triangleright>\<^sub>r (v :== (bop G exp2 (&v))))) =
          (v :== (trop If (bop F E exp1) (bop F E exp1) (bop G exp2 E)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -343,7 +334,7 @@ qed
 lemma assign_cond_If_bop5[symbolic_exec_assign_bop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v :== (bop G (&v) exp2))) =
+          ((v :== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v :== (bop G (&v) exp2)))) =
          (v :== (trop If (bop F exp1 E) (bop F exp1 E) (bop G E exp2)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -359,7 +350,7 @@ qed
 lemma assign_cond_If_bop6[symbolic_exec_assign_bop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v :== (bop G exp2 (&v)))) =
+          ((v :== (bop F exp1 (&v))) \<triangleleft>bop F exp1 (&v)\<triangleright>\<^sub>r (v :== (bop G exp2 (&v))))) =
          (v :== (trop If (bop F exp1 E) (bop F exp1 E) (bop G exp2 E)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -375,7 +366,7 @@ qed
 lemma assign_cond_If_trop[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-         (v :== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v :== (trop G exp1 exp2 (&v)))) =
+         ((v :== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v :== (trop G exp1 exp2 (&v))))) =
          (v :== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp1 exp2 E)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -391,7 +382,7 @@ qed
 lemma assign_cond_If_trop1[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v :== (trop G exp1 (&v) exp2))) =
+          ((v :== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v :== (trop G exp1 (&v) exp2)))) =
          (v :== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp1 E exp2)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -407,7 +398,7 @@ qed
 lemma assign_cond_If_trop2[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2"
   shows "((v :== E);;
-          (v :== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v :== (trop G (&v) exp1 exp2))) =
+          ((v :== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v :== (trop G (&v) exp1 exp2)))) =
          (v :== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp1 exp2)))"
   using 1 2 3
 proof (rel_simp, transfer)
@@ -423,7 +414,7 @@ qed
 lemma assign_cond_If_trop3[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
   shows "((v :== E);;
-          (v :== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v :== (trop G exp3 exp4 (&v)))) =
+          ((v :== (trop F exp1 exp2 (&v))) \<triangleleft>trop F exp1 exp2 (&v)\<triangleright>\<^sub>r (v :== (trop G exp3 exp4 (&v))))) =
          (v :== (trop If (trop F exp1 exp2 E) (trop F exp1 exp2 E) (trop G exp3 exp4 E)))"
   using 1 2 3 4 5
 proof (rel_simp, transfer)
@@ -439,7 +430,7 @@ qed
 lemma assign_cond_If_trop4[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
   shows "((v :== E);;
-         (v :== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v :== (trop G exp3 (&v) exp4))) =
+         ((v :== (trop F exp1 (&v) exp2)) \<triangleleft>trop F exp1 (&v) exp2\<triangleright>\<^sub>r (v :== (trop G exp3 (&v) exp4)))) =
          (v :== (trop If (trop F exp1 E exp2) (trop F exp1 E exp2) (trop G exp3 E exp4)))"
   using 1 2 3 4 5
 proof (rel_simp, transfer)
@@ -455,7 +446,7 @@ qed
 lemma assign_cond_If_trop5[symbolic_exec_assign_trop]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> exp1" and 3:"v \<sharp> exp2" and 4:"v \<sharp> exp3" and 5:"v \<sharp> exp4"
   shows "((v :== E);;
-          (v :== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v :== (trop G (&v) exp3 exp4))) =
+          ((v :== (trop F (&v) exp1 exp2)) \<triangleleft>trop F (&v) exp1 exp2\<triangleright>\<^sub>r (v :== (trop G (&v) exp3 exp4)))) =
          (v :== (trop If (trop F E exp1 exp2) (trop F E exp1 exp2) (trop G E exp3 exp4)))"
   using 1 2 3 4 5
 proof (rel_simp, transfer)
@@ -471,7 +462,7 @@ qed
 subsection \<open>Conditional Laws\<close>
 text \<open>In this section we introduce the algebraic laws of programming related to the conditional
       statement.\<close>
-named_theorems urel_cond and urel_comp
+named_theorems urel_cond
 lemma cond_idem[urel_cond]:
   "(P \<triangleleft> b \<triangleright> P) = P"
   by rel_auto
@@ -569,7 +560,7 @@ lemma cond_var_subst_right[urel_cond]:
   assumes "vwb_lens x"
   shows "(P \<triangleleft>&x \<triangleright> Q\<lbrakk>false/x\<rbrakk>) = (P \<triangleleft>&x \<triangleright> Q)"
   using assms
-  apply rel_auto apply transfer
+  apply pred_auto apply transfer
   by (metis (full_types) vwb_lens.put_eq)
 
 lemma cond_var_split[urel_cond]:
@@ -604,13 +595,6 @@ lemma seqr_left_zero [simp, symbolic_exec_ex]:
 lemma seqr_right_zero [simp, symbolic_exec_ex]:
   "P ;; false = false"
   by pred_auto
-
-lemma seqr_assoc: "P ;; (Q ;; R) = (P ;; Q) ;; R"
-  by rel_auto
-
-lemma seqr_or_distl[urel_comp]:
-  "((P \<or> Q) ;; R) = ((P ;; R) \<or> (Q ;; R))"
-  by rel_auto
 
 lemma seqr_or_distr[urel_comp]:
   "(P ;; (Q \<or> R)) = ((P ;; Q) \<or> (P ;; R))"
@@ -703,7 +687,7 @@ proof -
 qed
 
 lemma while_inv_unfold:
-  "while b invr p do P od = ((P ;; while b invr p do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  "(while b invr p do P od) = ((P ;; while b invr p do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
   unfolding while_inv_def using while_unfold
   by auto
 

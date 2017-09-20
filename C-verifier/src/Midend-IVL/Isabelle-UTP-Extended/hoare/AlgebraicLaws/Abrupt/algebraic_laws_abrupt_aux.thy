@@ -22,10 +22,10 @@ lemma vwb_of_abrupt[simp]:
   by simp_all
 
 lemma unrest_pre_out\<alpha>_abr[unrest]: "out\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub><"
-  by (transfer, auto simp add: out\<alpha>_def lens_prod_def)
+  by (rel_auto)
 
 lemma unrest_post_in\<alpha>_abr[unrest]: "in\<alpha> \<sharp> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>>"
-  by (transfer, auto simp add: in\<alpha>_def lens_prod_def)
+  by (rel_auto)
 
 lemma unrest_ok_abrupt_rel_uexpr_lift_cpa[unrest]:
   "$ok \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R" "$ok\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>A\<^sub>B\<^sub>R"
@@ -88,7 +88,7 @@ lemma simpl_abr_alr_def:
   "Simpl\<^sub>A\<^sub>B\<^sub>R (P) =
    ((\<not>$abrupt \<and> ($ok \<Rightarrow>($ok\<acute> \<and> P))) \<or> ($abrupt \<and> II))"
   by rel_auto
-
+    
 subsection \<open>Healthiness condition behavior\<close>
 
 lemma rel_usubst_cpa_c3_abr[usubst]:
@@ -107,7 +107,7 @@ lemma Simpl_abr_mono: "P \<sqsubseteq> Q \<Longrightarrow> Simpl\<^sub>A\<^sub>B
   by (rel_auto)
 
 lemma simpl_abr_Monotonic: "Monotonic Simpl\<^sub>A\<^sub>B\<^sub>R"
-  by (simp add: Monotonic_def Simpl_abr_mono)
+  by (simp add: mono_def Simpl_abr_mono)
 
 lemma simpl_abr_def:
   "Simpl\<^sub>A\<^sub>B\<^sub>R(P) = ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> P) \<triangleleft> \<not>$abrupt \<triangleright>  II)"
@@ -244,9 +244,9 @@ lemma nabrupt_simpl_abr[uabr_simpl]:
 definition design_abr_sup :: "('\<alpha>,'\<beta>) rel_cpa set \<Rightarrow> ('\<alpha>,'\<beta>) rel_cpa" ("\<Sqinter>\<^sub>A\<^sub>B\<^sub>R_" [900] 900) where
 "\<Sqinter>\<^sub>A\<^sub>B\<^sub>R A = (if (A = {}) then \<top>\<^sub>A\<^sub>B\<^sub>R else \<Sqinter> A)"
 
-lemma simpl_abr_Continuous: "Continuous Simpl\<^sub>A\<^sub>B\<^sub>R"
-  apply rel_auto
-done
+lemma simpl_abr_Continuous: 
+  "Continuous Simpl\<^sub>A\<^sub>B\<^sub>R"
+  by rel_auto
 
 lemma simpl_abr_R3_conj:
   "Simpl\<^sub>A\<^sub>B\<^sub>R(P \<and> Q) = (Simpl\<^sub>A\<^sub>B\<^sub>R(P) \<and> Simpl\<^sub>A\<^sub>B\<^sub>R(Q))"
@@ -281,7 +281,7 @@ abbreviation design_inf :: "('\<alpha>, '\<beta>) rel_des set \<Rightarrow> ('\<
 lemma design_bottom_abr:
   "\<bottom>\<^sub>A\<^sub>B\<^sub>R \<sqsubseteq> (P \<turnstile> Q)"
   by simp
-
+    
 lemma Simpl_abr_bottom_abr:
   "\<bottom>\<^sub>A\<^sub>B\<^sub>R \<sqsubseteq> Simpl\<^sub>A\<^sub>B\<^sub>R (P)"
   by simp
@@ -339,9 +339,8 @@ lemma usubst_lift_cpa_skip_lift_cpa[usubst]:
 lemma usubst_cpa_skip_cpa [usubst]:
   assumes "$ok \<sharp> \<sigma>" "$ok\<acute> \<sharp> \<sigma> "
   shows
-  "(\<sigma> \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ((\<not>$abrupt\<acute>) \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> (II)))"
+  "(\<sigma> \<dagger> SKIP\<^sub>A\<^sub>B\<^sub>R) = ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<sigma> \<dagger> ((\<not>$abrupt\<acute>) \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))) \<triangleleft> \<sigma> \<dagger> (\<not>$abrupt) \<triangleright> (\<sigma> \<dagger> (II)))"
   using assms unfolding skip_abr_def
-  using [[simp_trace]]
   by (simp add: usubst)
 
 lemma usubst_cpa_throw_cpa [usubst]:
@@ -389,8 +388,8 @@ lemma assigns_lift_cpa_comp_rel_cpa[uabr_comp]:
   assumes "$ok \<sharp> P" "$abrupt \<sharp> P"
   shows  "(\<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R;; P) = (\<lceil>\<sigma>\<rceil>\<^sub>s\<^sub>A\<^sub>B\<^sub>R \<dagger> P)"
   apply (insert assms)
-  apply pred_simp
-  apply rel_blast
+  apply rel_auto
+  apply blast
 done
 
 lemma lift_des_skip_dr_unit_abr[uabr_comp]:

@@ -109,7 +109,7 @@ lemma simpl_pre_skip_abr_post:
   by rel_auto
 
 lemma simpl_pre_skip_abr_var:
-  fixes x :: "(bool, 'b cpa) uvar"
+  fixes x :: "(bool \<Longrightarrow> 'b cpa)"
   shows "(Simpl\<^sub>A\<^sub>B\<^sub>R $x \<and> SKIP\<^sub>A\<^sub>B\<^sub>R) = (SKIP\<^sub>A\<^sub>B\<^sub>R \<and> Simpl\<^sub>A\<^sub>B\<^sub>R $x\<acute>)"
   by rel_auto
 
@@ -133,14 +133,14 @@ text \<open>In this section we introduce the algebraic laws of programming relat
       statement.\<close>
 
 lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; P \<triangleleft> \<not> $abrupt \<triangleright> Q) =
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; (P \<triangleleft> \<not> $abrupt \<triangleright> Q)) =
    S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; Q)"
-  apply pred_simp
+  apply rel_simp
   apply fastforce
 done
 
 lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; P \<triangleleft> $abrupt \<triangleright> Q) =
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; (P \<triangleleft> $abrupt \<triangleright> Q)) =
    S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>R\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; P)"
   apply pred_simp
   apply fastforce
@@ -182,15 +182,15 @@ done
 
 lemma not_abrupt_left_assigns_abr_post_des[urel_cond]:
   "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>A\<^sub>B\<^sub>R;; P)) =
-   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; P))"
+   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> ((\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>));; P))"
   unfolding assigns_abr_def
   apply pred_simp
-  apply rel_simp
+  apply rel_simp 
 done
 
 lemma  not_abrupt_left_throw_abr_post_des[urel_cond]:
   "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (THROW\<^sub>A\<^sub>B\<^sub>R;; P))  =
-   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> ((\<not>$abrupt) \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>);; P))"
+   R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> ((\<not>$abrupt) \<turnstile> (\<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R \<and> $abrupt\<acute>));; P)"
   unfolding assigns_abr_def
   apply pred_simp
   apply rel_simp
@@ -235,7 +235,7 @@ lemma assign_abr_commute:
   by (simp add: uabr_comp usubst usubst_upd_comm)
 
 lemma assign_abr_cond_abr[uabr_comp]: (*needs more laws to be automatic*)
-  fixes x :: "('a, '\<alpha>) uvar"
+  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   shows "(x \<Midarrow> e;; (bif b then Simpl\<^sub>A\<^sub>B\<^sub>R P else Simpl\<^sub>A\<^sub>B\<^sub>R Q eif)) =
          (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e;; Simpl\<^sub>A\<^sub>B\<^sub>R P)  else (x \<Midarrow> e;; Simpl\<^sub>A\<^sub>B\<^sub>R Q) eif)"
   apply (simp add: usubst uabr_comp)
@@ -309,18 +309,18 @@ lemma assign_abr_vwb_skip_abr[uabr_comp]:
 lemma assign_c_simultaneous:
   assumes  1: "vwb_lens var2"
   and      2: "var1 \<bowtie> var2"
-  shows "var1, var2 \<Midarrow> exp, &var2 = var1 \<Midarrow> exp"
+  shows "var1, var2 \<Midarrow> expr, &var2 = var1 \<Midarrow> expr"
   by (simp add: assms usubst_upd_comm usubst)
 
 lemma assign_c_seq[uabr_comp]:
   assumes  1: "vwb_lens var2"
-  shows"(var1 \<Midarrow> exp);; (var2 \<Midarrow> &var2) = (var1 \<Midarrow> exp)"
+  shows"(var1 \<Midarrow> expr);; (var2 \<Midarrow> &var2) = (var1 \<Midarrow> expr)"
   by (simp add: assms usubst uabr_comp)
 
 lemma assign_c_cond_c_uop[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v"
-  shows "bif uop F exp then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-          v \<Midarrow> exp;; bif uop F (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif uop F expr then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+          v \<Midarrow> expr;; bif uop F (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
@@ -330,101 +330,101 @@ done
 
 lemma assign_c_cond_bop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif bop bp exp exp2 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-          v \<Midarrow> exp;; bif bop bp (&v) exp2 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif bop bp expr exp2 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+          v \<Midarrow> expr;; bif bop bp (&v) exp2 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis "1" "2" unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_c_cond_bop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif bop bp exp2 exp then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-          v \<Midarrow> exp;; bif bop bp  exp2 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif bop bp exp2 expr then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+          v \<Midarrow> expr;; bif bop bp  exp2 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_cond_trop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp exp2 exp3 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif trop bp (&v) exp2 exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif trop bp expr exp2 exp3 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif trop bp (&v) exp2 exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_cond_trop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp2 exp exp3 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif trop bp  exp2 (&v) exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif trop bp exp2 expr exp3 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif trop bp  exp2 (&v) exp3 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_cond_trop3[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif trop bp exp2 exp3 exp then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif trop bp exp2 exp3 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif trop bp exp2 exp3 expr then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif trop bp exp2 exp3 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_cond_qtop1[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp exp2 exp3 exp4 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif qtop bp (&v) exp2 exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif qtop bp expr exp2 exp3 exp4 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif qtop bp (&v) exp2 exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_c_cond_qtop2[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp  exp3 exp4 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif qtop bp exp2 (&v) exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif qtop bp exp2 expr  exp3 exp4 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif qtop bp exp2 (&v) exp3 exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_c_cond_qtop3[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp3 exp exp4 then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif qtop bp exp2 exp3 (&v) exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif qtop bp exp2 exp3 expr exp4 then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif qtop bp exp2 exp3 (&v) exp4 then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_c_cond_qtop4[uabr_comp]: (*needs more laws to be automatic*)
   assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif qtop bp exp2 exp3 exp4 exp then (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> exp;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
-         v \<Midarrow> exp;; bif qtop bp exp2  exp3 exp4 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
+  shows "bif qtop bp exp2 exp3 exp4 expr then (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C1) else (v \<Midarrow> expr;; Simpl\<^sub>A\<^sub>B\<^sub>R C2) eif =
+         v \<Midarrow> expr;; bif qtop bp exp2  exp3 exp4 (&v) then Simpl\<^sub>A\<^sub>B\<^sub>R C1 else Simpl\<^sub>A\<^sub>B\<^sub>R C2 eif"
   apply (simp add: assms usubst uabr_comp uabr_simpl)
   apply pred_simp
   apply rel_simp
   apply auto
-  apply (metis assms unrest_upred.rep_eq weak_lens.put_get)+
+  apply (metis assms unrest_uexpr.rep_eq weak_lens.put_get)+
 done
 
 lemma assign_c_cond_If [uabr_cond]:
@@ -441,28 +441,24 @@ theorem while_unfold:
 proof -
   have m:"mono (\<lambda>X. bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (auto intro: monoI seqr_mono if_mono)
-  have "(while b do P od) = (\<mu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+  have "(while b do P od) = (\<nu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (simp add: While_def)
-  also have "... = (bif b then (P;; (\<mu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
-    by (subst gfp_unfold,simp_all add:m)
+  also have "... = (bif b then (P;; (\<nu> X \<bullet> bif b then (P;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+    by (subst lfp_unfold,simp_all add:m)
   also have "... = (bif b then (P;; while b do P od) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
     by (simp add: While_def)
   finally show ?thesis .
 qed
 
-(*lemma while_true:
-  shows "(while true do (P\<turnstile>Q) od) = \<top>\<^sub>A\<^sub>B\<^sub>R"
+lemma while_true:
+  shows "(while true do (P\<turnstile>Q) od) = false"(*it should eq to \<top>\<^sub>A\<^sub>B\<^sub>R*)
   apply (simp add: While_def alpha)
-  apply (rule antisym)
-  prefer 2
-  apply (simp_all add:design_top_abr)
-  apply (rule conjI)
+   apply (rule antisym)
+  apply (simp_all)
   apply (rule lfp_lowerbound)
-  apply (simp add: C3_abr_def design_def cond_def)
-  apply rel_auto
-  apply (frule cond_mono)
-done*)
-
+  apply (simp)
+  done
+    
 lemma while_false:
   shows "(while false do P od) = SKIP\<^sub>A\<^sub>B\<^sub>R"
 proof -
@@ -473,7 +469,7 @@ proof -
 qed
 
 lemma while_inv_unfold:
-  "while b invr p do P od = (bif b then (P;; while b invr p do P od) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+  "(while b invr p do P od) = (bif b then (P ;; (while b invr p do P od)) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
   unfolding While_inv_def using while_unfold
   by auto
 
@@ -490,8 +486,6 @@ proof -
     by (simp add: While_bot_def)
   finally show ?thesis .
 qed
-
-term "while\<^sub>\<bottom> b do P od"
 
 theorem while_bot_false: "while\<^sub>\<bottom> false do P od = SKIP\<^sub>A\<^sub>B\<^sub>R"
   by (simp add: While_bot_def mu_const alpha)
