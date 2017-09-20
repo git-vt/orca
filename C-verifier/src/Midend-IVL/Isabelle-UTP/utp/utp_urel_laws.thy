@@ -529,15 +529,11 @@ text {* We introduce the power syntax derived from semirings *}
   
 subsection {* Algebraic Properties *}
 
-<<<<<<< .mine
 interpretation upred_semiring: semiring_1
   where times = seqr and one = skip_r and zero = false\<^sub>h and plus = Lattices.sup
   by (unfold_locales, (rel_auto)+)
 
-||||||| .r407
 
-=======
->>>>>>> .r410
 abbreviation upower :: "'\<alpha> hrel \<Rightarrow> nat \<Rightarrow> '\<alpha> hrel" (infixr "\<^bold>^" 100) where
 "upower P n \<equiv> upred_semiring.power P n"
 
