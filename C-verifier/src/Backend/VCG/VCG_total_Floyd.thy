@@ -23,9 +23,9 @@ lemma lens_indep_all_alt:
 lemma assert_hoare_r_t':
   assumes \<open>`p \<Rightarrow> c`\<close>
   shows \<open>\<lbrace>p\<rbrace>c\<^sub>\<bottom>\<^sub>C\<lbrace>p \<and> c\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-  by (metis assms cond_abr_hoare_r_t hoare_false_t neg_conj_cancel1 p_and_not_p rassert_abr_def
-skip_abr_hoare_r_t subsumption1 utp_pred.inf_commute utp_pred.sup_commute)
-
+  using assms
+   by rel_auto
+ 
 lemma assume_hoare_r_t': 
   shows \<open>\<lbrace>p\<rbrace>c\<^sup>\<top>\<^sup>C\<lbrace>p \<and> c\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by rel_simp
@@ -46,9 +46,9 @@ lemma cond_assert_abr_hoare_r_t:
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
     apply (rule assert_hoare_r_t')
-    apply (metis impl_alt_def subsumption1 utp_pred.double_compl utp_pred.sup_assoc utp_pred.sup_compl_top_left2)
+    apply (metis impl_alt_def subsumption1 utp_pred_laws.double_compl utp_pred_laws.sup_assoc utp_pred_laws.sup_compl_top_left2)
    apply (rule hoare_pre_str_t[where p\<^sub>2 = A])
-    apply (simp add: impl_alt_def utp_pred.sup_commute)
+    apply (simp add: impl_alt_def utp_pred_laws.sup_commute)
    apply assumption
   apply simp
   done
@@ -64,8 +64,9 @@ lemma cond_assert_last_abr_hoare_r_t:
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
    apply (rule assert_hoare_r_t')
-   apply (metis impl_alt_def subsumption1 utp_pred.double_compl utp_pred.sup_assoc utp_pred.sup_compl_top_left2)
-  by (meson impl.rep_eq taut.rep_eq upred_ref_iff utp_pred.inf.cobounded2)
+   apply (metis impl_alt_def subsumption1 utp_pred_laws.double_compl utp_pred_laws.sup_assoc utp_pred_laws.sup_compl_top_left2)
+  apply (meson impl.rep_eq taut.rep_eq upred_ref_iff utp_pred_laws.inf.cobounded2)
+ done   
 (* or by (metis conj_disj_abs refBy_order subsumption1 utp_pred.inf_le2 utp_pred.sup_assoc) *)
 
 lemma while_invr_hoare_r_t':
