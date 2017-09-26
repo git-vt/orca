@@ -36,9 +36,9 @@ syntax
   "_ubu_neg"    :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr\<close>	 ("-\<^bsub>u'/_\<^esub> _" [200, 150] 150)
 
 translations
-  "mset\<^sub>u(x)" == "CONST uop CONST mset x"
-  "int\<^sub>u(n)" == "CONST uop CONST int n"
-  "nat\<^sub>u(i)" == "CONST uop CONST nat i"
+  "_umset" == "CONST uop CONST mset"
+  "_uint" == "CONST uop CONST int"
+  "_unat" == "CONST uop CONST nat"
   "f\<lparr>kf\<rparr>\<^sub>r" == "CONST uop kf f"
   "f(k \<mapsto> v)\<^sub>r" == "CONST bop k (CONST rec_update_wrapper v) f"
   "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
