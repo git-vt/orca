@@ -209,11 +209,11 @@ lemma insertion_sort:
   \<open>\<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
   i \<Midarrow> 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr (&i) (&array) (&old_array) do
+  invr outer_invr &i &array &old_array do
     j \<Midarrow> &i;;
-    while (&j) >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
-    invr inner_invr (&i) (&j) (&array) (&old_array) do
-      array \<Midarrow> swap_at (&j) (&array);;
+    while &j >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
+    invr inner_invr &i &j &array &old_array do
+      array \<Midarrow> swap_at &j &array;;
       j \<Midarrow> (&j - 1)
     od;;
     i \<Midarrow> (&i + 1)
