@@ -221,67 +221,6 @@ lemma insertion_sort:
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms) exp_vcg
 
-subsubsection \<open>Another insertion sort style\<close>
-
-text \<open>This version of insertion sort does not use swapping, rather a shifting up of values and then
-inserting the desired value in the right place.\<close>
-
-definition \<open>inner_invr2' i j x array old_array \<equiv>
-  i < length array
-\<and> i > 0
-\<and> i > nat j
-(* below is not right (needs to use x), also needs some connection to old_array with mset somehow *)
-\<and> (let xs\<^sub>1 = take (nat j) array; z = array!(nat j); xs\<^sub>2 = drop (Suc (nat j)) (take (Suc i) array) in
-  sorted (xs\<^sub>1 @ xs\<^sub>2) \<and> (\<forall>y \<in> set xs\<^sub>2. z < y))
-\<close>
-abbreviation \<open>inner_invr2 \<equiv> qiop inner_invr2'\<close>
-
-lemma inner_invr2_init[vcg_simps]:
-  assumes \<open>outer_invr' i array old_array\<close>
-      and \<open>nat j = i - 1\<close>
-      and \<open>i < length array\<close>
-      and \<open>x = array ! i\<close>
-    shows \<open>inner_invr2' i j x array old_array\<close>
-  using assms unfolding inner_invr2'_def outer_invr'_def
-    
-lemma inner_invr2_step[vcg_simps]:
-  assumes \<open>inner_invr2' i j x array old_array\<close>
-    and \<open>j \<ge> 0\<close>
-  shows \<open>inner_invr2' i (j - 1) x (array[nat (j+1) := array!(nat j)]) old_array\<close>
-  using assms unfolding inner_invr2'_def
-
-lemma outer_invr2_step[vcg_simps]:
-  assumes \<open>inner_invr2' i j x array old_array\<close>
-      and \<open>j < 0 \<or> x \<le> array!(nat j)\<close>
-    shows \<open>outer_invr' (Suc i) (array[nat (j + 1) := x]) old_array\<close>
-  using assms unfolding inner_invr2'_def outer_invr'_def
-
-lemma insertion_sort:
-  assumes \<open>lens_indep_all [i, x]\<close>
-      and \<open>lens_indep_all [array, old_array]\<close>
-      and \<open>vwb_lens j\<close> and \<open>i \<bowtie> j\<close> and \<open>x \<bowtie> j\<close>
-      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close>
-      and \<open>x \<bowtie> array\<close> and \<open>x \<bowtie> old_array\<close>
-      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
-  shows
-  \<open>\<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
-  i \<Midarrow> 1;;
-  while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr &i &array &old_array do
-    x \<Midarrow> &array(&i)\<^sub>a;;
-    j \<Midarrow> int\<^sub>u(&i - 1);;
-    while &j \<ge>\<^sub>u 0 \<and> &x <\<^sub>u &array(nat\<^sub>u(&j))\<^sub>a
-    invr inner_invr2 &i &j &x &array &old_array do
-      array \<Midarrow> &array(nat\<^sub>u(&j+1) \<mapsto> &array(nat\<^sub>u(&j))\<^sub>a)\<^sub>u;;
-      j \<Midarrow> (&j - 1)
-    od;;
-    array \<Midarrow> &array(nat\<^sub>u(&j+1) \<mapsto> &x)\<^sub>u;;
-    i \<Midarrow> (&i + 1)
-  od
-  \<lbrace>sorted\<^sub>u(&array) \<and> mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-  apply (insert assms)
-  apply exp_vcg
-
 subsubsection \<open>Future: merge sort, quicksort\<close>
 
 end

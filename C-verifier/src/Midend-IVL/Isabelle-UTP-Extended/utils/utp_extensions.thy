@@ -1,3 +1,5 @@
+section \<open>Syntax extensions for UTP\<close>
+
 theory utp_extensions
 imports
   "../../Isabelle-UTP/utp/utp"
@@ -7,6 +9,8 @@ begin
 
 recall_syntax \<comment> \<open>Fixes notation issue with inclusion of HOL libraries.\<close>
  (*TODO @Yakoub: Fix the F** of the priorities of the syntax*)
+
+subsection \<open>Notation\<close>
 
 text \<open>We need multisets for concise list invariants for sorting. Also, int/nat conversion is
 sometimes needed as some loop methods mix array indices and loop variables (which sometimes rely on
@@ -53,7 +57,7 @@ translations
   "_ubu_not" == "CONST bop CONST u_not"
   "_ubu_neg" == "CONST bop CONST u_neg"
 
-subsubsection \<open>Extra stuff to work more-arg functions into UTP\<close>
+subsection \<open>Extra stuff to work more-arg functions into UTP\<close>
 
 lift_definition qiop ::
   \<open>('a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> 'e \<Rightarrow> 'f) \<Rightarrow>
@@ -102,6 +106,5 @@ lemma aext_sxop [alpha]:
 lemma lit_sxop_simp [lit_simps]:
   \<open>\<guillemotleft>i x y z u t v\<guillemotright> = sxop i \<guillemotleft>x\<guillemotright> \<guillemotleft>y\<guillemotright> \<guillemotleft>z\<guillemotright> \<guillemotleft>u\<guillemotright> \<guillemotleft>t\<guillemotright> \<guillemotleft>v\<guillemotright>\<close>
   by transfer simp
-
 
 end
