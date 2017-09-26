@@ -221,6 +221,53 @@ lemma insertion_sort:
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms) exp_vcg
 
-subsubsection \<open>Future: merge sort, quicksort\<close>
+subsubsection Quicksort
+
+(* more efficient to choose the pivot from the middle (or rather, the median of first/middle/last,
+or even the nine-median method for large lists), but that's probably harder to set up for
+verification *)
+definition \<open>partition'
+  A lo hi (* params *)
+  pivot i j (* locals *)
+  res (* return value *)
+\<equiv>
+bob
+INIT II
+BODY
+  pivot \<Midarrow> (&A:\<^sub>u 'a::ord list)(&hi)\<^sub>a;;
+  i \<Midarrow> (&lo - 1);;
+  j \<Midarrow> &lo;;
+  while &j <\<^sub>u &hi invr true do
+    bif &A(&j)\<^sub>a <\<^sub>u &pivot then
+      i \<Midarrow> (&i + 1);;
+      A \<Midarrow> &A(&i \<mapsto> &A(&j)\<^sub>a, &j \<mapsto> &A(&i)\<^sub>a)\<^sub>u
+    else
+      II
+    eif
+  od;;
+  res \<Midarrow> (&i + 1)
+RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
+                    j \<Midarrow> cp_des &j s
+RETURN \<lambda> _ _. II
+eob\<close>
+
+lemma quicksort:
+  assumes \<open>lens_indep_all [i, j, lo, hi, res]\<close> (* should res be in the alphabet? *)
+      and \<open>lens_indep_all [array, old_array]\<close>
+      and \<open>vwb_lens pivot\<close>
+      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> lo\<close> and \<open>pivot \<bowtie> hi\<close> and \<open>pivot \<bowtie> res\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close>
+      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
+      and \<open>lo \<bowtie> array\<close> and \<open>lo \<bowtie> old_array\<close>
+      and \<open>hi \<bowtie> array\<close> and \<open>hi \<bowtie> old_array\<close>
+      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<bowtie> old_array\<close>
+      and \<open>res \<bowtie> array\<close> and \<open>res \<bowtie> old_array\<close>
+  shows
+  \<open>\<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  apply (insert assms)
+  apply exp_vcg
+
+subsubsection \<open>Future: merge sort\<close>
 
 end

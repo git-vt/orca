@@ -75,7 +75,7 @@ lemma swap_test:
   using assms
   apply (simp only: uabr_comp uabr_simpl lens_indep_def)
   apply rel_simp
-done
+  done
 
 subsection {*Even count program*}
 term "j \<Midarrow> ((&j) + 1)"
@@ -144,15 +144,14 @@ lemma "while true invr true do SKIP\<^sub>A\<^sub>B\<^sub>R od = false"
   apply (simp_all)
   apply (rule lfp_lowerbound)
   apply (simp)
-done
+  done
 
 lemma 
  "\<lbrace>true\<rbrace>
    false
   \<lbrace>Q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
-  apply rel_auto
-  done
-    
+  by rel_auto
+
 lemma "while b do C od = lfp (\<lambda>X .bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"    
   unfolding While_def
   by (rule refl)

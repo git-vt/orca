@@ -42,7 +42,9 @@ datatype cJSON_tree =
   Leaf
 | Node (data: cJSON) (nextt: cJSON) (prev: cJSON) (child: cJSON)
 
-(* TODO: cJSON_Hooks is a struct holding functions *)
+record '\<alpha> cJSON_Hooks =
+  malloc_fn :: \<open>size_t \<Rightarrow> nat \<Longrightarrow> '\<alpha>\<close>
+  free_fn :: \<open>nat \<Longrightarrow> '\<alpha> \<Rightarrow> \<close>
 
 (* I'd prefer to use bool but cJSON doesn't use the C99 bool type. *)
 type_synonym cJSON_bool = int
@@ -66,4 +68,5 @@ definition \<open>cJSON_Version = shows\<^sub>u(CJSON_VERSION_MAJOR) ^\<^sub>u \
                             shows\<^sub>u(CJSON_VERSION_MINOR) ^\<^sub>u \<guillemotleft>''.''\<guillemotright> ^\<^sub>u
                             shows\<^sub>u(CJSON_VERSION_PATCH)\<close>
 
+definition \<open>case_insensitive_strcmp string1 string2 = \<close>
 end

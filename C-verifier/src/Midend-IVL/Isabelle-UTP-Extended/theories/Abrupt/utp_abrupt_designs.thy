@@ -20,6 +20,9 @@ alphabet cp_abr = des_vars +
 
 declare cp_abr.splits [alpha_splits]
 
+text \<open>This abbreviation reduces verbosity for restore/return functions in blocks.\<close>
+abbreviation \<open>cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_abr.more \<circ> des_vars.more) s)\<guillemotright>\<close>
+
 subsubsection {*Alphabet proofs*}
 text {*
   The two locale interpretations below are a technicality to improve automatic

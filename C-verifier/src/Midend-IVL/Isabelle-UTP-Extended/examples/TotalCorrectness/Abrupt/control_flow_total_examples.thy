@@ -128,12 +128,6 @@ text {*block_test1 is a scenario. The scenario represent a program where i is na
        In that case we can use a restore function on the state s to set the variable to its
        previous value ie.,its value in the scope s, and this before we exit the block.*}
 
-text \<open>The normal restore/return functions were verbose, so it's good to have an abbreviation to use
-      to reduce duplicated code. Unfortunately, this does cause some parsing ambiguity, but Isabelle
-      resolves that fairly well. It may reduce performance slightly, though.\<close>
-abbreviation cp_des where
-  "cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_abr.more \<circ> des_vars.more) s)\<guillemotright>"
-
 lemma   block_c_test1:
   shows "\<lbrace>\<guillemotleft>weak_lens i\<guillemotright> \<and> \<guillemotleft>weak_lens j\<guillemotright> \<and> \<guillemotleft>i \<bowtie> j\<guillemotright>\<rbrace> 
           i \<Midarrow> \<guillemotleft>2::int\<guillemotright>;; j \<Midarrow> \<guillemotleft>0::int\<guillemotright>;;
@@ -141,7 +135,7 @@ lemma   block_c_test1:
             INIT j \<Midarrow> 5;; i \<Midarrow> 5
             BODY II
             RESTORE (\<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
-                                j \<Midarrow> cp_des &j s)
+                                 j \<Midarrow> cp_des &j s)
             RETURN (\<lambda> _ _. II)
           eob
          \<lbrace>&j =\<^sub>u 0 \<and> &i =\<^sub>u 2\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
@@ -161,7 +155,7 @@ lemma   block_c_test2:
                                 j \<Midarrow> cp_des &j t
             RETURN \<lambda> _ _. II
           eob
-         \<lbrace>&j =\<^sub>u 5\<and> &i =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+         \<lbrace>&j =\<^sub>u 5 \<and> &i =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   unfolding lens_indep_def 
   by rel_simp
 
