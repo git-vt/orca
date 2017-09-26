@@ -13,7 +13,7 @@ lemma increment_semimanual:
   \<open>\<lbrace>&y =\<^sub>u \<guillemotleft>5::int\<guillemotright>\<rbrace>
   x \<Midarrow> 0;;
   while &x <\<^sub>u &y
-  invr (&x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5)
+  invr &x \<le>\<^sub>u &y \<and> &y =\<^sub>u 5
   do x \<Midarrow> (&x + 1) od
   \<lbrace>&x =\<^sub>u 5\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
@@ -49,7 +49,7 @@ lemma even_count_method:
     i \<Midarrow> &start;;
     j \<Midarrow> 0;;
     while &i <\<^sub>u &endd
-    invr &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u (((&i + 1) - &start) div 2) \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
+    invr &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u ((&i + 1) - &start) div 2 \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
     do
       bif &i mod 2 =\<^sub>u 0 then
         j \<Midarrow> (&j + 1)

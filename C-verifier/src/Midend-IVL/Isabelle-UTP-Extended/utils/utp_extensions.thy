@@ -12,6 +12,10 @@ text \<open>We need multisets for concise list invariants for sorting. Also, int
 sometimes needed as some loop methods mix array indices and loop variables (which sometimes rely on
 going below 0 for termination). Bitwise operations and record access/update are included for
 completeness.\<close>
+  
+text \<open>A helper function for record updating.\<close>
+lift_definition rec_update_wrapper :: \<open>('a, '\<alpha>) uexpr \<Rightarrow> ('a \<Rightarrow> 'a, '\<alpha>) uexpr\<close> is
+  \<open>\<lambda>v s _. v s\<close> .
 
 syntax
   "_umset" :: \<open>('a list, '\<alpha>) uexpr \<Rightarrow> ('a multiset, '\<alpha>) uexpr\<close> ("mset\<^sub>u'(_')")
@@ -30,6 +34,7 @@ syntax
   "_ubs_not"    :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr \<Rightarrow> (int, '\<alpha>) uexpr\<close> ("\<not>\<^bsub>s'/_\<^esub> _" [200, 150] 150)
   "_ubu_not"    :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr\<close>	 ("\<not>\<^bsub>u'/_\<^esub> _" [200, 150] 150)
   "_ubu_neg"    :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr\<close>	 ("-\<^bsub>u'/_\<^esub> _" [200, 150] 150)
+
 translations
   "mset\<^sub>u(x)" == "CONST uop CONST mset x"
   "int\<^sub>u(n)" == "CONST uop CONST int n"
