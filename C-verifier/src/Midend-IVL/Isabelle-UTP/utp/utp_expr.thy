@@ -3,7 +3,6 @@ section \<open> UTP expressions \<close>
 theory utp_expr
 imports
    utp_var
-  "../utils/BitOps"
 begin
 
 subsection \<open> Expression type \<close>
