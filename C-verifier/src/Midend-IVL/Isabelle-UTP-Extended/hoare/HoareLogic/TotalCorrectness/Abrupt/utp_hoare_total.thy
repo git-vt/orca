@@ -136,4 +136,11 @@ lemma while_invr_hoare_r_t [hoare_total]:
   shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
   by (metis assms hoare_pre_str_t while_hoare_r'_t While_inv_def inf_commute)
 
+datatype val = Int1 int|Nat1 nat
+lemma   "\<lbrace>\<guillemotleft>x\<bowtie>y\<guillemotright> \<and> \<guillemotleft>vwb_lens x\<guillemotright> \<and> \<guillemotleft>vwb_lens y\<guillemotright>\<rbrace>
+         x \<Midarrow> \<guillemotleft>Int1 1\<guillemotright> ;; 
+         y \<Midarrow> \<guillemotleft>Nat1 1\<guillemotright> 
+         \<lbrace>&x=\<^sub>u \<guillemotleft>Int1 1\<guillemotright> \<and> &y=\<^sub>u \<guillemotleft>Nat1 1\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
+  unfolding lens_indep_def
+  by rel_simp  
 end

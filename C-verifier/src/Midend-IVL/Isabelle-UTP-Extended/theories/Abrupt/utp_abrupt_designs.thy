@@ -45,7 +45,6 @@ apply (rule injI)
 apply (clarsimp)
 done
 
-find_theorems name: cp_abr
 subsubsection {*Type lifting*}
 
 type_synonym  ('\<alpha>) cpa = "('\<alpha>) cp_abr_scheme des"
@@ -231,5 +230,5 @@ translations
   "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) x v)"
   "x,y \<Midarrow> u,v" <= "CONST assigns_abr (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
-
+  
 end
