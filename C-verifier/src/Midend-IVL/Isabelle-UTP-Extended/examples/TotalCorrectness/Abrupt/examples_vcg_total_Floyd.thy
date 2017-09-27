@@ -2,6 +2,7 @@ section \<open>Examples using ML-level VCG for Total Correctness\<close>
 
 theory examples_vcg_total_Floyd
 imports
+  "../../../utils/utp_extensions"
   "../../../../../Backend/VCG/VCG_total_Floyd"
 begin
 
