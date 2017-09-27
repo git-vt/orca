@@ -1,5 +1,5 @@
 theory utp_abrupt_designs
-imports   (*"../../utils/utp_extensions"*)
+imports   "../../utils/utp_extensions"
           "../../../Isabelle-UTP/theories/utp_designs"
           "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_aux"
 begin
@@ -50,16 +50,16 @@ done
 
 subsubsection {*Type lifting*}
 
-type_synonym  ('\<alpha>) cpa = "('\<alpha>) cp_abr_scheme des"
-type_synonym ('\<alpha>,'\<beta>) rel_cpa  = "(('\<alpha>) cpa, ('\<beta>) cpa) rel"
-type_synonym ('\<alpha>) hrel_cpa  = "(('\<alpha>) cpa) hrel"
+type_synonym  '\<alpha> cpa = "'\<alpha> cp_abr_scheme des"
+type_synonym ('\<alpha>, '\<beta>) rel_cpa  = "('\<alpha> cpa, '\<beta> cpa) rel"
+type_synonym '\<alpha> hrel_cpa  = "'\<alpha> cpa hrel"
 
 subsubsection {*Syntactic type setup*}
 
 translations
-  (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_scheme des"
-  (type) "('\<alpha>) cpa" <= (type) " ('\<alpha>) cp_abr_ext des"
-  (type) "('\<alpha>,'\<beta>) rel_cpa" <= (type) "(('\<alpha>) cpa, ('\<beta>) cpa) rel"
+  (type) "'\<alpha> cpa" <= (type) "'\<alpha> cp_abr_scheme des"
+  (type) "'\<alpha> cpa" <= (type) "'\<alpha> cp_abr_ext des"
+  (type) "('\<alpha>, '\<beta>) rel_cpa" <= (type) "('\<alpha> cpa, '\<beta> cpa) rel"
 
 notation cp_abr_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
 notation cp_abr_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")

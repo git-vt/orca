@@ -200,71 +200,106 @@ lemma outer_invr_final[vcg_dests]:
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
-      and \<open>lens_indep_all [array, old_array]\<close>
+      and \<open>vwb_lens array\<close>
       and \<open>vwb_lens x\<close> and \<open>x \<bowtie> i\<close> and \<open>x \<bowtie> j\<close>
-      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close>
-      and \<open>x \<bowtie> array\<close> and \<open>x \<bowtie> old_array\<close>
-      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
+      and \<open>i \<bowtie> array\<close>
+      and \<open>x \<bowtie> array\<close>
+      and \<open>j \<bowtie> array\<close>
   shows
-  \<open>\<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
+  \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright>\<rbrace>
   i \<Midarrow> 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr &i &array &old_array do
+  invr outer_invr &i &array \<guillemotleft>old_array\<guillemotright> do
     j \<Midarrow> &i;;
     while &j >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
-    invr inner_invr &i &j &array &old_array do
+    invr inner_invr &i &j &array \<guillemotleft>old_array\<guillemotright> do
       array \<Midarrow> swap_at &j &array;;
       j \<Midarrow> (&j - 1)
     od;;
     i \<Midarrow> (&i + 1)
   od
-  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms) exp_vcg
 
 subsubsection Quicksort
+
+text \<open>The below function provides a more general swap function.\<close>
+definition \<open>swap' xs i j = xs[i := xs!j, j := xs!i]\<close>
+abbreviation \<open>swap \<equiv> trop swap'\<close>
 
 (* more efficient to choose the pivot from the middle (or rather, the median of first/middle/last,
 or even the nine-median method for large lists), but that's probably harder to set up for
 verification *)
 definition \<open>partition'
-  A lo hi (* params *)
+  A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
   pivot i j (* locals *)
   res (* return value *)
 \<equiv>
 bob
 INIT II
 BODY
-  pivot \<Midarrow> (&A:\<^sub>u 'a::ord list)(&hi)\<^sub>a;;
-  i \<Midarrow> (&lo - 1);;
-  j \<Midarrow> &lo;;
-  while &j <\<^sub>u &hi invr true do
+  pivot \<Midarrow> (&A :\<^sub>u 'a::ord list)(hi)\<^sub>a;;
+  i \<Midarrow> (lo - 1);;
+  j \<Midarrow> lo;;
+  while &j <\<^sub>u hi invr true do (* TODO: invariant *)
     bif &A(&j)\<^sub>a <\<^sub>u &pivot then
       i \<Midarrow> (&i + 1);;
-      A \<Midarrow> &A(&i \<mapsto> &A(&j)\<^sub>a, &j \<mapsto> &A(&i)\<^sub>a)\<^sub>u
-    else
-      II
-    eif
+      A \<Midarrow> swap &A &i &j
+    else II eif
   od;;
+  bif &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
+      A \<Midarrow> swap &A (&i + 1) hi
+  else II eif;;
   res \<Midarrow> (&i + 1)
-RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;;
-                    j \<Midarrow> cp_des &j s
+RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des &i s;; (* these may not be needed as they're reset anyway *)
+                    j \<Midarrow> cp_des &j s;;
+                    pivot \<Midarrow> cp_des &pivot s
 RETURN \<lambda> _ _. II
 eob\<close>
 
+definition \<open>qsort
+  A lo hi
+  pivot i j (* locals *)
+  res (* return value of inner function *)
+\<equiv>
+\<nu> X \<bullet>
+bif &lo <\<^sub>u &hi then
+  partition' A &lo &hi pivot i j res;;
+  bob INIT II BODY
+    hi \<Midarrow> (&res - 1);;
+    X
+  RESTORE \<lambda> (s, _) _. hi \<Midarrow> cp_des &hi s;;
+                      res \<Midarrow> cp_des &res s
+  RETURN \<lambda> _ _. II
+  eob;;
+  bob INIT II BODY
+    lo \<Midarrow> (&res + 1);;
+    X
+  RESTORE \<lambda> (s, _) _. lo \<Midarrow> cp_des &lo s;;
+                      res \<Midarrow> cp_des &res s
+  RETURN \<lambda> _ _. II
+  eob;;
+  X
+else
+  II
+eif
+\<close>
+
 lemma quicksort:
-  assumes \<open>lens_indep_all [i, j, lo, hi, res]\<close> (* should res be in the alphabet? *)
-      and \<open>lens_indep_all [array, old_array]\<close>
-      and \<open>vwb_lens pivot\<close>
-      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> lo\<close> and \<open>pivot \<bowtie> hi\<close> and \<open>pivot \<bowtie> res\<close>
-      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close>
-      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
-      and \<open>lo \<bowtie> array\<close> and \<open>lo \<bowtie> old_array\<close>
-      and \<open>hi \<bowtie> array\<close> and \<open>hi \<bowtie> old_array\<close>
-      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<bowtie> old_array\<close>
-      and \<open>res \<bowtie> array\<close> and \<open>res \<bowtie> old_array\<close>
+  assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
+      and \<open>vwb_lens array\<close> and \<open>vwb_lens pivot\<close>
+      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
+      and \<open>i \<bowtie> array\<close>
+      and \<open>j \<bowtie> array\<close>
+      and \<open>lo \<bowtie> array\<close>
+      and \<open>hi \<bowtie> array\<close>
+      and \<open>pivot \<bowtie> array\<close>
+      and \<open>res \<bowtie> array\<close>
   shows
-  \<open>\<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array)\<rbrace>
-  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(&old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright> \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
+    qsort A lo hi pivot i j res
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  unfolding qsort_def partition'_def
   apply (insert assms)
   apply exp_vcg
 
