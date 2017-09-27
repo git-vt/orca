@@ -10,7 +10,6 @@ imports "utp_pred" "utp_alphabet" "utp_urel_setup"
 
 begin
 
-
 type_synonym '\<alpha> cond      = "'\<alpha> upred"
 type_synonym ('\<alpha>, '\<beta>) rel = "('\<alpha> \<times> '\<beta>) upred"
 type_synonym '\<alpha> hrel      = "('\<alpha> \<times> '\<alpha>) upred"

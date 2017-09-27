@@ -2,11 +2,10 @@ section \<open>Syntax extensions for UTP\<close>
 
 theory utp_extensions
 imports
-  "../../Isabelle-UTP/utp/utp"
   BitOps
+  "../../Isabelle-UTP/utp/utp"
   "~~/src/HOL/Library/Multiset"
 begin
-
 recall_syntax \<comment> \<open>Fixes notation issue with inclusion of HOL libraries.\<close>
  (*TODO @Yakoub: Fix the F** of the priorities of the syntax*)
 

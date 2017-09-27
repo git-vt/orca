@@ -1,5 +1,5 @@
 theory utp_abrupt_designs
-imports   "../../utils/utp_extensions"
+imports   (*"../../utils/utp_extensions"*)
           "../../../Isabelle-UTP/theories/utp_designs"
           "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_aux"
 begin

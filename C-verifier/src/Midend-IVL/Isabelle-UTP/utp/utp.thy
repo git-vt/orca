@@ -20,6 +20,7 @@ imports
   utp_rel
   utp_tactics
   "../../Isabelle-UTP-Extended/hoare/HoareLogic/PartialCorrectness/utp_hoare"
+  "../../Isabelle-UTP-Extended/utp/utp_rec_total"
   utp_wp
   utp_theory
   utp_concurrency
