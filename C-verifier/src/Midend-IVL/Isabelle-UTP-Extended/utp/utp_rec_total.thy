@@ -177,10 +177,6 @@ proof -
     by pred_simp
 qed
 
-  
-find_consts "(('a \<times> 'b) set) \<Rightarrow> (('a \<times> 'b) set) upred"  
-term "($\<Sigma>,st)\<in>R"
-term "bop Pair ($\<Sigma>) \<guillemotleft>st\<guillemotright> \<in>\<^sub>u R"  
 lemma  rec_total_rule_Pure'': 
   assumes WF: "wf R"
   and     M: "mono B"  
