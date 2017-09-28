@@ -1,5 +1,13 @@
 theory utp_abrupt_designs
+<<<<<<< .mine
+imports   "../../utils/utp_extensions"
+          "../../../Isabelle-UTP/theories/utp_designs"
+||||||| .r432
+imports   (*"../../utils/utp_extensions"*)
+          "../../../Isabelle-UTP/theories/utp_designs"
+=======
 imports   "../../../Isabelle-UTP/theories/utp_designs"
+>>>>>>> .r436
           "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_aux"
 begin
 subsection {*Sequential C-program alphabet*}
