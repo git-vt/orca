@@ -15,7 +15,7 @@ text {*In order to record the interaction of a sequential C program with its exe
 *}
 
 alphabet cp_abr = des_vars +
-  abrupt:: bool
+  abrupt :: bool
 
 declare cp_abr.splits [alpha_splits]
 

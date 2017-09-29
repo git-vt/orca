@@ -232,38 +232,21 @@ abbreviation \<open>swap \<equiv> trop swap'\<close>
 or even the nine-median method for large lists), but that's probably harder to set up for
 verification *)
   
-term "(&A :\<^sub>u (('a::ord) list))(hi)\<^sub>a "
-term "
-  (
-  pivot :== (&A :\<^sub>u ('a::ord) list)(hi)\<^sub>a;;
-  i :== (lo - 1);;
-  j :== lo;;
-  (while &j <\<^sub>u hi invr true do (* TODO: invariant *)
-    if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then (
-      i :== (&i + 1);;
-      A :== swap &A &i &j)
-    else II
-  od);;
-  (if\<^sub>u &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
-      A :== swap &A (&i + 1) hi
-  else II);;
-  res :== (&i + 1)
-)"
-  
+abbreviation \<open>stet v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e s\<guillemotright>\<close>
+
 definition \<open>partition'
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
   pivot i j (* locals *)
   res (* return value *)
 \<equiv>
-block II 
-(
+block II (
   pivot :== (&A :\<^sub>u ('a::ord) list)(hi)\<^sub>a;;
   i :== (lo - 1);;
   j :== lo;;
   (while &j <\<^sub>u hi invr true do (* TODO: invariant *)
-    if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then (
+    if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
       i :== (&i + 1);;
-      A :== swap &A &i &j)
+      A :== swap &A &i &j
     else II
   od);;
   (if\<^sub>u &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
@@ -271,47 +254,60 @@ block II
   else II);;
   res :== (&i + 1)
 )
-(\<lambda> (s, _) _. i :== \<guillemotleft>\<lbrakk>&i\<rbrakk>\<^sub>e s\<guillemotright>;; (* these may not be needed as they're reset anyway *)
-             j :== \<guillemotleft>\<lbrakk>&j\<rbrakk>\<^sub>e s\<guillemotright>;;
-             pivot :== \<guillemotleft>\<lbrakk>&pivot\<rbrakk>\<^sub>e s\<guillemotright> )
+(\<lambda> (s, _) _. i :== stet &i s;; (* these may not be needed as they're reset anyway *)
+             j :== stet &j s;;
+             pivot :== stet &pivot s)
 (\<lambda> _ _. II)
 \<close>
+definition \<open>slice l u A \<equiv> drop l (take u A)\<close>
+abbreviation \<open>slice\<^sub>u \<equiv> trop slice\<close>
 
-abbreviation \<open>cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e (s)\<guillemotright>\<close>
-  
-    
-thm hoare_pre_str[OF _ nu_hoare_basic_r]
-    
-    
-  
-definition \<open>qsort
-  A lo hi
-  pivot i j (* locals *)
-  res (* return value of inner function *)
-\<equiv>
-\<nu> X [undefined ''pre''\<Rightarrow>undefined ''post''] \<bullet>
-if\<^sub>u &lo <\<^sub>u &hi then
-  partition' A &lo &hi pivot i j res;;
-  block II (
-    hi :== (&res - 1);;
-    X
-  )
-  (\<lambda> (s, _) _. hi :== cp_des &hi s;;
-                      res :== cp_des &res s)
-  (\<lambda> _ _. II)
-  ;;
-  block II
-    (lo :== (&res + 1);;
-    X)
-  (\<lambda> (s, _) _. lo :== cp_des &lo s;;
-                      res :== cp_des &res s)
-  (\<lambda> _ _. II)
-  ;;
-  X
-else
-  II
+lemma upred_taut_refl: \<open>`A \<Rightarrow> A`\<close>
+  by pred_simp
 
-\<close>
+lemma quicksort_exp:
+  assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
+      and \<open>lens_indep_all [array, old_array]\<close> 
+      and \<open>vwb_lens pivot\<close>
+      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
+      and \<open>i \<bowtie> array\<close> 
+      and \<open>j \<bowtie> array\<close>
+      and \<open>lo \<bowtie> array\<close>
+      and \<open>hi \<bowtie> array\<close>
+      and \<open>pivot \<bowtie> array\<close>
+      and \<open>res \<bowtie> array\<close>
+      and \<open>i \<bowtie> old_array\<close> 
+      and \<open>j \<bowtie> old_array\<close>
+      and \<open>lo \<bowtie> old_array\<close>
+      and \<open>hi \<bowtie> old_array\<close>
+      and \<open>pivot \<bowtie> old_array\<close>
+      and \<open>res \<bowtie> old_array\<close>
+  shows
+  \<open>\<lbrace>&array =\<^sub>u &old_array \<and> 0 \<le>\<^sub>u &lo \<and> &lo \<le>\<^sub>u &hi \<and> &hi <\<^sub>u #\<^sub>u(&array)\<rbrace>
+   \<nu> X \<bullet>
+  if\<^sub>u &lo <\<^sub>u &hi then
+    partition' array &lo &hi pivot i j res;;
+    block II
+      (hi :== (&res - 1);; X)
+      (\<lambda> (s, _) _. hi :== stet &hi s;;
+                   res :== stet &res s)
+      (\<lambda> _ _. II);;
+    block II
+      (lo :== (&res + 1);; X)
+      (\<lambda> (s, _) _. lo :== stet &lo s;;
+                   res :== stet &res s)
+      (\<lambda> _ _. II)
+  else
+    II
+  \<lbrace>mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array)) =\<^sub>u mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&old_array))
+\<and> slice\<^sub>u 0 (&lo) (&array) =\<^sub>u slice\<^sub>u 0 (&lo) (&old_array)
+\<and> slice\<^sub>u (&hi) #\<^sub>u(&array) (&array) =\<^sub>u slice\<^sub>u (&hi) #\<^sub>u(&array) (&old_array)
+\<and> #\<^sub>u(&array) =\<^sub>u #\<^sub>u(&old_array)
+\<and> sorted\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array))\<rbrace>\<^sub>u\<close>
+  unfolding partition'_def
+  apply (insert assms)
+  apply (rule nu_hoare_r[OF upred_taut_refl])
+  apply exp_vcg
 
 lemma quicksort:
   assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
@@ -325,9 +321,23 @@ lemma quicksort:
       and \<open>res \<bowtie> array\<close>
   shows
   \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright> \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
-    qsort A lo hi pivot i j res
+   \<nu> X [undefined ''pre'' \<Rightarrow> undefined ''post''] \<bullet>
+  if\<^sub>u &lo <\<^sub>u &hi then
+    partition' array &lo &hi pivot i j res;;
+    block II
+      (hi :== (&res - 1);; X)
+      (\<lambda> (s, _) _. hi :== stet &hi s;;
+                   res :== stet &res s)
+      (\<lambda> _ _. II);;
+    block II
+      (lo :== (&res + 1);; X)
+      (\<lambda> (s, _) _. lo :== stet &lo s;;
+                   res :== stet &res s)
+      (\<lambda> _ _. II)
+  else
+    II
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
-  unfolding qsort_def partition'_def
+  unfolding partition'_def
   apply (insert assms)
   apply exp_vcg
 

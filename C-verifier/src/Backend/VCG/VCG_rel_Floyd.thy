@@ -67,7 +67,7 @@ lemma cond_assert_last_hoare_r:
    apply (rule cond_hoare_r' seq_hoare_r|assumption)+
    apply (rule assert_hoare_r')
   using impl_disjI apply blast
-  by (metis impl_alt_def impl_mp2 refBy_order subsumption1 utp_pred_laws.compl_inf utp_pred_laws.conj_assoc utp_pred_laws.inf.orderE utp_pred_laws.inf_commute utp_pred_laws.sup_cancel_left2 utp_pred_laws.sup_commute utp_pred_laws.sup_inf_distrib1 utp_pred_laws.sup_left_idem)  
+  by (metis impl_alt_def subsumption1 utp_pred_laws.compl_inf utp_pred_laws.inf_commute utp_pred_laws.sup_cancel_left2 utp_pred_laws.sup_commute utp_pred_laws.sup_inf_distrib1 utp_pred_laws.sup_left_idem)
 
 lemma while_invr_hoare_r':
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>u\<close> and \<open>`p' \<Rightarrow> p`\<close>
@@ -75,50 +75,44 @@ lemma while_invr_hoare_r':
   by (metis while_inv_def assms hoare_post_weak hoare_pre_str while_hoare_r)
 
 lemma nu_refine_intro:
-  assumes "(C \<Rightarrow> S) \<sqsubseteq> F(C \<Rightarrow> S)"
-  shows "(C \<Rightarrow> S) \<sqsubseteq> \<nu> F"
+  assumes \<open>(C \<Rightarrow> S) \<sqsubseteq> F(C \<Rightarrow> S)\<close>
+  shows \<open>(C \<Rightarrow> S) \<sqsubseteq> \<nu> F\<close>
   using assms
   by (simp add: lfp_lowerbound)
   
 lemma nu_hoare_basic_r:
-  assumes "\<And>p. \<lbrace>P\<rbrace> p \<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace> F p \<lbrace>Q\<rbrace>\<^sub>u"
-  shows "\<lbrace>P\<rbrace> \<nu> F \<lbrace>Q\<rbrace>\<^sub>u"
-  using assms
-  unfolding hoare_r_def
-  apply (rule nu_refine_intro)
-  by auto  
+  assumes \<open>\<And>p. \<lbrace>P\<rbrace>p\<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace>F p\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>P\<rbrace>\<nu> F\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  using assms unfolding hoare_r_def
+  by (rule nu_refine_intro) auto  
 
-definition annot_rec :: 
-  "'a upred \<Rightarrow> 'a upred \<Rightarrow> ((bool, 'a) hexpr \<Rightarrow> (bool, 'a) hexpr) \<Rightarrow> (bool, 'a) hexpr"
-  where "annot_rec P Q F \<equiv> \<nu> F"    
+definition annot_rec ::
+  \<open>'a upred \<Rightarrow> 'a upred \<Rightarrow> ((bool, 'a) hexpr \<Rightarrow> (bool, 'a) hexpr) \<Rightarrow> (bool, 'a) hexpr\<close> where
+  \<open>annot_rec P Q F \<equiv> \<nu> F\<close>    
 
 syntax  
-  "_nu_annot" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("\<nu> _ [_\<Rightarrow>_] \<bullet> _" [0, 10] 10)
+  "_nu_annot" :: \<open>pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<nu> _ [_\<Rightarrow>_] \<bullet> _" [0, 10] 10)
 
 translations
   "\<nu> X [P\<Rightarrow>Q] \<bullet> p" == "CONST annot_rec P Q (\<lambda> X. p)"
-  
-  
-term "\<nu> X [P\<Rightarrow>Q] \<bullet> X"
-  
-    
+
 lemma nu_hoare_r:
-  assumes PRE: "`P' \<Rightarrow> P`"
-  assumes IH: "\<And>p. \<lbrace>P\<rbrace> p \<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace> F p \<lbrace>Q\<rbrace>\<^sub>u"
-  shows "\<lbrace>P'\<rbrace> \<nu> F \<lbrace>Q\<rbrace>\<^sub>u"
+  assumes PRE: \<open>`P' \<Rightarrow> P`\<close>
+  assumes IH: \<open>\<And>p. \<lbrace>P\<rbrace>p\<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace>F p\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>P'\<rbrace>\<nu> F\<lbrace>Q\<rbrace>\<^sub>u\<close>
   apply (rule hoare_pre_str[OF PRE])  
   using IH
   unfolding hoare_r_def
-  apply (rule nu_refine_intro)
-  by (rule order_refl)
-    
+  by (rule nu_refine_intro) (rule order_refl)
+
 lemma nu_hoare_annot_r:
-  assumes PRE: "`P' \<Rightarrow> P`"
-  assumes IH: "\<And>p. \<lbrace>P\<rbrace> p \<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace> F p \<lbrace>Q\<rbrace>\<^sub>u"
-  shows "\<lbrace>P'\<rbrace> annot_rec P Q F \<lbrace>Q\<rbrace>\<^sub>u"
+  assumes PRE: \<open>`P' \<Rightarrow> P`\<close>
+  assumes IH: \<open>\<And>p. \<lbrace>P\<rbrace>p\<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace>F p\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>P'\<rbrace>annot_rec P Q F\<lbrace>Q\<rbrace>\<^sub>u\<close>
   using nu_hoare_r assms unfolding annot_rec_def .
-    
-lemmas hoare_rules =
+
+named_theorems hoare_rules
+lemmas [hoare_rules] =
   assigns_floyd_r
   skip_hoare_r
   assert_hoare_r'
