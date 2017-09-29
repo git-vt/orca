@@ -6,39 +6,10 @@ lift_definition uwfP::"('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>  (
 "\<lambda> P r.  (r \<in> {(x, y). wfP P \<and> P x y})" .  
 update_uexpr_rep_eq_thms -- {* Reread @{text rep_eq} theorems. *}     
 
-term "\<forall> x \<in> X. ((\<forall>y \<in> X. (R x y \<longrightarrow> P y)) \<longrightarrow> P x)\<longrightarrow> (\<forall>x \<in> X. P x)"
+section{*Algebraic laws for relations*}
+text{*We present a set of algebraic laws for relations. However these laws are a way more
+     weaker than the usual Hoare laws*}
   
-term "\<^bold>\<forall>st \<bullet> \<^bold>\<forall>f \<bullet> ((\<^bold>\<forall> st'\<bullet> \<guillemotleft>(st',st) \<in>R\<guillemotright> \<Rightarrow> \<guillemotleft>(Pre \<Rightarrow> Post) \<sqsubseteq> (B f)\<guillemotright>) \<Rightarrow> \<guillemotleft>(Pre \<Rightarrow> Post) \<sqsubseteq> (B f)\<guillemotright>) "
-
-lemma "`\<^bold>\<forall> x \<bullet> ((\<^bold>\<forall> y \<bullet> (\<lceil>\<guillemotleft>(y,x) \<in>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> P\<lbrakk>\<guillemotleft>y\<guillemotright>/ &\<Sigma>\<rbrakk>)) \<Rightarrow> P\<lbrakk>\<guillemotleft>x\<guillemotright>/ &\<Sigma>\<rbrakk> )` = 
-        (\<forall>x. (\<forall>y. (y, x) \<in> R \<longrightarrow> \<lbrakk>P\<rbrakk>\<^sub>e y)\<longrightarrow> \<lbrakk>P\<rbrakk>\<^sub>e x)"
-  by pred_auto 
-
-term "\<forall> x \<in> X. ((\<forall>y \<in> X. (R x y \<longrightarrow> P y)) \<longrightarrow> P x)\<longrightarrow> (\<forall>x \<in> X. P x)" 
-term " (subst_upd id \<Sigma>) \<dagger> P" 
-term"(subst_upd id \<Sigma> \<guillemotleft>s\<guillemotright>)"
-term "[$\<Sigma> \<mapsto>\<^sub>s \<guillemotleft>s\<guillemotright>] :: ('a \<times> 'b )\<Rightarrow>('a \<times> 'b )"  
-  
- term "([$\<Sigma> \<mapsto>\<^sub>s \<guillemotleft>s\<guillemotright>] :: ('a \<times> 'b )\<Rightarrow>('a \<times> 'b ) )\<dagger> (P:: ('a, 'b) rel)" 
-term "((Pre\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>) \<Rightarrow> Post)"  
-  
-lemma "Rep_uexpr (P\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>) (s,s') \<longleftrightarrow> Rep_uexpr P (st,s')"  
-  by rel_auto
-  
-  
-lemma "([$\<Sigma> \<mapsto>\<^sub>s \<guillemotleft>sx\<guillemotright>] :: ('a \<times> 'b )\<Rightarrow>('a \<times> 'b )) = 
-  (\<lambda>(s,s'). (sx,s'))"  
-  by rel_auto  
-  
-lemma "(subst_upd id \<Sigma> \<guillemotleft>s\<guillemotright>) = (\<lambda>_. s)"
-  by rel_auto  
-  
-  
-  
-lemma foo: "(\<forall>st .(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (B f)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>) = 
-         ((Pre \<Rightarrow> Post) \<sqsubseteq> (B f))"
-  by pred_simp
-   
 lemma pre_str:
   assumes "`Pre \<Rightarrow> I`"
   and     "(I \<Rightarrow> Post) \<sqsubseteq> P"
@@ -112,10 +83,6 @@ lemma skip_refine:
   by rel_auto
   
     
-lemma skip_refine:
-  "`(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>` \<Longrightarrow> (\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> II\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>"
-  by pred_blast
-    
 lemma 11:"(\<lceil>b\<rceil>\<^sub>< \<and> \<lceil>I\<rceil>\<^sub><)  = \<lceil>b \<and> I\<rceil>\<^sub><"
   by ( simp add: utp_alphabet.alpha)
 
@@ -147,24 +114,16 @@ proof -
     by pred_simp
 qed
 
-term "(P \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Q"
-
-term "(\<lceil>P  \<and> &\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub><) \<Rightarrow> Q"
-  
-lemma "Rep_uexpr ((P \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Q) (s,s') = 
-        (s=st \<and> Rep_uexpr P (st, s') \<longrightarrow> Rep_uexpr Q (st, s'))"  
-  by (rel_auto)
-    
-lemma  wf_fixp_uinduct_Pure': 
+lemma wf_fixp_uinduct_pure_usubst:                  
   assumes fixp_unfold: "fp B = B (fp B)"
   and              WF: "wf R"
   and     induct_step:
-          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)\<rbrakk>
-               \<Longrightarrow> fp B = f \<Longrightarrow>((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> (B f)"
+          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> ((Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk>)\<rbrakk>
+               \<Longrightarrow> fp B = f \<Longrightarrow>(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (B f)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>"
   shows "((Pre \<Rightarrow> Post) \<sqsubseteq> fp B)"  
 proof -  
    { fix st
-    have "((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post)\<sqsubseteq> (fp B))" 
+    have "((Pre \<Rightarrow> Post) \<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (fp B)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> )" 
       using WF
       apply (induction rule: wf_induct_rule)  
       apply (subst fixp_unfold)  
@@ -176,23 +135,43 @@ proof -
   thus ?thesis
     by pred_simp
 qed
+  
+lemma usubst_to_ueq:
+  "(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> = (((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)"
+  by rel_simp
 
-lemma  rec_total_rule_Pure'': 
+thm wf_fixp_uinduct_pure_usubst[simplified usubst_to_ueq]    
+(*Following usubst_to_ueq we can have... *)
+(*TODO @Yakoub: Maybe wf_fixp_uinduct_pure_ueq is redundant  should be just a lemmas*)  
+lemma  wf_fixp_uinduct_pure_ueq:                  
+  assumes fixp_unfold: "fp B = B (fp B)"
+  and              WF: "wf R"
+  and     induct_step:
+          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)\<rbrakk>
+               \<Longrightarrow> fp B = f \<Longrightarrow>((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> (B f)"
+        shows "((Pre \<Rightarrow> Post) \<sqsubseteq> fp B)"  
+  using wf_fixp_uinduct_pure_usubst[simplified usubst_to_ueq,of fp B R Pre Post] assms
+  by simp
+    
+    
+lemma  rec_total_rule_pure: 
   assumes WF: "wf R"
   and     M: "mono B"  
   and     induct_step:
           "\<And> f st.  \<lbrakk>(Pre \<and> ($\<Sigma>,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> f\<rbrakk>
                \<Longrightarrow> \<mu> B = f \<Longrightarrow>(Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> (B f)"
         shows "(Pre \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
-  apply (rule wf_fixp_uinduct_Pure'[where fp=\<mu> and Pre=Pre and B=B])    
+  apply (rule  wf_fixp_uinduct_pure_usubst[simplified usubst_to_ueq, where fp=\<mu> and Pre=Pre and B=B])    
   using M apply (rule gfp_unfold)    
    apply (rule WF)  
   apply (rule induct_step)
     apply pred_simp
    apply assumption
   done     
-  
-lemma  rec_total_rule_Pure''': 
+
+(*TODO @Yakoub: the proof of rec_total_rule_utp is totally independent from
+  wf_fixp_uinduct_pure_ueq. Make it dependent to keep the logic reasoning straight*)
+lemma  rec_total_utp_rule: 
   assumes WF: "wf R"
     and     M: "mono B"  
     and     induct_step:
@@ -235,25 +214,34 @@ lemma  rec_total_rule_Pure':
   apply (rule induct_step)
    apply assumption
     apply assumption
-  done     
+oops    
 
-lemma job_done_going_home_now:
-  "vwb_lens x \<Longrightarrow> (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
-  term "\<lbrakk>&x\<rbrakk>\<^sub>e"
-  term "measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"
-    thm rec_total_rule_Pure
-  apply (rule rec_total_rule_Pure''[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
+(*The lemma total_rec_utp_test shows how rec_total_utp_rule improves automation wrt
+  rec_total_rule_pure which was used for the same example in  total_rec_test*)  
+lemma total_rec_test:
+  "vwb_lens x \<Longrightarrow> 
+   (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
+  apply (rule  rec_total_utp_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
+    apply simp
+     apply (simp add: cond_mono monoI seqr_mono)
+  apply (rule  cond_refine_split')
+     prefer 2
+     apply (rule skip_refine_XXX)
+     apply pred_simp+      
+  done
+    
+lemma total_rec_test:
+  "vwb_lens x \<Longrightarrow> 
+   (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
+  apply (rule   rec_total_rule_pure[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
     apply simp
      apply (simp add: cond_mono monoI seqr_mono)
     
   apply (rule  cond_refine_split')
      prefer 2
      apply (rule skip_refine_XXX)
-     apply pred_simp 
-     
+     apply pred_simp      
     subgoal premises prems for f st   
-      term "([x\<mapsto>\<^sub>s &x-1] st)"
-    (*apply (rule seq_refine_split''[where s="0 \<le>\<^sub>u &x \<and>  subst_upd id\<dagger>(&x =\<^sub>u (&x-1))\<guillemotleft>([x\<mapsto>\<^sub>s &x-1] st)\<guillemotright>"]) *)
     apply (rule seq_refine_split''[where s="0 \<le>\<^sub>u &x \<and> &\<Sigma> =\<^sub>u \<guillemotleft>([x\<mapsto>\<^sub>s &x-1] st)\<guillemotright>"]) 
      apply pred_simp 
       apply pred_simp 
@@ -263,88 +251,6 @@ lemma job_done_going_home_now:
       using prems(1) apply pred_simp 
       done
     done
-      
-
-lemma job_done_going_home_now_definitely:
-  "vwb_lens x \<Longrightarrow> (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
-  term "\<lbrakk>&x\<rbrakk>\<^sub>e"
-  term "measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"
-  apply (rule rec_total_rule_Pure'''[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
-    apply simp
-     apply (simp add: cond_mono monoI seqr_mono)
-    
-  apply (rule  cond_refine_split')
-     prefer 2
-     apply (rule skip_refine_XXX)
-     apply pred_simp 
-    
-    subgoal for st   
-      term "([x\<mapsto>\<^sub>s &x-1] st)"
-    (*apply (rule seq_refine_split''[where s="0 \<le>\<^sub>u &x \<and>  subst_upd id\<dagger>(&x =\<^sub>u (&x-1))\<guillemotleft>([x\<mapsto>\<^sub>s &x-1] st)\<guillemotright>"]) *)
-    apply (rule seq_refine_split''[where s="0 \<le>\<^sub>u &x \<and> &\<Sigma> =\<^sub>u \<guillemotleft>([x\<mapsto>\<^sub>s &x-1] st)\<guillemotright>"]) 
-     apply pred_simp 
-      apply pred_simp 
-      apply pred_simp 
-      apply pred_simp 
-      done
-    done
-
-
-      
-      
-      
-      using 12[of "[]\<^sub>u <\<^sub>u &x"]
-      apply (subst 12[of "[]\<^sub>u <\<^sub>u &x"])
-      apply (simp only:inf_top_right inf_top_left 11 12)
- 
-     
-    apply (simp)
-      
-    using seq_refine_split
-   apply (rule seq_refine_split)
-    
-    
-  apply (fold foo) 
-  apply (rule allI)  
-  oops   
-  
-  
-lemma  wf_fixp_uinduct_Pure: 
-  assumes fixp_unfold: "fp B = B (fp B)"
-  and              WF: "wf R"
-  and     induct_step:
-          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> ((Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk>)\<rbrakk>
-               \<Longrightarrow> fp B = f \<Longrightarrow>(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (B f)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>"
-  shows "((Pre \<Rightarrow> Post) \<sqsubseteq> fp B)"  
-proof -  
-   { fix st
-    have "((Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (fp B)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>)" 
-      using WF
-      apply (induction rule: wf_induct_rule)  
-      apply (subst fixp_unfold)  
-      apply (rule induct_step)  
-      apply pred_blast
-      apply simp  
-      done  
-        }
-  thus ?thesis
-    by pred_simp
-qed
-   
-lemma  rec_total_rule_Pure: 
-  assumes WF: "wf R"
-  and     M: "mono B"  
-  and     induct_step:
-          "\<And> f st.  \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk>\<rbrakk>
-               \<Longrightarrow> \<mu> B = f \<Longrightarrow>(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> (B f)\<lbrakk>\<guillemotleft>st\<guillemotright>/ $\<Sigma>\<rbrakk>"
-        shows "(Pre \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
-  apply (rule wf_fixp_uinduct_Pure[where fp=\<mu> and Pre=Pre and B=B])    
-  using M apply (rule gfp_unfold)    
-   apply (rule WF)  
-  apply (rule induct_step)
-   apply assumption
-    apply assumption
-  done  
 
 
     
