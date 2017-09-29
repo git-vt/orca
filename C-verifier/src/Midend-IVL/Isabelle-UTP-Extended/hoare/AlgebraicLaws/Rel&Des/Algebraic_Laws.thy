@@ -35,6 +35,25 @@ lemma skip_r_alpha_eq:
   "II = ($\<Sigma>\<acute> =\<^sub>u $\<Sigma>)"
   by rel_auto
 
+lemma skip_r_refine_orig:
+  "(p \<Rightarrow> p) \<sqsubseteq> II"
+  by pred_blast
+
+lemma skip_r_eq[simp]: "\<lbrakk>II\<rbrakk>\<^sub>e (a, b) \<longleftrightarrow> a = b"
+  by rel_auto
+
+lemma skip_refine_join:
+  "(p \<Rightarrow> q) \<sqsubseteq> II \<longleftrightarrow> `((p \<squnion> II) \<Rightarrow> q)`"
+  by pred_auto
+ 
+lemma skip_refine_rel:
+  "`(II \<Rightarrow> (p \<Rightarrow> q))` \<Longrightarrow> (p \<Rightarrow> q) \<sqsubseteq> II"
+  by pred_auto
+  
+lemma skip_r_refine_pred:
+  "`(p \<Rightarrow> q)` \<Longrightarrow> (\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> II"
+  by rel_auto
+    
 subsection \<open>Assignment Laws\<close>
 text \<open>In this section we introduce the algebraic laws of programming related to the assignment
       statement.\<close>
@@ -767,9 +786,41 @@ lemma rel_alpha_ext_alt_def:
 done
 
 
-subsection \<open>Tactic setup\<close>
-text \<open>In this section we will design a tactic that can be used to automate
-       the process of program optimization.\<close>
-(*TODO*)
+subsection \<open>Refinement rules\<close>
+  
+lemma pre_weak_rel:
+  assumes "`Pre \<Rightarrow> I`"
+  and     "(I \<Rightarrow> Post) \<sqsubseteq> P"
+  shows "(Pre \<Rightarrow> Post) \<sqsubseteq> P"
+ using assms
+  by(rel_auto)
+    
+lemma post_str_rel: "(p\<Rightarrow>q) \<sqsubseteq> P \<Longrightarrow> `q\<Rightarrow>r` \<Longrightarrow> (p\<Rightarrow>r) \<sqsubseteq> P"
+  by pred_blast
+    
+    
+lemma cond_refine_rel: 
+  assumes "(b \<and> p \<Rightarrow> q) \<sqsubseteq> C\<^sub>1" and "(\<not>b \<and> p \<Rightarrow> q)\<sqsubseteq> C\<^sub>2" 
+  shows "(p \<Rightarrow> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
+  using assms by rel_auto
+    
+lemma cond_refine_pred: 
+  assumes "(\<lceil>b \<and> p\<rceil>\<^sub><\<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> C\<^sub>1" and "(\<lceil>\<not>b \<and> p\<rceil>\<^sub><\<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> C\<^sub>2" 
+  shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (C\<^sub>1 \<triangleleft> \<lceil>b\<rceil>\<^sub>< \<triangleright> C\<^sub>2)"
+  using assms by rel_auto
+
+lemma seq_refine_pred:
+  assumes "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> f" and "(\<lceil>s\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> fa"
+  shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (f ;; fa)"
+  using assms by rel_auto
+   
+lemma seq_refine_unrest:
+  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
+  assumes "(p \<Rightarrow> \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> f" and "(\<lceil>s\<rceil>\<^sub>< \<Rightarrow> q) \<sqsubseteq> fa"
+  shows "(p \<Rightarrow> q) \<sqsubseteq> (f ;; fa)"
+  using assms by rel_blast    
+    
+lemmas skip_refine' = post_str_rel[OF skip_r_refine_orig]
+
 
 end
