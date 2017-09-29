@@ -17,12 +17,11 @@ lemma pre_str:
  using assms
   by(rel_auto)
 
-lemma cond_refine_split': 
+lemma cond_refine_split_rel: 
   assumes "(b \<and> p \<Rightarrow> q) \<sqsubseteq> C\<^sub>1" and "(\<not>b \<and> p \<Rightarrow> q)\<sqsubseteq> C\<^sub>2" 
   shows "(p \<Rightarrow> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
   by (insert assms) rel_auto
-    
-    
+        
 lemma cond_refine_split: 
   assumes "(\<lceil>b \<and> p\<rceil>\<^sub><\<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> C\<^sub>1" and "(\<lceil>\<not>b \<and> p\<rceil>\<^sub><\<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> C\<^sub>2" 
   shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (C\<^sub>1 \<triangleleft> \<lceil>b\<rceil>\<^sub>< \<triangleright> C\<^sub>2)"
@@ -66,7 +65,7 @@ lemma skip_refine_XX:
   apply pred_auto
   done  
 
-lemma skip_refine_XXX:
+lemma skip_refine_rel:
   "`(II \<Rightarrow> (p \<Rightarrow> q))` \<Longrightarrow> (p \<Rightarrow> q) \<sqsubseteq> II"
   apply pred_auto
   done  
@@ -135,6 +134,11 @@ proof -
   thus ?thesis
     by pred_simp
 qed
+
+lemma 
+  "(P)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> = ((($\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> P) \<sqsubseteq> f)"
+  by rel_simp
+
   
 lemma usubst_to_ueq:
   "(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/ $\<Sigma>\<rbrakk> = (((Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)"
@@ -198,35 +202,18 @@ proof -
   }
   thus ?thesis
     by pred_simp
-qed          
-  
-  
-lemma  rec_total_rule_Pure': 
-  assumes WF: "wf R"
-  and     M: "mono B"  
-  and     induct_step:
-          "\<And> f st.  \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st'\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> f\<rbrakk>
-               \<Longrightarrow> \<mu> B = f \<Longrightarrow>(Pre \<and> $\<Sigma> =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> (B f)"
-        shows "(Pre \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
-  apply (rule wf_fixp_uinduct_Pure'[where fp=\<mu> and Pre=Pre and B=B])    
-  using M apply (rule gfp_unfold)    
-   apply (rule WF)  
-  apply (rule induct_step)
-   apply assumption
-    apply assumption
-oops    
+qed            
 
 (*The lemma total_rec_utp_test shows how rec_total_utp_rule improves automation wrt
   rec_total_rule_pure which was used for the same example in  total_rec_test*)  
-lemma total_rec_test:
+lemma total_rec_utp_test:
   "vwb_lens x \<Longrightarrow> 
    (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
   apply (rule  rec_total_utp_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
     apply simp
      apply (simp add: cond_mono monoI seqr_mono)
-  apply (rule  cond_refine_split')
+  apply (rule  cond_refine_split_rel)
      prefer 2
-     apply (rule skip_refine_XXX)
      apply pred_simp+      
   done
     
@@ -235,11 +222,9 @@ lemma total_rec_test:
    (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
   apply (rule   rec_total_rule_pure[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"])  
     apply simp
-     apply (simp add: cond_mono monoI seqr_mono)
-    
-  apply (rule  cond_refine_split')
+     apply (simp add: cond_mono monoI seqr_mono)   
+  apply (rule  cond_refine_split_rel)
      prefer 2
-     apply (rule skip_refine_XXX)
      apply pred_simp      
     subgoal premises prems for f st   
     apply (rule seq_refine_split''[where s="0 \<le>\<^sub>u &x \<and> &\<Sigma> =\<^sub>u \<guillemotleft>([x\<mapsto>\<^sub>s &x-1] st)\<guillemotright>"]) 
@@ -250,9 +235,7 @@ lemma total_rec_test:
       apply (rule prems(2))  
       using prems(1) apply pred_simp 
       done
-    done
-
-
+done
     
 definition while_invT :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sub>\<bottom> _ invr _ do _ od" 71) where
 "while\<^sub>\<bottom> b invr p do S od = while\<^sub>\<bottom> b do S od"  
@@ -261,55 +244,29 @@ definition while_invT :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarr
 lemma uwhile_total_rule:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I\<rceil>\<^sub>< \<Rightarrow> \<lceil>I \<and> \<guillemotleft>(st', st) \<in> R\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> f"  
+  assumes induct_step:"\<And> st. (\<lceil>b \<and> I\<rceil>\<^sub>< \<Rightarrow> (\<lceil>I\<rceil>\<^sub>> \<and>($\<Sigma>\<acute>,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)) \<sqsubseteq> f"  
   assumes PHI:"`\<not> \<lceil>b\<rceil>\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>< \<Rightarrow> \<lceil>Post\<rceil>\<^sub>>`"  
   shows "\<lbrace>Pre\<rbrace>while\<^sub>\<bottom> b invr I do f od\<lbrace> Post\<rbrace>\<^sub>u"
   unfolding  hoare_r_def while_invT_def while_bot_def
    apply (rule pre_str[of _ "\<lceil>I\<rceil>\<^sub><" ])
   using I0 
    apply pred_simp
-    apply (rule rec_total_rule[where Pre="\<lceil>I\<rceil>\<^sub><", OF WF])  
+    apply (rule rec_total_utp_rule[where Pre="\<lceil>I\<rceil>\<^sub><", OF WF])  
    apply (simp add: cond_mono monoI seqr_mono)
-  apply (rule  cond_refine_split)
+  apply (rule  cond_refine_split_rel)
      prefer 2
-   apply (rule skip_refine)
+   apply (rule skip_refine_rel)
   using PHI
-   apply simp
-  apply (subst 11)
-    subgoal  order_trans for fa st 
-  apply (rule_tac seq_refine_split[where s= "I \<and> \<guillemotleft>(st', st) \<in> R\<guillemotright>" ])
-   apply (rule order_trans[OF induct_step])
    apply pred_blast
-  apply (subst (asm) 11)
-    apply blast
-done
-
-
-lemma uwhile_total_rule_Pure:
-  assumes WF: "wf R"
-  assumes I0: "`Pre \<Rightarrow> I`"
-  assumes induct_step:"\<And> st st'. (\<lceil>b \<and> I\<rceil>\<^sub>< \<Rightarrow> \<lceil>I\<lbrakk>\<guillemotleft>st'\<guillemotright>/&\<Sigma>\<rbrakk> \<and> \<guillemotleft>(st', st) \<in> R\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/$\<Sigma>\<rbrakk>"  
-  assumes PHI:"`\<not> \<lceil>b\<rceil>\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>< \<Rightarrow> \<lceil>Post\<rceil>\<^sub>>`"  
-  shows "\<lbrace>Pre\<rbrace>while\<^sub>\<bottom> b invr I do f od\<lbrace> Post\<rbrace>\<^sub>u"
-  unfolding  hoare_r_def while_invT_def while_bot_def
-  apply (rule 1[of _ "\<lceil>I\<rceil>\<^sub><" ])
-  using I0 
-   apply pred_simp
-        
-    apply (rule rec_total_rule_Pure[where Pre="\<lceil>I\<rceil>\<^sub><", OF WF])  
-   apply (simp add: cond_mono monoI seqr_mono)
-  apply (rule 2)
-  prefer 2
-   apply (rule 7)
-  using PHI
-   apply pred_blast 
-    apply (subst 11)
-  apply (rule_tac s = "I" in 3)
-   apply (rule order_trans[OF induct_step])
-   prefer 2
-    apply (rule order_trans[OF induct_step])
-    
-  oops
-   
+    subgoal for  st 
+      apply (rule_tac seq_refine_split''[where s= "I \<and> (&\<Sigma>,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
+         apply pred_simp
+        apply pred_simp
+      
+       apply (rule order_trans[OF induct_step]) 
+       apply pred_blast
+      apply pred_simp
+done        
+  done      
 
 end
