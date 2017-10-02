@@ -210,11 +210,11 @@ lemma insertion_sort:
   \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright>\<rbrace>
   i :== 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr &i &array \<guillemotleft>old_array\<guillemotright> do
+  invr outer_invr (&i) (&array) \<guillemotleft>old_array\<guillemotright> do
     j :== &i;;
     (while &j >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
-    invr inner_invr &i &j &array \<guillemotleft>old_array\<guillemotright> do
-      array :== swap_at &j &array;;
+    invr inner_invr (&i) (&j) (&array) \<guillemotleft>old_array\<guillemotright> do
+      array :== swap_at (&j) (&array);;
       j :== (&j - 1)
     od);;
     i :== (&i + 1)
@@ -234,7 +234,7 @@ verification *)
   
 abbreviation \<open>stet v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e s\<guillemotright>\<close>
 
-definition \<open>partition'
+definition \<open>qs_partition
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
   pivot i j (* locals *)
   res (* return value *)
@@ -246,17 +246,17 @@ block II (
   (while &j <\<^sub>u hi invr true do (* TODO: invariant *)
     if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
       i :== (&i + 1);;
-      A :== swap &A &i &j
+      A :== swap (&A) (&i) (&j)
     else II
   od);;
   (if\<^sub>u &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
-      A :== swap &A (&i + 1) hi
+      A :== swap (&A) (&i + 1) hi
   else II);;
   res :== (&i + 1)
 )
-(\<lambda> (s, _) _. i :== stet &i s;; (* these may not be needed as they're reset anyway *)
-             j :== stet &j s;;
-             pivot :== stet &pivot s)
+(\<lambda> (s, _) _. i :== stet (&i) s;; (* these may not be needed as they're reset anyway *)
+             j :== stet (&j) s;;
+             pivot :== stet (&pivot) s)
 (\<lambda> _ _. II)
 \<close>
 definition \<open>slice l u A \<equiv> drop l (take u A)\<close>
@@ -270,32 +270,26 @@ lemma quicksort_exp:
       and \<open>lens_indep_all [array, old_array]\<close> 
       and \<open>vwb_lens pivot\<close>
       and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
-      and \<open>i \<bowtie> array\<close> 
-      and \<open>j \<bowtie> array\<close>
-      and \<open>lo \<bowtie> array\<close>
-      and \<open>hi \<bowtie> array\<close>
-      and \<open>pivot \<bowtie> array\<close>
-      and \<open>res \<bowtie> array\<close>
-      and \<open>i \<bowtie> old_array\<close> 
-      and \<open>j \<bowtie> old_array\<close>
-      and \<open>lo \<bowtie> old_array\<close>
-      and \<open>hi \<bowtie> old_array\<close>
-      and \<open>pivot \<bowtie> old_array\<close>
-      and \<open>res \<bowtie> old_array\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close> 
+      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
+      and \<open>lo \<bowtie> array\<close> and \<open>lo \<bowtie> old_array\<close>
+      and \<open>hi \<bowtie> array\<close> and \<open>hi \<bowtie> old_array\<close>
+      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<bowtie> old_array\<close>
+      and \<open>res \<bowtie> array\<close> and \<open>res \<bowtie> old_array\<close>
   shows
   \<open>\<lbrace>&array =\<^sub>u &old_array \<and> 0 \<le>\<^sub>u &lo \<and> &lo \<le>\<^sub>u &hi \<and> &hi <\<^sub>u #\<^sub>u(&array)\<rbrace>
    \<nu> X \<bullet>
   if\<^sub>u &lo <\<^sub>u &hi then
-    partition' array &lo &hi pivot i j res;;
+    qs_partition array (&lo) (&hi) pivot i j res;;
     block II
       (hi :== (&res - 1);; X)
-      (\<lambda> (s, _) _. hi :== stet &hi s;;
-                   res :== stet &res s)
+      (\<lambda> (s, _) _. hi :== stet (&hi) s;;
+                   res :== stet (&res) s)
       (\<lambda> _ _. II);;
     block II
       (lo :== (&res + 1);; X)
-      (\<lambda> (s, _) _. lo :== stet &lo s;;
-                   res :== stet &res s)
+      (\<lambda> (s, _) _. lo :== stet (&lo) s;;
+                   res :== stet (&res) s)
       (\<lambda> _ _. II)
   else
     II
@@ -304,7 +298,7 @@ lemma quicksort_exp:
 \<and> slice\<^sub>u (&hi) #\<^sub>u(&array) (&array) =\<^sub>u slice\<^sub>u (&hi) #\<^sub>u(&array) (&old_array)
 \<and> #\<^sub>u(&array) =\<^sub>u #\<^sub>u(&old_array)
 \<and> sorted\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array))\<rbrace>\<^sub>u\<close>
-  unfolding partition'_def
+  unfolding qs_partition_def
   apply (insert assms)
   apply (rule nu_hoare_r[OF upred_taut_refl])
   apply exp_vcg
@@ -323,21 +317,21 @@ lemma quicksort:
   \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright> \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
    \<nu> X [undefined ''pre'' \<Rightarrow> undefined ''post''] \<bullet>
   if\<^sub>u &lo <\<^sub>u &hi then
-    partition' array &lo &hi pivot i j res;;
+    qs_partition array (&lo) (&hi) pivot i j res;;
     block II
       (hi :== (&res - 1);; X)
-      (\<lambda> (s, _) _. hi :== stet &hi s;;
-                   res :== stet &res s)
+      (\<lambda> (s, _) _. hi :== stet (&hi) s;;
+                   res :== stet (&res) s)
       (\<lambda> _ _. II);;
     block II
       (lo :== (&res + 1);; X)
-      (\<lambda> (s, _) _. lo :== stet &lo s;;
-                   res :== stet &res s)
+      (\<lambda> (s, _) _. lo :== stet (&lo) s;;
+                   res :== stet (&res) s)
       (\<lambda> _ _. II)
   else
     II
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
-  unfolding partition'_def
+  unfolding qs_partition_def
   apply (insert assms)
   apply exp_vcg
 
