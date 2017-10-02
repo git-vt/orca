@@ -45,7 +45,7 @@ subsection \<open>Even count\<close>
 
 lemma even_count_method:
   assumes \<open>lens_indep_all [i, start, j, endd]\<close>
-  shows            
+  shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i :== &start;;
     j :== 0;;
@@ -67,7 +67,7 @@ lemma even_count_method:
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
    apply solve_vcg
-  done    
+  done
 
 subsection Sorting
 definition \<open>outer_invr i array old_array \<equiv>
@@ -105,7 +105,7 @@ lemma inner_invr_init[vcg_simps]:
 text \<open>The below function provides an easy-to-understand swap-elements-at-i-and-(i-1) function.\<close>
 definition \<open>swap_at i xs = xs[i := xs!(i-1), i-1 := xs!i]\<close>
 abbreviation \<open>swap_at\<^sub>u \<equiv> bop swap_at\<close>
-  
+
 lemma inner_invr_step[vcg_simps]:
   assumes \<open>inner_invr i j array old_array\<close>
     and \<open>j > 0\<close>
@@ -200,37 +200,38 @@ lemma outer_invr_final[vcg_dests]:
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
-      and \<open>vwb_lens array\<close>
+      and \<open>vwb_lens array\<close> and \<open>array \<sharp> old_array\<close>
       and \<open>vwb_lens x\<close> and \<open>x \<bowtie> i\<close> and \<open>x \<bowtie> j\<close>
-      and \<open>i \<bowtie> array\<close>
-      and \<open>x \<bowtie> array\<close>
-      and \<open>j \<bowtie> array\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<sharp> old_array\<close>
+      and \<open>x \<bowtie> array\<close> and \<open>x \<sharp> old_array\<close>
+      and \<open>j \<bowtie> array\<close> and \<open>j \<sharp> old_array\<close>
   shows
-  \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright>\<rbrace>
+  \<open>\<lbrace>&array =\<^sub>u old_array\<rbrace>
   i :== 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr\<^sub>u (&i) (&array) \<guillemotleft>old_array\<guillemotright> do
+  invr outer_invr\<^sub>u (&i) (&array) old_array do
     j :== &i;;
     (while &j >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
-    invr inner_invr\<^sub>u (&i) (&j) (&array) \<guillemotleft>old_array\<guillemotright> do
+    invr inner_invr\<^sub>u (&i) (&j) (&array) old_array do
       array :== swap_at\<^sub>u (&j) (&array);;
       j :== (&j - 1)
     od);;
     i :== (&i + 1)
   od
-  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
   by (insert assms) exp_vcg
 
 subsubsection Quicksort
 
-text \<open>The below function provides a more general swap\<^sub>u function.\<close>
-definition \<open>swap xs i j = xs[i := xs!j, j := xs!i]\<close>
+text \<open>The below definition provides a more general swap function.\<close>
+definition \<open>swap i j xs = xs[i := xs!j, j := xs!i]\<close>
 abbreviation \<open>swap\<^sub>u \<equiv> trop swap\<close>
 
-(* more efficient to choose the pivot from the middle (or rather, the median of first/middle/last,
-or even the nine-median method for large lists), but that's probably harder to set up for
-verification *)
-  
+text \<open>It's more efficient to choose the pivot from the middle (or rather, the median of
+first/middle/last, or even the nine-median method for large lists), but that is probably harder to
+set up for verification; the partitioning mechanism is also not the most efficient, but seems to be
+the simplest to handle.\<close>
+
 abbreviation \<open>stet v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e s\<guillemotright>\<close>
 
 definition \<open>qs_partition
@@ -239,63 +240,112 @@ definition \<open>qs_partition
   res (* return value *)
 \<equiv>
 block II (
-  pivot :== (&A :\<^sub>u ('a::ord) list)(hi)\<^sub>a;;
-  i :== (lo - 1);;
+  pivot :== &A(hi)\<^sub>a;;
+  i :== lo;; (* keeping i at 0 or greater to avoid nat/int conversions; this did require reworking
+              the algorithm slightly. *)
   j :== lo;;
   (while &j <\<^sub>u hi invr true do (* TODO: invariant *)
-    if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
-      i :== (&i + 1);;
-      A :== swap\<^sub>u (&A) (&i) (&j)
-    else II
+    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
+      A :== swap\<^sub>u (&i) (&j) (&A);;
+      i :== (&i + 1)
+    else II);;
+    j :== (&j + 1)
   od);;
-  (if\<^sub>u &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
-      A :== swap\<^sub>u (&A) (&i + 1) hi
+  (if\<^sub>u &pivot <\<^sub>u &A(&i)\<^sub>a then
+      A :== swap\<^sub>u (&i) hi (&A)
   else II);;
-  res :== (&i + 1)
+  res :== &i
 )
 (\<lambda> (s, _) _. i :== stet (&i) s;; (* these may not be needed as they're reset anyway *)
              j :== stet (&j) s;;
              pivot :== stet (&pivot) s)
 (\<lambda> _ _. II)
 \<close>
+
 definition \<open>slice l u A \<equiv> drop l (take u A)\<close>
 abbreviation \<open>slice\<^sub>u \<equiv> trop slice\<close>
 
-lemma quicksort_partition:
-  assumes \<open>\<close>
+definition \<open>pivot_invr u A \<equiv> \<forall>x \<in> set (take u A). \<forall>y \<in> set (drop u A). x \<le> y\<close>
+abbreviation \<open>pivot_invr\<^sub>u \<equiv> bop pivot_invr\<close>
+
+definition \<open>qs_partition_invr A oldA lo hi i j \<equiv>
+  mset A = mset oldA
+\<and> i \<le> j
+\<and> (\<forall>x \<in> set (slice lo i A). x \<le> A!hi)
+\<and> (\<forall>x \<in> set (slice i j A). A!hi < x)
+\<close>
+abbreviation \<open>qs_partition_invr\<^sub>u \<equiv> sxop qs_partition_invr\<close>
+
+lemma qs_partition_invr_init[vcg_simps]:
+  assumes \<open>A = oldA\<close>
+    and \<open>lo < hi\<close>
+    and \<open>hi < length A\<close>
+    and \<open>pivot_invr lo A\<close>
+    and \<open>pivot_invr (Suc hi) A\<close>
+  shows \<open>qs_partition_invr A oldA lo hi lo lo\<close>
+  using assms unfolding qs_partition_invr_def pivot_invr_def
+  by (smt drop_all empty_iff length_take less_imp_le less_trans list.set(1) min.absorb2 order_refl
+      slice_def)
+
+lemma qs_partition_invr_step1[vcg_simps]:
+  assumes \<open>qs_partition_invr A oldA lo hi i j\<close>
+    and \<open>j < hi\<close>
+    and \<open>hi < length A\<close>
+    and \<open>A!j < A!hi\<close>
+  shows \<open>\<close>
+  using assms unfolding qs_partition_invr_def pivot_invr_def
+
+
+lemma quicksort_partition[vcg_simps]:
+  assumes \<open>lens_indep_all [i, j, res]\<close>
+      and \<open>vwb_lens pivot\<close> and \<open>vwb_lens A\<close>
+      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
+      and \<open>i \<bowtie> A\<close> and \<open>i \<sharp> oldA\<close> and \<open>i \<sharp> lo\<close> and \<open>i \<sharp> hi\<close>
+      and \<open>j \<bowtie> A\<close> and \<open>j \<sharp> oldA\<close> and \<open>j \<sharp> lo\<close> and \<open>j \<sharp> hi\<close>
+      and \<open>pivot \<bowtie> A\<close> and \<open>pivot \<sharp> oldA\<close> and \<open>pivot \<sharp> lo\<close> and \<open>pivot \<sharp> hi\<close>
+      and \<open>res \<bowtie> A\<close> and \<open>res \<sharp> oldA\<close> and \<open>res \<sharp> lo\<close> and \<open>res \<sharp> hi\<close>
   shows
-  \<open>\<lbrace>\<rbrace>
-  pivot :== (&A :\<^sub>u ('a::ord) list)(hi)\<^sub>a;;
-  i :== (lo - 1);;
+  \<open>\<lbrace>&A =\<^sub>u oldA
+\<and> lo <\<^sub>u hi
+\<and> hi <\<^sub>u #\<^sub>u(&A)
+\<and> pivot_invr\<^sub>u lo (&A)
+\<and> pivot_invr\<^sub>u hi (&A)\<rbrace>
+  pivot :== &A(hi)\<^sub>a;;
+  i :== lo;;
   j :== lo;;
-  (while &j <\<^sub>u hi invr true do (* TODO: invariant *)
-    if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
-      i :== (&i + 1);;
-      A :== swap\<^sub>u (&A) (&i) (&j)
-    else II
+  (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) do
+    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
+      A :== swap\<^sub>u (&i) (&j) (&A);;
+      i :== (&i + 1)
+    else II);;
+    j :== (&j + 1)
   od);;
-  (if\<^sub>u &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
-      A :== swap\<^sub>u (&A) (&i + 1) hi
+  (if\<^sub>u &pivot <\<^sub>u &A(&i)\<^sub>a then
+      A :== swap\<^sub>u (&i) hi (&A)
   else II);;
-  res :== (&i + 1)
-\<lbrace>\<rbrace>\<^sub>u\<close>
+  res :== &i
+  \<lbrace>mset\<^sub>u(&A) =\<^sub>u mset\<^sub>u(oldA)
+\<and> pivot_invr\<^sub>u (&res) (&A)\<rbrace>\<^sub>u\<close>
+  unfolding swap_def
+  apply (insert assms)
+  apply exp_vcg
+    apply solve_vcg
 
 lemma upred_taut_refl: \<open>`A \<Rightarrow> A`\<close>
   by pred_simp
 
 lemma quicksort_exp:
   assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
-      and \<open>lens_indep_all [array, old_array]\<close> 
-      and \<open>vwb_lens pivot\<close>
+      and \<open>vwb_lens array\<close> and \<open>vwb_lens pivot\<close>
       and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
-      and \<open>i \<bowtie> array\<close> and \<open>i \<bowtie> old_array\<close> 
-      and \<open>j \<bowtie> array\<close> and \<open>j \<bowtie> old_array\<close>
-      and \<open>lo \<bowtie> array\<close> and \<open>lo \<bowtie> old_array\<close>
-      and \<open>hi \<bowtie> array\<close> and \<open>hi \<bowtie> old_array\<close>
-      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<bowtie> old_array\<close>
-      and \<open>res \<bowtie> array\<close> and \<open>res \<bowtie> old_array\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<sharp> old_array\<close>
+      and \<open>j \<bowtie> array\<close> and \<open>j \<sharp> old_array\<close>
+      and \<open>lo \<bowtie> array\<close> and \<open>lo \<sharp> old_array\<close>
+      and \<open>hi \<bowtie> array\<close> and \<open>hi \<sharp> old_array\<close>
+      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<sharp> old_array\<close>
+      and \<open>res \<bowtie> array\<close> and \<open>res \<sharp> old_array\<close>
   shows
-  \<open>\<lbrace>&array =\<^sub>u &old_array \<and> 0 \<le>\<^sub>u &lo \<and> &lo \<le>\<^sub>u &hi \<and> &hi <\<^sub>u #\<^sub>u(&array)\<rbrace>
+  \<open>\<lbrace>&array =\<^sub>u old_array \<and> &lo \<le>\<^sub>u &hi \<and> &hi <\<^sub>u #\<^sub>u(&array)\<rbrace>
    \<nu> X \<bullet>
   if\<^sub>u &lo <\<^sub>u &hi then
     qs_partition array (&lo) (&hi) pivot i j res;;
@@ -311,10 +361,10 @@ lemma quicksort_exp:
       (\<lambda> _ _. II)
   else
     II
-  \<lbrace>mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array)) =\<^sub>u mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&old_array))
-\<and> slice\<^sub>u 0 (&lo) (&array) =\<^sub>u slice\<^sub>u 0 (&lo) (&old_array)
-\<and> slice\<^sub>u (&hi) #\<^sub>u(&array) (&array) =\<^sub>u slice\<^sub>u (&hi) #\<^sub>u(&array) (&old_array)
-\<and> #\<^sub>u(&array) =\<^sub>u #\<^sub>u(&old_array)
+  \<lbrace>mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array)) =\<^sub>u mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) old_array)
+\<and> slice\<^sub>u 0 (&lo) (&array) =\<^sub>u slice\<^sub>u 0 (&lo) old_array
+\<and> slice\<^sub>u (&hi) #\<^sub>u(&array) (&array) =\<^sub>u slice\<^sub>u (&hi) #\<^sub>u(&array) old_array
+\<and> #\<^sub>u(&array) =\<^sub>u #\<^sub>u(old_array)
 \<and> sorted\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array))\<rbrace>\<^sub>u\<close>
   unfolding qs_partition_def
   apply (insert assms)
@@ -325,14 +375,14 @@ lemma quicksort:
   assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
       and \<open>vwb_lens array\<close> and \<open>vwb_lens pivot\<close>
       and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
-      and \<open>i \<bowtie> array\<close>
-      and \<open>j \<bowtie> array\<close>
-      and \<open>lo \<bowtie> array\<close>
-      and \<open>hi \<bowtie> array\<close>
-      and \<open>pivot \<bowtie> array\<close>
-      and \<open>res \<bowtie> array\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<sharp> old_array\<close>
+      and \<open>j \<bowtie> array\<close> and \<open>j \<sharp> old_array\<close>
+      and \<open>lo \<bowtie> array\<close> and \<open>lo \<sharp> old_array\<close>
+      and \<open>hi \<bowtie> array\<close> and \<open>hi \<sharp> old_array\<close>
+      and \<open>pivot \<bowtie> array\<close> and \<open>pivot \<sharp> old_array\<close>
+      and \<open>res \<bowtie> array\<close> and \<open>res \<sharp> old_array\<close>
   shows
-  \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright> \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
+  \<open>\<lbrace>&array =\<^sub>u old_array \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
    \<nu> X [undefined ''pre'' \<Rightarrow> undefined ''post''] \<bullet>
   if\<^sub>u &lo <\<^sub>u &hi then
     qs_partition array (&lo) (&hi) pivot i j res;;
@@ -348,7 +398,7 @@ lemma quicksort:
       (\<lambda> _ _. II)
   else
     II
-  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
   unfolding qs_partition_def
   apply (insert assms)
   apply exp_vcg

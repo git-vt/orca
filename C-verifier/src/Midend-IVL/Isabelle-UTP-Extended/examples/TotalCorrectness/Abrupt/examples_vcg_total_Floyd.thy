@@ -45,7 +45,7 @@ subsection \<open>Even count\<close>
 
 lemma even_count_method:
   assumes \<open>lens_indep_all [i, start, j, endd]\<close>
-  shows            
+  shows
   \<open>\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
     i \<Midarrow> &start;;
     j \<Midarrow> 0;;
@@ -201,31 +201,31 @@ lemma outer_invr_final[vcg_dests]:
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
-      and \<open>vwb_lens array\<close>
+      and \<open>vwb_lens array\<close> and \<open>array \<sharp> old_array\<close>
       and \<open>vwb_lens x\<close> and \<open>x \<bowtie> i\<close> and \<open>x \<bowtie> j\<close>
-      and \<open>i \<bowtie> array\<close>
-      and \<open>x \<bowtie> array\<close>
-      and \<open>j \<bowtie> array\<close>
+      and \<open>i \<bowtie> array\<close> and \<open>i \<sharp> old_array\<close>
+      and \<open>x \<bowtie> array\<close> and \<open>x \<sharp> old_array\<close>
+      and \<open>j \<bowtie> array\<close> and \<open>j \<sharp> old_array\<close>
   shows
-  \<open>\<lbrace>&array =\<^sub>u \<guillemotleft>old_array\<guillemotright>\<rbrace>
+  \<open>\<lbrace>&array =\<^sub>u old_array\<rbrace>
   i \<Midarrow> 1;;
   while &i <\<^sub>u #\<^sub>u(&array)
-  invr outer_invr\<^sub>u (&i) (&array) \<guillemotleft>old_array\<guillemotright> do
+  invr outer_invr\<^sub>u (&i) (&array) old_array do
     j \<Midarrow> &i;;
     while &j >\<^sub>u 0 \<and> &array(&j - 1)\<^sub>a >\<^sub>u &array(&j)\<^sub>a
-    invr inner_invr\<^sub>u (&i) (&j) (&array) \<guillemotleft>old_array\<guillemotright> do
+    invr inner_invr\<^sub>u (&i) (&j) (&array) old_array do
       array \<Midarrow> swap_at\<^sub>u (&j) (&array);;
       j \<Midarrow> (&j - 1)
     od;;
     i \<Midarrow> (&i + 1)
   od
-  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(\<guillemotleft>old_array\<guillemotright>) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms) exp_vcg
 
 subsubsection Quicksort
 
 text \<open>The below function provides a more general swap\<^sub>u function.\<close>
-definition \<open>swap xs i j = xs[i := xs!j, j := xs!i]\<close>
+definition \<open>swap i j xs = xs[i := xs!j, j := xs!i]\<close>
 abbreviation \<open>swap\<^sub>u \<equiv> trop swap\<close>
 
 (* more efficient to choose the pivot from the middle (or rather, the median of first/middle/last,
@@ -245,11 +245,11 @@ BODY
   while &j <\<^sub>u hi invr true do (* TODO: invariant *)
     bif &A(&j)\<^sub>a <\<^sub>u &pivot then
       i \<Midarrow> (&i + 1);;
-      A \<Midarrow> swap\<^sub>u (&A) (&i) (&j)
+      A \<Midarrow> swap\<^sub>u (&i) (&j) (&A)
     else II eif
   od;;
   bif &A(hi)\<^sub>a <\<^sub>u &A(&i + 1)\<^sub>a then
-      A \<Midarrow> swap\<^sub>u (&A) (&i + 1) hi
+      A \<Midarrow> swap\<^sub>u (&i + 1) hi (&A)
   else II eif;;
   res \<Midarrow> (&i + 1)
 RESTORE \<lambda> (s, _) _. i \<Midarrow> cp_des (&i) s;; (* these may not be needed as they're reset anyway *)
