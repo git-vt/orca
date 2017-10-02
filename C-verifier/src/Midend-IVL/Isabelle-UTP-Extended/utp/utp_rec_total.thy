@@ -2,7 +2,7 @@ theory utp_rec_total
   imports  "../hoare/HoareLogic/PartialCorrectness/utp_hoare"
 begin
 text {*The following lemma explains the intuition behind lifting operators from predicates to relations.
-       While in relational setting both input and output state are evaluated. A predicate
+       While in relational setting both, input and output state are evaluated. A predicate
        evaluate only on a single state. To unify predicates and relations such a lifting is necessary.
        This gives away to express Hoare logic in relational calculus.*}
   
@@ -62,7 +62,7 @@ lemma  rec_total_pure_rule:
    apply assumption
   done     
 
-(*TODO @Yakoub: the proof of rec_total_rule_utp is totally independent from
+(*TODO @Yakoub: the proof of rec_total_utp_rule is totally independent from
   wf_fixp_uinduct_pure_ueq. Make it dependent to keep the logic reasoning straight*)
 text {*Since @{term "B ((Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post)) \<sqsubseteq> B (\<mu> B)"} and 
       @{term "mono B"}, thus,  @{thm rec_total_pure_rule} can be expressed as follows*}
