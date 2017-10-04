@@ -68,6 +68,11 @@ lift_definition sxop ::
    ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('c, '\<alpha>) uexpr \<Rightarrow> ('d, '\<alpha>) uexpr \<Rightarrow> ('e, '\<alpha>) uexpr \<Rightarrow>
    ('f, '\<alpha>) uexpr \<Rightarrow> ('g, '\<alpha>) uexpr\<close>
   is \<open>\<lambda>f u v w x y z b. f (u b) (v b) (w b) (x b) (y b) (z b)\<close> .
+lift_definition sepop ::
+  \<open>('a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> 'e \<Rightarrow> 'f \<Rightarrow> 'g \<Rightarrow> 'h) \<Rightarrow>
+   ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('c, '\<alpha>) uexpr \<Rightarrow> ('d, '\<alpha>) uexpr \<Rightarrow> ('e, '\<alpha>) uexpr \<Rightarrow>
+   ('f, '\<alpha>) uexpr \<Rightarrow> ('g, '\<alpha>) uexpr \<Rightarrow> ('h, '\<alpha>) uexpr\<close>
+  is \<open>\<lambda>f u v w x y z a b. f (u b) (v b) (w b) (x b) (y b) (z b) (a b)\<close> .
 update_uexpr_rep_eq_thms \<comment> \<open>Necessary to get the above utilized by {pred,rel}_{auto,simp}\<close>
 
 text \<open>The below lemmas do not seem useful in general but are included for completeness.\<close>

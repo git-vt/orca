@@ -2,6 +2,7 @@ section \<open>Helper constants and such\<close>
 
 theory helpers
 imports
+  "../../../../utils/utp_extensions"
   "../../../../../../Backend/VCG/VCG_total_Floyd"
 begin
 

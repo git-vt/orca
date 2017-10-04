@@ -2,8 +2,8 @@ section \<open>Examples using VCG for Partial Correctness\<close>
 
 theory examples_vcg_Floyd
 imports
-  "../../../utils/utp_extensions"
   "../../../../../Backend/VCG/VCG_rel_Floyd"
+  "../../../utils/vcg_helpers"
 begin
 
 subsection Increment
@@ -102,14 +102,10 @@ lemma inner_invr_init[vcg_simps]:
   using assms unfolding outer_invr_def inner_invr_def
   by auto
 
-text \<open>The below function provides an easy-to-understand swap-elements-at-i-and-(i-1) function.\<close>
-definition \<open>swap_at i xs = xs[i := xs!(i-1), i-1 := xs!i]\<close>
-abbreviation \<open>swap_at\<^sub>u \<equiv> bop swap_at\<close>
-
 lemma inner_invr_step[vcg_simps]:
   assumes \<open>inner_invr i j array old_array\<close>
     and \<open>j > 0\<close>
-    and \<open>array!(j- Suc 0) > array!j\<close>
+    and \<open>array!(j - Suc 0) > array!j\<close>
   shows \<open>inner_invr i (j - Suc 0) (swap_at j array) old_array\<close>
   using assms unfolding inner_invr_def Let_def
   apply clarsimp
@@ -156,22 +152,6 @@ next
           swap_at_def xs\<^sub>2_def y y_concat_xs\<^sub>2)
   }
 qed
-
-lemma disjE1:
-  assumes \<open>P \<or> Q\<close>
-    and \<open>P \<Longrightarrow> R\<close>
-    and \<open>\<not> P \<Longrightarrow> Q \<Longrightarrow> R\<close>
-  shows \<open>R\<close>
-  using assms by blast
-
-lemma insert_with_sorted:
-  assumes \<open>sorted (xs\<^sub>1 @ xs\<^sub>2)\<close>
-      and \<open>\<forall>y \<in> set xs\<^sub>2. x < y\<close>
-      and \<open>x \<ge> last xs\<^sub>1\<close>
-      and \<open>xs\<^sub>1 \<noteq> []\<close>
-  shows \<open>sorted (xs\<^sub>1 @ x # xs\<^sub>2)\<close>
-  using assms
-  by (auto simp: sorted_append sorted_Cons) (meson order_trans sorted_last)
 
 lemma outer_invr_step[vcg_simps]:
   assumes \<open>inner_invr i j array old_array\<close>
@@ -223,16 +203,117 @@ lemma insertion_sort:
 
 subsubsection Quicksort
 
-text \<open>The below definition provides a more general swap function.\<close>
-definition \<open>swap i j xs = xs[i := xs!j, j := xs!i]\<close>
-abbreviation \<open>swap\<^sub>u \<equiv> trop swap\<close>
-
 text \<open>It's more efficient to choose the pivot from the middle (or rather, the median of
 first/middle/last, or even the nine-median method for large lists), but that is probably harder to
 set up for verification; the partitioning mechanism is also not the most efficient, but seems to be
 the simplest to handle.\<close>
 
-abbreviation \<open>stet v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e s\<guillemotright>\<close>
+definition \<open>qs_partition_invr A oldA lo hi i j pivot \<equiv>
+  mset (slice lo hi A) = mset (slice lo hi oldA)
+\<and> take lo A = take lo oldA
+\<and> drop hi A = drop hi oldA (* pivot at hi doesn't get moved until after the loop *)
+\<and> lo \<le> i
+\<and> i \<le> j
+\<and> j \<le> hi
+\<and> lo < hi
+\<and> hi < length A
+\<and> (\<forall>x \<in> set (slice lo i A). x \<le> pivot)
+\<and> (\<forall>x \<in> set (slice i j A). pivot \<le> x)
+\<and> pivot = A!hi
+\<close>
+abbreviation \<open>qs_partition_invr\<^sub>u \<equiv> sepop qs_partition_invr\<close>
+
+lemma qs_partition_invr_init[vcg_simps]:
+  assumes \<open>A = oldA\<close>
+    and \<open>lo < hi\<close>
+    and \<open>hi < length A\<close>
+  shows \<open>qs_partition_invr A oldA lo hi lo lo (A!hi)\<close>
+  using assms unfolding qs_partition_invr_def pivot_invr_def slice_def
+  by (smt drop_all empty_iff length_take less_imp_le less_trans list.set(1) min.absorb2 order_refl)
+
+lemma qs_partition_invr_step1[vcg_simps]:
+  fixes A :: \<open>_::linorder list\<close>
+  assumes \<open>qs_partition_invr A oldA lo hi i j pivot\<close>
+    and \<open>j < hi\<close>
+    and \<open>A!j < pivot\<close> (* version requiring swap and i increment *)
+  shows \<open>qs_partition_invr (swap i j A) oldA lo hi (Suc i) (Suc j) pivot\<close>
+  using assms unfolding qs_partition_invr_def swap_def
+  apply auto
+  subgoal
+    using mset_swap[of \<open>j - lo\<close> \<open>slice lo hi A\<close> \<open>i - lo\<close>]
+    by (simp add: slice_update_extract)
+  subgoal for x
+    by (cases \<open>i = j\<close>) (auto simp: slice_suc2_eq)
+  subgoal for x
+    apply (cases \<open>i = j\<close>)
+     apply auto[]
+    apply (auto simp: slice_set_conv_nth nth_list_update)
+     apply fastforce
+    by (metis Suc_leD less_antisym less_trans)
+  done
+
+lemma qs_partition_invr_step2_helper:
+  fixes A :: \<open>_::linorder list\<close>
+  assumes \<open>\<forall>x \<in> set (slice i j A). p \<le> x\<close>
+      and \<open>p \<le> A!j\<close>
+  shows \<open>\<forall>x \<in> set (slice i (Suc j) A). p \<le> x\<close>
+  using assms unfolding slice_def
+  by auto (smt Suc_diff_Suc antisym_conv2 append_take_drop_id diff_Suc_Suc drop_all drop_take
+      in_set_conv_nth length_take less_or_eq_imp_le min_def not_less not_less_eq nth_append nth_take
+      take_all) (* takes a while *)
+
+lemma qs_partition_invr_step2[vcg_simps]:
+  fixes A :: \<open>_::linorder list\<close>
+  assumes \<open>qs_partition_invr A oldA lo hi i j pivot\<close>
+    and \<open>j < hi\<close>
+    and \<open>pivot \<le> A!j\<close> \<comment> \<open>so array doesn't change this step\<close>
+  shows \<open>qs_partition_invr A oldA lo hi i (Suc j) pivot\<close>
+  using assms unfolding qs_partition_invr_def pivot_invr_def
+  using qs_partition_invr_step2_helper by auto blast
+
+lemma qs_partition_invr_final[vcg_simps]:
+  fixes A :: \<open>_::linorder list\<close>
+  assumes \<open>qs_partition_invr A oldA lo hi i j pivot\<close>
+     and \<open>\<not> j < hi\<close>
+ shows \<open>mset (swap i hi A) = mset oldA\<close>
+   and \<open>pivot_invr i (swap i hi A)\<close>
+
+lemma quicksort_partition[vcg_simps]:
+  fixes pivot :: \<open>_::linorder \<Longrightarrow> _\<close>
+  assumes \<open>lens_indep_all [i, j, res]\<close>
+      and \<open>vwb_lens pivot\<close> and \<open>vwb_lens A\<close>
+      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
+      and \<open>A \<sharp> oldA\<close> and \<open>A \<sharp> lo\<close> and \<open>A \<sharp> hi\<close>
+      and \<open>i \<bowtie> A\<close> and \<open>i \<sharp> oldA\<close> and \<open>i \<sharp> lo\<close> and \<open>i \<sharp> hi\<close>
+      and \<open>j \<bowtie> A\<close> and \<open>j \<sharp> oldA\<close> and \<open>j \<sharp> lo\<close> and \<open>j \<sharp> hi\<close>
+      and \<open>pivot \<bowtie> A\<close> and \<open>pivot \<sharp> oldA\<close> and \<open>pivot \<sharp> lo\<close> and \<open>pivot \<sharp> hi\<close>
+      and \<open>res \<bowtie> A\<close> and \<open>res \<sharp> oldA\<close> and \<open>res \<sharp> lo\<close> and \<open>res \<sharp> hi\<close>
+  shows
+  \<open>\<lbrace>&A =\<^sub>u oldA
+\<and> lo <\<^sub>u hi
+\<and> hi <\<^sub>u #\<^sub>u(&A)\<rbrace>
+  pivot :== &A(hi)\<^sub>a;;
+  i :== lo;;
+  j :== lo;;
+  (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot) do
+    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
+      A :== swap\<^sub>u (&i) (&j) (&A);;
+      i :== (&i + 1);;
+      j :== (&j + 1)
+    else j :== (&j + 1));;
+    (qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot))\<^sub>\<bottom>
+  od);;
+(*   (if\<^sub>u &pivot <\<^sub>u &A(&i)\<^sub>a then *)
+      A :== swap\<^sub>u (&i) hi (&A);;
+(*   else II);; *)
+  res :== &i
+  \<lbrace>mset\<^sub>u(slice\<^sub>u lo (hi + 1) (&A)) =\<^sub>u mset\<^sub>u(slice\<^sub>u lo (hi + 1) oldA)
+\<and> take\<^sub>u(lo, &A) =\<^sub>u take\<^sub>u(lo, oldA)
+\<and> drop\<^sub>u(hi + 1, &A) =\<^sub>u drop\<^sub>u(hi + 1, oldA)
+\<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))\<rbrace>\<^sub>u\<close>
+  apply (insert assms)
+  apply exp_vcg
+    apply solve_vcg
 
 definition \<open>qs_partition
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
@@ -262,78 +343,6 @@ block II (
 (\<lambda> _ _. II)
 \<close>
 
-definition \<open>slice l u A \<equiv> drop l (take u A)\<close>
-abbreviation \<open>slice\<^sub>u \<equiv> trop slice\<close>
-
-definition \<open>pivot_invr u A \<equiv> \<forall>x \<in> set (take u A). \<forall>y \<in> set (drop u A). x \<le> y\<close>
-abbreviation \<open>pivot_invr\<^sub>u \<equiv> bop pivot_invr\<close>
-
-definition \<open>qs_partition_invr A oldA lo hi i j \<equiv>
-  mset A = mset oldA
-\<and> i \<le> j
-\<and> (\<forall>x \<in> set (slice lo i A). x \<le> A!hi)
-\<and> (\<forall>x \<in> set (slice i j A). A!hi < x)
-\<close>
-abbreviation \<open>qs_partition_invr\<^sub>u \<equiv> sxop qs_partition_invr\<close>
-
-lemma qs_partition_invr_init[vcg_simps]:
-  assumes \<open>A = oldA\<close>
-    and \<open>lo < hi\<close>
-    and \<open>hi < length A\<close>
-    and \<open>pivot_invr lo A\<close>
-    and \<open>pivot_invr (Suc hi) A\<close>
-  shows \<open>qs_partition_invr A oldA lo hi lo lo\<close>
-  using assms unfolding qs_partition_invr_def pivot_invr_def
-  by (smt drop_all empty_iff length_take less_imp_le less_trans list.set(1) min.absorb2 order_refl
-      slice_def)
-
-lemma qs_partition_invr_step1[vcg_simps]:
-  assumes \<open>qs_partition_invr A oldA lo hi i j\<close>
-    and \<open>j < hi\<close>
-    and \<open>hi < length A\<close>
-    and \<open>A!j < A!hi\<close>
-  shows \<open>\<close>
-  using assms unfolding qs_partition_invr_def pivot_invr_def
-
-
-lemma quicksort_partition[vcg_simps]:
-  assumes \<open>lens_indep_all [i, j, res]\<close>
-      and \<open>vwb_lens pivot\<close> and \<open>vwb_lens A\<close>
-      and \<open>pivot \<bowtie> i\<close> and \<open>pivot \<bowtie> j\<close> and \<open>pivot \<bowtie> res\<close>
-      and \<open>i \<bowtie> A\<close> and \<open>i \<sharp> oldA\<close> and \<open>i \<sharp> lo\<close> and \<open>i \<sharp> hi\<close>
-      and \<open>j \<bowtie> A\<close> and \<open>j \<sharp> oldA\<close> and \<open>j \<sharp> lo\<close> and \<open>j \<sharp> hi\<close>
-      and \<open>pivot \<bowtie> A\<close> and \<open>pivot \<sharp> oldA\<close> and \<open>pivot \<sharp> lo\<close> and \<open>pivot \<sharp> hi\<close>
-      and \<open>res \<bowtie> A\<close> and \<open>res \<sharp> oldA\<close> and \<open>res \<sharp> lo\<close> and \<open>res \<sharp> hi\<close>
-  shows
-  \<open>\<lbrace>&A =\<^sub>u oldA
-\<and> lo <\<^sub>u hi
-\<and> hi <\<^sub>u #\<^sub>u(&A)
-\<and> pivot_invr\<^sub>u lo (&A)
-\<and> pivot_invr\<^sub>u hi (&A)\<rbrace>
-  pivot :== &A(hi)\<^sub>a;;
-  i :== lo;;
-  j :== lo;;
-  (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) do
-    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
-      A :== swap\<^sub>u (&i) (&j) (&A);;
-      i :== (&i + 1)
-    else II);;
-    j :== (&j + 1)
-  od);;
-  (if\<^sub>u &pivot <\<^sub>u &A(&i)\<^sub>a then
-      A :== swap\<^sub>u (&i) hi (&A)
-  else II);;
-  res :== &i
-  \<lbrace>mset\<^sub>u(&A) =\<^sub>u mset\<^sub>u(oldA)
-\<and> pivot_invr\<^sub>u (&res) (&A)\<rbrace>\<^sub>u\<close>
-  unfolding swap_def
-  apply (insert assms)
-  apply exp_vcg
-    apply solve_vcg
-
-lemma upred_taut_refl: \<open>`A \<Rightarrow> A`\<close>
-  by pred_simp
-
 lemma quicksort_exp:
   assumes \<open>lens_indep_all [i, j, res]\<close> (* should res be in the alphabet? *)
       and \<open>vwb_lens array\<close> and \<open>vwb_lens pivot\<close>
@@ -362,8 +371,8 @@ lemma quicksort_exp:
   else
     II
   \<lbrace>mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array)) =\<^sub>u mset\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) old_array)
-\<and> slice\<^sub>u 0 (&lo) (&array) =\<^sub>u slice\<^sub>u 0 (&lo) old_array
-\<and> slice\<^sub>u (&hi) #\<^sub>u(&array) (&array) =\<^sub>u slice\<^sub>u (&hi) #\<^sub>u(&array) old_array
+\<and> take\<^sub>u(&lo, &array) =\<^sub>u take\<^sub>u(&lo, old_array)
+\<and> drop\<^sub>u(&hi + 1, &array) =\<^sub>u drop\<^sub>u(&hi + 1, old_array)
 \<and> #\<^sub>u(&array) =\<^sub>u #\<^sub>u(old_array)
 \<and> sorted\<^sub>u(slice\<^sub>u (&lo) (&hi + 1) (&array))\<rbrace>\<^sub>u\<close>
   unfolding qs_partition_def

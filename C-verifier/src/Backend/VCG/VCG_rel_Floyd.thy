@@ -33,7 +33,7 @@ lemma assume_hoare_r'[hoare_rules]:
   shows \<open>\<lbrace>p\<rbrace>c\<^sup>\<top>\<lbrace>p \<and> c\<rbrace>\<^sub>u\<close>
   by rel_simp
 
-lemma cond_hoare_r'[hoare_rules]:
+lemma cond_hoare_r':
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
   shows \<open>\<lbrace>p\<rbrace>if\<^sub>u b then C\<^sub>1 else C\<^sub>2 \<lbrace>q \<or> s\<rbrace>\<^sub>u\<close>
   by (insert assms, rel_auto)
@@ -44,7 +44,7 @@ lemma cond_hoare_r'[hoare_rules]:
       and \<open>`q \<Rightarrow> A`\<close>
       and \<open>`s \<Rightarrow> A`\<close>
       and \<open>\<lbrace>A\<rbrace>P\<lbrace>A'\<rbrace>\<^sub>u\<close>
-    shows \<open>\<lbrace>p\<rbrace>if\<^sub>u b then C\<^sub>1 else C\<^sub>2;; A\<^sub>\<bottom>;; P\<lbrace>A'\<rbrace>\<^sub>u\<close>
+    shows \<open>\<lbrace>p\<rbrace>(if\<^sub>u b then C\<^sub>1 else C\<^sub>2);; A\<^sub>\<bottom>;; P\<lbrace>A'\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply (rule hoare_post_weak)
    apply (rule cond_hoare_r' seq_hoare_r|assumption)+
@@ -62,14 +62,13 @@ lemma cond_assert_last_hoare_r[hoare_rules]:
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
       and \<open>`q \<Rightarrow> A`\<close>
       and \<open>`s \<Rightarrow> A`\<close>
-      and \<open>`A \<Rightarrow> A'`\<close>
-    shows \<open>\<lbrace>p\<rbrace>if\<^sub>u b then C\<^sub>1 else C\<^sub>2;; A\<^sub>\<bottom>\<lbrace>A'\<rbrace>\<^sub>u\<close>
+    shows \<open>\<lbrace>p\<rbrace>(if\<^sub>u b then C\<^sub>1 else C\<^sub>2);; A\<^sub>\<bottom>\<lbrace>A\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply (rule hoare_post_weak)
    apply (rule cond_hoare_r' seq_hoare_r|assumption)+
    apply (rule assert_hoare_r')
   using impl_disjI apply blast
-  by (metis impl_alt_def subsumption1 utp_pred_laws.compl_inf utp_pred_laws.inf_commute utp_pred_laws.sup_cancel_left2 utp_pred_laws.sup_commute utp_pred_laws.sup_inf_distrib1 utp_pred_laws.sup_left_idem)
+  using refBy_order by fastforce
 
 lemma while_invr_hoare_r'[hoare_rules]:
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>u\<close> and \<open>`p' \<Rightarrow> p`\<close>
@@ -114,6 +113,7 @@ lemma nu_hoare_annot_r[hoare_rules]:
   using nu_hoare_r assms unfolding annot_rec_def .
 
 lemmas [hoare_rules] =
+  cond_hoare_r' \<comment> \<open>Needs to come after annotated cond check\<close>
   assigns_floyd_r
   skip_hoare_r
   seq_hoare_r

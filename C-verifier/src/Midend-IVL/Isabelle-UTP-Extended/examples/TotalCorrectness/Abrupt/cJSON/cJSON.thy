@@ -28,13 +28,14 @@ abbreviation \<open>cJSON_StringIsConst \<equiv> \<guillemotleft>512::nat\<guill
 text \<open>Limiting nesting prevents stack overflows.\<close>
 abbreviation \<open>CJSON_NESTING_LIMIT \<equiv> \<guillemotleft>1000::nat\<guillemotright>\<close>
 
+text \<open>Using @{typ \<open>'a option\<close>} to emulate null strings/pointers for now.\<close>
 record cJSON =
   type :: int
-  valuestring :: string -- \<open>if \texttt{type==cJSON\_String}; not worrying about C string handling\<close>
-  valueint :: int -- \<open>Writing directly is deprecated, should use \texttt{cJSON\_SetNumberValue}\<close>
-  valuedouble :: real -- \<open>if \texttt{type==cJSON\_Number}\<close>
-  string :: string -- \<open>name string if this item is the child of or is in the list of subitems of
-some parent object\<close>
+  valuestring :: \<open>string option\<close> \<comment> \<open>if \texttt{type==cJSON\_String}\<close>
+  valueint :: int \<comment> \<open>Writing directly is deprecated, should use \texttt{cJSON\_SetNumberValue}\<close>
+  valuedouble :: real \<comment> \<open>if \texttt{type==cJSON\_Number}\<close>
+  string :: \<open>string option\<close> \<comment> \<open>name string if this item is the child of or is in the list of
+                               subitems of some parent object\<close>
 
 text \<open>As we do not currently have a proper memory model for pointers and records cannot normally have
 deferred types, we must use a separate structure for that kind of thing that holds cJSON items.\<close>
@@ -43,8 +44,9 @@ datatype cJSON_tree =
 | Node (data: cJSON) (nextt: cJSON) (prev: cJSON) (child: cJSON)
 
 record '\<alpha> cJSON_Hooks =
-  malloc_fn :: \<open>size_t \<Rightarrow> nat \<Longrightarrow> '\<alpha>\<close>
-  free_fn :: \<open>nat \<Longrightarrow> '\<alpha> \<Rightarrow> \<close>
+  malloc_fn :: \<open>(size_t \<Rightarrow> nat) \<Longrightarrow> '\<alpha>\<close>
+  free_fn :: \<open>(nat \<Rightarrow> unit) \<Longrightarrow> '\<alpha>\<close> \<comment> \<open>Function that doesn't return anything, not sure how to
+                                      properly represent\<close>
 
 (* I'd prefer to use bool but cJSON doesn't use the C99 bool type. *)
 type_synonym cJSON_bool = int
@@ -55,7 +57,7 @@ abbreviation \<open>true' \<equiv> \<guillemotleft>1::cJSON_bool\<guillemotright
 abbreviation \<open>false' \<equiv> \<guillemotleft>0::cJSON_bool\<guillemotright>\<close>
 
 record error =
-  json :: \<open>string option\<close> \<comment> \<open>Using option type to emulate null strings/pointers\<close>
+  json :: \<open>string option\<close>
   position :: size_t \<comment> \<open>Index into JSON string\<close>
 abbreviation \<open>global_error \<equiv> \<guillemotleft>\<lparr>json = None, position = 0\<rparr>\<guillemotright>\<close> (* TODO: fix up, must be a lens *)
 
