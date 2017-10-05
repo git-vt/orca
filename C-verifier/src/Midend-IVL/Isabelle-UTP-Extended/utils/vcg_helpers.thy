@@ -39,23 +39,35 @@ lemma mset_swap[simp]:
   using assms unfolding swap_def
   by (simp add: mset_swap)
 
+lemma set_swap[simp]:
+  assumes \<open>i < length xs\<close>
+      and \<open>j < length xs\<close>
+    shows \<open>set (swap i j xs) = set xs\<close>
+  using assms unfolding swap_def
+  by simp
+
 lemma swap_commute:
   \<open>swap i j xs = swap j i xs\<close>
   unfolding swap_def
   by (cases \<open>i = j\<close>) (auto simp: list_update_swap)
 
-lemma drop_suc_swap[simp]:
-  assumes \<open>j < length xs\<close>
-      and \<open>i \<le> j\<close>
-  shows \<open>drop (Suc j) (swap i j xs) = drop (Suc j) xs\<close>
+lemma swap_id[simp]:
+  assumes \<open>i < length xs\<close>
+  shows \<open>swap i i xs = xs\<close>
+  using assms unfolding swap_def
+  by simp
+
+lemma drop_swap[simp]:
+  assumes \<open>i < n\<close>
+      and \<open>j < n\<close>
+  shows \<open>drop n (swap i j xs) = drop n xs\<close>
   using assms unfolding swap_def
   by simp
 
 lemma take_swap[simp]:
-  assumes \<open>lo \<le> i\<close>
-    and \<open>lo < hi\<close>
-    and \<open>hi < length xs\<close>
-  shows \<open>take lo (swap i hi xs) = take lo xs\<close>
+  assumes \<open>n \<le> i\<close>
+      and \<open>n \<le> j\<close>
+  shows \<open>take n (swap i j xs) = take n xs\<close>
   using assms unfolding swap_def
   by simp
 
@@ -85,8 +97,18 @@ subsection Slice
 definition \<open>slice l u A \<equiv> drop l (take u A)\<close>
 abbreviation \<open>slice\<^sub>u \<equiv> trop slice\<close>
 
-lemma slice_equal_indices[simp]: \<open>slice i i xs = []\<close>
-  unfolding slice_def by auto
+lemma slice_empty[simp]:
+  assumes \<open>i \<ge> j\<close>
+  shows \<open>slice i j xs = []\<close>
+  using assms unfolding slice_def
+  by simp
+
+lemma slice_nonempty[simp]:
+  assumes \<open>i < j\<close>
+      and \<open>i < length xs\<close>
+  shows \<open>slice i j xs \<noteq> []\<close>
+  using assms unfolding slice_def
+  by simp
 
 lemma slice_suc2_eq:
   assumes \<open>j < length xs\<close>
@@ -96,12 +118,13 @@ lemma slice_suc2_eq:
   by (metis diff_is_0_eq drop_0 drop_append length_take less_imp_le min.absorb2
       take_Suc_conv_app_nth)
 
-lemma slice_update[simp]:
+lemma slice_update_outofbounds_upper[simp]:
   assumes \<open>j \<le> k\<close>
   shows \<open>slice i j (xs[k := l]) = slice i j xs\<close>
-  using assms unfolding slice_def by auto
+  using assms unfolding slice_def
+  by auto
 
-lemma slice_update2[simp]:
+lemma slice_update2_outofbounds_lower[simp]:
   assumes \<open>k < i\<close>
   shows \<open>slice i j (xs[k := l]) = slice i j xs\<close>
   using assms unfolding slice_def
@@ -159,6 +182,21 @@ lemma slice_merge[simp]:
   by (smt append_take_drop_id diff_is_0_eq drop_0 drop_append length_take less_or_eq_imp_le
       min.absorb2 take_take)
 
+lemma element_in_set_of_slice: \<comment> \<open>May not be useful\<close>
+  assumes \<open>lo \<le> i\<close>
+      and \<open>i < hi\<close>
+      and \<open>i < length xs\<close>
+  shows \<open>xs!i \<in> set (slice lo hi xs)\<close>
+  using assms
+  by (auto simp: slice_set_conv_nth)
+
+lemma take_slice[simp]: \<open>take n (slice lo hi xs) = slice lo (min (n + lo) hi) xs\<close>
+  unfolding slice_def by (simp add: take_drop)
+
+lemma drop_slice[simp]:
+  \<open>drop n (slice lo hi xs) = slice (n + lo) hi xs\<close>
+  unfolding slice_def by simp
+
 subsection \<open>Swap and Slice together\<close>
 
 lemma slice_swap_extract:
@@ -166,23 +204,62 @@ lemma slice_swap_extract:
     and \<open>lo \<le> j\<close>
     and \<open>i < hi\<close>
     and \<open>j < hi\<close>
-    and \<open>j < length xs\<close>
+    and \<open>i < length xs \<or> j < length xs\<close> \<comment> \<open>Not sure why it doesn't need both at once.\<close>
   shows \<open>slice lo hi (swap i j xs) = swap (i - lo) (j - lo) (slice lo hi xs)\<close>
   using assms unfolding slice_def swap_def
   by (smt append_take_drop_id drop_update_swap le_cases length_take min.absorb2 not_less nth_append
       order_trans take_all take_update_swap)
 (*   if using `hi \<le> length xs`, only need `by (simp add: drop_update_swap take_update_swap)` *)
 
-lemma mset_slice_swap_inbounds[simp]:
+lemma mset_slice_swap[simp]:
   assumes \<open>lo \<le> i\<close>
-      and \<open>i \<le> j\<close>
+      and \<open>lo \<le> j\<close>
+      and \<open>i < hi\<close>
       and \<open>j < hi\<close>
+      and \<open>i < length xs\<close>
       and \<open>j < length xs\<close>
   shows \<open>mset (slice lo hi (swap i j xs)) = mset (slice lo hi xs)\<close>
   using assms
   apply (simp add: slice_swap_extract)
   unfolding slice_def
   by auto
+
+lemma set_slice_swap[simp]:
+  assumes \<open>lo \<le> i\<close>
+      and \<open>lo \<le> j\<close>
+      and \<open>i < hi\<close>
+      and \<open>j < hi\<close>
+      and \<open>i < length xs\<close>
+      and \<open>j < length xs\<close>
+  shows \<open>set (slice lo hi (swap i j xs)) = set (slice lo hi xs)\<close>
+  using assms
+  apply (simp add: slice_swap_extract)
+  unfolding slice_def
+  by auto
+
+lemma set_slice_swap_greaterthan: \<comment> \<open>Not all that useful. Could be more general.\<close>
+  fixes xs :: \<open>_::linorder list\<close>
+  assumes \<open>\<forall>x \<in> set (slice i hi xs). x \<ge> xs!hi\<close>
+      and \<open>i \<le> hi\<close>
+      and \<open>hi < length xs\<close>
+  shows \<open>\<forall>x \<in> set (slice i (Suc hi) (swap i hi xs)). x \<ge> xs!hi\<close>
+  using assms
+  apply auto \<comment> \<open>First application cannot use @{thm slice_suc2_eq} or we get an extra goal.\<close>
+  by (auto simp add: slice_suc2_eq)
+
+lemma slice_swap1[simp]:
+  assumes \<open>i < lo\<close>
+      and \<open>j < lo\<close>
+  shows \<open>slice lo hi (swap i j xs) = slice lo hi xs\<close>
+  using assms unfolding slice_def swap_def
+  by (simp add: drop_take)
+  
+lemma slice_swap2[simp]:
+  assumes \<open>hi \<le> i\<close>
+      and \<open>hi \<le> j\<close>
+  shows \<open>slice lo hi (swap i j xs) = slice lo hi xs\<close>
+  using assms unfolding slice_def swap_def
+  by simp
 
 subsection \<open>Sorting pivots\<close>
 

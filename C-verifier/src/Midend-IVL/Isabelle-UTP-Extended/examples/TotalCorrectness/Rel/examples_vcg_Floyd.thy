@@ -269,61 +269,11 @@ lemma qs_partition_invr_step2[vcg_simps]:
     and \<open>pivot \<le> A!j\<close> \<comment> \<open>so array doesn't change this step\<close>
   shows \<open>qs_partition_invr A oldA lo hi i (Suc j) pivot\<close>
   using assms unfolding qs_partition_invr_def pivot_invr_def
-  using qs_partition_invr_step2_helper by auto blast
+  using qs_partition_invr_step2_helper
+  by auto blast
 
-(* TODO: move to vcg_helpers *)
-lemma swap_id[simp]:
-  assumes \<open>i < length xs\<close>
-  shows \<open>swap i i xs = xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-(* TODO: move to vcg_helpers *)
-lemma slice_empty[simp]:
-  assumes \<open>i \<ge> j\<close>
-  shows \<open>slice i j xs = []\<close>
-  using assms unfolding slice_def
-  by simp
-
-(* TODO: move to vcg_helpers *)
-lemma slice_nonempty[simp]:
-  assumes \<open>i < j\<close>
-      and \<open>i < length xs\<close>
-  shows \<open>slice i j xs \<noteq> []\<close>
-  using assms unfolding slice_def
-  by simp
-
-(* TODO: move to vcg_helpers *)
-lemma set_swap[simp]:
-  assumes \<open>i < length xs\<close>
-      and \<open>j < length xs\<close>
-    shows \<open>set (swap i j xs) = set xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-(* TODO: move to vcg_helpers *)
-lemma set_slice_swap_inbounds[simp]:
-  assumes \<open>i \<le> j\<close>
-      and \<open>j < hi\<close>
-      and \<open>j < length xs\<close>
-  shows \<open>set (slice i hi (swap i j xs)) = set (slice i hi xs)\<close>
-  using assms
-  apply (auto simp: slice_swap_extract)
-  unfolding slice_def
-  by auto
-
-(* TODO: move to vcg_helpers? name? *)
-lemma
-  assumes \<open>\<forall>x \<in> set (slice i hi xs). x \<ge> xs!hi\<close>
-      and \<open>i \<le> hi\<close>
-      and \<open>hi < length xs\<close>
-  shows \<open>\<forall>x \<in> set (slice i (Suc hi) (swap i hi xs)). x \<ge> xs!hi\<close>
-  using assms
-  apply (subst slice_suc2_eq)
-      apply auto
-
-(* TODO: move to vcg_helpers *)
-lemma pivot_slice_swap[simp]:
+lemma pivot_slice_swap:
+  fixes xs :: \<open>_::linorder list\<close>
   assumes \<open>lo \<le> i\<close>
       and \<open>i \<le> hi\<close>
       and \<open>hi < length xs\<close>
@@ -331,7 +281,7 @@ lemma pivot_slice_swap[simp]:
       and \<open>\<forall>x \<in> set (slice i hi xs). x \<ge> xs!hi\<close>
   shows \<open>pivot_invr (i - lo) (slice lo (Suc hi) (swap i hi xs))\<close>
   using assms unfolding pivot_invr_def
-  apply (auto simp: slice_swap_extract)
+  by (auto simp: min_absorb1) (meson assms(4) order_trans qs_partition_invr_step2_helper)
 
 lemma qs_partition_invr_final[vcg_simps]:
   fixes A :: \<open>_::linorder list\<close>
@@ -342,9 +292,7 @@ lemma qs_partition_invr_final[vcg_simps]:
    and \<open>drop (hi + 1) (swap i hi A) = drop (hi + 1) oldA\<close>
    and \<open>take lo (swap i hi A) = take lo oldA\<close>
   using assms unfolding qs_partition_invr_def
-     apply auto
-  apply (simp add: slice_swap_extract)
-  unfolding pivot_invr_def
+  by (auto simp: pivot_slice_swap)
 
 lemma quicksort_partition[vcg_simps]:
   fixes pivot :: \<open>_::linorder \<Longrightarrow> _\<close>
@@ -381,7 +329,7 @@ lemma quicksort_partition[vcg_simps]:
 \<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply exp_vcg
-    apply solve_vcg
+  apply solve_vcg
 
 definition \<open>qs_partition
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
