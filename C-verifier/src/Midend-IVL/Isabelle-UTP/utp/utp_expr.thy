@@ -713,4 +713,5 @@ lemma lit_numeral_2: "Abs_uexpr (\<lambda> b. numeral v) = numeral v"
 method literalise = (unfold lit_simps[THEN sym])
 method unliteralise = (unfold lit_simps uexpr_defs[THEN sym];
                      (unfold lit_numeral_1 ; (unfold ueval); (unfold lit_numeral_2))?)+
+                   
 end
