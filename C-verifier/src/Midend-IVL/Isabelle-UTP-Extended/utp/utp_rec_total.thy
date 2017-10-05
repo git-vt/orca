@@ -4,7 +4,7 @@ begin
 text {*The following lemma explains the intuition behind lifting operators from predicates to relations.
        While in relational setting both, input and output state are evaluated. A predicate
        evaluate only on a single state. To unify predicates and relations such a lifting is necessary.
-       This gives away to express Hoare logic in relational calculus.*}
+       This gives a way to express Hoare logic in relational calculus.*}
   
 lemma "\<lbrakk>\<lceil>p\<rceil>\<^sub><\<Rightarrow> \<lceil>q\<rceil>\<^sub>>\<rbrakk>\<^sub>e (s,s') = (\<lbrakk>\<lceil>p\<rceil>\<^sub><\<rbrakk>\<^sub>e(s,UNIV) \<longrightarrow> \<lbrakk>\<lceil>q\<rceil>\<^sub>>\<rbrakk>\<^sub>e (UNIV, s'))"
   by rel_auto
