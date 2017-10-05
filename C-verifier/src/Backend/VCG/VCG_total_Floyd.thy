@@ -33,7 +33,7 @@ lemma assume_hoare_r_t'[hoare_rules]:
   shows \<open>\<lbrace>p\<rbrace>c\<^sup>\<top>\<^sup>C\<lbrace>p \<and> c\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by rel_simp
 
-lemma cond_abr_hoare_r_t'[hoare_rules]:
+lemma cond_abr_hoare_r_t':
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q \<or> s\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   by (insert assms, rel_auto) metis+
@@ -44,7 +44,7 @@ lemma cond_assert_abr_hoare_r_t[hoare_rules]: (* Needs some heuristics *)
       and \<open>`q \<Rightarrow> A`\<close>
       and \<open>`s \<Rightarrow> A`\<close>
       and \<open>\<lbrace>A\<rbrace>P\<lbrace>A'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
-    shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif;; A\<^sub>\<bottom>\<^sub>C;; P\<lbrace>A'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif;; A\<^sub>\<bottom>\<^sub>C;; P\<lbrace>A'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
@@ -55,20 +55,19 @@ lemma cond_assert_abr_hoare_r_t[hoare_rules]: (* Needs some heuristics *)
    apply assumption
   apply simp
   done
-
+    
 lemma cond_assert_last_abr_hoare_r_t[hoare_rules]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
       and \<open>`q \<Rightarrow> A`\<close>
       and \<open>`s \<Rightarrow> A`\<close>
-      and \<open>`A \<Rightarrow> A'`\<close>
-    shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif;; A\<^sub>\<bottom>\<^sub>C\<lbrace>A'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
+  shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif;; A\<^sub>\<bottom>\<^sub>C\<lbrace>A\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close>
   apply (insert assms)
   apply (rule hoare_post_weak_t)
    apply (rule cond_abr_hoare_r_t' seq_hoare_r_t|assumption)+
    apply (rule assert_hoare_r_t')
-  using impl_disjI apply blast
-  by (metis conj_comm refBy_order utp_pred_laws.le_infI1)
+  using impl_disjI
+  by blast pred_simp
 
 lemma while_invr_hoare_r_t'[hoare_rules]:
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>A\<^sub>B\<^sub>R\<close> and \<open>`p' \<Rightarrow> p`\<close>
@@ -76,6 +75,7 @@ lemma while_invr_hoare_r_t'[hoare_rules]:
   by (metis While_inv_def assms hoare_post_weak_t hoare_pre_str_t while_hoare_r_t)
 
 lemmas [hoare_rules] =
+  cond_abr_hoare_r_t' \<comment> \<open>Needs to come after annotated cond check\<close>
   assigns_abr_floyd_r_t
   skip_abr_hoare_r_t
   seq_hoare_r_t

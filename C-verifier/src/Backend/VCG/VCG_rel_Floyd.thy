@@ -62,7 +62,7 @@ lemma cond_assert_last_hoare_r[hoare_rules]:
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
       and \<open>`q \<Rightarrow> A`\<close>
       and \<open>`s \<Rightarrow> A`\<close>
-    shows \<open>\<lbrace>p\<rbrace>(if\<^sub>u b then C\<^sub>1 else C\<^sub>2);; A\<^sub>\<bottom>\<lbrace>A\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>p\<rbrace>(if\<^sub>u b then C\<^sub>1 else C\<^sub>2);; A\<^sub>\<bottom>\<lbrace>A\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply (rule hoare_post_weak)
    apply (rule cond_hoare_r' seq_hoare_r|assumption)+
