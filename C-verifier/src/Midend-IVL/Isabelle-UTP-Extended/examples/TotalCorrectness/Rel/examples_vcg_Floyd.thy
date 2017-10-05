@@ -286,11 +286,11 @@ lemma pivot_slice_swap:
 lemma qs_partition_invr_final[vcg_simps]:
   fixes A :: \<open>_::linorder list\<close>
   assumes \<open>qs_partition_invr A oldA lo hi i j pivot\<close>
-     and \<open>\<not> j < hi\<close>
- shows \<open>mset (slice lo (hi + 1) (swap i hi A)) = mset (slice lo (hi + 1) oldA)\<close>
-   and \<open>pivot_invr (i - lo) (slice lo (hi + 1) (swap i hi A))\<close>
-   and \<open>drop (hi + 1) (swap i hi A) = drop (hi + 1) oldA\<close>
-   and \<open>take lo (swap i hi A) = take lo oldA\<close>
+      and \<open>\<not> j < hi\<close>
+  shows \<open>mset (slice lo (Suc hi) (swap i hi A)) = mset (slice lo (Suc hi) oldA)\<close>
+    and \<open>pivot_invr (i - lo) (slice lo (Suc hi) (swap i hi A))\<close>
+    and \<open>drop (Suc hi) (swap i hi A) = drop (Suc hi) oldA\<close>
+    and \<open>take lo (swap i hi A) = take lo oldA\<close>
   using assms unfolding qs_partition_invr_def
   by (auto simp: pivot_slice_swap)
 
@@ -327,9 +327,7 @@ lemma quicksort_partition[vcg_simps]:
 \<and> take\<^sub>u(lo, &A) =\<^sub>u take\<^sub>u(lo, oldA)
 \<and> drop\<^sub>u(hi + 1, &A) =\<^sub>u drop\<^sub>u(hi + 1, oldA)
 \<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))\<rbrace>\<^sub>u\<close>
-  apply (insert assms)
-  apply exp_vcg
-  apply solve_vcg
+  by (insert assms) exp_vcg
 
 definition \<open>qs_partition
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
