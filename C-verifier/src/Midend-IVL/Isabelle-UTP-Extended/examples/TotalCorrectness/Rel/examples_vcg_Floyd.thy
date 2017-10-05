@@ -344,9 +344,7 @@ block II (
     else II);;
     j :== (&j + 1)
   od);;
-  (if\<^sub>u &pivot <\<^sub>u &A(&i)\<^sub>a then
-      A :== swap\<^sub>u (&i) hi (&A)
-  else II);;
+  A :== swap\<^sub>u (&i) hi (&A);;
   res :== &i
 )
 (\<lambda> (s, _) _. i :== stet (&i) s;; (* these may not be needed as they're reset anyway *)
