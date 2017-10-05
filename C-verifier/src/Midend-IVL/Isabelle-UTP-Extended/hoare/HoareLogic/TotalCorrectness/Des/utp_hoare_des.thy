@@ -48,7 +48,7 @@ term "x :=\<^sub>D s"
 
 subsection{*Conditional design*}
 
-abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_des \<Rightarrow> ('\<alpha>) hrel_des \<Rightarrow> ('\<alpha>) hrel_des" ("bif\<^sub>D (_)/ then (_) else (_) eif")
+abbreviation IfD :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_des \<Rightarrow> ('\<alpha>) hrel_des \<Rightarrow> ('\<alpha>) hrel_des" ("bif\<^sub>D (_)/ then (_) else (_) eif")
 where "bif\<^sub>D b then P else Q eif \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<triangleright> Q)"
 
 subsection{*assert and assume*}
@@ -61,7 +61,7 @@ abbreviation assert_des :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_des" 
 
 subsection{*Scoping*}
 
-definition block_abr ("bob\<^sub>D INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
+definition blockD ("bob\<^sub>D INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
   "bob\<^sub>D INIT init BODY body RESTORE restore RETURN return eob= 
     Abs_uexpr (\<lambda>(s, s'). 
@@ -107,64 +107,56 @@ subsection Skip
 text \<open>In this section we introduce the algebraic laws of programming related to the SKIP
       statement.\<close>
 
-lemma true_left_zero_skip_cpa_abr[udes_comp]:
+lemma true_left_zero_skip_cpaD[udes_comp]:
   "(SKIP\<^sub>D;; true) = (true)"
   by rel_auto
 
-lemma true_lift_abr_left_zero_skip_abr[udes_comp]:
+lemma true_liftD_left_zero_skipD[udes_comp]:
   "(SKIP\<^sub>D;; \<lceil>true\<rceil>\<^sub>D) = (\<lceil>true\<rceil>\<^sub>D)"
   by rel_auto
 
-lemma false_lift_abr_left_zero_skip_abr[udes_comp]:
+lemma false_liftD_left_zero_skipD[udes_comp]:
   "(SKIP\<^sub>D;; \<lceil>false\<rceil>\<^sub>D) = (\<lceil>false\<rceil>\<^sub>D)"
   by rel_auto
 
-lemma skip_abr_left_unit_assigns_abr[udes_comp]:
+lemma skipD_left_unit_assignsD[udes_comp]:
   "(SKIP\<^sub>D;; \<langle>\<sigma>\<rangle>\<^sub>D) = (\<langle>\<sigma>\<rangle>\<^sub>D)"
   by rel_auto
 
-lemma skip_abr_top_abr_left_zero[udes_comp]:
+lemma skipD_topD_left_zero[udes_comp]:
   "(SKIP\<^sub>D;; \<top>\<^sub>D) = (\<top>\<^sub>D)"
   by rel_auto
 
-lemma skip_abr_abrupt_left_zero[udes_comp]:
+lemma skipDDupt_left_zero[udes_comp]:
   "($x;; SKIP\<^sub>D) = $x"
   by rel_auto
 
-lemma skip_abr_bot_left_zero[udes_comp]:
+lemma skipD_bot_left_zero[udes_comp]:
   "(\<top>\<^sub>D;; SKIP\<^sub>D) = (\<top>\<^sub>D)"
   by rel_auto
 
-lemma skip_abr_idem [udes_comp]:
+lemma skipD_idem [udes_comp]:
   "(SKIP\<^sub>D;; SKIP\<^sub>D) = SKIP\<^sub>D"
   by rel_auto
 
-lemma skip_abr_alpha_eq:
+lemma skipD_alpha_eq:
   "SKIP\<^sub>D =  ($ok \<Rightarrow> ($ok\<acute> \<and> ($\<Sigma>\<^sub>D\<acute> =\<^sub>u $\<Sigma>\<^sub>D)))"
    by rel_simp
 
-lemma simpl_pre_skip_abr_post:
-  "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> SKIP\<^sub>D) = (SKIP\<^sub>D \<and> \<lceil>b\<rceil>\<^sub>D\<^sub>>)"
+lemma simpl_pre_skipD_post:
+  "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> SKIP\<^sub>D =\<^sub>u $ok) = (SKIP\<^sub>D =\<^sub>u $ok \<and> \<lceil>b\<rceil>\<^sub>D\<^sub>>)"
   by rel_auto
 
-lemma simpl_pre_skip_abr_var:
-  fixes x :: "(bool \<Longrightarrow> 'b cpa)"
-  shows "(Simpl\<^sub>D $x \<and> SKIP\<^sub>D) = (SKIP\<^sub>D \<and> Simpl\<^sub>D $x\<acute>)"
+lemma simpl_pre_skipD_var:
+  fixes x :: "(bool \<Longrightarrow> 'b des)"
+  shows "($x \<and> SKIP\<^sub>D =\<^sub>u $ok) = (SKIP\<^sub>D =\<^sub>u $ok \<and> $x\<acute>)"
   by rel_auto
 
-lemma skip_abr_post_left_unit[udes_comp]:
+lemma skipD_post_left_unit[udes_comp]:
   "(S \<turnstile> (SKIP\<^sub>D;; Q)) = (S \<turnstile> Q)"
   apply pred_simp
   apply rel_simp
   apply fastforce
-done
-
-lemma simpl_post_left_unit[udes_comp]:
-  "(S \<turnstile> (Simpl\<^sub>D (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>D);; Q)) = (S \<turnstile> Q)"
-  apply pred_simp
-  apply rel_simp
-  apply transfer
-  apply auto
 done
 
 subsection \<open>Assignment Laws\<close>
@@ -172,46 +164,45 @@ text \<open>In this section we introduce the algebraic laws of programming relat
       statement.\<close>
 
 lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $abrupt\<acute>);; (P \<triangleleft> \<not> $abrupt \<triangleright> Q)) =
-   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $abrupt\<acute>);; Q)"
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; (P \<triangleleft> \<not> $b \<triangleright> Q)) =
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; Q)"
   apply rel_simp
   apply fastforce
 done
 
 lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $abrupt\<acute>);; (P \<triangleleft> $abrupt \<triangleright> Q)) =
-   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $abrupt\<acute>);; P)"
+  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; (P \<triangleleft> $b \<triangleright> Q)) =
+   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; P)"
   apply pred_simp
   apply fastforce
 done
 
-lemma not_abrupt_assigns_abr_L6_left_des[urel_cond]:
-  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; (P \<triangleleft> $abrupt \<triangleright> Q))) \<triangleleft> \<not> $abrupt \<triangleright> R) =
-   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; Q)) \<triangleleft> \<not> $abrupt \<triangleright> R)"
-  unfolding assigns_abr_def
+lemma notDupt_assignsD_L6_left_des[urel_cond]:
+  "((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; (P \<triangleleft> $b \<triangleright> Q))) \<triangleleft> \<not> $b \<triangleright> R) =
+   ((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; Q)) \<triangleleft> \<not> $b \<triangleright> R)"
+  unfolding assigns_d_def
   apply pred_simp
-  apply fastforce
 done
 
-lemma abrupt_assigns_abr_L6_left_des[urel_cond]:
+lemma abrupt_assignsD_L6_left_des[urel_cond]:
   "((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q))) \<triangleleft> $abrupt \<triangleright> R) =
    ((S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; Q)) \<triangleleft> $abrupt \<triangleright> R)"
-  unfolding assigns_abr_def
+  unfolding assignsD_def
   apply pred_simp
   apply rel_simp
   apply fastforce
 done
 
-lemma not_abrupt_assigns_abr_L6_right_des[urel_cond]:
+lemma notDupt_assignsD_L6_right_des[urel_cond]:
   "(R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; (P \<triangleleft> $abrupt \<triangleright> Q)))) =
    (R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; P)))"
-  unfolding assigns_abr_def
+  unfolding assignsD_def
   apply pred_simp
   apply rel_simp
   apply fastforce
 done
 
-lemma abrupt_assigns_abr_L6_right_des[urel_cond]:
+lemma abrupt_assignsD_L6_right_des[urel_cond]:
  "(R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; (P \<triangleleft> \<not> $abrupt \<triangleright> Q)))) =
   (R \<triangleleft> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; P)))"
   apply pred_simp
@@ -219,36 +210,36 @@ lemma abrupt_assigns_abr_L6_right_des[urel_cond]:
   apply fastforce
 done
 
-lemma not_abrupt_left_assigns_abr_post_des[urel_cond]:
+lemma notDupt_left_assignsD_post_des[urel_cond]:
   "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (\<langle>a\<rangle>\<^sub>D;; P)) =
    R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> ((\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>II\<rceil>\<^sub>D \<and> $abrupt\<acute>));; P))"
-  unfolding assigns_abr_def
+  unfolding assignsD_def
   apply pred_simp
   apply rel_simp 
 done
 
-lemma  not_abrupt_left_throw_abr_post_des[urel_cond]:
+lemma  notDupt_left_throwD_post_des[urel_cond]:
   "R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> (THROW\<^sub>D;; P))  =
    R \<triangleleft> \<not> $abrupt \<triangleright> (S \<turnstile> ((\<not>$abrupt) \<turnstile> (\<lceil>II\<rceil>\<^sub>D \<and> $abrupt\<acute>));; P)"
-  unfolding assigns_abr_def
+  unfolding assignsD_def
   apply pred_simp
   apply rel_simp
 done
 
-lemma usubst_abr_cancel [usubst]:
+lemma usubstD_cancel [usubst]:
   assumes 1:"weak_lens v"
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub>D\<^sub></$v\<rbrakk> = \<lceil>expr\<rceil>\<^sub>D\<^sub><"
   using 1
   by  rel_auto
 
-lemma usubst_abr_lift_cancel[usubst]:
+lemma usubstD_lift_cancel[usubst]:
   assumes 1:"weak_lens v"
   shows "\<lceil>($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub></$v\<rbrakk>\<rceil>\<^sub>D = \<lceil>expr\<rceil>\<^sub>D\<^sub><"
   using 1
   by  rel_auto
 
-lemma assigns_abr_id [uabr_simpl]: "SKIP\<^sub>D = \<langle>id\<rangle>\<^sub>D"
-  unfolding skip_abr_def assigns_abr_def
+lemma assignsD_id [uabr_simpl]: "SKIP\<^sub>D = \<langle>id\<rangle>\<^sub>D"
+  unfolding skipD_def assignsD_def
   by (rel_auto)
 
 lemma assign_test[udes_comp]:
@@ -257,23 +248,23 @@ lemma assign_test[udes_comp]:
   using 1
   by (simp add: usubst udes_comp)
 
-lemma assign_abr_left_comp_subst[udes_comp]:
+lemma assignD_left_comp_subst[udes_comp]:
   "(x \<Midarrow> u;; Simpl\<^sub>D(\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D)) = Simpl\<^sub>D(\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>D)"
   by (simp add: udes_comp usubst)
 
-lemma assign_abr_twice[udes_comp]:
+lemma assignD_twice[udes_comp]:
   assumes "mwb_lens x" and  "x \<sharp> f"
   shows "(x \<Midarrow> e;; x \<Midarrow> f) = (x \<Midarrow> f)"
   using assms
   by (simp add: udes_comp usubst)
 
-lemma assign_abr_commute:
+lemma assignD_commute:
   assumes "x \<bowtie> y" "x \<sharp> f" "y \<sharp> e"
   shows "(x \<Midarrow> e;; y \<Midarrow> f) = (y \<Midarrow> f;; x \<Midarrow> e)"
   using assms
   by (simp add: udes_comp usubst usubst_upd_comm)
 
-lemma assign_abr_cond_abr[udes_comp]: (*needs more laws to be automatic*)
+lemma assignD_condD[udes_comp]: (*needs more laws to be automatic*)
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   shows "(x \<Midarrow> e;; (bif b then Simpl\<^sub>D P else Simpl\<^sub>D Q eif)) =
          (bif (b\<lbrakk>e/x\<rbrakk>) then (x \<Midarrow> e;; Simpl\<^sub>D P)  else (x \<Midarrow> e;; Simpl\<^sub>D Q) eif)"
@@ -340,7 +331,7 @@ lemma assign_c_qtop4[udes_comp]:
 
 text \<open>In the sequel we define assignment laws proposed by Hoare\<close>
 
-lemma assign_abr_vwb_skip_abr[udes_comp]:
+lemma assignD_vwb_skipD[udes_comp]:
   assumes 1: "vwb_lens v"
   shows "(v \<Midarrow> &v) = SKIP\<^sub>D"
   by (simp add: assms usubst uabr_simpl)
