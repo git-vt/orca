@@ -90,39 +90,42 @@ lemma cond_d_hoare_d'_t [hoare_total]:
   shows "\<lbrace>p\<rbrace>bif\<^sub>D b then C\<^sub>1 else C\<^sub>2 eif \<lbrace>q\<rbrace>\<^sub>D"
   by (insert assms, rel_auto) 
 
-subsection {*Hoare for While-loop*}
-  
+    
+subsection {*Helpers*}
 lemma cond_refine_des: 
   assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
   shows "(p \<turnstile> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
   using assms by rel_blast
-thm seq_refine_unrest
     
 lemma seq_refine_unrest_des:
   assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
   assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
   shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
-  apply (insert assms)  apply rel_auto
-   apply metis+ done
+  apply (insert assms)  
+  apply rel_auto
+   apply metis+ 
+  done
     
 lemma skip_refine_des:
   "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
-  by pred_auto    
+  by pred_auto   
+    
+subsection {*Hoare for While-loop*}   
    
 lemma while_hoare_r_t [hoare_total]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"  
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> (\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D)"  
+  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> (P \<turnstile> Q)"  
   assumes PHI:"`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
-  shows "\<lbrace>Pre\<rbrace>while  b invr I do \<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D od\<lbrace>\<not>Post \<and> p\<rbrace>\<^sub>D"
+  shows "\<lbrace>Pre\<rbrace>while  b invr I do P \<turnstile> Q od\<lbrace>\<not>Post \<and> p\<rbrace>\<^sub>D"
 proof -
-  have M: "mono (\<lambda>X. bif\<^sub>D b then ((\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D) ;; X) else SKIP\<^sub>D eif)"
+  have M: "mono (\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono) 
-   have H: "(\<lambda>X. bif\<^sub>D b then ((\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D) ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+   have H: "(\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
     apply pred_simp apply rel_simp apply smt done   
   from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>DES\<^esub>"] H
           design_theory_continuous.LFP_weak_unfold  
-  have M_des: "Mono\<^bsub>uthy_order DES\<^esub>(\<lambda>X. bif\<^sub>D b then (\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D) ;; X else SKIP\<^sub>D eif)"
+  have M_des: "Mono\<^bsub>uthy_order DES\<^esub>(\<lambda>X. bif\<^sub>D b then (P \<turnstile> Q) ;; X else SKIP\<^sub>D eif)"
     by auto
   show ?thesis    
   unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
@@ -147,16 +150,7 @@ proof -
      using PHI
        apply rel_blast
   done 
-
-lemma while_hoare_r'_t [hoare_total]:
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>A\<^sub>B\<^sub>R" and "`p \<and> \<not>b \<Rightarrow> q`"
-  shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>q\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
-  using assms
-  by (metis hoare_post_weak_t while_hoare_r_t inf_commute)
-
-lemma while_invr_hoare_r_t [hoare_total]:
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>A\<^sub>B\<^sub>R" and "`pre \<Rightarrow> p`" and "`(\<not>b \<and> p) \<Rightarrow> post`"
-  shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
-  by (metis assms hoare_pre_str_t while_hoare_r'_t While_inv_def inf_commute)
+qed
+  
   
 end
