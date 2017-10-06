@@ -271,7 +271,7 @@ subsection \<open>Miscellaneous\<close>
 lemma upred_taut_refl: \<open>`A \<Rightarrow> A`\<close>
   by pred_simp
 
-text \<open>Minor helper for blocks.\<close>
+text \<open>Minor helper for blocks in partial correctness.\<close>
 abbreviation \<open>stet v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e s\<guillemotright>\<close>
 
 end
