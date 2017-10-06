@@ -381,7 +381,10 @@ lemma assert_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>\<
    apply blast
   apply (rel_simp)
     apply blast
-done
+  done
+    
+subsection \<open>Try Catch laws\<close>
+(*see utp_hoare_helper*)
 
 
 end
