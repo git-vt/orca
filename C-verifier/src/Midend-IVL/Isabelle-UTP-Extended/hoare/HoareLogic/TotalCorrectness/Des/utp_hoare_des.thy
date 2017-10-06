@@ -91,9 +91,6 @@ lemma cond_d_hoare_d'_t [hoare_total]:
   by (insert assms, rel_auto) 
 
 subsection {*Hoare for While-loop*}
-term " x:=\<^sub>D s"  
-term "while b do x:=\<^sub>D s od"
-term "(\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>< \<Rightarrow> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>> )) \<sqsubseteq> (P \<turnstile> Q)"  
   
 lemma cond_refine_des: 
   assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
@@ -102,12 +99,15 @@ lemma cond_refine_des:
 thm seq_refine_unrest
     
 lemma seq_refine_unrest_des:
-  assumes "$ok\<acute> \<sharp> P\<^sub>1" "$ok\<acute> \<sharp> P\<^sub>2" 
-           "out\<alpha> \<sharp> Q\<^sub>1" "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
-  assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> (P\<^sub>1 \<turnstile> Q\<^sub>1)" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>> \<turnstile> q) \<sqsubseteq> (P\<^sub>2 \<turnstile> Q\<^sub>2)"
-  shows "(p \<turnstile> q) \<sqsubseteq> ((P\<^sub>1 \<turnstile> Q\<^sub>1) ;; (P\<^sub>2 \<turnstile> Q\<^sub>2))"
-  using assms apply pred_simp apply rel_auto
-  apply metis+ done 
+  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
+  assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
+  shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
+  apply (insert assms)  apply rel_auto
+   apply metis+ done
+    
+lemma skip_refine_des:
+  "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
+  by pred_auto    
    
 lemma while_hoare_r_t [hoare_total]:
   assumes WF: "wf R"
@@ -139,22 +139,13 @@ proof -
       apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
             apply pred_simp
            apply pred_simp
-         
-        apply pred_simp
-  apply (rule   seq_hoare_d_t[unfolded hoare_d_def])
-    thm cond_d_hoare_d_t[unfolded hoare_d_def]
-     prefer 2
-   apply (rule skip_refine_rel)
-  using PHI
-   apply pred_blast
-    subgoal for  st 
-      apply (rule_tac seq_refine_unrest[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
-         apply pred_simp
-        apply pred_simp
        apply (rule order_trans[OF induct_step, where st1 = st]) 
-       apply pred_simp 
-      apply pred_simp
-done        
+        apply pred_simp
+        apply pred_simp
+      done
+     apply (rule skip_refine_des)      
+     using PHI
+       apply rel_blast
   done 
 
 lemma while_hoare_r'_t [hoare_total]:
