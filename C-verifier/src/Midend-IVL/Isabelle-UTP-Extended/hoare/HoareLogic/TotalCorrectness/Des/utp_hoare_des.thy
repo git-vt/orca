@@ -25,7 +25,7 @@ lemma hoare_false_d_t [hoare_total]:
 
 subsection {*Precondition weakening*}
 
-lemma hoare_pre_weak_d_t[hoare_total]:
+lemma hoare_pre_str_d_t[hoare_total]:
   assumes "`p\<^sub>1 \<Rightarrow> p\<^sub>2`" and "\<lbrace>p\<^sub>2\<rbrace>C\<lbrace>q\<rbrace>\<^sub>D"
   shows "\<lbrace>p\<^sub>1\<rbrace>C\<lbrace>q\<rbrace>\<^sub>D" 
   by (insert assms) rel_auto
@@ -115,13 +115,13 @@ subsection {*Hoare for While-loop*}
 lemma while_hoare_r_des_t [hoare_total]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"  
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> (P \<turnstile> Q)"  
+  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> (P \<turnstile> Q)"  
   assumes PHI:"`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
-  shows "\<lbrace>Pre\<rbrace>while  b invr I do P \<turnstile> Q od\<lbrace>\<not>Post \<and> p\<rbrace>\<^sub>D"
+  shows "\<lbrace>Pre\<rbrace>while b invr I do P \<turnstile> Q od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
-  have M: "mono (\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)"
+  have M: "mono (\<lambda>X. bif\<^sub>D b then (P \<turnstile> Q) ;; X else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono) 
-   have H: "(\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+   have H: "(\<lambda>X. bif\<^sub>D b then (P \<turnstile> Q) ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
     apply pred_simp apply rel_simp apply smt done   
   from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>DES\<^esub>"] H
           design_theory_continuous.LFP_weak_unfold  
@@ -129,7 +129,7 @@ proof -
     by auto
   show ?thesis    
   unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
-   apply (rule hoare_pre_weak_d_t[unfolded hoare_d_def ,of _ "I" ])
+   apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
     apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF ])  
@@ -151,18 +151,18 @@ proof -
        apply rel_blast
   done 
 qed
-
+  
 lemma while_hoare_r_t [hoare_total]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is \<^bold>H"  
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> body"  
-  assumes PHI:"`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
-  shows "\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>\<not>Post \<and> p\<rbrace>\<^sub>D"
+  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>>)) \<sqsubseteq> body"  
+  assumes PHI:"`(\<not>\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
+  shows "\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
-  have M: "mono (\<lambda>X. bif\<^sub>D b then (body ;; X) else SKIP\<^sub>D eif)"
+  have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono) 
-  have H: "(\<lambda>X. bif\<^sub>D b then (body ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+  have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
     using BH
     apply pred_simp apply rel_simp  apply smt done   
   from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>DES\<^esub>"] H
@@ -171,7 +171,7 @@ proof -
     by auto
   show ?thesis    
   unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
-   apply (rule hoare_pre_weak_d_t[unfolded hoare_d_def ,of _ "I" ])
+   apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
     apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF ])  
@@ -180,7 +180,7 @@ proof -
     apply pred_simp
    apply pred_simp
   apply (rule  cond_refine_des)
-    subgoal for  st
+    subgoal for st
       apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
             apply pred_simp
            apply pred_simp

@@ -364,22 +364,12 @@ lemma assume_twice[udes_comp]: "(b\<^sup>\<top>\<^sup>D;; c\<^sup>\<top>\<^sup>D
   apply blast
     apply (rel_simp)
     apply blast
-   apply (rel_simp)
-   apply blast
-  apply (rel_simp)
-    apply blast
 done
 
 lemma assert_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>\<^sub>D) = (b \<and> c)\<^sub>\<bottom>\<^sub>D"
  apply pred_simp
   apply auto
-  apply (rel_simp)
-  apply blast
-    apply (rel_simp)
-    apply blast
-   apply (rel_simp)
-   apply blast
-  apply (rel_simp)
+  apply (rel_simp)+
     apply blast
   done
     
