@@ -70,10 +70,10 @@ lemma cond_assert_last_hoare_r[hoare_rules]:
     apply rel_auto+
   done
     
-thm while_hoare_r_t [folding]
+thm while_hoare_r_t [unfolded]
 
 lemma while_invr_hoare_d'[hoare_rules]:
-  assumes WF:\<open>wf R\<close> and I0:\<open>`Pre \<Rightarrow> I`\<close> 
+  assumes WF:\<open>wf R\<close> and I0:\<open>`Pre \<Rightarrow> I`\<close> and I1:\<open>`I'`\<close> 
       and step:\<open>\<And>st .\<lbrace>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>I\<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D\<close> 
       and PHI:\<open>`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>b\<rceil>\<^sub>D\<^sub>>`\<close> and HB:"body is \<^bold>H"
     shows \<open>\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>\<not>b \<and> I\<rbrace>\<^sub>D\<close>
