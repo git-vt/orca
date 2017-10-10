@@ -318,6 +318,26 @@ lemma f_rule:
   unfolding f_def using assms INDEP
   by rel_simp
 
+definition "EXINV l P \<equiv> \<^bold>\<exists>st \<bullet> P\<lbrakk>(\<guillemotleft>st\<guillemotright> \<oplus> &\<Sigma> on &l)/&\<Sigma>\<rbrakk>" (* P holds on st[&l/l]     *)    
+
+lemma
+  assumes "vwb_lens a"  "\<lbrace>P\<rbrace> c \<lbrace>Q\<rbrace>\<^sub>u"
+  shows "\<lbrace>P\<rbrace> a:[c] \<lbrace> (\<exists>a \<bullet> P) \<and> (EXINV a Q) \<rbrace>\<^sub>u"  
+  using assms unfolding EXINV_def
+  apply rel_simp 
+  apply pred_simp
+  by (metis assms(1) vwb_lens_wb wb_lens.get_put)  
+    
+    
+    
+lemma 
+  assumes "vwb_lens r"
+  shows "\<lbrace> F \<rbrace> f r a \<lbrace> \<exists> r \<bullet> \<exists> Gret \<bullet> F \<rbrace>\<^sub>u"
+  unfolding f_def using INDEP assms apply -
+  apply (exp_vcg)  
+  apply rel_simp
+  
+  
     
 lemma "\<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val\<guillemotright> \<rbrace> f Lx (&Lx) \<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val+1\<guillemotright> \<rbrace>\<^sub>u"
 
@@ -355,6 +375,11 @@ definition partition:: "'c hrel" where
   A :== swap\<^sub>u (&i) hi (&A);; (* Don't need `pivot < A!i` check, it's a minor optimization *)
   res :== &i"
   
+lemma "MYEX l P = (\<exists>l \<bullet> P)"  
+  unfolding MYEX_def
+  apply rel_simp done  
+  
+term "\<lbrace>P\<rbrace> C \<lbrace> MYEX l (MYEX l2 P) \<rbrace>\<^sub>u"  
 lemma "\<lbrace>
     &A =\<^sub>u oldA
   \<and> lo <\<^sub>u hi
