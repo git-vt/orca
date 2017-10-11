@@ -292,214 +292,7 @@ lemma qs_partition_invr_final[vcg_simps]:
     and \<open>take lo (swap i hi A) = take lo oldA\<close>
   using assms unfolding qs_partition_invr_def
   by (auto simp: pivot_slice_swap)
-locale peter =
-  fixes lvars:: "'l \<Longrightarrow> 's" 
-    and gvars:: "'g \<Longrightarrow> 's"
-    and   ret:: "nat \<Longrightarrow> 'g"
-    and     x:: "nat \<Longrightarrow> 'l"
-    and     y:: "nat \<Longrightarrow> 'l"
-  assumes INDEP: "lvars \<bowtie> gvars" "x \<bowtie> y"
-    "vwb_lens lvars" "vwb_lens gvars" "vwb_lens ret" "vwb_lens x" "vwb_lens y"
-begin
-abbreviation "Lx \<equiv> x ;\<^sub>L lvars"
-abbreviation "Ly \<equiv> y ;\<^sub>L lvars"
-abbreviation "Gret \<equiv> ret ;\<^sub>L gvars"
-  
-  
-  term "subst_upd id (x ;\<^sub>L lvars ) "
-  term "(antiframe gvars (Lx :== (&Lx + \<guillemotleft>1\<guillemotright>)))"
-definition f :: "_" 
-where "f r a = ( (gvars:[Lx :== a ;; Lx :== (&Lx + \<guillemotleft>1\<guillemotright>);; Gret:==&Lx]);; r :== &Gret )"  
 
-lemma f_rule: 
-  (*assumes "F indep of r, Gret"*)
-  assumes "vwb_lens r"
-  shows "\<lbrace> e=\<^sub>u\<guillemotleft>val\<guillemotright> \<rbrace> f r e \<lbrace> &r=\<^sub>u\<guillemotleft>val+1\<guillemotright> \<rbrace>\<^sub>u"
-  unfolding f_def using assms INDEP
-  by rel_simp
-
-definition (in -) "EXINV l P \<equiv> \<^bold>\<exists>st \<bullet> P\<lbrakk>(\<guillemotleft>st\<guillemotright> \<oplus> &\<Sigma> on &l)/&\<Sigma>\<rbrakk>" (* P holds on st[&l/l]     *)    
-
-lemma antiframe_rule[hoare_rules]:
-  assumes "vwb_lens a"  "\<lbrace>P\<rbrace> c \<lbrace>Q\<rbrace>\<^sub>u"
-  shows "\<lbrace>P\<rbrace> a:[c] \<lbrace> (\<exists>a \<bullet> P) \<and> (EXINV a Q) \<rbrace>\<^sub>u"  
-  using assms unfolding EXINV_def
-  apply rel_simp 
-  apply pred_simp
-  by (metis assms(1) vwb_lens_wb wb_lens.get_put)  
-    
-    
-    
-    
-    
-declare assigns_floyd_r[hoare_rules del]    
-lemma (in -) assigns_floyd_rX [hoare_rules]:
-  assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)  \<rbrace>\<^sub>u\<close>
-  apply (insert assms)
-  apply pred_simp
-  apply transfer
-  apply (rule)  
-  apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
-  (*subgoal for a x p e
-   apply (rule exI[where x="get\<^bsub>x\<^esub> a"])*)
-  apply auto
-  apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
-  apply auto
-  done
-    
-lemma (in -) modified_assign_rule:
-  assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<rbrace>\<^sub>u\<close>
-  apply (rule hoare_post_weak)
-  apply (rule assigns_floyd_rX)  
-  apply fact
-  apply pred_simp
-  done  
-    
-lemma (in -) EXINV_pull_out_sublens:
-  fixes x l
-  assumes A: "vwb_lens x" "vwb_lens l"
-  defines "XX\<equiv>x;\<^sub>Ll"
-  shows "EXINV l (\<exists>XX \<bullet> P ) = (\<exists>XX \<bullet> EXINV l P)"
-  unfolding EXINV_def XX_def using A 
-  by pred_blast
-    
-lemma (in -) EXINV_drop_indep:
-  fixes x l
-  assumes A: "vwb_lens l1" "vwb_lens l2" "l1\<bowtie>l2"
-  shows "EXINV l1 (\<exists>l2 \<bullet> P ) = (EXINV l1 P)"
-  unfolding EXINV_def using A 
-  apply pred_simp
-  by (metis lens_indep_def vwb_lens_wb wb_lens.get_put)  
-    
-lemma (in -) lens_indep_right_ext' [intro, simp]:
-  "z \<bowtie> x \<Longrightarrow> x \<bowtie> (y ;\<^sub>L z)"
-  using lens_indep_sym by blast  
-  
-lemma (in -) lens_indep_left_ext' [intro, simp]:
-  "x \<bowtie> z \<Longrightarrow> (y ;\<^sub>L z) \<bowtie> x"
-  using lens_indep_sym by blast  
-    
-(*lemmas [simp] = lens_indep_right_ext lens_indep_left_ext*)
-    
-    
-lemma conj_ex2_move_front: "l \<sharp> P \<Longrightarrow> (P \<and> (\<exists>l \<bullet> Q)) = (\<exists>l \<bullet> P \<and> Q )"
-  by pred_simp
-    
-lemma (in -) dep_unrest_ex:
-  fixes x l
-  assumes A: "vwb_lens x" "vwb_lens l"
-  defines "XX \<equiv> x;\<^sub>Ll"
-  shows "XX \<sharp> (\<exists> l \<bullet> F)"
-  unfolding XX_def using A
-  by pred_simp  
-    
-lemma (in -) 
-  assumes "vwb_lens l"
-  shows "((\<exists> l \<bullet> F) \<and> EXINV l F) = F"
-  using assms
-  unfolding EXINV_def  
-  apply pred_simp
-  apply transfer  
-    oops
-      
-lemma (in -) "(\<exists>x. P x st) \<and> (\<exists>x. Q x st) \<Longrightarrow> \<exists>x. P x st \<and> Q x st" oops   
-  
-    
-    
-    
-lemma 
-  assumes "vwb_lens r"
-  shows "\<lbrace> F \<rbrace> f r a \<lbrace> \<exists> r \<bullet> \<exists> Gret \<bullet> F \<rbrace>\<^sub>u"
-  unfolding f_def using INDEP assms
-  (*supply assigns_floyd_rX [hoare_rules del]  
-  supply modified_assign_rule[hoare_rules]  *)
-  apply -  
-  apply (exp_vcg)
-  apply (simp add: EXINV_pull_out_sublens EXINV_drop_indep conj_ex2_move_front dep_unrest_ex)
-  unfolding EXINV_def  
-  apply pred_simp  
-    
-  apply (subst conj_ex2_move_front)  
-    
-    
-    
-oops    
-  apply (subst EXINV_drop_indep)  
-  apply simp  
-  apply simp  
-  apply (rule lens_indep_sym)
-  solve_direct  
-    
-  using lens_indep_sym apply blast  
-  apply simp  
-    
-oops    
-  apply (solve_vcg)  
-  apply pred_simp
-    
-    
-  apply (simp add: vwb_lens_wb[THEN wb_lens.get_put])
-  
-    
-lemma "\<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val\<guillemotright> \<rbrace> f Lx (&Lx) \<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val+1\<guillemotright> \<rbrace>\<^sub>u"
-
-  
-end  
-    
-
-context
-  fixes pivot :: \<open>'a::linorder \<Longrightarrow> 'c\<close>
-     and i res j:: "nat \<Longrightarrow> 'c" and  A :: "'a list \<Longrightarrow> 'c" 
-     and oldA:: \<open> ('a list, 'c) uexpr\<close> and  lo hi:: \<open>(nat, 'c) uexpr\<close> 
-  assumes INDEP:\<open>lens_indep_all [i, j, res]\<close>
-       \<open>vwb_lens pivot\<close>  \<open>vwb_lens A\<close>
-       \<open>pivot \<bowtie> i\<close>  \<open>pivot \<bowtie> j\<close>  \<open>pivot \<bowtie> res\<close>
-       \<open>A \<sharp> oldA\<close>  \<open>A \<sharp> lo\<close>  \<open>A \<sharp> hi\<close>
-       \<open>i \<bowtie> A\<close>  \<open>i \<sharp> oldA\<close>  \<open>i \<sharp> lo\<close>  \<open>i \<sharp> hi\<close>
-       \<open>j \<bowtie> A\<close>  \<open>j \<sharp> oldA\<close>  \<open>j \<sharp> lo\<close>  \<open>j \<sharp> hi\<close>
-       \<open>pivot \<bowtie> A\<close>  \<open>pivot \<sharp> oldA\<close>  \<open>pivot \<sharp> lo\<close>  \<open>pivot \<sharp> hi\<close>
-       \<open>res \<bowtie> A\<close>  \<open>res \<sharp> oldA\<close>  \<open>res \<sharp> lo\<close>  \<open>res \<sharp> hi\<close>
- 
-begin
-definition partition:: "'c hrel" where
-  "partition =  
-    pivot :== &A(hi)\<^sub>a;;
-  i :== lo;;
-  j :== lo;;
-  (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot) do
-    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
-      A :== swap\<^sub>u (&i) (&j) (&A);;
-      i :== (&i + 1);;
-      j :== (&j + 1)
-    else j :== (&j + 1));;
-    (qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot))\<^sub>\<bottom>
-  od);;
-  A :== swap\<^sub>u (&i) hi (&A);; (* Don't need `pivot < A!i` check, it's a minor optimization *)
-  res :== &i"
-  
-lemma "MYEX l P = (\<exists>l \<bullet> P)"  
-  unfolding MYEX_def
-  apply rel_simp done  
-  
-term "\<lbrace>P\<rbrace> C \<lbrace> MYEX l (MYEX l2 P) \<rbrace>\<^sub>u"  
-lemma "\<lbrace>
-    &A =\<^sub>u oldA
-  \<and> lo <\<^sub>u hi
-  \<and> hi <\<^sub>u #\<^sub>u(&A)
-\<rbrace>
-  partition
-\<lbrace>
-    mset\<^sub>u(slice\<^sub>u lo (hi + 1) (&A)) =\<^sub>u mset\<^sub>u(slice\<^sub>u lo (hi + 1) oldA)
-  \<and> take\<^sub>u(lo, &A) =\<^sub>u take\<^sub>u(lo, oldA)
-  \<and> drop\<^sub>u(hi + 1, &A) =\<^sub>u drop\<^sub>u(hi + 1, oldA)
-  \<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))
-\<rbrace>\<^sub>u"
-  unfolding partition_def
-  by (insert INDEP) exp_vcg
-    
-  end
 lemma quicksort_partition[vcg_simps]:
   fixes pivot :: \<open>_::linorder \<Longrightarrow> _\<close>
   assumes \<open>lens_indep_all [i, j, res]\<close>
@@ -533,7 +326,54 @@ lemma quicksort_partition[vcg_simps]:
 \<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))\<rbrace>\<^sub>u\<close>
   by (insert assms) exp_vcg
 
-thm vcg_simps
+context
+  fixes pivot :: \<open>'a::linorder \<Longrightarrow> 'c\<close>
+     and i res j:: "nat \<Longrightarrow> 'c" and  A :: "'a list \<Longrightarrow> 'c"
+     and oldA:: \<open> ('a list, 'c) uexpr\<close> and  lo hi:: \<open>(nat, 'c) uexpr\<close>
+  assumes INDEP:\<open>lens_indep_all [i, j, res]\<close>
+       \<open>vwb_lens pivot\<close>  \<open>vwb_lens A\<close>
+       \<open>pivot \<bowtie> i\<close>  \<open>pivot \<bowtie> j\<close>  \<open>pivot \<bowtie> res\<close>
+       \<open>A \<sharp> oldA\<close>  \<open>A \<sharp> lo\<close>  \<open>A \<sharp> hi\<close>
+       \<open>i \<bowtie> A\<close>  \<open>i \<sharp> oldA\<close>  \<open>i \<sharp> lo\<close>  \<open>i \<sharp> hi\<close>
+       \<open>j \<bowtie> A\<close>  \<open>j \<sharp> oldA\<close>  \<open>j \<sharp> lo\<close>  \<open>j \<sharp> hi\<close>
+       \<open>pivot \<bowtie> A\<close>  \<open>pivot \<sharp> oldA\<close>  \<open>pivot \<sharp> lo\<close>  \<open>pivot \<sharp> hi\<close>
+       \<open>res \<bowtie> A\<close>  \<open>res \<sharp> oldA\<close>  \<open>res \<sharp> lo\<close>  \<open>res \<sharp> hi\<close>
+
+begin
+
+definition partition:: \<open>'c hrel\<close> where
+  \<open>partition =
+    pivot :== &A(hi)\<^sub>a;;
+  i :== lo;;
+  j :== lo;;
+  (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot) do
+    (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
+      A :== swap\<^sub>u (&i) (&j) (&A);;
+      i :== (&i + 1);;
+      j :== (&j + 1)
+    else j :== (&j + 1));;
+    (qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot))\<^sub>\<bottom>
+  od);;
+  A :== swap\<^sub>u (&i) hi (&A);;
+  res :== &i\<close>
+
+lemma \<open>\<lbrace>
+    &A =\<^sub>u oldA
+  \<and> lo <\<^sub>u hi
+  \<and> hi <\<^sub>u #\<^sub>u(&A)
+\<rbrace>
+  partition
+\<lbrace>
+    mset\<^sub>u(slice\<^sub>u lo (hi + 1) (&A)) =\<^sub>u mset\<^sub>u(slice\<^sub>u lo (hi + 1) oldA)
+  \<and> take\<^sub>u(lo, &A) =\<^sub>u take\<^sub>u(lo, oldA)
+  \<and> drop\<^sub>u(hi + 1, &A) =\<^sub>u drop\<^sub>u(hi + 1, oldA)
+  \<and> pivot_invr\<^sub>u (&res - lo) (slice\<^sub>u lo (hi + 1) (&A))
+\<rbrace>\<^sub>u\<close>
+  unfolding partition_def
+  by (insert INDEP) exp_vcg
+
+end
+
 definition \<open>qs_partition
   A lo hi (* params (lo and hi are uexprs rather than lenses!) *)
   pivot i j (* locals *)
