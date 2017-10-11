@@ -42,19 +42,18 @@ lemma antiframe_rule[hoare_rules]:
   apply pred_simp
   by (metis assms(1) vwb_lens_wb wb_lens.get_put)
 
-
 declare assigns_floyd_r[hoare_rules del]
 lemma (in -) assigns_floyd_rX [hoare_rules]:
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)  \<rbrace>\<^sub>u\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply pred_simp
   apply transfer
-  apply (rule)
-  apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
-  (*subgoal for a x p e
+  apply rule
+   apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
+    (*subgoal for a x p e
    apply (rule exI[where x="get\<^bsub>x\<^esub> a"])*)
-  apply auto
+   apply auto
   apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
   apply auto
   done
@@ -63,8 +62,8 @@ lemma (in -) modified_assign_rule:
   assumes \<open>vwb_lens x\<close>
   shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<rbrace>\<^sub>u\<close>
   apply (rule hoare_post_weak)
-  apply (rule assigns_floyd_rX)
-  apply fact
+   apply (rule assigns_floyd_rX)
+   apply fact
   apply pred_simp
   done
 
@@ -79,8 +78,7 @@ lemma (in -) EXINV_drop_indep:
   assumes A: \<open>vwb_lens l\<^sub>1\<close> \<open>vwb_lens l\<^sub>2\<close> \<open>l\<^sub>1 \<bowtie> l\<^sub>2\<close>
   shows "EXINV l\<^sub>1 (\<exists>l\<^sub>2 \<bullet> P) = (EXINV l\<^sub>1 P)"
   unfolding EXINV_def using A
-  apply pred_simp
-  by (metis lens_indep_def vwb_lens_wb wb_lens.get_put)
+  by pred_simp (metis lens_indep_def vwb_lens_wb wb_lens.get_put)
 
 lemma (in -) lens_indep_right_ext' [intro, simp]:
   \<open>z \<bowtie> x \<Longrightarrow> x \<bowtie> (y ;\<^sub>L z)\<close>
@@ -109,7 +107,7 @@ lemma (in -)
   unfolding EXINV_def
   apply pred_simp
   apply transfer
-    oops
+  oops
 
 lemma (in -) \<open>(\<exists>x. P x st) \<and> (\<exists>x. Q x st) \<Longrightarrow> \<exists>x. P x st \<and> Q x st\<close>
   oops
@@ -121,7 +119,7 @@ lemma
     (*supply assigns_floyd_rX [hoare_rules del]
   supply modified_assign_rule[hoare_rules]  *)
   apply -
-  apply (exp_vcg)
+  apply exp_vcg
   apply (simp add: EXINV_pull_out_sublens EXINV_drop_indep conj_ex2_move_front dep_unrest_ex)
   unfolding EXINV_def
   apply pred_simp
@@ -135,7 +133,7 @@ lemma
   using lens_indep_sym apply blast
   apply simp
   oops
-  apply (solve_vcg)
+  apply solve_vcg
   apply pred_simp
   apply (simp add: vwb_lens_wb[THEN wb_lens.get_put])
 
