@@ -30,6 +30,19 @@ type_synonym size_t = nat
 
 abbreviation \<open>NULL \<equiv> \<guillemotleft>0\<guillemotright>\<close>
 
+text \<open>String upper/lower borrowed from the Isabelle Meta Model in the AFP.\<close>
+definition \<open>lowercase =
+  map (\<lambda>c. let n = nat_of_char c in if n < 97 then char_of_nat (n + 32 ) else c)\<close>
+abbreviation \<open>lowercase\<^sub>u \<equiv> uop lowercase\<close>
+
+definition \<open>uppercase =
+  map (\<lambda>c. let n = nat_of_char c in if n < 97 then c else char_of_nat (n - 32))\<close>
+abbreviation \<open>uppercase\<^sub>u \<equiv> uop uppercase\<close>
+
+definition int_of_char :: \<open>char \<Rightarrow> int\<close> where
+  \<open>int_of_char = int_of_integer \<circ> integer_of_char\<close>
+abbreviation \<open>int_of_char\<^sub>u \<equiv> uop int_of_char\<close>
+
 text \<open>Borrowed from the @{typ nat} implementation of \texttt{shows} from the Real_Impl theory set
 in the Archive of Formal Proofs (\url{https://www.isa-afp.org/entries/Real_Impl.html}); some slight
 modifications were done for my own personal preferences.\<close>
@@ -47,11 +60,11 @@ definition string_of_digit :: \<open>nat \<Rightarrow> string\<close> where
     else if n = 8 then ''8''
     else ''9'')\<close>
 
-fun shows' :: \<open>string \<Rightarrow> nat \<Rightarrow> string\<close> where
-  \<open>shows' p n =
+fun shows_aux :: \<open>string \<Rightarrow> nat \<Rightarrow> string\<close> where
+  \<open>shows_aux p n =
   (if n < 10 then string_of_digit n
-  else shows' p (n div 10) @ string_of_digit (n mod 10))\<close>
-abbreviation \<open>shows n \<equiv> shows' '''' n\<close>
+  else shows_aux p (n div 10) @ string_of_digit (n mod 10))\<close>
+abbreviation \<open>shows n \<equiv> shows_aux '''' n\<close>
 
 syntax
   "_ushows" :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (string, '\<alpha>) uexpr\<close> ("shows\<^sub>u'(_')")
