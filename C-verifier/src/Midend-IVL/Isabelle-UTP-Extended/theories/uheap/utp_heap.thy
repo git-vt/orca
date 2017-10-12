@@ -143,41 +143,30 @@ definition rassert_hp :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cphp" (
 
 subsection{*store and load*}
   
-definition ustore:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ =\<^sub>h\<^sub>p/ _)"[73, 73] 72)where 
+definition ustore:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>h\<^sub>p/ _)"[73, 73] 72)where 
   [urel_defs]:"ustore p v = (heap_raw :== (bop hrs_mem_update (bop heap_update \<guillemotleft>p\<guillemotright> v) (&heap_raw)))"
 
 definition uload:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr" ( "*\<^sub>h\<^sub>p")where 
   [urel_defs]:"uload p = (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)"
+  
+definition uderef:: "('b \<Longrightarrow> 'a cphp)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ :=\<^sub>h\<^sub>p/*_)"[73, 73] 72)
+where [urel_defs]: "uderef x p  = (x :== (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))"
 
-definition uderef:: "('b \<Longrightarrow> 'a cphp)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ =\<^sub>h\<^sub>p/*_)"[73, 73] 72)where 
-  [urel_defs]:" uderef x p  = (x :== (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))"
+definition uderef':: "('b \<Longrightarrow> 'a)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ :=\<^sub>s\<^sub>t\<^sub>k/*_)"[73, 73] 72)
+where [urel_defs]:
+  "uderef' x p = (\<^bold>\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><)"
 
-definition uderef':: "('b \<Longrightarrow> 'a)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " where 
-  [urel_defs]:"uderef' x p  =
-               (\<^bold>\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><)"
-
-term "\<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><"  
-term "\<^bold>\<exists> v \<bullet> ((\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)) \<and>\<^sub>p undefined)"  
-
-term "\<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><"  
-term "\<^bold>\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub>< "  
-term "\<lparr>lens_get = (\<lambda>h. h_val (hrs_mem h) p ) , 
-       lens_put = (\<lambda>h v. hrs_mem_update (heap_update p v) h)\<rparr>" 
-term "bop h_val (utp_expr.var (fst\<^sub>L ;\<^sub>L heap_raw)) p"  
 lemma [simp]: 
   "(h_val (hrs_mem (hrs_mem_update (heap_update (p::'b::mem_type ptr) v) (h,tt))) p) = v" 
   unfolding hrs_mem_def hrs_mem_update_def
   by (simp add: h_val_heap_update)
 
-term " heap_raw"
-term "ok"  
 lemma "
-   ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x =\<^sub>h\<^sub>p *p)  = ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x:== \<guillemotleft>v\<guillemotright>)"
+   ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x :=\<^sub>h\<^sub>p *p)  = ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x:== \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
   by rel_simp
 
-lemma "
-   ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; uderef' x p )  = ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x\<Midarrow> \<guillemotleft>v\<guillemotright>)"
+lemma "( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
   by rel_simp    
 
