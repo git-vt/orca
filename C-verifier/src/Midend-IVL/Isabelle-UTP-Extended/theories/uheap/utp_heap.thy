@@ -152,11 +152,11 @@ definition uload:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr" ( "*\<^s
 definition uderef:: "('b \<Longrightarrow> 'a cphp)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ =\<^sub>h\<^sub>p/*_)"[73, 73] 72)where 
   [urel_defs]:" uderef x p  = (x :== (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))"
 
-  term "x \<Midarrow>((bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)\<restriction>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)"
 definition uderef':: "('b \<Longrightarrow> 'a)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " where 
   [urel_defs]:"uderef' x p  =
-               (\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><)"
-  
+               (\<^bold>\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><)"
+
+term "\<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><"  
 term "\<^bold>\<exists> v \<bullet> ((\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)) \<and>\<^sub>p undefined)"  
 
 term "\<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><"  
@@ -179,8 +179,8 @@ lemma "
 lemma "
    ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; uderef' x p )  = ( *p =\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x\<Midarrow> \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
-  apply rel_simp    
-  
+  by rel_simp    
+
 subsection{*Loops*}
 
 end
