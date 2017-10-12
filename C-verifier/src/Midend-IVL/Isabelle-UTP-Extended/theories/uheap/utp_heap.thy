@@ -11,7 +11,7 @@ text {*
 
 alphabet cp_hp = des_vars +
   heap_raw:: "heap_raw_state"
-
+term "heap_raw"
 
 declare cp_hp.splits [alpha_splits]
 
@@ -146,6 +146,9 @@ subsection{*store and load*}
 definition ustore:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>h\<^sub>p/ _)"[73, 73] 72)where 
   [urel_defs]:"ustore p v = (heap_raw :== (bop hrs_mem_update (bop heap_update \<guillemotleft>p\<guillemotright> v) (&heap_raw)))"
 
+definition ustore':: "'b::mem_type ptr \<Rightarrow> ('b, 'a) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>H\<^sub>P/ _)"[73, 73] 72)where 
+  [urel_defs]:"ustore' p v = (heap_raw :== (bop hrs_mem_update (bop heap_update \<guillemotleft>p\<guillemotright> (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)) (&heap_raw)))"
+  
 definition uload:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr" ( "*\<^sub>h\<^sub>p")where 
   [urel_defs]:"uload p = (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)"
   
@@ -166,10 +169,31 @@ lemma "
   unfolding lens_indep_def
   by rel_simp
 
+lemma " heap_raw \<sharp> v \<Longrightarrow>
+   ( *p :=\<^sub>h\<^sub>p v ;; x :=\<^sub>h\<^sub>p *p)  = ( *p :=\<^sub>h\<^sub>p v ;; x:== v)"
+  unfolding lens_indep_def
+  apply pred_simp apply rel_simp
+  by (metis (no_types)  prod.exhaust_sel)
+
+
 lemma "( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
-  by rel_simp    
+  by rel_simp
 
+term "\<guillemotleft>x\<guillemotright>"
+lemma "( *p :=\<^sub>H\<^sub>P v  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>H\<^sub>P v  ;; x \<Midarrow> v)"
+  unfolding lens_indep_def
+  by rel_simp   
+
+lemma "( *p :=\<^sub>H\<^sub>P (y + 1)  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = (  x \<Midarrow> (y + 1))"
+  unfolding lens_indep_def
+  by rel_simp 
+
+
+lemma "( *p :=\<^sub>h\<^sub>p (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>h\<^sub>p (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)  ;; x \<Midarrow> v)"
+  unfolding lens_indep_def
+  by rel_simp     
+term "heap_raw"
 subsection{*Loops*}
 
 end
