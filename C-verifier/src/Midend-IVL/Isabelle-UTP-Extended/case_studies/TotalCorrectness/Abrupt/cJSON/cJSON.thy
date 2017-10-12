@@ -44,7 +44,7 @@ text \<open>As we do not currently have a proper memory model for pointers and r
 deferred types, we must use a separate structure for that kind of thing that holds cJSON items.\<close>
 datatype cJSON_tree =
   Leaf
-| Node (data: cJSON) (nextt: cJSON) (prev: cJSON) (child: cJSON)
+| Node (data: cJSON) (nextt: cJSON_tree) (prev: cJSON_tree) (child: cJSON_tree)
 
 (* TODO: These aren't written right, returning a nat as a pointer isn't good enough *)
 record '\<alpha> cJSON_Hooks =
