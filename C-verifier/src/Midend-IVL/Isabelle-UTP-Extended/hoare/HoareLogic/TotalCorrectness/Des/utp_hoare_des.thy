@@ -157,7 +157,7 @@ lemma while_hoare_r_t [hoare_total]:
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is \<^bold>H"  
   assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>>)) \<sqsubseteq> body"  
-  assumes PHI:"`(\<not>\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
+  assumes PHI:"`\<lceil>\<not> b \<and> I\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
   shows "\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"

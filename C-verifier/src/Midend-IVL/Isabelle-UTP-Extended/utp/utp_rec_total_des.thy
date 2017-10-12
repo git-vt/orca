@@ -19,17 +19,17 @@ lemma  rec_total_utp_des_rule:
     and      H: "B \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H"
     and      Okey1:"$ok\<acute> \<sharp> Pre" and Okey2:"$ok\<acute> \<sharp> Post"
     and  induct_step:
-    "\<And>st. ((Pre \<and>\<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post) \<sqsubseteq> (B ((Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile> Post))"
+    "\<And>st. ((Pre \<and>\<lceil>E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> Post) \<sqsubseteq> (B ((Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile> Post))"
   shows "(Pre \<turnstile> Post) \<sqsubseteq> \<mu>\<^sub>D B"            
 proof -          
   { fix st
-    have "((Pre \<and>\<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post)\<sqsubseteq> (\<mu>\<^sub>D B)" 
+    have "((Pre \<and>\<lceil>E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> Post)\<sqsubseteq> (\<mu>\<^sub>D B)" 
       using WF
       apply (induction  rule: wf_induct_rule)  
       apply (subst design_theory_continuous.LFP_unfold [OF M H])
     proof -
       fix st 
-      assume *: "\<And>st'. (st', st) \<in> R \<Longrightarrow> ((Pre \<and>\<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<turnstile> Post) \<sqsubseteq> \<mu>\<^sub>D B"
+      assume *: "\<And>st'. (st', st) \<in> R \<Longrightarrow> ((Pre \<and>\<lceil>E=\<^sub>u \<guillemotleft>st'\<guillemotright>\<rceil>\<^sub>D\<^sub>< ) \<turnstile> Post) \<sqsubseteq> \<mu>\<^sub>D B"
       from * have 0:"((Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile> Post) \<sqsubseteq> \<mu>\<^sub>D B"  
         by pred_blast
      from M H design_theory_continuous.LFP_lemma3 have 1: "\<mu>\<^sub>D B \<sqsubseteq>  B (\<mu>\<^sub>D B)"
@@ -46,8 +46,8 @@ proof -
           apply rel_simp
           apply fastforce 
          done
-        have 4:"((Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post) \<sqsubseteq> \<dots>"  by (rule induct_step)
-      show "((Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post) \<sqsubseteq> B (\<mu>\<^sub>D B) "  
+        have 4:"((Pre \<and> \<lceil>E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> Post) \<sqsubseteq> \<dots>"  by (rule induct_step)
+      show "((Pre \<and> \<lceil>E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> Post) \<sqsubseteq> B (\<mu>\<^sub>D B) "  
         using order_trans[OF 3 4] .
     qed  
   }

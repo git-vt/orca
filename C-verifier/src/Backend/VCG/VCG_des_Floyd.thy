@@ -71,18 +71,45 @@ lemma cond_assert_last_hoare_r[hoare_rules]:
   done
     
 thm while_hoare_r_t [unfolded]
-
 lemma while_invr_hoare_d'[hoare_rules]:
-  assumes WF:\<open>wf R\<close> and I0:\<open>`Pre \<Rightarrow> I`\<close> and I1:\<open>`I'`\<close> 
-      and step:\<open>\<And>st .\<lbrace>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>I\<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D\<close> 
-      and PHI:\<open>`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>b\<rceil>\<^sub>D\<^sub>>`\<close> and HB:"body is \<^bold>H"
-    shows \<open>\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>\<not>b \<and> I\<rbrace>\<^sub>D\<close>
-  apply (rule while_hoare_r_t[of R _ _ _ _ E, OF WF I0 HB])
-   apply (rule step[unfolded hoare_d_def])
-  apply (rule PHI)
- done
-      
-lemma while_invr_hoare_r'[hoare_rules]:
+  assumes   WF:\<open>wf R\<close> 
+      and   I0:\<open>`Pre \<Rightarrow> I`\<close> 
+      and step:\<open>\<And>st .\<lbrace>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D\<close> 
+      and   BH:"body is \<^bold>H"
+    shows \<open>\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>\<not>b \<and> I\<rbrace>\<^sub>D\<close>  
+ proof -
+  have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
+    by (auto intro: monoI seqr_mono cond_mono) 
+  have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+    using BH
+    apply pred_simp apply rel_simp  apply smt done   
+  from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>DES\<^esub>"] H
+          design_theory_continuous.LFP_weak_unfold  
+  have M_des: "Mono\<^bsub>uthy_order DES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
+    by auto
+  show ?thesis    
+  unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
+   apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
+  using I0 
+   apply pred_simp
+    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF ])  
+      apply (simp add: M_des)
+     apply (simp add: H)
+    apply pred_simp
+   apply pred_simp
+  apply (rule  cond_refine_des)
+    subgoal for st
+      apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
+            apply pred_simp
+        apply pred_simp 
+        using step[unfolded hoare_d_def, of st] apply pred_simp 
+        apply pred_simp
+      done
+     apply (rule skip_refine_des)      
+       apply rel_blast
+  done 
+qed      
+(*lemma while_invr_hoare_r'[hoare_rules]:
   assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>u\<close> and \<open>`p' \<Rightarrow> p`\<close>
   shows \<open>\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u\<close>
   by (metis while_inv_def assms hoare_post_weak hoare_pre_str while_hoare_r)
@@ -98,6 +125,22 @@ lemma nu_hoare_basic_r[hoare_rules]:
   shows \<open>\<lbrace>P\<rbrace>\<nu> F\<lbrace>Q\<rbrace>\<^sub>u\<close>
   using assms unfolding hoare_r_def
   by (rule nu_refine_intro) auto
+*)
+  
+lemma mu_deshoare_basic_r[hoare_rules]:
+  assumes WF:"wf R"
+  assumes M:"Mono\<^bsub>uthy_order DES\<^esub> F"
+  assumes H:"F \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H"  
+  assumes step:\<open>\<And>p st. \<lbrace>P \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>p\<lbrace>Q\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>P \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright> \<rbrace>F p\<lbrace>Q\<rbrace>\<^sub>D\<close>
+  shows \<open>\<lbrace>P\<rbrace>\<mu>\<^sub>D F\<lbrace>Q\<rbrace>\<^sub>D\<close>
+  unfolding hoare_d_def
+    thm rec_total_utp_des_rule
+    apply (rule rec_total_utp_des_rule[of _ _ _ _ "E", OF WF M H])
+      apply pred_simp
+     apply pred_simp
+    subgoal for st
+    using step[of st]  
+  by (rule rec_total_utp_des_rule) auto
 
 definition annot_rec ::
   \<open>'a upred \<Rightarrow> 'a upred \<Rightarrow> ((bool, 'a) hexpr \<Rightarrow> (bool, 'a) hexpr) \<Rightarrow> (bool, 'a) hexpr\<close> where
