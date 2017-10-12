@@ -206,7 +206,7 @@ definition
 where
   "list_array a = map (index a) [0..<CARD('n)]"
 
-setup_lifting type_definition_array
+
 lift_definition set_array :: "'a['n::finite] \<Rightarrow> 'a set" is range .
 
 lemma set_array_list:
