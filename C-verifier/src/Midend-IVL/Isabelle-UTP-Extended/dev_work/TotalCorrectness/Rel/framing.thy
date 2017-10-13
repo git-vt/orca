@@ -64,10 +64,10 @@ lemma (in -) modifies_ext:
 subsection \<open>Region-based modifies\<close>
 
 definition (in -) region :: \<open>('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> set\<close> where
-  \<open>region x s = {s'. \<exists>v. s' = put\<^bsub>x\<^esub> s v}\<close>
+  \<open>region x s = {s'. \<exists>v. s = put\<^bsub>x\<^esub> s' v}\<close>
 
 definition (in -) region_modifies :: \<open>('\<alpha> \<Rightarrow> '\<alpha> set) \<Rightarrow> _\<close> where
-  \<open>region_modifies reg \<equiv> $\<Sigma> \<in>\<^sub>u uop reg $\<Sigma>\<acute>\<close>
+  \<open>region_modifies reg \<equiv> $\<Sigma>\<acute> \<in>\<^sub>u uop reg $\<Sigma>\<close>
 
 lemma (in -) region_modifies_to_ext:
   assumes \<open>region_modifies (region x) \<sqsubseteq> c\<close>
@@ -86,15 +86,27 @@ lemma (in -) region_modifies_ext:
   using ext_to_region_modifies region_modifies_to_ext
   by blast
 
+abbreviation
+  \<open>reg_mod_intersect a b \<equiv> region_modifies (\<lambda>s. region a s \<inter> region b s)\<close>
+
+lemma reg_mod_intersect_antiframe: (* This works but does it actually help? *)
+  assumes \<open>region_modifies (region a) \<sqsubseteq> c\<close>
+          \<open>region_modifies (region b) \<sqsubseteq> c\<close>
+          \<open>vwb_lens b\<close>
+  shows \<open>reg_mod_intersect a b \<sqsubseteq> b:[c]\<close>
+  using assms unfolding region_modifies_def region_def
+  apply rel_auto
+   apply (metis mwb_lens.put_put vwb_lens_def wb_lens.get_put)
+  apply (metis vwb_lens.put_eq)
+  done
+
 subsection \<open>Antiframe rule work\<close>
 
 lemma antiframe_rule[hoare_rules]:
   assumes \<open>vwb_lens a\<close> \<open>\<lbrace>P\<rbrace>c\<lbrace>Q\<rbrace>\<^sub>u\<close>
   shows \<open>\<lbrace>P\<rbrace> a:[c] \<lbrace>(\<exists>a \<bullet> P) \<and> (EXINV a Q)\<rbrace>\<^sub>u\<close>
   using assms unfolding EXINV_def
-  apply rel_simp
-  apply pred_simp
-  by (metis assms(1) vwb_lens_wb wb_lens.get_put)
+  by rel_simp (metis assms(1) vwb_lens_wb wb_lens.get_put)
 
 declare assigns_floyd_r[hoare_rules del]
 lemma (in -) assigns_floyd_rX [hoare_rules]:
@@ -105,8 +117,6 @@ lemma (in -) assigns_floyd_rX [hoare_rules]:
   apply transfer
   apply rule
    apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
-    (*subgoal for a x p e
-   apply (rule exI[where x="get\<^bsub>x\<^esub> a"])*)
    apply auto
   apply (rule_tac x = \<open>get\<^bsub>x\<^esub> a\<close> in exI)
   apply auto
@@ -123,8 +133,8 @@ lemma (in -) modified_assign_rule:
 
 lemma (in -) EXINV_pull_out_sublens:
   assumes A: \<open>vwb_lens x\<close> \<open>vwb_lens l\<close>
-  defines \<open>XX \<equiv> x;\<^sub>Ll\<close>
-  shows \<open>EXINV l (\<exists>XX \<bullet> P ) = (\<exists>XX \<bullet> EXINV l P)\<close>
+  defines \<open>XX \<equiv> x ;\<^sub>L l\<close>
+  shows \<open>EXINV l (\<exists>XX \<bullet> P) = (\<exists>XX \<bullet> EXINV l P)\<close>
   unfolding EXINV_def XX_def using A
   by pred_blast
 
