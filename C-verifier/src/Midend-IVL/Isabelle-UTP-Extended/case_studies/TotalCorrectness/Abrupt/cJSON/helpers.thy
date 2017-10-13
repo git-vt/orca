@@ -6,6 +6,10 @@ imports
   "../../../../../../Backend/VCG/VCG_total_Floyd"
 begin
 
+text \<open>Somehow the rel while loop syntax was being reincluded, causing ambiguous parse warnings;
+this requires recalling syntax again.\<close>
+recall_syntax
+
 text \<open>For now structs are being represented as basic records (which has significant limitations);
 pointers are represented as lenses, e.g. a \texttt{int*} has type @{text \<open>int \<Longrightarrow> '\<alpha>\<close>}; this means
 that a variable holding that pointer has type @{text \<open>(int \<Longrightarrow> '\<alpha>) \<Longrightarrow> '\<alpha>\<close>}.
@@ -42,6 +46,7 @@ abbreviation \<open>uppercase\<^sub>u \<equiv> uop uppercase\<close>
 definition int_of_char :: \<open>char \<Rightarrow> int\<close> where
   \<open>int_of_char = int_of_integer \<circ> integer_of_char\<close>
 abbreviation \<open>int_of_char\<^sub>u \<equiv> uop int_of_char\<close>
+abbreviation \<open>nat_of_char\<^sub>u \<equiv> uop nat_of_char\<close>
 
 text \<open>Borrowed from the @{typ nat} implementation of \texttt{shows} from the Real_Impl theory set
 in the Archive of Formal Proofs (\url{https://www.isa-afp.org/entries/Real_Impl.html}); some slight

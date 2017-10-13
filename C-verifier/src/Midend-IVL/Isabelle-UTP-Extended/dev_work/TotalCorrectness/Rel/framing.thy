@@ -9,13 +9,13 @@ begin
 text \<open>Using locales for modularity\<close>
 
 locale peter =
-  fixes lvars:: \<open>'l \<Longrightarrow> 's\<close>
-    and gvars:: \<open>'g \<Longrightarrow> 's\<close>
-    and   ret:: \<open>nat \<Longrightarrow> 'g\<close>
-    and     x:: \<open>nat \<Longrightarrow> 'l\<close>
-    and     y:: \<open>nat \<Longrightarrow> 'l\<close>
+  fixes lvars :: \<open>'l \<Longrightarrow> 's\<close>
+    and gvars :: \<open>'g \<Longrightarrow> 's\<close>
+    and   ret :: \<open>nat \<Longrightarrow> 'g\<close>
+    and     x :: \<open>nat \<Longrightarrow> 'l\<close>
+    and     y :: \<open>nat \<Longrightarrow> 'l\<close>
   assumes INDEP: \<open>lvars \<bowtie> gvars\<close> \<open>x \<bowtie> y\<close>
-    \<open>vwb_lens lvars\<close> \<open>vwb_lens gvars\<close> \<open>vwb_lens ret\<close> \<open>vwb_lens x\<close> \<open>vwb_lens y\<close>
+          \<open>vwb_lens lvars\<close> \<open>vwb_lens gvars\<close> \<open>vwb_lens ret\<close> \<open>vwb_lens x\<close> \<open>vwb_lens y\<close>
 begin
 abbreviation \<open>Lx \<equiv> x ;\<^sub>L lvars\<close>
 abbreviation \<open>Ly \<equiv> y ;\<^sub>L lvars\<close>
@@ -34,9 +34,63 @@ lemma f_rule:
 
 definition (in -) \<open>EXINV l P \<equiv> \<^bold>\<exists>st \<bullet> P\<lbrakk>(\<guillemotleft>st\<guillemotright> \<oplus> &\<Sigma> on &l)/&\<Sigma>\<rbrakk>\<close>
 
+subsection \<open>Modification is existential\<close>
+
+definition (in -) \<open>modifies x \<equiv> \<^bold>\<exists>v' \<bullet> $\<Sigma>\<acute> \<oplus> \<guillemotleft>v'\<guillemotright> on &x =\<^sub>u $\<Sigma>\<close>
+abbreviation (in -) ref_modifies (infix "\<flat>" 95) where
+  \<open>x \<flat> c \<equiv> modifies x \<sqsubseteq> c\<close>
+
+lemma (in -) modifies_to_ext:
+  assumes \<open>vwb_lens x\<close>
+      and \<open>modifies x \<sqsubseteq> c\<close> (* TODO: use notation? *)
+  shows \<open>\<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u\<close>
+  using assms unfolding modifies_def
+  by rel_simp metis
+
+lemma (in -) ext_to_modifies:
+  assumes \<open>vwb_lens x\<close>
+      and \<open>\<forall>P. \<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u\<close>
+  shows \<open>modifies x \<sqsubseteq> c\<close>
+  using assms unfolding modifies_def
+  apply - \<comment> \<open>Why do we need to inline the assumptions? Weird.\<close>
+  apply rel_simp
+  by (metis skip_r_eq subst.rep_eq vwb_lens.put_eq)
+
+lemma (in -) modifies_ext:
+  assumes \<open>vwb_lens x\<close>
+  shows \<open>modifies x \<sqsubseteq> c = (\<forall>P. \<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u)\<close>
+  by (metis assms modifies_to_ext ext_to_modifies)
+
+subsection \<open>Region-based modifies\<close>
+
+definition (in -) region :: \<open>('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> set\<close> where
+  \<open>region x s = {s'. \<exists>v. s' = put\<^bsub>x\<^esub> s v}\<close>
+
+definition (in -) region_modifies :: \<open>('\<alpha> \<Rightarrow> '\<alpha> set) \<Rightarrow> _\<close> where
+  \<open>region_modifies reg \<equiv> $\<Sigma> \<in>\<^sub>u uop reg $\<Sigma>\<acute>\<close>
+
+lemma (in -) region_modifies_to_ext:
+  assumes \<open>region_modifies (region x) \<sqsubseteq> c\<close>
+  shows \<open>\<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u\<close>
+  using assms unfolding region_modifies_def region_def
+  by rel_simp blast
+
+lemma (in -) ext_to_region_modifies:
+  assumes \<open>\<forall>P. \<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u\<close>
+  shows \<open>region_modifies (region x) \<sqsubseteq> c\<close>
+  using assms unfolding region_modifies_def region_def
+  by rel_simp (metis skip_r_eq subst.rep_eq)
+
+lemma (in -) region_modifies_ext:
+  \<open>region_modifies (region x) \<sqsubseteq> c = (\<forall>P. \<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u)\<close>
+  using ext_to_region_modifies region_modifies_to_ext
+  by blast
+
+subsection \<open>Antiframe rule work\<close>
+
 lemma antiframe_rule[hoare_rules]:
-  assumes \<open>vwb_lens a\<close> \<open>\<lbrace>P\<rbrace> c \<lbrace>Q\<rbrace>\<^sub>u\<close>
-  shows \<open>\<lbrace>P\<rbrace> a:[c] \<lbrace> (\<exists>a \<bullet> P) \<and> (EXINV a Q) \<rbrace>\<^sub>u\<close>
+  assumes \<open>vwb_lens a\<close> \<open>\<lbrace>P\<rbrace>c\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>P\<rbrace> a:[c] \<lbrace>(\<exists>a \<bullet> P) \<and> (EXINV a Q)\<rbrace>\<^sub>u\<close>
   using assms unfolding EXINV_def
   apply rel_simp
   apply pred_simp
@@ -60,7 +114,7 @@ lemma (in -) assigns_floyd_rX [hoare_rules]:
 
 lemma (in -) modified_assign_rule:
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<rbrace>\<^sub>u\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p)\<rbrace>\<^sub>u\<close>
   apply (rule hoare_post_weak)
    apply (rule assigns_floyd_rX)
    apply fact
@@ -109,15 +163,15 @@ lemma (in -)
   apply transfer
   oops
 
-lemma (in -) \<open>(\<exists>x. P x st) \<and> (\<exists>x. Q x st) \<Longrightarrow> \<exists>x. P x st \<and> Q x st\<close>
+lemma (in -) \<open>(\<exists>x. P x y) \<and> (\<exists>y. P x y) \<Longrightarrow> P x y\<close>
   oops
 
 lemma
   assumes \<open>vwb_lens r\<close>
   shows \<open>\<lbrace> F \<rbrace> f r a \<lbrace> \<exists> r \<bullet> \<exists> Gret \<bullet> F \<rbrace>\<^sub>u\<close>
   unfolding f_def using INDEP assms
-    (*supply assigns_floyd_rX [hoare_rules del]
-  supply modified_assign_rule[hoare_rules]  *)
+    supply assigns_floyd_rX [hoare_rules del]
+  supply modified_assign_rule[hoare_rules]
   apply -
   apply exp_vcg
   apply (simp add: EXINV_pull_out_sublens EXINV_drop_indep conj_ex2_move_front dep_unrest_ex)
@@ -137,7 +191,7 @@ lemma
   apply pred_simp
   apply (simp add: vwb_lens_wb[THEN wb_lens.get_put])
 
-lemma \<open>\<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val\<guillemotright> \<rbrace> f Lx (&Lx) \<lbrace> &Ly=\<^sub>u\<guillemotleft>val2\<guillemotright> \<and> &Lx=\<^sub>u\<guillemotleft>val+1\<guillemotright> \<rbrace>\<^sub>u\<close>
+
 
 end
 
