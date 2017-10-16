@@ -89,7 +89,14 @@ lemma (in -) region_modifies_ext:
 abbreviation
   \<open>reg_mod_intersect a b \<equiv> region_modifies (\<lambda>s. region a s \<inter> region b s)\<close>
 
-lemma reg_mod_intersect_antiframe: (* This works but does it actually help? *)
+lemma reg_mod_intersect:
+  assumes \<open>region_modifies (region a) \<sqsubseteq> c\<close>
+          \<open>region_modifies (region b) \<sqsubseteq> c\<close>
+  shows \<open>reg_mod_intersect a b \<sqsubseteq> c\<close>
+  using assms unfolding region_def region_modifies_def
+  by rel_simp
+
+lemma reg_mod_intersect_antiframe1: (* This works but does it actually help? *)
   assumes \<open>region_modifies (region a) \<sqsubseteq> c\<close>
           \<open>region_modifies (region b) \<sqsubseteq> c\<close>
           \<open>vwb_lens b\<close>
@@ -97,6 +104,17 @@ lemma reg_mod_intersect_antiframe: (* This works but does it actually help? *)
   using assms unfolding region_modifies_def region_def
   apply rel_auto
    apply (metis mwb_lens.put_put vwb_lens_def wb_lens.get_put)
+  apply (metis vwb_lens.put_eq)
+  done
+
+lemma reg_mod_intersect_antiframe2:
+  assumes \<open>region_modifies (region a) \<sqsubseteq> c\<close>
+          \<open>region_modifies (region b) \<sqsubseteq> c\<close>
+          \<open>vwb_lens a\<close>
+  shows \<open>reg_mod_intersect a b \<sqsubseteq> a:[c]\<close>
+  using assms unfolding region_modifies_def region_def
+  apply rel_auto
+   apply (metis vwb_lens_def wb_lens.get_put)
   apply (metis vwb_lens.put_eq)
   done
 
