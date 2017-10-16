@@ -9,7 +9,7 @@ syntax
 translations
   "_svid_st_alpha" => "CONST des_vars_child_lens"
  
-section {*Type projections and injection*}
+section {*Type projections and injections*}
 
 subsection {*Substitution lift and drop*}
 

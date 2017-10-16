@@ -115,8 +115,8 @@ subsection {*Hoare for While-loop*}
 lemma while_hoare_r_des_t [hoare_total]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"  
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and>  E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> )) \<sqsubseteq> (P \<turnstile> Q)"  
-  assumes PHI:"`(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
+  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> P \<turnstile> Q \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
+  assumes PHI:"`(\<not>b \<and> I) \<Rightarrow> Post`"  
   shows "\<lbrace>Pre\<rbrace>while b invr I do P \<turnstile> Q od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have M: "mono (\<lambda>X. bif\<^sub>D b then (P \<turnstile> Q) ;; X else SKIP\<^sub>D eif)"
@@ -132,9 +132,7 @@ proof -
    apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
-    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF ])  
-      apply (simp add: M_des)
-     apply (simp add: H)
+    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF  WF M_des H ])  
     apply pred_simp
    apply pred_simp
   apply (rule  cond_refine_des)
@@ -142,7 +140,7 @@ proof -
       apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
             apply pred_simp
            apply pred_simp
-       apply (rule order_trans[OF induct_step, where st1 = st]) 
+       apply (rule order_trans[OF induct_step[unfolded hoare_d_def], where st1 = st]) 
         apply pred_simp
         apply pred_simp
       done
@@ -156,8 +154,8 @@ lemma while_hoare_r_t [hoare_total]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is \<^bold>H"  
-  assumes induct_step:"\<And> st. (\<lceil>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> (\<lceil>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rceil>\<^sub>D\<^sub>>)) \<sqsubseteq> body"  
-  assumes PHI:"`\<lceil>\<not> b \<and> I\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>`"  
+  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
+  assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
   shows "\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
@@ -174,9 +172,7 @@ proof -
    apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
-    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF ])  
-      apply (simp add: M_des)
-     apply (simp add: H)
+    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
     apply pred_simp
    apply pred_simp
   apply (rule  cond_refine_des)
@@ -184,7 +180,7 @@ proof -
       apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
             apply pred_simp
            apply pred_simp
-       apply (rule order_trans[OF induct_step, where st1 = st]) 
+       apply (rule order_trans[OF induct_step[unfolded hoare_d_def],  where st1 = st]) 
         apply pred_simp
         apply pred_simp
       done
@@ -194,5 +190,5 @@ proof -
   done 
 qed
   
-  
+
 end
