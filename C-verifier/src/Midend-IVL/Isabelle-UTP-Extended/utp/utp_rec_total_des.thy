@@ -5,7 +5,6 @@ begin
   
 lemma Mono_utp_orderD:
   assumes M: "Mono\<^bsub>utp_order H\<^esub> B"
-  (*and     H: "B \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" what is the relation of "B \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" and the other assumptions*)
   and     "x is H"
   and     "y is H"
   and     "y \<sqsubseteq> x"    
