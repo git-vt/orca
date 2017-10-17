@@ -143,8 +143,10 @@ definition rassert_hp :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cphp" (
 
 subsection{*store and load*}
   
-definition ustore:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>h\<^sub>p/ _)"[73, 73] 72)where 
-  [urel_defs]:"ustore p v = (heap_raw :== (bop hrs_mem_update (bop heap_update \<guillemotleft>p\<guillemotright> v) (&heap_raw)))"
+definition ustore:: 
+  "('b::mem_type ptr \<Longrightarrow> 'a cphp) \<Rightarrow> ('b, 'a cphp) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>h\<^sub>p/ _)"[73, 73] 72)
+where [urel_defs]:
+  "ustore p v = (heap_raw :== (bop hrs_mem_update (bop heap_update (utp_expr.var p) v) (&heap_raw)))"
 
 definition ustore':: "'b::mem_type ptr \<Rightarrow> ('b, 'a) uexpr \<Rightarrow>  ('a) hrel_cphp" ("(*_ :=\<^sub>H\<^sub>P/ _)"[73, 73] 72)where 
   [urel_defs]:"ustore' p v = (heap_raw :== (bop hrs_mem_update (bop heap_update \<guillemotleft>p\<guillemotright> (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)) (&heap_raw)))"
@@ -152,13 +154,15 @@ definition ustore':: "'b::mem_type ptr \<Rightarrow> ('b, 'a) uexpr \<Rightarrow
 definition uload:: "'b::mem_type ptr \<Rightarrow> ('b, 'a cphp) uexpr" ( "*\<^sub>h\<^sub>p")where 
   [urel_defs]:"uload p = (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>)"
   
-definition uderef:: "('b \<Longrightarrow> 'a cphp)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ :=\<^sub>h\<^sub>p/*_)"[73, 73] 72)
-where [urel_defs]: "uderef x p  = (x :== (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))"
+definition uderef:: "('b \<Longrightarrow> 'a cphp)  \<Rightarrow>('b::mem_type ptr \<Longrightarrow> 'a cphp) \<Rightarrow>  ('a) hrel_cphp " ("(/_ :=\<^sub>h\<^sub>p/*_)"[73, 73] 72)
+where [urel_defs]: "uderef x p  = (x :== (bop h_val (uop hrs_mem (&heap_raw)) (utp_expr.var p)))"
 
 definition uderef':: "('b \<Longrightarrow> 'a)  \<Rightarrow>'b::mem_type ptr \<Rightarrow>  ('a) hrel_cphp " ("(/_ :=\<^sub>s\<^sub>t\<^sub>k/*_)"[73, 73] 72)
 where [urel_defs]:
   "uderef' x p = (\<^bold>\<exists> v \<bullet> x \<Midarrow> \<guillemotleft>v\<guillemotright> \<and>\<^sub>p \<lceil>(\<guillemotleft>v\<guillemotright> =\<^sub>u (bop h_val (uop hrs_mem (&heap_raw)) \<guillemotleft>p\<guillemotright>))\<rceil>\<^sub><)"
-
+term "\<Sigma>\<^sub>H\<^sub>P"
+term "(v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)"  
+  
 lemma [simp]: 
   "(h_val (hrs_mem (hrs_mem_update (heap_update (p::'b::mem_type ptr) v) (h,tt))) p) = v" 
   unfolding hrs_mem_def hrs_mem_update_def
@@ -167,7 +171,7 @@ lemma [simp]:
 lemma "
    ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x :=\<^sub>h\<^sub>p *p)  = ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x:== \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
-  by rel_simp
+  apply rel_simp
 
 lemma " heap_raw \<sharp> v \<Longrightarrow>
    ( *p :=\<^sub>h\<^sub>p v ;; x :=\<^sub>h\<^sub>p *p)  = ( *p :=\<^sub>h\<^sub>p v ;; x:== v)"
