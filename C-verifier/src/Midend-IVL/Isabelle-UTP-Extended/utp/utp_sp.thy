@@ -41,7 +41,6 @@ theorem sp_hoare_link:
 lemma "\<lbrace>p\<rbrace>C\<lbrace>p sp C\<rbrace>\<^sub>u"
   by rel_blast
 
-
 theorem sp_eq_intro: "\<lbrakk>\<And>r. r sp P = r sp Q\<rbrakk> \<Longrightarrow> P = Q"
   by (rel_auto robust, fastforce+)    
 
