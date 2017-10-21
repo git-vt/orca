@@ -157,9 +157,16 @@ lemma antiframe_rule[hoare_rules]:
   by rel_simp (metis assms(1) vwb_lens_wb wb_lens.get_put)
 
 declare assigns_floyd_r[hoare_rules del]
+<<<<<<< .mine
+thm assigns_floyd_r  
+lemma (in -) assigns_floyd_rX [hoare_rules]:
+||||||| .r489
+lemma (in -) assigns_floyd_rX [hoare_rules]:
+=======
 lemma assigns_floyd_rX [hoare_rules]:
+>>>>>>> .r497
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<rbrace>\<^sub>u\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<rbrace>\<^sub>u\<close>(*INCOMPLETE*)
   apply (insert assms)
   apply pred_simp
   apply transfer
