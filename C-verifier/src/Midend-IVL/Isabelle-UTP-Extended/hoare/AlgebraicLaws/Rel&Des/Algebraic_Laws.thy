@@ -98,7 +98,7 @@ lemma assign_cond:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "out\<alpha> \<sharp> b"
   shows "(x :== e ;; (P \<triangleleft> b \<triangleright> Q)) =
-         ((x :== e ;; P) \<triangleleft>(b\<lbrakk>\<lceil>e\<rceil>\<^sub></$x\<rbrakk>)\<triangleright> (x :== e ;; Q))"
+         ((x :== e ;; P) \<triangleleft>b\<lbrakk>\<lceil>e\<rceil>\<^sub></$x\<rbrakk>\<triangleright> (x :== e ;; Q))"
   by rel_auto
 
 lemma assign_rcond[symbolic_exec]:
@@ -771,21 +771,6 @@ theorem RA6[urel_comp]: "((P \<or> Q) ;; R) = ((P;;R) \<or> (Q;;R))"
 theorem RA7: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
   by (rel_auto)
 
-subsection \<open>Relational alphabet extension\<close>
-
-lift_definition rel_alpha_ext :: "'\<beta> hrel \<Rightarrow> ('\<beta> \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel" (infix "\<oplus>\<^sub>R" 65) is
-  "\<lambda> P x (b1, b2). P (get\<^bsub>x\<^esub> b1, get\<^bsub>x\<^esub> b2) \<and> (\<forall> b. b1 \<oplus>\<^sub>L b on x = b2 \<oplus>\<^sub>L b on x)" .
-
-lemma rel_alpha_ext_alt_def:
-  assumes "vwb_lens y" "x +\<^sub>L y \<approx>\<^sub>L 1\<^sub>L" "x \<bowtie> y"
-  shows "P \<oplus>\<^sub>R x = (P \<oplus>\<^sub>p (x \<times>\<^sub>L x) \<and> $y\<acute> =\<^sub>u $y)"
-  using assms
-  apply (rel_auto robust, simp_all add: lens_override_def)
-  apply (metis lens_indep_get lens_indep_sym)
-  apply (metis vwb_lens_def wb_lens.get_put wb_lens_def weak_lens.put_get)
-done
-
-
 subsection \<open>Refinement rules\<close>
   
 lemma pre_weak_rel:
@@ -797,8 +782,7 @@ lemma pre_weak_rel:
     
 lemma post_str_rel: "(p\<Rightarrow>q) \<sqsubseteq> P \<Longrightarrow> `q\<Rightarrow>r` \<Longrightarrow> (p\<Rightarrow>r) \<sqsubseteq> P"
   by pred_blast
-    
-    
+        
 lemma cond_refine_rel: 
   assumes "(b \<and> p \<Rightarrow> q) \<sqsubseteq> C\<^sub>1" and "(\<not>b \<and> p \<Rightarrow> q)\<sqsubseteq> C\<^sub>2" 
   shows "(p \<Rightarrow> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"

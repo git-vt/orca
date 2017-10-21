@@ -9,7 +9,7 @@ named_theorems hoare_total
 subsection {*Hoare triple definition*}
 
 definition hoare_d :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> bool" ("\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>D") where
-[upred_defs]:"\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>D = ((\<lceil>p\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>r\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> Q)"
+[upred_defs]:"\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>D = ((p \<turnstile>\<^sub>n \<lceil>r\<rceil>\<^sub>>) \<sqsubseteq> Q)"
 
 lemma hoare_true_assisgns_d_t [hoare_total]: 
   "\<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>D\<lbrace>true\<rbrace>\<^sub>D"
@@ -117,7 +117,7 @@ lemma while_hoare_r_des_t [hoare_total]:
   assumes I0: "`Pre \<Rightarrow> I`"  
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> P \<turnstile> Q \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
   assumes PHI:"`(\<not>b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>while b invr I do P \<turnstile> Q od\<lbrace>Post\<rbrace>\<^sub>D"
+  shows "\<lbrace>Pre\<rbrace>while\<^sub>D b invr I do P \<turnstile> Q od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have M: "mono (\<lambda>X. bif\<^sub>D b then (P \<turnstile> Q) ;; X else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono) 
@@ -132,12 +132,13 @@ proof -
    apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
+    unfolding ndesign_def rdesign_def
     apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF  WF M_des H ])  
     apply pred_simp
    apply pred_simp
   apply (rule  cond_refine_des)
     subgoal for  st
-      apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
+      apply (rule_tac seq_refine_unrest_des[ where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
             apply pred_simp
            apply pred_simp
        apply (rule order_trans[OF induct_step[unfolded hoare_d_def], where st1 = st]) 
@@ -156,7 +157,7 @@ lemma while_hoare_r_t [hoare_total]:
   assumes BH :" body is \<^bold>H"  
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>while b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
+  shows "\<lbrace>Pre\<rbrace>while\<^sub>D b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono) 
@@ -172,6 +173,7 @@ proof -
    apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
+     unfolding ndesign_def rdesign_def
     apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
     apply pred_simp
    apply pred_simp

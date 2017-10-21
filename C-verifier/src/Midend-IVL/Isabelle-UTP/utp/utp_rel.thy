@@ -22,11 +22,38 @@ text {* We set up some overloaded constants for sequential composition and the i
   we want to overload their definitions later. *}
   
 consts
-  useq   :: "'a \<Rightarrow> 'b \<Rightarrow> 'c" (infixr ";;" 71)
-  uskip  :: "'a" ("II")
+  useq     :: "'a \<Rightarrow> 'b \<Rightarrow> 'c" (infixr ";;" 71)
+  uassigns :: "'a usubst \<Rightarrow> 'b" ("\<langle>_\<rangle>\<^sub>a")
+  uskip    :: "'a" ("II")
+  
+
+subsection{*Conditional*}
+
+abbreviation rcond::"('\<alpha>, '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<alpha>, '\<beta>) rel"
+                                                          ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
+where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>< \<triangleright> Q)"
+
+subsection{*Sequential composition*}
+
+lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel"  is
+  "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
+    
+ adhoc_overloading
+  useq seqr
+  
+text {* We also set up a homogeneous sequential composition operator, and versions of @{term true}
+  and @{term false} that are explicitly typed by a homogeneous alphabet. *}
+
+abbreviation seqh :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" (infixr ";;\<^sub>h" 71) where
+"seqh P Q \<equiv> (P ;; Q)"  
+
+lift_definition assigns_r :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel"
+  is "\<lambda> \<sigma> (A, A'). A' = \<sigma>(A)" .
+
+adhoc_overloading
+  uassigns assigns_r
  
 subsection{*SKIP*}                                                     
-
 
 definition skip_ra :: "('\<beta>, '\<alpha>) lens \<Rightarrow>'\<alpha> hrel" where
 [urel_defs]: "skip_ra v = ($v\<acute> =\<^sub>u $v)"
@@ -36,14 +63,13 @@ syntax
 
 translations
   "_skip_ra v" == "CONST skip_ra v"
-
-lift_definition assigns_r :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel" ("\<langle>_\<rangle>\<^sub>a")
-  is "\<lambda> \<sigma> (A, A'). A' = \<sigma>(A)" .
-
+  
 definition skip_r :: "'\<alpha> hrel" where
 [urel_defs]:"skip_r = assigns_r id"
+
 adhoc_overloading
   uskip skip_r
+  
 subsection{*Assign*}
 
 definition assigns_ra :: "'\<alpha> usubst \<Rightarrow> ('\<beta>, '\<alpha>) lens \<Rightarrow> '\<alpha> hrel" ("\<langle>_\<rangle>\<^bsub>_\<^esub>") where
@@ -52,28 +78,11 @@ definition assigns_ra :: "'\<alpha> usubst \<Rightarrow> ('\<beta>, '\<alpha>) l
 abbreviation assign_r :: "('t \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel"  where 
   "assign_r v expr \<equiv> assigns_r [v \<mapsto>\<^sub>s expr]"
 
+  
 abbreviation assign_2_r ::
   "('t1 \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t2 \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t1, '\<alpha>) uexpr \<Rightarrow> ('t2, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel" where 
   "assign_2_r x y u v \<equiv> assigns_r [x \<mapsto>\<^sub>s u, y \<mapsto>\<^sub>s v]"
 
-subsection{*Conditional*}
-
-abbreviation rcond::"('\<alpha>, '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<alpha>, '\<beta>) rel"
-                                                          ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
-where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (P \<triangleleft>\<lceil>b\<rceil>\<^sub>< \<triangleright> Q)"
-
-subsection{*Sequential composition*}
-
-lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel"  is
-  "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
- adhoc_overloading
-  useq seqr
-  
-text {* We also set up a homogeneous sequential composition operator, and versions of @{term true}
-  and @{term false} that are explicitly typed by a homogeneous alphabet. *}
-
-abbreviation seqh :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" (infixr ";;\<^sub>h" 71) where
-"seqh P Q \<equiv> (P ;; Q)"
 
 text {* We set up iterated sequential composition which iterates an indexed predicate over the
   elements of a list. *}
@@ -94,7 +103,6 @@ text{*In order to specify while loops we need a concept that refers to the resul
       Now we need to reason on the next state space to see if we continue the execution of the body
       or we skip it.*}
 
-term "(\<nu> X \<bullet> (C ;; X))"
 definition while :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sup>\<top> _ do _ od") where
 "while b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
 
@@ -172,7 +180,8 @@ definition block :: "('a, 'c) rel \<Rightarrow> ('c, 'd) rel  \<Rightarrow> ('a 
 
 
 
-subsection {* Syntax Translations Setup*}
+
+subsection {* Syntax Translations *}
     
 syntax
   -- {* Alternative traditional conditional syntax *}
@@ -200,18 +209,20 @@ translations
   ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
   "_mk_usubst \<sigma> (_svid_unit x) v" \<rightleftharpoons> "\<sigma>(&x \<mapsto>\<^sub>s v)"
   "_mk_usubst \<sigma> (_svid_list x xs) (_uexprs v vs)" \<rightleftharpoons> "(_mk_usubst (\<sigma>(&x \<mapsto>\<^sub>s v)) xs vs)"
-  "_assignment xs vs" => "CONST assigns_r (_mk_usubst (CONST id) xs vs)"
-  "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) (CONST svar x) v)"
-  "x :== v" <= "CONST assigns_r (CONST subst_upd (CONST id) x v)"
-  "x,y :== u,v" <= "CONST assigns_r (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
+  "_assignment xs vs" => "CONST uassigns (_mk_usubst (CONST id) xs vs)"
+  "x :== v" <= "CONST uassigns (CONST subst_upd (CONST id) (CONST svar x) v)"
+  "x :== v" <= "CONST uassigns (CONST subst_upd (CONST id) x v)"
+  "x,y :== u,v" <= "CONST uassigns (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
   -- {* Indexed assignment uses the overloaded collection update function \emph{uupd}. *}
   "x [k] :== v" => "x :== &x(k \<mapsto> v)\<^sub>u"
   "_skip_ra v" \<rightleftharpoons> "CONST skip_ra v"
-  "_frame x P" \<rightleftharpoons> "CONST frame x P"
-  "_antiframe x P" \<rightleftharpoons> "CONST antiframe x P"
-  "_nameset x P" \<rightleftharpoons> "CONST nameset x P"
+  "_frame x P" => "CONST frame x P"
+  "_frame (_salphaset (_salphamk x)) P" <= "CONST frame x P"
+  "_antiframe x P" => "CONST antiframe x P"
+  "_antiframe (_salphaset (_salphamk x)) P" <= "CONST antiframe x P"
+  "_nameset x P" == "CONST nameset x P"
 
- text {* The following code sets up pretty-printing for homogeneous relational expressions. We cannot 
+text {* The following code sets up pretty-printing for homogeneous relational expressions. We cannot 
   do this via the ``translations'' command as we only want the rule to apply when the input and output
   alphabet types are the same. The code has to deconstruct a @{typ "('a, '\<alpha>) uexpr"} type, determine 
   that it is relational (product alphabet), and then checks if the types \emph{alpha} and \emph{beta} 
@@ -227,7 +238,10 @@ fun tr' ctx [ a
     else raise Match;
 in [(@{type_syntax "uexpr"},tr')]
 end
-*} 
+*}
+  
+translations
+  (type) "'\<alpha> hrel" <= (type) "(bool, '\<alpha>) hexpr"
   
 subsection {* Program values *}
 
@@ -275,4 +289,17 @@ definition rel_var_res :: "'\<alpha> hrel \<Rightarrow> ('a \<Longrightarrow> '\
 lemma Rep_inverse[code]:"Rep_uexpr (Abs_uexpr x) = x" 
 by rel_auto
 
+subsection {* Relational alphabet extension *}
+
+lift_definition rel_alpha_ext :: "'\<beta> hrel \<Rightarrow> ('\<beta> \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel" (infix "\<oplus>\<^sub>R" 65)
+is "\<lambda> P x (b1, b2). P (get\<^bsub>x\<^esub> b1, get\<^bsub>x\<^esub> b2) \<and> (\<forall> b. b1 \<oplus>\<^sub>L b on x = b2 \<oplus>\<^sub>L b on x)" .
+
+lemma rel_alpha_ext_alt_def:
+  assumes "vwb_lens y" "x +\<^sub>L y \<approx>\<^sub>L 1\<^sub>L" "x \<bowtie> y"
+  shows "P \<oplus>\<^sub>R x = (P \<oplus>\<^sub>p (x \<times>\<^sub>L x) \<and> $y\<acute> =\<^sub>u $y)"
+  using assms
+  apply (rel_auto robust, simp_all add: lens_override_def)
+  apply (metis lens_indep_get lens_indep_sym)
+  apply (metis vwb_lens_def wb_lens.get_put wb_lens_def weak_lens.put_get)
+done  
 end

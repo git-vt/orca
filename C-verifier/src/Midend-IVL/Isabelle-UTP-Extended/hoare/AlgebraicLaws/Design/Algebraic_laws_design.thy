@@ -279,72 +279,103 @@ lemma assign_d_cond_If [udes_cond]:
    (v :=\<^sub>D (exp1 \<triangleleft> bexp \<triangleright> exp2))"
   by rel_auto
 
-subsection \<open>While laws\<close>
+subsection \<open>While laws for designs\<close>
 text \<open>In this section we introduce the algebraic laws of programming related to the while
       statement.\<close>
   
-theorem while_unfold:
-  "while b do (P \<turnstile> Q) od = (bif\<^sub>D b then ((P \<turnstile> Q);; while b do (P \<turnstile> Q) od) else SKIP\<^sub>D eif)"
+lemma design_is_H1:
+  "(P \<turnstile> Q) is H1"  
+  by pred_auto 
+
+lemma weaker_seq_r_H1_H2_closed [closure]:
+  assumes "P is H1"  "Q is \<^bold>H"
+  shows "(P ;; Q) is \<^bold>H"
 proof -
-  have m:"mono (\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)"
+ obtain Q\<^sub>1 Q\<^sub>2 where "Q = Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2"
+   by (metis H1_H2_commute H1_H2_is_rdesign H2_idem Healthy_def assms(2)) 
+   moreover have "(P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) is \<^bold>H"
+   proof -
+     have "H1 P = P"
+       by (metis Healthy_def assms(1))
+     then show ?thesis
+       by (metis (no_types) H1_H3_commute H1_H3_idempotent H1_H3_impl_H2 H3_def Healthy_def assms(2) calculation design_left_unit seq_r_H1_H2_closed seqr_assoc)
+   qed 
+  ultimately show ?thesis by simp
+qed    
+      
+lemma weak_seq_r_H1_H2_closed [closure]:
+  assumes  "Q is \<^bold>H"
+  shows "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; Q) is \<^bold>H"
+proof -
+ obtain Q\<^sub>1 Q\<^sub>2 where *: "Q = Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2"
+   by (metis H1_H2_commute H1_H2_is_rdesign H2_idem Healthy_def assms(1)) 
+  moreover have "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) is \<^bold>H"
+    using weaker_seq_r_H1_H2_closed design_is_H1 * assms by auto  
+  ultimately show ?thesis by simp
+qed    
+  
+theorem while_des_unfold_gen:
+  assumes HB: "B is H1"
+  shows "while\<^sub>D b do B od = (bif\<^sub>D b then (B;; while\<^sub>D b do B od) else SKIP\<^sub>D eif)"
+proof -
+  have m:"mono (\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono)
-  have H: "(\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+  have H: "(\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H"
+    using HB
     apply pred_simp apply rel_simp apply smt done       
-  have "(while b do (P \<turnstile> Q) od) = (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)"
+  have "(while\<^sub>D b do B od) = (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
     by (simp add: While_lfp_des_def)
-  also have "... = (bif\<^sub>D b then ((P \<turnstile> Q);; (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
+  also have "... = (bif\<^sub>D b then (B;; (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
     using mono_Monotone_utp_order [OF m, of "\<H>\<^bsub>DES\<^esub>"] H
           design_theory_continuous.LFP_weak_unfold 
     by auto
-  also have "... = (bif\<^sub>D b then ((P \<turnstile> Q);; while b do (P \<turnstile> Q) od) else SKIP\<^sub>D eif)"
+  also have "... = (bif\<^sub>D b then (B;; while\<^sub>D b do B od) else SKIP\<^sub>D eif)"
     by (simp add: While_lfp_des_def)
   finally show ?thesis .
 qed
-
-theorem while_bot_true: "while true do (P \<turnstile> Q) od = (\<mu>\<^sub>D X \<bullet> ((P \<turnstile> Q);; X))"
+      
+theorem while_bot_des_true: 
+  "while\<^sub>D true do P od = (\<mu>\<^sub>D X \<bullet> (P ;; X))"
   by (simp add: While_lfp_des_def alpha)
-        
-lemma while_false:
-  shows "(while false do (P \<turnstile> Q) od) = SKIP\<^sub>D"
-proof -
-  have "(while false do (P \<turnstile> Q) od) = bif\<^sub>D false then ((P \<turnstile> Q) ;; while false do (P \<turnstile> Q) od) else SKIP\<^sub>D eif"
-    using while_unfold[of _ P] by simp
-  also have "... = SKIP\<^sub>D" by rel_blast
-  finally show ?thesis .
-qed
+    
+lemma while_des_false:
+  shows "(while\<^sub>D false do P od) = SKIP\<^sub>D"
+  by (simp add: While_lfp_des_def alpha skip_d_def 
+      design_theory_continuous.LFP_const rdesign_is_H1_H2)
 
-lemma while_inv_unfold:
-  "(while b invr p do (P \<turnstile> Q) od) = 
-   (bif\<^sub>D b then ((P \<turnstile> Q) ;; (while b invr p do (P \<turnstile> Q) od)) else SKIP\<^sub>D eif)"
-  unfolding While_inv_des_def using while_unfold
+lemma while_inv_des_unfold:
+   assumes HB: "B is H1"
+  shows "(while\<^sub>D b invr p do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>D b invr p do B od)) else SKIP\<^sub>D eif)"
+  unfolding While_inv_des_def using while_des_unfold_gen assms
   by auto
 
-theorem while_top_unfold:
-  "while\<^sup>\<top>\<^sup>D b do (P \<turnstile> Q) od = (bif\<^sub>D b then ((P \<turnstile> Q) ;; while\<^sup>\<top>\<^sup>D b do (P \<turnstile> Q) od) else SKIP\<^sub>D eif)"
+theorem while_top_des_unfold_gen:
+  assumes HB: "B is H1"
+  shows
+  "while\<^sup>\<top>\<^sup>D b do B od = (bif\<^sub>D b then (B ;; while\<^sup>\<top>\<^sup>D b do B od) else SKIP\<^sub>D eif)"
 proof -
-  have m:"mono (\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)"
+  have m:"mono (\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
     by (auto intro: monoI seqr_mono cond_mono)
-  have H: "(\<lambda>X. bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
+  have H: "(\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H"  
+    using HB
     apply pred_simp apply rel_simp apply smt done     
-  have "(while\<^sup>\<top>\<^sup>D b do (P \<turnstile> Q) od) = (\<nu>\<^sub>D X \<bullet> bif\<^sub>D b then ((P \<turnstile> Q);; X) else SKIP\<^sub>D eif)"
+  have "(while\<^sup>\<top>\<^sup>D b do B od) = (\<nu>\<^sub>D X \<bullet> bif\<^sub>D b then (B;; X) else SKIP\<^sub>D eif)"
     by (simp add: While_gfp_des_def)
-  also have "... = (bif\<^sub>D b then ((P \<turnstile> Q) ;; (\<nu>\<^sub>D X \<bullet> bif\<^sub>D b then ((P \<turnstile> Q) ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
+  also have "... = (bif\<^sub>D b then (B ;; (\<nu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
     using mono_Monotone_utp_order [OF m, of "\<H>\<^bsub>DES\<^esub>"] H
           design_theory_continuous.GFP_weak_unfold 
     by auto
-  also have "... = (bif\<^sub>D b then ((P \<turnstile> Q);; while\<^sup>\<top>\<^sup>D b do (P \<turnstile> Q) od) else SKIP\<^sub>D eif)"
+  also have "... = (bif\<^sub>D b then (B ;; while\<^sup>\<top>\<^sup>D b do B od) else SKIP\<^sub>D eif)"
     by (simp add:While_gfp_des_def)
   finally show ?thesis .
-qed
-
-theorem while_bot_false: "while\<^sup>\<top>\<^sup>D false do (P \<turnstile> Q) od = SKIP\<^sub>D"
- proof -
-  have "(while\<^sup>\<top>\<^sup>D false do (P \<turnstile> Q) od) = bif\<^sub>D false then ((P \<turnstile> Q) ;; while\<^sup>\<top>\<^sup>D false do (P \<turnstile> Q) od) else SKIP\<^sub>D eif"
-    using while_top_unfold[of _ P] by simp
-  also have "... = SKIP\<^sub>D" by rel_blast
-  finally show ?thesis .
-qed
-
+qed    
+ 
+theorem while_top_des_false: 
+  "while\<^sup>\<top>\<^sup>D false do P od = SKIP\<^sub>D"
+ by (simp add: While_gfp_des_def alpha skip_d_def 
+      design_theory_continuous.GFP_const rdesign_is_H1_H2)
+    
 (*lemma while_true:
   shows "(while true do (P\<turnstile>Q) od) = false"it should eq to \<top>\<^sub>D
   apply (simp add: While_lfp_des_def alpha)
@@ -354,6 +385,80 @@ qed
   apply (simp)
   done*)
 
+subsection \<open>While laws for normal designs\<close>
+text \<open>In this section we introduce the algebraic laws of programming related to the while
+      statement.\<close>
+  
+theorem while_bot_ndes_unfold_gen:
+  assumes HB: "B is H1"
+  shows
+  "while\<^sub>N b do B od = (bif\<^sub>D b then (B;; while\<^sub>N b do B od) else SKIP\<^sub>D eif)"
+proof -
+  have m:"mono (\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
+    by (auto intro: monoI seqr_mono cond_mono)
+  have H: "(\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+    using HB apply pred_simp apply rel_simp apply smt done       
+  have "(while\<^sub>N b do B od) = (\<mu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
+    by (simp add: While_lfp_ndes_def)
+  also have "... = (bif\<^sub>D b then (B ;; (\<mu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
+    using mono_Monotone_utp_order [OF m, of "\<H>\<^bsub>NDES\<^esub>"] H
+          normal_design_theory_continuous.LFP_weak_unfold 
+    by auto
+  also have "... = (bif\<^sub>D b then (B ;; while\<^sub>N b do B od) else SKIP\<^sub>D eif)"
+    by (simp add: While_lfp_ndes_def)
+  finally show ?thesis .
+qed
+
+
+theorem while_bot_ndes_true: "while\<^sub>N true do P od = (\<mu>\<^sub>N X \<bullet> (P;; X))"
+  by (simp add: While_lfp_ndes_def alpha)
+        
+lemma while_ndes_false:
+  shows "(while\<^sub>N false do P od) = SKIP\<^sub>D"
+  by (simp add: While_lfp_ndes_def alpha skip_d_is_H1_H3  
+      normal_design_theory_continuous.LFP_const)
+    
+lemma while_inv_ndes_unfold:
+  assumes HB: "B is H1"
+  shows
+  "(while\<^sub>N b invr p do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>N b invr p do B od)) else SKIP\<^sub>D eif)"
+  unfolding While_inv_ndes_def using while_bot_ndes_unfold_gen assms
+  by auto  
+  
+theorem while_top_ndes_unfold:
+  assumes HB: "B is H1"
+  shows
+  "while\<^sup>\<top>\<^sup>N b do B od = (bif\<^sub>D b then (B ;; while\<^sup>\<top>\<^sup>N b do B od) else SKIP\<^sub>D eif)"
+proof -
+  have m:"mono (\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
+    by (auto intro: monoI seqr_mono cond_mono)
+  have H: "(\<lambda>X. bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H" 
+    using HB
+    apply pred_simp apply rel_simp apply smt done     
+  have "(while\<^sup>\<top>\<^sup>N b do B od) = (\<nu>\<^sub>N X \<bullet> bif\<^sub>D b then (B;; X) else SKIP\<^sub>D eif)"
+    by (simp add: While_gfp_ndes_def)
+  also have "... = (bif\<^sub>D b then (B ;; (\<nu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)) else SKIP\<^sub>D eif)"
+    using mono_Monotone_utp_order [OF m, of "\<H>\<^bsub>NDES\<^esub>"] H
+          normal_design_theory_continuous.GFP_weak_unfold 
+    by auto
+  also have "... = (bif\<^sub>D b then (B ;; while\<^sup>\<top>\<^sup>N b do B od) else SKIP\<^sub>D eif)"
+    by (simp add:While_gfp_ndes_def)
+  finally show ?thesis .
+qed
+
+theorem while_bot_ndes_false: "while\<^sup>\<top>\<^sup>N false do B od = SKIP\<^sub>D"
+ by (simp add: While_gfp_ndes_def alpha skip_d_is_H1_H3  
+      normal_design_theory_continuous.GFP_const)
+
+(*lemma while_true:
+  shows "(while true do (P\<turnstile>Q) od) = false"it should eq to \<top>\<^sub>D
+  apply (simp add: While_lfp_des_def alpha)
+   apply (rule antisym)
+  apply (simp_all)
+  apply (rule lfp_lowerbound)
+  apply (simp)
+  done*)
  
 subsection \<open>assume laws\<close>
 

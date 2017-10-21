@@ -93,6 +93,5 @@ proof -
   thus ?thesis
     by pred_simp
 qed    
- 
- 
+
 end

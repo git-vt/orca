@@ -159,10 +159,28 @@ lemma Idempotent_image: "Idempotent f \<Longrightarrow> f ` f ` A = f ` A"
 lemma Monotonic_id [simp]: "Monotonic id"
   by (simp add: monoI)
 
+lemma Monotonic_id' [closure]: 
+  "mono (\<lambda> X. X)" 
+  by (simp add: monoI)
+    
+lemma Monotonic_const [closure]: 
+  "Monotonic (\<lambda> x. c)"
+  by (simp add: mono_def)
+    
 lemma Monotonic_comp [intro]:
   "\<lbrakk> Monotonic f; Monotonic g \<rbrakk> \<Longrightarrow> Monotonic (f \<circ> g)"
   by (simp add: mono_def)
+        
+lemma Monotonic_seqr_tail [closure]:
+  assumes "Monotonic F"
+  shows "Monotonic (\<lambda> X. P ;; F(X))"
+  by (simp add: assms monoD monoI seqr_mono)
 
+lemma Monotonic_cond [closure]:
+  assumes "Monotonic P" "Monotonic Q"
+  shows "Monotonic (\<lambda> X. P(X) \<triangleleft> b \<triangleright> Q(X))"
+  by (simp add: assms cond_monotonic)
+    
 lemma Conjuctive_Idempotent:
   "Conjunctive(H) \<Longrightarrow> Idempotent(H)"
   by (auto simp add: Conjunctive_def Idempotent_def)
@@ -274,7 +292,7 @@ lemma UINF_Continuous_closed [closure]:
   "\<lbrakk> Continuous H; \<And> i. P(i) is H \<rbrakk> \<Longrightarrow> (\<Sqinter> i \<bullet> P(i)) is H"
   using UINF_mem_Continuous_closed[of H UNIV P]
   by (simp add: UINF_mem_UNIV)
- 
+
 text {* All continuous functions are also Scott-continuous *}
 
 lemma sup_continuous_Continuous [closure]: "Continuous F \<Longrightarrow> sup_continuous F"

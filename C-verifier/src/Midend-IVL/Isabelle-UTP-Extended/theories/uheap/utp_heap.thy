@@ -179,12 +179,10 @@ lemma " heap_raw \<sharp> v \<Longrightarrow>
   apply pred_simp apply rel_simp
   by (metis (no_types)  prod.exhaust_sel)
 
-
 lemma "( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>h\<^sub>p \<guillemotleft>v\<guillemotright> ;; x \<Midarrow> \<guillemotleft>v\<guillemotright>)"
   unfolding lens_indep_def
   by rel_simp
 
-term "\<guillemotleft>x\<guillemotright>"
 lemma "( *p :=\<^sub>H\<^sub>P v  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>H\<^sub>P v  ;; x \<Midarrow> v)"
   unfolding lens_indep_def
   by rel_simp   
@@ -193,11 +191,10 @@ lemma "( *p :=\<^sub>H\<^sub>P (y + 1)  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = (
   unfolding lens_indep_def
   by rel_simp 
 
-
 lemma "( *p :=\<^sub>h\<^sub>p (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)  ;; x :=\<^sub>s\<^sub>t\<^sub>k *p)  = ( *p :=\<^sub>h\<^sub>p (v\<oplus>\<^sub>p \<Sigma>\<^sub>H\<^sub>P)  ;; x \<Midarrow> v)"
   unfolding lens_indep_def
   by rel_simp     
-term "heap_raw"
+
 subsection{*Loops*}
 
 end
