@@ -81,13 +81,13 @@ lemma reg_mod_intersect_sym:
   using assms unfolding region_def region_modifies_def
   by rel_simp+
 
-lemma reg_mod_intersect_antiframe1: (* This works but does it actually help? *)
+lemma reg_mod_intersect_antiframe1:
   assumes \<open>region_modifies r\<^sub>1 \<sqsubseteq> c\<close> \<open>region_modifies r\<^sub>2 \<sqsubseteq> c\<close>
           \<open>vwb_lens b\<close>
   shows \<open>region_modifies (reg_inter r\<^sub>1 r\<^sub>2) \<sqsubseteq> b:[c]\<close>
   using assms unfolding region_modifies_def region_def
   apply rel_auto
-    oops
+  oops \<comment> \<open>Don't know how either region relates to b\<close>
    apply (metis mwb_lens.put_put vwb_lens_def wb_lens.get_put)
   apply (metis vwb_lens.put_eq)
   done
@@ -98,7 +98,7 @@ lemma reg_mod_intersect_antiframe2:
   shows \<open>region_modifies (reg_inter r\<^sub>1 r\<^sub>2) \<sqsubseteq> a:[c]\<close>
   using assms unfolding region_modifies_def region_def
   apply rel_auto
-  oops
+  oops \<comment> \<open>Don't know how either region relates to a\<close>
     apply (metis vwb_lens_def wb_lens.get_put)
   apply (metis vwb_lens.put_eq)
   done
@@ -124,7 +124,7 @@ proof -
     by auto
   with assms show ?thesis by rel_simp (metis vwb_lens.put_eq)
 qed
-  
+
 lemma ext_to_prog_reg:
   assumes \<open>\<forall>P. \<lbrace>P\<rbrace>c\<lbrace>\<exists>x \<bullet> P\<rbrace>\<^sub>u\<close>
           \<open>vwb_lens x\<close>
@@ -150,21 +150,14 @@ text \<open>Lenses are too abstract for proper region reasoning right now.\<clos
 
 subsection \<open>Antiframe rule work\<close>
 
-lemma antiframe_rule[hoare_rules]:
+lemma antiframe_rule(* [hoare_rules] *):
   assumes \<open>vwb_lens a\<close> \<open>\<lbrace>P\<rbrace>c\<lbrace>Q\<rbrace>\<^sub>u\<close>
   shows \<open>\<lbrace>P\<rbrace> a:[c] \<lbrace>(\<exists>a \<bullet> P) \<and> (EXINV a Q)\<rbrace>\<^sub>u\<close>
   using assms unfolding EXINV_def
   by rel_simp (metis assms(1) vwb_lens_wb wb_lens.get_put)
 
-declare assigns_floyd_r[hoare_rules del]
-<<<<<<< .mine
-thm assigns_floyd_r  
-lemma (in -) assigns_floyd_rX [hoare_rules]:
-||||||| .r489
-lemma (in -) assigns_floyd_rX [hoare_rules]:
-=======
-lemma assigns_floyd_rX [hoare_rules]:
->>>>>>> .r497
+(* declare assigns_floyd_r[hoare_rules del] *)
+lemma assigns_floyd_rX (* [hoare_rules] *):
   assumes \<open>vwb_lens x\<close>
   shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p) \<and> (\<^bold>\<exists>v \<bullet> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<rbrace>\<^sub>u\<close>(*INCOMPLETE*)
   apply (insert assms)
@@ -177,9 +170,9 @@ lemma assigns_floyd_rX [hoare_rules]:
   apply auto
   done
 
-lemma modified_assign_rule:
+lemma modified_assign_rule (* [hoare_rules] *):
   assumes \<open>vwb_lens x\<close>
-  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>(\<exists>x \<bullet> p)\<rbrace>\<^sub>u\<close>
+  shows   \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>\<exists>x \<bullet> p\<rbrace>\<^sub>u\<close>
   apply (rule hoare_post_weak)
    apply (rule assigns_floyd_rX)
    apply fact
@@ -247,9 +240,6 @@ abbreviation \<open>Lx \<equiv> x ;\<^sub>L lvars\<close>
 abbreviation \<open>Ly \<equiv> y ;\<^sub>L lvars\<close>
 abbreviation \<open>Gret \<equiv> ret ;\<^sub>L gvars\<close>
 
-term \<open>subst_upd id (x ;\<^sub>L lvars)\<close>
-term \<open>antiframe gvars (Lx :== (&Lx + \<guillemotleft>1\<guillemotright>))\<close>
-
 definition \<open>f r a = gvars:[Lx :== a ;; Lx :== (&Lx + \<guillemotleft>1\<guillemotright>);; Gret:==&Lx];; r :== &Gret\<close>
 
 lemma f_rule:
@@ -261,10 +251,9 @@ lemma f_rule:
 lemma
   assumes \<open>vwb_lens r\<close>
   shows \<open>\<lbrace> F \<rbrace> f r a \<lbrace> \<exists> r \<bullet> \<exists> Gret \<bullet> F \<rbrace>\<^sub>u\<close>
-  unfolding f_def using INDEP assms
-    supply assigns_floyd_rX [hoare_rules del]
-  supply modified_assign_rule[hoare_rules]
-  apply -
+  unfolding f_def using INDEP
+  apply (insert assms)
+    supply frame_hoare_r[hoare_rules]
   apply exp_vcg
   apply (simp add: EXINV_pull_out_sublens EXINV_drop_indep conj_ex2_move_front dep_unrest_ex)
   unfolding EXINV_def
