@@ -52,7 +52,7 @@ lemma hoare_r_conj_d_t [hoare_prog]:
 subsection {*Hoare SKIP*}
 
 lemma skip_d_hoare_d_t [hoare_prog]: 
-  "\<lbrace>p\<rbrace>skip\<lbrace>p\<rbrace>\<^sub>P"
+  "\<lbrace>p\<rbrace>SKIP\<lbrace>p\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
 
 subsection {*Hoare for assignment*}
@@ -85,7 +85,7 @@ subsection {*Hoare for Conditional*}
 
 lemma cond_d_hoare_d_t [hoare_prog]: 
   assumes "\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P" and "\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>P" 
-  shows "\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q\<rbrace>\<^sub>P"
+  shows "\<lbrace>p\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q\<rbrace>\<^sub>P"
   using assms
   by (simp add: prog_rep_eq hoare_des) 
     
@@ -100,7 +100,7 @@ lemma while_hoare_r_t [hoare_prog]:
   assumes I0: "`Pre \<Rightarrow> I`" 
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>pwhile_inv_des b  I  body \<lbrace>Post\<rbrace>\<^sub>P"
+  shows "\<lbrace>Pre\<rbrace>WHILE b INVR  I DO  body OD \<lbrace>Post\<rbrace>\<^sub>P"
   by (simp add:  prog_rep_eq  
                  while_hoare_ndesign_t[OF WF I0 Rep_prog_H1_H3_closed [of body, THEN normal_design_is_H1]
                                         induct_step [unfolded prog_rep_eq] PHI])
