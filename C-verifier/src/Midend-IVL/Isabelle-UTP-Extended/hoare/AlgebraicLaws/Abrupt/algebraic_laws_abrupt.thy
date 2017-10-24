@@ -47,9 +47,9 @@ lemma bot_left_zero_throw_abr[uabr_comp]:
   "(\<top>\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R) = (\<top>\<^sub>A\<^sub>B\<^sub>R)"
   by rel_auto
 
-(*lemma throw_abr_idem [uabr_comp]:
+lemma throw_abr_idem [uabr_comp]:
   "(THROW\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R"
-  by rel_auto*)
+  by rel_auto
 
 lemma throw_abr_right_zero_skip_abr[uabr_comp]:
   "(SKIP\<^sub>A\<^sub>B\<^sub>R;; THROW\<^sub>A\<^sub>B\<^sub>R) = THROW\<^sub>A\<^sub>B\<^sub>R"

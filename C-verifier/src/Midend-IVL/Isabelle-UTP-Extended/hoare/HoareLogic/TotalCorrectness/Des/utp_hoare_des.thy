@@ -135,7 +135,7 @@ proof -
   using I0 
    apply pred_simp
      unfolding ndesign_def rdesign_def
-    apply (rule rec_total_utp_des_rule[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
+    apply (rule design_mu_wf_refine_intro[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
     apply pred_simp
    apply pred_simp
   apply (rule  cond_refine_des)
@@ -176,7 +176,7 @@ proof -
    apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
   using I0 
    apply pred_simp
-     apply (rule rec_total_utp_normal_design_rule[where Pre="I" and E = "E", OF WF M_des H])  
+     apply (rule ndesign_mu_wf_refine_intro[where Pre="I" and E = "E", OF WF M_des H])  
        unfolding ndesign_def rdesign_def
   apply (rule  cond_refine_des)
     subgoal for st

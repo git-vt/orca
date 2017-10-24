@@ -4,23 +4,21 @@ imports   "../../../Isabelle-UTP/theories/utp_designs"
 begin
 subsection {*Sequential C-program alphabet*}
 
-text {*In order to record the interaction of a sequential C program with its execution environment, 
-       we extend the alphabet of UTP by two additional global state variables:
-      \begin{itemize}   
-       \<^item> abrupt_aux: a variable of type @{typ "'a option"} used to record the reason of the abrupt.
-         For example a reason for abrupt in a C program can be: break, continue, return.
-       \<^item> abrupt: a boolean variable used to specify if the program is in an abrupt state or not.
-     \end{itemize}
-
+text 
+{* In order to capture exceptions, we extend the alphabet of UTP by an additional global 
+   state variables:
+   \begin{itemize}   
+      \<^item> abrupt: a boolean variable used to specify if the program is in an abrupt state or not.
+   \end{itemize}
 *}
 
-alphabet cp_abr = des_vars +
+alphabet abr_vars = des_vars +
   abrupt :: bool
 
-declare cp_abr.splits [alpha_splits]
+declare  abr_vars.splits [alpha_splits]
 
 text \<open>This abbreviation reduces verbosity for restore/return functions in blocks.\<close>
-abbreviation \<open>cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((cp_abr.more \<circ> des_vars.more) s)\<guillemotright>\<close>
+abbreviation \<open>cp_des v s \<equiv> \<guillemotleft>\<lbrakk>v\<rbrakk>\<^sub>e ((abr_vars.more \<circ> des_vars.more) s)\<guillemotright>\<close>
 
 subsubsection {*Alphabet proofs*}
 text {*
@@ -49,26 +47,26 @@ done
 
 subsubsection {*Type lifting*}
 
-type_synonym  '\<alpha> cpa = "'\<alpha> cp_abr_scheme des"
+type_synonym  '\<alpha> cpa = "'\<alpha> abr_vars_scheme des"
 type_synonym ('\<alpha>, '\<beta>) rel_cpa  = "('\<alpha> cpa, '\<beta> cpa) rel"
 type_synonym '\<alpha> hrel_cpa  = "'\<alpha> cpa hrel"
 
 subsubsection {*Syntactic type setup*}
 
 translations
-  (type) "'\<alpha> cpa" <= (type) "'\<alpha> cp_abr_scheme des"
-  (type) "'\<alpha> cpa" <= (type) "'\<alpha> cp_abr_ext des"
+  (type) "'\<alpha> cpa" <= (type) "'\<alpha> abr_vars_scheme des"
+  (type) "'\<alpha> cpa" <= (type) "'\<alpha> abr_vars_ext des"
   (type) "('\<alpha>, '\<beta>) rel_cpa" <= (type) "('\<alpha> cpa, '\<beta> cpa) rel"
 
-notation cp_abr_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
-notation cp_abr_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
+notation abr_vars_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
+notation abr_vars_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
 
 syntax
   "_svid_st_alpha"  :: "svid" ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
   "_svid_st_a"  :: "svid" ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
 translations
-  "_svid_st_alpha" => "CONST cp_abr_child_lens"
-   "_svid_st_a" => "CONST cp_abr_child_lens\<^sub>a"
+  "_svid_st_alpha" => "CONST abr_vars_child_lens"
+   "_svid_st_a" => "CONST abr_vars_child_lens\<^sub>a"
 
 abbreviation abrupt_f::"('\<alpha>, '\<beta>) rel_cpa \<Rightarrow> ('\<alpha>, '\<beta>) rel_cpa"
 where "abrupt_f R \<equiv> R\<lbrakk>false/$abrupt\<rbrakk>"
@@ -232,5 +230,25 @@ translations
   "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) (CONST svar x) v)"
   "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) x v)"
   "x,y \<Midarrow> u,v" <= "CONST assigns_abr (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
-  
+
+
+subsection {* UTP theories *}
+
+typedecl ABR
+
+abbreviation "ABR \<equiv> UTHY(ABR, '\<alpha> cpa)"
+
+overloading
+  abr_hcond == "utp_hcond :: (ABR, '\<alpha> cpa) uthy \<Rightarrow> ('\<alpha> cpa \<times> '\<alpha> cpa) health"
+  abr_unit == "utp_unit :: (ABR, '\<alpha> cpa) uthy \<Rightarrow>  '\<alpha> hrel_cpa" (unchecked)
+
+begin
+  definition abr_hcond :: "(ABR, '\<alpha> cpa) uthy \<Rightarrow> ('\<alpha> cpa \<times> '\<alpha> cpa) health" where
+  [upred_defs]: "abr_hcond t = undefined"
+
+  definition abr_unit :: "(ABR, '\<alpha> cpa) uthy \<Rightarrow> '\<alpha> hrel_cpa" where
+  [upred_defs]: "abr_unit t = undefined"
+
+
+end  
 end
