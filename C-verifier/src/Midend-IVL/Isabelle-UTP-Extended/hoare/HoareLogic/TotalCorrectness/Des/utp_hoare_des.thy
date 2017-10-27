@@ -129,11 +129,7 @@ proof -
           design_theory_continuous.LFP_weak_unfold  
   have M_des: "Mono\<^bsub>uthy_order DES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
     by auto
-  show ?thesis    
-  unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
-   apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
-  using I0 
-   apply pred_simp
+  have *:"(I \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>  \<sqsubseteq> \<mu>\<^sub>D (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif))"  
      unfolding ndesign_def rdesign_def
     apply (rule design_mu_wf_refine_intro[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
     apply pred_simp
@@ -150,9 +146,13 @@ proof -
      apply (rule skip_refine_des)      
      using PHI
        apply rel_blast
-  done 
+  done    
+  show ?thesis    
+  unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
+     unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
+    by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
 qed
-  
+
 
 lemma while_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
@@ -168,29 +168,40 @@ proof -
     using BH
     apply pred_simp apply rel_simp  apply smt done   
   from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>NDES\<^esub>"] H
-          normal_design_theory_continuous.LFP_weak_unfold  
+    normal_design_theory_continuous.LFP_weak_unfold  
   have M_des: "Mono\<^bsub>uthy_order NDES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
     by simp
+  have *:"(I \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>  \<sqsubseteq> \<mu>\<^sub>N (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif))"
+  proof (rule ndesign_mu_wf_refine_intro[where Pre="I" and E = "E", OF WF M_des H])
+    { fix st
+      have if_false_part: "(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> SKIP\<^sub>D"     
+        using PHI by rel_blast
+      have seq_left_part: "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> body"        
+      proof (rule order_trans[OF induct_step[unfolded hoare_d_def],  where st1 = st]) 
+        show "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> \<sqsubseteq>
+              (b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>>"
+          by pred_simp
+      qed    
+      have seq_right_part: 
+        "\<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>" 
+        by pred_simp 
+      from seq_left_part seq_right_part 
+      have seq_both_sides:
+        "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> body ;; (\<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>)"
+        by (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ],simp_all add: unrest)
+      from seq_both_sides  if_false_part   
+      have "(I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> bif\<^sub>D b then body ;;
+            ((I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>) else SKIP\<^sub>D eif"
+        unfolding ndesign_def rdesign_def
+        by (rule  cond_refine_des)
+      thus "(I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> bif\<^sub>D b then body ;;
+            ((I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>) else SKIP\<^sub>D eif"  
+        unfolding ndesign_def rdesign_def . 
+    }
+  qed   
   show ?thesis    
-  unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
-   apply (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I" ])
-  using I0 
-   apply pred_simp
-     apply (rule ndesign_mu_wf_refine_intro[where Pre="I" and E = "E", OF WF M_des H])  
-       unfolding ndesign_def rdesign_def
-  apply (rule  cond_refine_des)
-    subgoal for st
-      apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
-            apply pred_simp
-           apply pred_simp
-       apply (rule order_trans[OF induct_step[unfolded hoare_d_def],  where st1 = st]) 
-        apply pred_simp
-        apply pred_simp
-      done
-     apply (rule skip_refine_des)      
-     using PHI
-       apply rel_blast
-  done 
+    unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
+    by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
 qed
 
 end
