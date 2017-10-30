@@ -1,7 +1,7 @@
 section \<open>VCG for total correctness using Floyd assignment\<close>
 
 theory VCG_rel_Floyd                                           
-  imports "../../Midend-IVL/Isabelle-UTP-Extended/hoare/HoareLogic/PartialCorrectness/utp_hoare"
+  imports "../../Midend-IVL/Isabelle-UTP-Extended/hoare/Partial_Correctness"
 begin
 
 text \<open>The below definition helps in asserting independence for a group of lenses, as otherwise the
