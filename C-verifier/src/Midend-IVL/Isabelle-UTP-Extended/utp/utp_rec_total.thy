@@ -1,5 +1,5 @@
 theory utp_rec_total
-  imports  "../hoare/HoareLogic/PartialCorrectness/utp_hoare"
+  imports  "../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws"
 begin
 text {*The following lemma explains the intuition behind lifting operators from predicates to relations.
        While in relational setting both, input and output state are evaluated. A predicate

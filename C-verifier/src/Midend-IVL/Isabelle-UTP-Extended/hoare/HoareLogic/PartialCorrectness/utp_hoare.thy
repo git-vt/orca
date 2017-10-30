@@ -1,7 +1,7 @@
 subsection {* Relational Hoare calculus *}
 
 theory utp_hoare
-imports "../../AlgebraicLaws/Rel&Des/Algebraic_Laws"
+imports "../../../utp/utp_rec_total"
 begin
 
 named_theorems hoare and hoare_safe
