@@ -278,10 +278,6 @@ lemma assign_d_cond_If [udes_cond]:
   "(bif\<^sub>D bexp then (v :=\<^sub>D exp1) else (v :=\<^sub>D exp2) eif) =
    (v :=\<^sub>D (exp1 \<triangleleft> bexp \<triangleright> exp2))"
   by rel_auto
-
-subsection \<open>While laws for designs\<close>
-text \<open>In this section we introduce the algebraic laws of programming related to the while
-      statement.\<close>
   
 lemma design_is_H1:
   "(P \<turnstile> Q) is H1"  
@@ -302,7 +298,7 @@ proof -
    qed 
   ultimately show ?thesis by simp
 qed    
-      
+  
 lemma weak_seq_r_H1_H2_closed [closure]:
   assumes  "Q is \<^bold>H"
   shows "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; Q) is \<^bold>H"
@@ -312,8 +308,13 @@ proof -
   moreover have "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) is \<^bold>H"
     using weaker_seq_r_H1_H2_closed design_is_H1 * assms by auto  
   ultimately show ?thesis by simp
-qed    
+qed          
+
+subsection \<open>While laws for designs\<close>
   
+text \<open>In this section we introduce the algebraic laws of programming related to the while
+      statement.\<close>
+
 theorem while_des_unfold_gen:
   assumes HB: "B is H1"
   shows "while\<^sub>D b do B od = (bif\<^sub>D b then (B;; while\<^sub>D b do B od) else SKIP\<^sub>D eif)"
@@ -333,23 +334,50 @@ proof -
     by (simp add: While_lfp_des_def)
   finally show ?thesis .
 qed
-      
+     
+lemma while_inv_des_unfold:
+   assumes HB: "B is H1"
+  shows "(while\<^sub>D b invr p  do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>D b invr p  do B od)) else SKIP\<^sub>D eif)"
+  unfolding While_inv_des_def using while_des_unfold_gen assms
+  by auto
+
+lemma while_inv_vrt_des_unfold:
+   assumes HB: "B is H1"
+  shows "(while\<^sub>D b invr p vrt e do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>D b invr p vrt e do B od)) else SKIP\<^sub>D eif)"
+  unfolding While_inv_vrt_des_def using while_des_unfold_gen assms
+  by auto
+    
 theorem while_bot_des_true: 
   "while\<^sub>D true do P od = (\<mu>\<^sub>D X \<bullet> (P ;; X))"
   by (simp add: While_lfp_des_def alpha)
-    
+
+lemma while_inv_des_true: 
+  "while\<^sub>D true invr p do P od = (\<mu>\<^sub>D X \<bullet> (P ;; X))"
+   unfolding While_inv_des_def using while_bot_des_true
+   by auto    
+
+lemma while_inv_vrt_des_true: 
+  "while\<^sub>D true invr p vrt e do P od = (\<mu>\<^sub>D X \<bullet> (P ;; X))"
+   unfolding While_inv_vrt_des_def using while_bot_des_true
+   by auto 
+     
 lemma while_des_false:
   shows "(while\<^sub>D false do P od) = SKIP\<^sub>D"
   by (simp add: While_lfp_des_def alpha skip_d_def 
       design_theory_continuous.LFP_const rdesign_is_H1_H2)
 
-lemma while_inv_des_unfold:
-   assumes HB: "B is H1"
-  shows "(while\<^sub>D b invr p do B od) = 
-   (bif\<^sub>D b then (B ;; (while\<^sub>D b invr p do B od)) else SKIP\<^sub>D eif)"
-  unfolding While_inv_des_def using while_des_unfold_gen assms
-  by auto
+lemma while_inv_des_false:
+  shows "(while\<^sub>D false invr p do P od) = SKIP\<^sub>D"
+   unfolding While_inv_des_def using while_des_false
+   by auto  
 
+lemma while_inv_vrt_des_false:
+  shows "(while\<^sub>D false invr p vrt e do P od) = SKIP\<^sub>D"
+   unfolding While_inv_vrt_des_def using while_des_false
+   by auto  
+        
 theorem while_top_des_unfold_gen:
   assumes HB: "B is H1"
   shows
@@ -408,24 +436,51 @@ proof -
     by (simp add: While_lfp_ndes_def)
   finally show ?thesis .
 qed
-
-
-theorem while_bot_ndes_true: "while\<^sub>N true do P od = (\<mu>\<^sub>N X \<bullet> (P;; X))"
-  by (simp add: While_lfp_ndes_def alpha)
-        
-lemma while_ndes_false:
-  shows "(while\<^sub>N false do P od) = SKIP\<^sub>D"
-  by (simp add: While_lfp_ndes_def alpha skip_d_is_H1_H3  
-      normal_design_theory_continuous.LFP_const)
     
 lemma while_inv_ndes_unfold:
   assumes HB: "B is H1"
   shows
-  "(while\<^sub>N b invr p do B od) = 
-   (bif\<^sub>D b then (B ;; (while\<^sub>N b invr p do B od)) else SKIP\<^sub>D eif)"
+  "(while\<^sub>N b invr p  do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>N b invr p  do B od)) else SKIP\<^sub>D eif)"
   unfolding While_inv_ndes_def using while_bot_ndes_unfold_gen assms
   by auto  
-  
+
+lemma while_inv_vrt_ndes_unfold:
+  assumes HB: "B is H1"
+  shows
+  "(while\<^sub>N b invr p vrt e do B od) = 
+   (bif\<^sub>D b then (B ;; (while\<^sub>N b invr p vrt e do B od)) else SKIP\<^sub>D eif)"
+  unfolding While_inv_vrt_ndes_def using while_bot_ndes_unfold_gen assms
+  by auto 
+
+theorem while_bot_ndes_true: "while\<^sub>N true do P od = (\<mu>\<^sub>N X \<bullet> (P;; X))"
+  by (simp add: While_lfp_ndes_def alpha)
+        
+lemma while_inv_ndes_true:
+  "(while\<^sub>N true invr p  do B od) = (\<mu>\<^sub>N X \<bullet> (B;; X))"
+  unfolding While_inv_ndes_def using while_bot_ndes_true 
+  by auto 
+
+lemma while_inv_vrt_ndes_true:
+  "(while\<^sub>N true invr p vrt e do B od) = (\<mu>\<^sub>N X \<bullet> (B;; X))"
+  unfolding While_inv_vrt_ndes_def using while_bot_ndes_true 
+  by auto
+    
+lemma while_ndes_false:
+  shows "(while\<^sub>N false do P od) = SKIP\<^sub>D"
+  by (simp add: While_lfp_ndes_def alpha skip_d_is_H1_H3  
+      normal_design_theory_continuous.LFP_const)
+
+lemma while_inv_ndes_false:
+  "(while\<^sub>N false invr p  do B od) = SKIP\<^sub>D"
+  unfolding While_inv_ndes_def using while_ndes_false 
+  by auto  
+
+lemma while_inv_vrt_ndes_false:
+  "(while\<^sub>N false invr p vrt e do B od) = SKIP\<^sub>D"
+  unfolding While_inv_vrt_ndes_def using while_ndes_false 
+  by auto 
+          
 theorem while_top_ndes_unfold:
   assumes HB: "B is H1"
   shows
@@ -477,9 +532,6 @@ lemma assert_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>\<
   apply (rel_simp)+
     apply blast
   done
-    
-subsection \<open>Try Catch laws\<close>
-(*see utp_hoare_helper*)
 
 
 end

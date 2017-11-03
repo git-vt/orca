@@ -182,7 +182,7 @@ definition block :: "('a, 'c) rel \<Rightarrow> ('c, 'd) rel  \<Rightarrow> ('a 
 
 
 subsection {* Syntax Translations *}
-    
+   
 syntax
   -- {* Alternative traditional conditional syntax *}
   "_utp_if" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(if\<^sub>u (_)/ then (_)/ else (_))" [0, 0, 71] 71)

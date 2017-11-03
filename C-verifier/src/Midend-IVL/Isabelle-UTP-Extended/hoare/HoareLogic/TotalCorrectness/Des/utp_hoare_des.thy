@@ -200,8 +200,28 @@ proof -
     }
   qed   
   show ?thesis    
-    unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
+    unfolding hoare_d_def While_inv_ndes_def While_lfp_ndes_def
     by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
 qed
 
+lemma while_vrt_hoare_ndesign_t [hoare_des]:
+  assumes WF: "wf R"
+  assumes I0: "`Pre \<Rightarrow> I`"
+  assumes BH :" body is H1"  
+  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
+  assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
+  shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt E do body od\<lbrace>Post\<rbrace>\<^sub>D"
+  using assms while_hoare_ndesign_t[of R Pre I body b E Post]
+  by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)
+
+
+lemma while_vrt_hoare_ndesign_t' [hoare_des]:
+  assumes I0: "`Pre \<Rightarrow> I`"
+  assumes BH :" body is H1"  
+  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
+  assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
+  shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt \<guillemotleft>wf R\<guillemotright> do body od\<lbrace>Post\<rbrace>\<^sub>D"
+  using assms while_hoare_ndesign_t[of R Pre I body b E Post]
+  by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)    
+    
 end

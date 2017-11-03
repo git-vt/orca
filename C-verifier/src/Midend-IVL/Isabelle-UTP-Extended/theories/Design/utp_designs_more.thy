@@ -1,6 +1,5 @@
 theory utp_designs_more
-imports   "../../../Isabelle-UTP/theories/utp_designs"
-          "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_AUX"
+imports   "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_AUX"
 begin
 
 section {*Syntax setup*}
@@ -90,22 +89,24 @@ where "while\<^sup>\<top>\<^sup>D b do B od = (\<nu>\<^sub>D X \<bullet> bif\<^s
 definition While_lfp_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>D _ do _ od") 
 where "while\<^sub>\<bottom>\<^sub>D b do B od =  (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
 
-purge_notation while_top ("while _ do _ od")
-
 abbreviation While_bot_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ do _ od") 
 where "while\<^sub>D b do B od \<equiv> while\<^sub>\<bottom>\<^sub>D b do B od"
 
-subsection{*While-loop inv*}
 text {*While loops with invariant decoration*}
-
-purge_notation while_inv ("while _ invr _ do _ od" 71)
 
 definition While_inv_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ invr _ do _ od") 
 where "while\<^sub>D b invr p do S od = while\<^sub>D b do S od"
 
+text {*While loops with invariant and variant decoration*}
+  
+definition While_inv_vrt_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>'\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ invr _ vrt _ do _ od") 
+where "while\<^sub>D b invr p vrt e do S od = while\<^sub>D b do S od"
+  
 declare While_gfp_des_def [urel_defs]
 declare While_inv_des_def [urel_defs]
 declare While_lfp_des_def [urel_defs]
+declare While_inv_vrt_des_def [urel_defs]
 
 subsection{*Normal Design Iterations*}   
 
@@ -119,16 +120,20 @@ where "while\<^sub>\<bottom>\<^sub>N b do B od =  (\<mu>\<^sub>N X \<bullet> bif
 abbreviation While_bot_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ do _ od") 
 where "while\<^sub>N b do B od \<equiv> while\<^sub>\<bottom>\<^sub>N b do B od"
 
-subsection{*While-loop inv*}
 text {*While loops with invariant decoration*}
-
-purge_notation while_inv ("while _ invr _ do _ od" 71)
 
 definition While_inv_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ invr _ do _ od") 
 where "while\<^sub>N b invr p do S od = while\<^sub>N b do S od"
+    
+text {*While loops with invariant and variant decoration*}
+
+definition While_inv_vrt_ndes :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ invr _ vrt _ do _ od") 
+where "while\<^sub>N b invr p vrt e do S od = while\<^sub>N b do S od"
 
 declare While_gfp_ndes_def [urel_defs]
 declare While_inv_ndes_def [urel_defs]
 declare While_lfp_ndes_def [urel_defs]
+declare While_inv_vrt_ndes_def [urel_defs]
 
 end
