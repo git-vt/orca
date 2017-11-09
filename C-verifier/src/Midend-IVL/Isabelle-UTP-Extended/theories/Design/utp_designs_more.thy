@@ -109,7 +109,6 @@ declare While_lfp_des_def [urel_defs]
 declare While_inv_vrt_des_def [urel_defs]
 
 subsection{*Normal Design Iterations*}   
-
   
 definition While_gfp_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>N _ do _ od")
 where "while\<^sup>\<top>\<^sup>N b do B od = (\<nu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"

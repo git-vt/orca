@@ -47,20 +47,21 @@ done
 
 subsubsection {*Type lifting*}
 
-type_synonym  '\<alpha> cpa = "'\<alpha> abr_vars_scheme des"
-type_synonym ('\<alpha>, '\<beta>) rel_cpa  = "('\<alpha> cpa, '\<beta> cpa) rel"
-type_synonym '\<alpha> hrel_cpa  = "'\<alpha> cpa hrel"
+type_synonym  '\<alpha> abr_des = "'\<alpha> abr_vars_scheme des"
+type_synonym ('\<alpha>, '\<beta>) rel_abr_des  = "('\<alpha> abr_des, '\<beta> abr_des) rel"
+type_synonym '\<alpha> hrel_abr_des  = "'\<alpha> abr_des hrel"
 
 subsubsection {*Syntactic type setup*}
 
 translations
-  (type) "'\<alpha> cpa" <= (type) "'\<alpha> abr_vars_scheme des"
-  (type) "'\<alpha> cpa" <= (type) "'\<alpha> abr_vars_ext des"
-  (type) "('\<alpha>, '\<beta>) rel_cpa" <= (type) "('\<alpha> cpa, '\<beta> cpa) rel"
+  (type) "'\<alpha> abr_des" <= (type) "'\<alpha> abr_vars_scheme des"
+  (type) "'\<alpha> abr_des" <= (type) "'\<alpha> abr_vars_ext des"
+  (type) "('\<alpha>, '\<beta>) rel_abr_des" <= (type) "('\<alpha> abr_des, '\<beta> abr_des) rel"
 
 notation abr_vars_child_lens\<^sub>a ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
 notation abr_vars_child_lens ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
 
+find_theorems "\<Sigma>\<^sub>a\<^sub>b\<^sub>r"  term "\<Sigma>\<^sub>a\<^sub>b\<^sub>r"  term "\<Sigma>\<^sub>A\<^sub>B\<^sub>R"
 syntax
   "_svid_st_alpha"  :: "svid" ("\<Sigma>\<^sub>A\<^sub>B\<^sub>R")
   "_svid_st_a"  :: "svid" ("\<Sigma>\<^sub>a\<^sub>b\<^sub>r")
@@ -68,10 +69,10 @@ translations
   "_svid_st_alpha" => "CONST abr_vars_child_lens"
    "_svid_st_a" => "CONST abr_vars_child_lens\<^sub>a"
 
-abbreviation abrupt_f::"('\<alpha>, '\<beta>) rel_cpa \<Rightarrow> ('\<alpha>, '\<beta>) rel_cpa"
+abbreviation abrupt_f::"('\<alpha>, '\<beta>) rel_abr_des \<Rightarrow> ('\<alpha>, '\<beta>) rel_abr_des"
 where "abrupt_f R \<equiv> R\<lbrakk>false/$abrupt\<rbrakk>"
 
-abbreviation abrupt_t::"('\<alpha>, '\<beta>) rel_cpa \<Rightarrow> ('\<alpha>, '\<beta>) rel_cpa"
+abbreviation abrupt_t::"('\<alpha>, '\<beta>) rel_abr_des \<Rightarrow> ('\<alpha>, '\<beta>) rel_abr_des"
 where "abrupt_t R \<equiv> R\<lbrakk>true/$abrupt\<rbrakk>"
 
 syntax
@@ -130,110 +131,217 @@ subsection{*Healthiness conditions*}
 
 text {*Programs in abrupt state do not progress*}   
 abbreviation
- "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> ((\<not>$abrupt \<turnstile> P) \<squnion> ($abrupt  \<turnstile> II))"
+ "Simpl\<^sub>A\<^sub>B\<^sub>R P \<equiv> (P \<triangleleft> \<not>$abrupt \<triangleright> II)"
 
 subsection{*Control flow statements*}
 
 text {**}
 
-definition skip_abr :: "('\<alpha>) hrel_cpa" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
+(*
+  des_state
+  abr_state
+
+  des :: abr_state \<Rightarrow> des_state
+  abrupt ::  abr_state \<Rightarrow> bool
+
+  c : des_state hrel
+
+  lift :: des_state hrel \<Rightarrow> abr_state hrel
+
+
+ 
+definition "lift c \<equiv> (s, s') such that 
+  (if not abrupt s then c (des s) (des s') 
+    else II\<^sub>D (des s) (des s')) 
+  and abrupt s = abrupt s'
+
+ "*)
+
+definition skip_abr'' :: "('\<alpha>) hrel_abr_des" where
+skip_abr''_def [urel_defs]: "skip_abr''= ($id_lens\<acute> =\<^sub>u $id_lens)"
+
+definition skip_abr' :: "('\<alpha>) hrel_abr_des" ("II\<^sub>a\<^sub>b\<^sub>r") where
+skip_abr'_def [urel_defs]: "II\<^sub>a\<^sub>b\<^sub>r = ($\<Sigma>\<^sub>A\<^sub>B\<^sub>R\<acute> =\<^sub>u $\<Sigma>\<^sub>A\<^sub>B\<^sub>R)"
+
+definition skip_abr_des :: "('\<alpha>) hrel_abr_des" ("II\<^sub>A\<^sub>B\<^sub>R") where
+skip_abr_des_def [urel_defs]: "II\<^sub>A\<^sub>B\<^sub>R = (II \<or> (\<not>$ok))"
+
+definition abrh_def [upred_defs]: 
+  "abrh(P) = (II\<^sub>A\<^sub>B\<^sub>R \<triangleleft> $abrupt \<triangleright> P)"
+
+lemma skip_abr_des_def': "II\<^sub>A\<^sub>B\<^sub>R = abrh(true \<turnstile> ((\<not>$abrupt\<acute>) \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  by (rel_auto)    
+    
+definition skip_abr :: "('\<alpha>) hrel_abr_des" ("SKIP\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]:
-  "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "SKIP\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ((\<not>$abrupt\<acute>) \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+  
+definition RR  where
+[upred_defs]: "RR(P) = (\<exists> {$ok,$ok\<acute>,$abrupt,$abrupt\<acute>} \<bullet> (P))"
+
+lemma "RR(abrh(P)) = abrh(RR(P))" (*do they commute?*)
+  oops
+    
+lemma  1:
+ "(II\<^sub>a\<^sub>b\<^sub>r ;; RR (P)) = RR (P)"
+ "(RR (P) ;; II\<^sub>a\<^sub>b\<^sub>r) = RR (P)" 
+  by (rel_auto)+
+
+lemma  2:
+  "(II\<^sub>A\<^sub>B\<^sub>R ;; RR(abrh(P))) = RR(abrh(P))"
+  "(RR(abrh(P)) ;; II\<^sub>A\<^sub>B\<^sub>R) = RR(abrh(P))" 
+  by (rel_auto+; (metis (full_types)))+
+
+lemma "RR(II\<^sub>A\<^sub>B\<^sub>R) is (RR o abrh)"
+  apply pred_simp
+  apply rel_simp
+  apply (metis (full_types))
+  done   
+
+lemma  3:
+  "(RR (II\<^sub>A\<^sub>B\<^sub>R) ;; RR(abrh(P))) = RR(abrh(P))"
+  "(RR(abrh(P)) ;; RR(II\<^sub>A\<^sub>B\<^sub>R)) = RR(abrh(P))" 
+  by rel_blast+
+
+lemma 
+  assumes "P is RR"
+  shows "(P ;; II\<^sub>a\<^sub>b\<^sub>r) = P"  "( II\<^sub>a\<^sub>b\<^sub>r ;;P  ) = P"
+  proof -
+  have 1: "RR(P) ;; II\<^sub>a\<^sub>b\<^sub>r = RR(P)"
+    by (rel_auto)
+  have 2: "II\<^sub>a\<^sub>b\<^sub>r ;; RR(P) = RR(P)"
+    by (rel_auto)
+  from 1 2 show "P ;; II\<^sub>a\<^sub>b\<^sub>r = P" "II\<^sub>a\<^sub>b\<^sub>r ;; P = P"
+    by (simp_all add: Healthy_if assms)
+qed  
+     
+term "(\<exists> {$v1} \<bullet> undefined)"
+term "(\<^bold>\<exists> (v1, v2, v3, v4) \<bullet> undefined)"  
+term "(\<exists> v1 v2. x)"    
+lemma "(\<exists> {$ok,$ok\<acute>,$abrupt,$abrupt\<acute>} \<bullet> (P)) = 
+       undefined"
+  apply rel_simp
+  oops 
+  find_theorems "uex"    
 
 subsection{*THROW*}
 
-definition throw_abr :: "('\<alpha>) hrel_cpa" ("THROW\<^sub>A\<^sub>B\<^sub>R")
+definition throw_abr :: "('\<alpha>) hrel_abr_des" ("THROW\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "THROW\<^sub>A\<^sub>B\<^sub>R = Simpl\<^sub>A\<^sub>B\<^sub>R(\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> ($abrupt\<acute> \<and> \<lceil>II\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
 
-definition assigns_abr :: "'\<alpha> usubst \<Rightarrow> ('\<alpha>) hrel_cpa" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
+definition assigns_abr :: "'\<alpha> usubst \<Rightarrow> ('\<alpha>) hrel_abr_des" ("\<langle>_\<rangle>\<^sub>A\<^sub>B\<^sub>R")
 where [urel_defs]: 
-  "assigns_abr \<sigma> = Simpl\<^sub>A\<^sub>B\<^sub>R (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R)"
+  "assigns_abr \<sigma> = Simpl\<^sub>A\<^sub>B\<^sub>R (\<lceil>true\<rceil>\<^sub>A\<^sub>B\<^sub>R \<turnstile> (\<not>$abrupt\<acute> \<and> \<lceil>\<langle>\<sigma>\<rangle>\<^sub>a\<rceil>\<^sub>A\<^sub>B\<^sub>R))"
+
+syntax
+  "_assignmentabr" :: "svids \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr ":=\<^sub>A\<^sub>B\<^sub>R" 72)
+
+translations
+  "_assignmentabr xs vs" => "CONST assigns_abr (_mk_usubst (CONST id) xs vs)"
+  "x :=\<^sub>A\<^sub>B\<^sub>R v" <= "CONST assigns_abr (CONST subst_upd (CONST id) (CONST svar x) v)"
+  "x :=\<^sub>A\<^sub>B\<^sub>R v" <= "CONST assigns_abr (CONST subst_upd (CONST id) x v)"
+  "x,y :=\<^sub>A\<^sub>B\<^sub>R u,v" <= "CONST assigns_abr (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
+
 
 subsection{*Conditional*}
 
-abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("bif (_)/ then (_) else (_) eif")
-where "bif b then P else Q eif \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
+abbreviation If_abr :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_abr_des \<Rightarrow> ('\<alpha>) hrel_abr_des \<Rightarrow> ('\<alpha>) hrel_abr_des" ("bif\<^sub>A\<^sub>B\<^sub>R (_)/ then (_) else (_) eif")
+where "bif\<^sub>A\<^sub>B\<^sub>R b then P else Q eif \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P \<triangleleft> \<lceil>b\<rceil>\<^sub>A\<^sub>B\<^sub>R\<^sub>< \<triangleright> Q)"
 
 subsection{*assert and assume*}
 
-definition rassume_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cpa" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
-[urel_defs]: "rassume_abr c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<top>\<^sub>A\<^sub>B\<^sub>R eif)"
+definition rassume_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_abr_des" ("_\<^sup>\<top>\<^sup>C" [999] 999) where
+[urel_defs]: "rassume_abr c = (bif\<^sub>A\<^sub>B\<^sub>R c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<top>\<^sub>A\<^sub>B\<^sub>R eif)"
 
-definition rassert_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_cpa" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
-[urel_defs]: "rassert_abr c = (bif c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<bottom>\<^sub>A\<^sub>B\<^sub>R eif)"
+definition rassert_abr :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_abr_des" ("_\<^sub>\<bottom>\<^sub>C" [999] 999) where
+[urel_defs]: "rassert_abr c = (bif\<^sub>A\<^sub>B\<^sub>R c then SKIP\<^sub>A\<^sub>B\<^sub>R else \<bottom>\<^sub>A\<^sub>B\<^sub>R eif)"
 
 subsection{*Exceptions*}
 
-abbreviation catch_abr :: "('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("try (_) catch /(_) end")
-where "try P catch Q end \<equiv> (P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
+abbreviation catch_abr :: "('\<alpha>) hrel_abr_des \<Rightarrow> ('\<alpha>) hrel_abr_des \<Rightarrow> ('\<alpha>) hrel_abr_des" ("try\<^sub>A\<^sub>B\<^sub>R (_) catch /(_) end")
+where "try\<^sub>A\<^sub>B\<^sub>R P catch Q end \<equiv> Simpl\<^sub>A\<^sub>B\<^sub>R (P ;; ((abrupt:== (\<not> &abrupt) ;; Q) \<triangleleft> $abrupt \<triangleright> II))"
 
 subsection{*Scoping*}
 
-definition block_abr ("bob INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
+definition block_abr ("bob\<^sub>A\<^sub>B\<^sub>R INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") where
 [urel_defs]:
-  "bob INIT init BODY body RESTORE restore RETURN return eob= 
+  "bob\<^sub>A\<^sub>B\<^sub>R INIT init BODY body RESTORE restore RETURN return eob=
+    Simpl\<^sub>A\<^sub>B\<^sub>R 
     (Abs_uexpr (\<lambda>(s, s'). 
      \<lbrakk>init ;; body ;; Abs_uexpr (\<lambda>(t, t').
                        \<lbrakk>(abrupt:== (\<not> &abrupt) ;;restore (s, s') (t, t');; THROW\<^sub>A\<^sub>B\<^sub>R) \<triangleleft> $abrupt \<triangleright> II;; 
          restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s')))" 
 
-subsection{*Loops*}
+subsection{*Abrupt Design Iterations*}
+  
+definition While_gfp_abr_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sup>\<top>\<^sup>D\<^sup>A _ do _ od")
+where "while\<^sup>\<top>\<^sup>D\<^sup>A b do B od = (\<nu>\<^sub>D X \<bullet> bif\<^sub>A\<^sub>B\<^sub>R b then (B ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
-purge_notation while ("while\<^sup>\<top> _ do _ od")
+definition While_lfp_abr_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>\<bottom>\<^sub>D\<^sub>A _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>D\<^sub>A b do B od =  (\<mu>\<^sub>D X \<bullet> bif\<^sub>A\<^sub>B\<^sub>R b then (B ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
-definition While_abr_top :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sup>\<top> _ do _ od") where
-"While b C = (\<nu>\<^sub>D X \<bullet> bif b then (C ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
+abbreviation While_bot_abr_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>D\<^sub>A\<^sub>B\<^sub>R _ do _ od") 
+where "while\<^sub>D\<^sub>A\<^sub>B\<^sub>R b do B od \<equiv> while\<^sub>\<bottom>\<^sub>D\<^sub>A b do B od"  
 
-purge_notation while_top ("while _ do _ od")
-
-abbreviation While_top :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while _ do _ od") where
-"while b do P od \<equiv> while\<^sup>\<top> b do P od"
-
-purge_notation while_bot ("while\<^sub>\<bottom> _ do _ od")
-
-definition While_bot :: "'\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while\<^sub>\<bottom> _ do _ od") where
-"while\<^sub>\<bottom> b do P od =  (\<mu> X \<bullet> bif b then (P ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
-
-subsection{*While-loop inv*}
 text {*While loops with invariant decoration*}
 
-purge_notation while_inv ("while _ invr _ do _ od" 71)
+definition While_inv_abr_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>D\<^sub>A\<^sub>B\<^sub>R _ invr _ do _ od") 
+where "while\<^sub>D\<^sub>A\<^sub>B\<^sub>R b invr p do S od = while\<^sub>D\<^sub>A\<^sub>B\<^sub>R b do S od"
 
-definition While_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>) hrel_cpa \<Rightarrow> ('\<alpha>) hrel_cpa" ("while _ invr _ do _ od") where
-"while b invr p do S od = while b do S od"
+text {*While loops with invariant and variant decoration*}
+  
+definition While_inv_vrt_abr_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>'\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>D\<^sub>A\<^sub>B\<^sub>R _ invr _ vrt _ do _ od") 
+where "while\<^sub>D\<^sub>A\<^sub>B\<^sub>R b invr p vrt e do S od = while\<^sub>D\<^sub>A\<^sub>B\<^sub>R b do S od"
+  
+declare While_gfp_abr_des_def [urel_defs]
+declare While_inv_abr_des_def [urel_defs]
+declare While_lfp_abr_des_def [urel_defs]
+declare While_inv_vrt_abr_des_def [urel_defs]
 
-declare While_def [urel_defs]
-declare While_inv_def [urel_defs]
-declare While_bot_def [urel_defs]
+subsection{*Normal Design Iterations*}   
+  
+definition While_gfp_abr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sup>\<top>\<^sup>N\<^sup>A _ do _ od")
+where "while\<^sup>\<top>\<^sup>N\<^sup>A b do B od = (\<nu>\<^sub>N X \<bullet> bif\<^sub>A\<^sub>B\<^sub>R b then (B ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
-syntax
-  "_assignmentabr" :: "svids \<Rightarrow> uexprs \<Rightarrow> logic"  (infixr "\<Midarrow>" 72)
+definition While_lfp_abr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>\<bottom>\<^sub>N\<^sub>A _ do _ od") 
+  where "while\<^sub>\<bottom>\<^sub>N\<^sub>A b do B od =  (\<mu>\<^sub>N X \<bullet> bif\<^sub>A\<^sub>B\<^sub>R b then (B ;; X) else SKIP\<^sub>A\<^sub>B\<^sub>R eif)"
 
-translations
-  "_assignmentabr xs vs" => "CONST assigns_abr (_mk_usubst (CONST id) xs vs)"
-  "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) (CONST svar x) v)"
-  "x \<Midarrow> v" <= "CONST assigns_abr (CONST subst_upd (CONST id) x v)"
-  "x,y \<Midarrow> u,v" <= "CONST assigns_abr (CONST subst_upd (CONST subst_upd (CONST id) (CONST svar x) u) (CONST svar y) v)"
+abbreviation While_bot_abr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>N\<^sub>A\<^sub>B\<^sub>R _ do _ od") 
+where "while\<^sub>N\<^sub>A\<^sub>B\<^sub>R b do B od \<equiv> while\<^sub>\<bottom>\<^sub>N\<^sub>A b do B od"
 
+text {*While loops with invariant decoration*}
 
-subsection {* UTP theories *}
+definition While_inv_abr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>N\<^sub>A\<^sub>B\<^sub>R _ invr _ do _ od") 
+where "while\<^sub>N\<^sub>A\<^sub>B\<^sub>R b invr p do S od = while\<^sub>N\<^sub>A\<^sub>B\<^sub>R b do S od"
+    
+text {*While loops with invariant and variant decoration*}
+
+definition While_inv_vrt_abr_ndes :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_abr_des \<Rightarrow> '\<alpha> hrel_abr_des" ("while\<^sub>N\<^sub>A\<^sub>B\<^sub>R _ invr _ vrt _ do _ od") 
+where "while\<^sub>N\<^sub>A\<^sub>B\<^sub>R b invr p vrt e do S od = while\<^sub>N\<^sub>A\<^sub>B\<^sub>R b do S od"
+
+declare While_gfp_ndes_def [urel_defs]
+declare While_inv_ndes_def [urel_defs]
+declare While_lfp_ndes_def [urel_defs]
+declare While_inv_vrt_ndes_def [urel_defs]
+  
+subsection {* UTP theories for abrupt *}
 
 typedecl ABR
 
-abbreviation "ABR \<equiv> UTHY(ABR, '\<alpha> cpa)"
+abbreviation "ABR \<equiv> UTHY(ABR, '\<alpha> abr_des)"
 
 overloading
-  abr_hcond == "utp_hcond :: (ABR, '\<alpha> cpa) uthy \<Rightarrow> ('\<alpha> cpa \<times> '\<alpha> cpa) health"
-  abr_unit == "utp_unit :: (ABR, '\<alpha> cpa) uthy \<Rightarrow>  '\<alpha> hrel_cpa" (unchecked)
-
+  abr_hcond == "utp_hcond :: (ABR, '\<alpha> abr_des) uthy \<Rightarrow> ('\<alpha> abr_des \<times> '\<alpha> abr_des) health"
+  abr_unit == "utp_unit :: (ABR, '\<alpha> abr_des) uthy \<Rightarrow>  '\<alpha> hrel_abr_des" (unchecked)
 begin
-  definition abr_hcond :: "(ABR, '\<alpha> cpa) uthy \<Rightarrow> ('\<alpha> cpa \<times> '\<alpha> cpa) health" where
+  definition abr_hcond :: "(ABR, '\<alpha> abr_des) uthy \<Rightarrow> ('\<alpha> abr_des \<times> '\<alpha> abr_des) health" where
   [upred_defs]: "abr_hcond t = undefined"
 
-  definition abr_unit :: "(ABR, '\<alpha> cpa) uthy \<Rightarrow> '\<alpha> hrel_cpa" where
+  definition abr_unit :: "(ABR, '\<alpha> abr_des) uthy \<Rightarrow> '\<alpha> hrel_abr_des" where
   [upred_defs]: "abr_unit t = undefined"
-
-
-end  
+end 
+  
 end

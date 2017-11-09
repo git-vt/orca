@@ -216,11 +216,12 @@ lemma while_vrt_hoare_ndesign_t [hoare_des]:
 
 
 lemma while_vrt_hoare_ndesign_t' [hoare_des]:
+  assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is H1"  
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt \<guillemotleft>wf R\<guillemotright> do body od\<lbrace>Post\<rbrace>\<^sub>D"
+  shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt \<guillemotleft>R\<guillemotright> do body od\<lbrace>Post\<rbrace>\<^sub>D"
   using assms while_hoare_ndesign_t[of R Pre I body b E Post]
   by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)    
     

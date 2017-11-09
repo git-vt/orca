@@ -99,15 +99,26 @@ lemma assigns_d_id : "SKIP\<^sub>D = \<langle>id\<rangle>\<^sub>D"
   unfolding skip_d_def assigns_d_def
   by (rel_auto)
     
-lemma assign_test[udes_comp]:
+lemma assign_design_test[udes_comp]:
   assumes 1:"mwb_lens x"
   shows     "(x :=\<^sub>D \<guillemotleft>u\<guillemotright>;; x :=\<^sub>D \<guillemotleft>v\<guillemotright>) = (x :=\<^sub>D \<guillemotleft>v\<guillemotright>)"
   using 1
   by (simp add: usubst udes_comp)
 
-lemma assign_d_left_comp_subst[udes_comp]:
+lemma assigns_d_left_comp_subst[udes_comp]:
   "(x :=\<^sub>D u;; (\<lceil>P\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<rceil>\<^sub>D)) = (\<lceil>P\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>D \<turnstile> \<lceil>Q\<lbrakk>\<lceil>u\<rceil>\<^sub></$x\<rbrakk>\<rceil>\<^sub>D)"
   by rel_blast
+
+lemma assigns_d_left_comp_subst_hdesigns[udes_comp]:
+  assumes "P is \<^bold>H"
+  shows "(x :=\<^sub>D u;; (P)) = (\<lceil>[x \<mapsto>\<^sub>s u]\<rceil>\<^sub>s\<^sub>D \<dagger> P)" (*fix the syntax sugar for substitution lifting*)
+  using assms  
+  apply (rel_auto )
+  apply smt
+  done
+    
+lemmas assigns_d_left_comp_subst_ndesigns[udes_comp] = 
+  assigns_d_left_comp_subst_hdesigns[OF H1_H3_impl_H2] 
 
 lemma assign_d_twice[udes_comp]:
   assumes "mwb_lens x" and  "x \<sharp> f"
@@ -115,24 +126,36 @@ lemma assign_d_twice[udes_comp]:
   using assms
   by (simp add: udes_comp usubst)
 
-lemma assign_d_commute:
+lemma assigns_d_commute:
   assumes "x \<bowtie> y" "x \<sharp> f" "y \<sharp> e"
   shows "(x :=\<^sub>D e ;; y :=\<^sub>D f) = (y :=\<^sub>D f ;; x :=\<^sub>D e)"
   using assms
   by (simp add: udes_comp usubst usubst_upd_comm)
 
-lemma assign_d_cond_d[udes_comp]: (*needs more laws to be automatic*)
+lemma assigns_d_left_cond_d_H1[udes_comp]: (*needs more laws to be automatic*)
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "(x :=\<^sub>D e ;; (bif\<^sub>D b then P\<^sub>1 \<turnstile> Q\<^sub>1 else P\<^sub>2 \<turnstile> Q\<^sub>2 eif)) =
-         (bif\<^sub>D (b\<lbrakk>e/x\<rbrakk>) then (x :=\<^sub>D e;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (x :=\<^sub>D e ;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif)"
+  assumes "P is H1" and "Q is H1"  
+  shows "(x :=\<^sub>D e ;; (bif\<^sub>D b then P else Q eif)) =
+         (bif\<^sub>D (b\<lbrakk>e/x\<rbrakk>) then (x :=\<^sub>D e;; P) else (x :=\<^sub>D e ;; Q) eif)"
+  using assms  
   apply (simp add: usubst udes_comp)
-  apply rel_auto
-done
+  apply rel_simp
+  apply smt
+  done
+    
+lemma H1_H2_impl_H1: "P is \<^bold>H \<Longrightarrow> P is H1"  
+  by pred_blast
+    
+lemmas assigns_d_left_cond_d_hdesigns[udes_comp] = 
+  assigns_d_left_cond_d_H1[OF H1_H2_impl_H1 H1_H2_impl_H1]
 
-lemma assign_d_uop1[udes_comp]:
+lemmas assigns_d_left_cond_d_ndesigns[udes_comp] = 
+  assigns_d_left_cond_d_hdesigns[OF H1_H3_impl_H2 H1_H3_impl_H2]   
+  
+lemma assigns_d_uop1[udes_comp]:
   assumes 1: "mwb_lens v"
   shows "(v :=\<^sub>D e1;; v :=\<^sub>D (uop F (&v))) = (v :=\<^sub>D (uop F e1))"
-  by (simp add: usubst  udes_comp assms)
+  by (simp add: usubst udes_comp assms)
 
 lemma assign_d_bop1[udes_comp]:
   assumes 1: "mwb_lens v" and 2:"v \<sharp> e2"
@@ -193,7 +216,7 @@ lemma assign_d_vwb_skip_d[udes_comp]:
   shows "(v :=\<^sub>D &v) = SKIP\<^sub>D"
   by (simp add: assms usubst)
 
-lemma assign_c_simultaneous:
+lemma assign_d_simultaneous:
   assumes  1: "vwb_lens var2"
   and      2: "var1 \<bowtie> var2"
   shows "var1, var2 :=\<^sub>D expr, &var2 = var1 :=\<^sub>D expr"
@@ -204,77 +227,137 @@ lemma assign_d_seq[udes_comp]:
   shows"(var1 :=\<^sub>D expr);; (var2 :=\<^sub>D &var2) = (var1 :=\<^sub>D expr)"
   using assms by rel_blast
     
-lemma assign_d_cond_d_uop[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v"
-  shows "bif\<^sub>D uop F expr then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr ;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-          v :=\<^sub>D expr;; bif\<^sub>D uop F (&v) then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemma assign_d_cond_d_uop_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v"  
+  shows "bif\<^sub>D uop F expr then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr ;; Q) eif =
+          v :=\<^sub>D expr;; bif\<^sub>D uop F (&v) then P else Q eif"
   using assms
-  by (simp add: assign_d_cond_d subst_uop usubst_cancel)  
-
-lemma assign_d_cond_bop1[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif\<^sub>D bop bp expr exp2 then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-          v :=\<^sub>D expr;; bif\<^sub>D bop bp (&v) exp2 then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+  by (simp add: assigns_d_left_cond_d_H1 subst_uop usubst_cancel)
+    
+lemmas assign_d_cond_d_uop_hdesigns[udes_comp] = 
+    assign_d_cond_d_uop_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]
+    
+lemmas assign_d_cond_d_uop_ndesigns [udes_comp] = 
+  assign_d_cond_d_uop_hdesigns[OF H1_H3_impl_H2 H1_H3_impl_H2] 
+  
+lemma assign_d_cond_d_bop1_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" 
+  shows "bif\<^sub>D bop bp expr exp2 then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+          v :=\<^sub>D expr;; bif\<^sub>D bop bp (&v) exp2 then P else Q eif"
   using assms
-  by (simp add: assign_d_cond_d subst_bop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_bop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_d_cond_bop2[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2"
-  shows "bif\<^sub>D bop bp exp2 expr then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-          v :=\<^sub>D expr;; bif\<^sub>D bop bp exp2 (&v) then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_bop1_hdesigns[udes_comp] =
+  assign_d_cond_d_bop1_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1] 
+     
+lemmas assign_d_cond_d_bop1_ndesigns[udes_comp] = 
+  assign_d_cond_d_bop1_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2] 
+    
+lemma assign_d_cond_d_bop2_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2"
+  shows "bif\<^sub>D bop bp exp2 expr then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+          v :=\<^sub>D expr;; bif\<^sub>D bop bp exp2 (&v) then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_bop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_bop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_cond_trop1[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif\<^sub>D trop bp expr exp2 exp3 then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D trop bp (&v) exp2 exp3 then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_bop2_hdesigns[udes_comp] =
+  assign_d_cond_d_bop2_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]     
+    
+lemmas assign_d_cond_d_bop2_ndesigns[udes_comp] = 
+  assign_d_cond_d_bop2_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2] 
+
+lemma assign_d_cond_d_trop1_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
+  shows "bif\<^sub>D trop bp expr exp2 exp3 then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D trop bp (&v) exp2 exp3 then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_cond_trop2[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif\<^sub>D trop bp exp2 expr exp3 then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D trop bp  exp2 (&v) exp3 then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_trop1_hdesigns[udes_comp] =   
+    assign_d_cond_d_trop1_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]
+    
+lemmas assign_d_cond_d_trop1_ndesigns[udes_comp] = 
+  assign_d_cond_d_trop1_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]
+  
+lemma assign_d_cond_d_trop2_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
+  shows "bif\<^sub>D trop bp exp2 expr exp3 then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D trop bp  exp2 (&v) exp3 then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_cond_trop3[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
-  shows "bif\<^sub>D trop bp exp2 exp3 expr then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D trop bp exp2 exp3 (&v) then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_trop2_hdesigns[udes_comp] =   
+    assign_d_cond_d_trop2_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]
+      
+lemmas assign_d_cond_d_trop2_ndesigns[udes_comp] = 
+  assign_d_cond_d_trop2_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]    
+
+lemma assign_d_cond_d_trop3_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3"
+  shows "bif\<^sub>D trop bp exp2 exp3 expr then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D trop bp exp2 exp3 (&v) then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_trop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_cond_qtop1[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif\<^sub>D qtop bp expr exp2 exp3 exp4 then (v :=\<^sub>D expr;; (P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D qtop bp (&v) exp2 exp3 exp4 then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_trop3_hdesigns[udes_comp] =   
+    assign_d_cond_d_trop3_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]
+    
+lemmas assign_d_cond_d_trop3_ndesigns[udes_comp] = 
+  assign_d_cond_d_trop3_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]
+  
+lemma assign_d_cond_d_qtop1_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
+  shows "bif\<^sub>D qtop bp expr exp2 exp3 exp4 then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D qtop bp (&v) exp2 exp3 exp4 then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_d_cond_qtop2[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
-  shows "bif\<^sub>D qtop bp exp2 expr  exp3 exp4 then (v :=\<^sub>D expr;;(P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2 (&v) exp3 exp4 then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas assign_d_cond_d_qtop1_hdesigns[udes_comp] =     
+     assign_d_cond_d_qtop1_H1 [OF H1_H2_impl_H1 H1_H2_impl_H1]
+     
+lemmas assign_d_cond_d_qtop1_ndesigns[udes_comp] = 
+  assign_d_cond_d_qtop1_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]
+  
+lemma assign_d_cond_d_qtop2_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4:"v \<sharp> exp4"
+  shows "bif\<^sub>D qtop bp exp2 expr  exp3 exp4 then (v :=\<^sub>D expr;;P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2 (&v) exp3 exp4 then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_d_cond_qtop3[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif\<^sub>D qtop bp exp2 exp3 expr exp4 then (v :=\<^sub>D expr;;(P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2 exp3 (&v) exp4 then(P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas  assign_d_cond_d_qtop2_hdesigns[udes_comp] =     
+  assign_d_cond_d_qtop2_H1[OF H1_H2_impl_H1 H1_H2_impl_H1]
+  
+lemmas assign_d_cond_d_qtop2_ndesigns[udes_comp] = 
+  assign_d_cond_d_qtop2_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]
+  
+lemma assign_d_cond_d_qtop3_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
+  shows "bif\<^sub>D qtop bp exp2 exp3 expr exp4 then (v :=\<^sub>D expr;;P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2 exp3 (&v) exp4 then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_d_cond_qtop4[udes_comp]: (*needs more laws to be automatic*)
-  assumes 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
-  shows "bif\<^sub>D qtop bp exp2 exp3 exp4 expr then (v :=\<^sub>D expr;;(P\<^sub>1 \<turnstile> Q\<^sub>1)) else (v :=\<^sub>D expr;; (P\<^sub>2 \<turnstile> Q\<^sub>2)) eif =
-         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2  exp3 exp4 (&v) then (P\<^sub>1 \<turnstile> Q\<^sub>1) else (P\<^sub>2 \<turnstile> Q\<^sub>2) eif"
+lemmas  assign_d_cond_d_qtop3_hdesigns[udes_comp] =     
+  assign_d_cond_d_qtop3_H1[OF H1_H2_impl_H1 H1_H2_impl_H1]
+  
+lemmas assign_d_cond_d_qtop3_ndesigns[udes_comp] = 
+  assign_d_cond_d_qtop3_hdesigns [OF H1_H3_impl_H2 H1_H3_impl_H2]
+
+lemma assign_d_cond_d_qtop4_H1[udes_comp]: (*needs more laws to be automatic*)
+  assumes "P is H1" and "Q is H1" and 1: "weak_lens v" and 2: "v \<sharp> exp2" and 3: "v \<sharp> exp3" and 4: "v \<sharp> exp4"
+  shows "bif\<^sub>D qtop bp exp2 exp3 exp4 expr then (v :=\<^sub>D expr;; P) else (v :=\<^sub>D expr;; Q) eif =
+         v :=\<^sub>D expr;; bif\<^sub>D qtop bp exp2  exp3 exp4 (&v) then P else Q eif"
   using assms  
-  by (simp add: assign_d_cond_d subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
+  by (simp add: assigns_d_left_cond_d_H1 subst_qtop subst_to_singleton(2) subst_unrest usubst_cancel)
 
-lemma assign_d_cond_If [udes_cond]:
+lemmas  assign_d_cond_d_qtop4_hdesigns[udes_comp] =     
+  assign_d_cond_d_qtop4_H1[OF H1_H2_impl_H1 H1_H2_impl_H1]
+  
+lemmas assign_d_cond_d_qtop4_ndesigns[udes_comp] = 
+  assign_d_cond_d_qtop4_hdesigns[OF H1_H3_impl_H2 H1_H3_impl_H2]
+    
+lemma assign_d_cond_d_If [udes_cond]:
   "(bif\<^sub>D bexp then (v :=\<^sub>D exp1) else (v :=\<^sub>D exp2) eif) =
    (v :=\<^sub>D (exp1 \<triangleleft> bexp \<triangleright> exp2))"
   by rel_auto
@@ -297,18 +380,7 @@ proof -
        by (metis (no_types) H1_H3_commute H1_H3_idempotent H1_H3_impl_H2 H3_def Healthy_def assms(2) calculation design_left_unit seq_r_H1_H2_closed seqr_assoc)
    qed 
   ultimately show ?thesis by simp
-qed    
-  
-lemma weak_seq_r_H1_H2_closed [closure]:
-  assumes  "Q is \<^bold>H"
-  shows "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; Q) is \<^bold>H"
-proof -
- obtain Q\<^sub>1 Q\<^sub>2 where *: "Q = Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2"
-   by (metis H1_H2_commute H1_H2_is_rdesign H2_idem Healthy_def assms(1)) 
-  moreover have "((P\<^sub>1 \<turnstile> P\<^sub>2) ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) is \<^bold>H"
-    using weaker_seq_r_H1_H2_closed design_is_H1 * assms by auto  
-  ultimately show ?thesis by simp
-qed          
+qed             
 
 subsection \<open>While laws for designs\<close>
   
