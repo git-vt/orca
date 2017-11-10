@@ -88,22 +88,48 @@ lemma cond_d_hoare_d_t [hoare_prog]:
   shows "\<lbrace>p\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q\<rbrace>\<^sub>P"
   using assms
   by (simp add: prog_rep_eq hoare_des) 
+
+subsection {*Hoare for recursion*}
+
+lemma mu_p_rec_hoare_p_t [hoare_prog]:
+  assumes WF: "wf R"
+  assumes M:"mono (Rep_prog o F)"  
+  assumes induct_step:
+    "\<And> st P. \<lbrace>Pre \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>P \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>P"   
+  shows "\<lbrace>Pre\<rbrace>\<mu>\<^sub>p F \<lbrace>Post\<rbrace>\<^sub>P"
+  apply (simp add: prog_rep_eq)
+  apply (subst normal_design_theory_continuous.LFP_healthy_comp)  
+  apply (rule mu_p_rec_hoare_p_t[OF WF, of _ _ E])
+    apply (metis (no_types, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_def M Mono_utp_orderI comp_apply less_eq_prog.rep_eq monoD)
+  using Rep_prog apply fastforce
+  apply (simp add: Abs_prog_Rep_prog_Ncarrier)   
+  apply (rule induct_step[unfolded prog_rep_eq])
+  apply (simp add: Abs_prog_Rep_prog_Ncarrier)
+  apply (simp add: Healthy_if is_Ncarrier_is_ndesigns)
+  done
     
-subsection {*Hoare for While-loop*}   
+lemma mu_p_rec_hoare_p_t' [hoare_prog]:
+  assumes WF: "wf R"
+  assumes M:"mono (Rep_prog o F)"  
+  assumes induct_step:
+    "\<And> st P. \<lbrace>Pre \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>P \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>P" 
+  assumes I0: "`Pre' \<Rightarrow> Pre`"  
+  shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>p F \<lbrace>Post\<rbrace>\<^sub>P"
+  apply (rule hoare_pre_str_d_t[OF I0])
+  apply (rule mu_p_rec_hoare_p_t[OF WF M induct_step])
+  apply assumption
+  done
 
-lemma normal_design_is_H1:
-  "P is \<^bold>N \<Longrightarrow> P is H1"
-  by (metis  H3_ndesign Healthy_def' ndesign_form)     
+subsection {*Hoare for while iteration*}   
 
-lemma while_hoare_r_t [hoare_prog]:
+lemma while_hoare_p_t [hoare_prog]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`" 
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>WHILE b INVR  I DO  body OD \<lbrace>Post\<rbrace>\<^sub>P"
-  by (simp add:  prog_rep_eq  
-                 while_hoare_ndesign_t[OF WF I0 Rep_prog_H1_H3_closed [of body, THEN normal_design_is_H1]
-                                        induct_step [unfolded prog_rep_eq] PHI])
+  shows "\<lbrace>Pre\<rbrace>INVR I WHILE b DO body OD \<lbrace>Post\<rbrace>\<^sub>P"
+  unfolding pwhile_inv_prog_def
+  by (simp add: prog_rep_eq while_hoare_ndesign_t[unfolded While_inv_ndes_def, OF WF I0  Rep_prog_H1_H3_closed[THEN H1_H3_impl_H2, THEN H1_H2_impl_H1] induct_step[unfolded prog_rep_eq] PHI])
 
 section {*Abrupt*}
 subsection {*Sequential C-program alphabet*}

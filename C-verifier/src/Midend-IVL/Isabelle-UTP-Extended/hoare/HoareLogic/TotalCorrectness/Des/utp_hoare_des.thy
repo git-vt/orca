@@ -109,6 +109,35 @@ lemma seq_refine_unrest_des:
 lemma skip_refine_des:
   "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
   by pred_auto   
+
+subsection {*Hoare for recursion*}
+
+lemma mu_p_rec_hoare_p_t [hoare_des]:
+  assumes WF: "wf R"
+  assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
+  assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+  assumes induct_step:
+    "\<And> st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
+  shows "\<lbrace>Pre\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
+  unfolding hoare_d_def 
+  apply (rule ndesign_mu_wf_refine_intro[OF WF M H, of _ E])
+  apply (rule induct_step[unfolded hoare_d_def])
+  apply (simp add: ndesign_H1_H3)  
+  apply pred_simp 
+  done
+
+lemma mu_p_rec_hoare_p_t'[hoare_des]:
+  assumes WF: "wf R"
+  assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
+  assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
+  assumes induct_step:
+    "\<And> st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
+  assumes I0: "`Pre' \<Rightarrow> Pre  `"
+  shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
+  apply (rule hoare_pre_str_d_t[OF I0])  
+  apply (rule mu_p_rec_hoare_p_t[OF WF M H induct_step])
+  apply assumption+
+  done      
     
 subsection {*Hoare for While-loop*}   
 
@@ -152,7 +181,6 @@ proof -
      unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
     by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
 qed
-
 
 lemma while_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
@@ -201,7 +229,7 @@ proof -
   qed   
   show ?thesis    
     unfolding hoare_d_def While_inv_ndes_def While_lfp_ndes_def
-    by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
+    by (rule hoare_pre_str_d_t[unfolded hoare_d_def , OF I0 *]) 
 qed
 
 lemma while_vrt_hoare_ndesign_t [hoare_des]:
@@ -213,7 +241,6 @@ lemma while_vrt_hoare_ndesign_t [hoare_des]:
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt E do body od\<lbrace>Post\<rbrace>\<^sub>D"
   using assms while_hoare_ndesign_t[of R Pre I body b E Post]
   by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)
-
 
 lemma while_vrt_hoare_ndesign_t' [hoare_des]:
   assumes WF: "wf R"

@@ -27,6 +27,7 @@ begin
   instance by (intro_classes, (transfer, simp add: less_uexpr_def)+)
 end
 
+  
 lemma Rep_prog_refine [prog_rep_eq]:
   "P \<sqsubseteq> Q \<longleftrightarrow> \<lbrakk>P\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>Q\<rbrakk>\<^sub>p"
   by (simp add: less_eq_prog.rep_eq)

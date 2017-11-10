@@ -2,12 +2,20 @@ theory utp_rec_total_des
   imports "../hoare/AlgebraicLaws/Design/Algebraic_laws_design"
 begin
 
-lemma mu_design_is_healthy_des[simp]: (*This should be genrated automatically in utp_theory*)
+lemma Ncarrier_ndesigns:(*This should be generated automatically in utp_theory*)
+  "\<H>\<^bsub>NDES\<^esub> P = \<^bold>N P"
+  by (simp add: ndes_hcond_def)
+
+lemma is_Ncarrier_is_ndesigns:(*This should be generated automatically in utp_theory*)
+  "(P is \<H>\<^bsub>NDES\<^esub>) = (P is \<^bold>N)" 
+  by (simp add: ndes_hcond_def)
+    
+lemma mu_design_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
   "\<mu>\<^sub>D B is \<H>\<^bsub>DES\<^esub>"    
   by (metis (no_types) Healthy_def' des_hcond_def design_theory_continuous.LFP_closed)
 
 
-lemma mu_normal_design_is_healthy_des[simp]: (*This should be genrated automatically in utp_theory*)
+lemma mu_normal_design_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
   "\<mu>\<^sub>N B is \<H>\<^bsub>NDES\<^esub>"
   by (metis (no_types) Healthy_def' ndes_hcond_def normal_design_theory_continuous.LFP_closed) 
 
@@ -16,17 +24,17 @@ lemma design_is_healthy_des:"$ok\<acute> \<sharp> Pre \<Longrightarrow> Pre \<tu
   apply fastforce
 done    
 
-lemma rdesign_is_healthy_des[simp]: (*This should be genrated automatically in utp_theory*)
+lemma rdesign_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
   "Pre \<turnstile>\<^sub>r Post is \<H>\<^bsub>DES\<^esub>"
   by (simp add: rdesign_def design_is_healthy_des unrest)  
 
-lemma ndesign_is_healthy_des[simp]: (*This should be genrated automatically in utp_theory*)
+lemma ndesign_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
   "Pre \<turnstile>\<^sub>n Post is \<H>\<^bsub>NDES\<^esub>"
   apply rel_simp 
   apply fastforce
 done
     
-lemma Mono_utp_orderD: (*This should be genrated automatically in utp_theory*)
+lemma Mono_utp_orderD: (*This should be generated automatically in utp_theory*)
   assumes M: "Mono\<^bsub>utp_order H\<^esub> B"
   and     "x is H"
   and     "y is H"

@@ -589,7 +589,7 @@ theorem while_bot_ndes_false: "while\<^sup>\<top>\<^sup>N false do B od = SKIP\<
  
 subsection \<open>assume laws\<close>
 
-lemma assume_twice[udes_comp]: "(b\<^sup>\<top>\<^sup>D;; c\<^sup>\<top>\<^sup>D) = (b \<and> c)\<^sup>\<top>\<^sup>D"
+lemma assume_d_twice[udes_comp]: "(b\<^sup>\<top>\<^sup>D;; c\<^sup>\<top>\<^sup>D) = (b \<and> c)\<^sup>\<top>\<^sup>D"
   apply pred_simp
   apply auto
   apply (rel_simp)
@@ -598,7 +598,7 @@ lemma assume_twice[udes_comp]: "(b\<^sup>\<top>\<^sup>D;; c\<^sup>\<top>\<^sup>D
     apply blast
 done
 
-lemma assert_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>\<^sub>D) = (b \<and> c)\<^sub>\<bottom>\<^sub>D"
+lemma assert_d_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>\<^sub>D) = (b \<and> c)\<^sub>\<bottom>\<^sub>D"
  apply pred_simp
   apply auto
   apply (rel_simp)+
