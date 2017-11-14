@@ -449,7 +449,7 @@ lemma quicksort:
       and \<open>res \<bowtie> array\<close> and \<open>res \<sharp> old_array\<close>
   shows
   \<open>\<lbrace>(&array :\<^sub>u (_::linorder) list) =\<^sub>u old_array \<and> &lo =\<^sub>u 0 \<and> &hi =\<^sub>u #\<^sub>u(&array) - 1\<rbrace>
-   \<nu> X [undefined ''pre'' \<Rightarrow> undefined ''post''] \<bullet>
+   \<nu> X [undefined ''pre''] \<bullet>
   if\<^sub>u &lo <\<^sub>u &hi then
     qs_partition array (&lo) (&hi) pivot i j res;;
     block II

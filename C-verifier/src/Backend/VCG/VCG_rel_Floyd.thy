@@ -38,7 +38,7 @@ lemma cond_hoare_r':
   shows \<open>\<lbrace>p\<rbrace>if\<^sub>u b then C\<^sub>1 else C\<^sub>2 \<lbrace>q \<or> s\<rbrace>\<^sub>u\<close>
   by (insert assms, rel_auto)
 
-(*lemma cond_assert_hoare_r[hoare_rules]: (* Needs some heuristics *)
+lemma cond_assert_hoare_r[hoare_rules]: (* Needs some heuristics *)
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u\<close>
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
       and \<open>`q \<Rightarrow> A`\<close>
@@ -55,7 +55,6 @@ lemma cond_hoare_r':
     apply assumption
   apply pred_auto
   done
-*)
 
 lemma cond_assert_last_hoare_r[hoare_rules]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u\<close>
@@ -88,14 +87,14 @@ lemma nu_hoare_basic_r[hoare_rules]:
   by (rule nu_refine_intro) auto
 
 definition annot_rec ::
-  \<open>'a upred \<Rightarrow> 'a upred \<Rightarrow> ((bool, 'a) hexpr \<Rightarrow> (bool, 'a) hexpr) \<Rightarrow> (bool, 'a) hexpr\<close> where
-  \<open>annot_rec P Q F \<equiv> \<nu> F\<close>
+  \<open>'a upred \<Rightarrow> ((bool, 'a) hexpr \<Rightarrow> (bool, 'a) hexpr) \<Rightarrow> (bool, 'a) hexpr\<close> where
+  \<open>annot_rec P F \<equiv> \<nu> F\<close>
 
 syntax
-  "_nu_annot" :: \<open>pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<nu> _ [_\<Rightarrow>_] \<bullet> _" [0, 10] 10)
+  "_nu_annot" :: \<open>pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<nu> _ [_] \<bullet> _" [0, 10] 10)
 
 translations
-  "\<nu> X [P\<Rightarrow>Q] \<bullet> p" == "CONST annot_rec P Q (\<lambda> X. p)"
+  "\<nu> X [P] \<bullet> p" == "CONST annot_rec P (\<lambda>X. p)"
 
 lemma nu_hoare_r(* [hoare_rules] *):
   assumes PRE: \<open>`P' \<Rightarrow> P`\<close>
@@ -109,7 +108,7 @@ lemma nu_hoare_r(* [hoare_rules] *):
 lemma nu_hoare_annot_r[hoare_rules]:
   assumes PRE: \<open>`P' \<Rightarrow> P`\<close>
   assumes IH: \<open>\<And>p. \<lbrace>P\<rbrace>p\<lbrace>Q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>P\<rbrace>F p\<lbrace>Q\<rbrace>\<^sub>u\<close>
-  shows \<open>\<lbrace>P'\<rbrace>annot_rec P Q F\<lbrace>Q\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>P'\<rbrace>annot_rec P F\<lbrace>Q\<rbrace>\<^sub>u\<close>
   using nu_hoare_r assms unfolding annot_rec_def .
 
 lemmas [hoare_rules] =
