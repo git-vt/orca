@@ -7,7 +7,62 @@ imports
 begin
 
 subsection Increment
+term "x xor"
+term " j XOR s"  
+term "x :== bop (op XOR) (&x) (&y)"  
+term "y :== bop (op XOR) (&y) (&x)"
+term "x :== bop (op XOR) (&x) (&y)"  
+term "uop bitNOT c"  
+term "(uop (op NOT) c)"  
+lemma "bop (op XOR) b c = (uop bitNOT c) "oops 
+lemma  
+  "bop (op XOR) b c =  
+   (bop (op OR)) (bop (op AND) b  (uop bitNOT c)) (bop (op AND) (uop bitNOT b)  c)"
+  apply (rel_simp)
+  apply transfer  
+oops    
+lemma  
+  assumes "weak_lens x" and "weak_lens y" 
+  and "x \<bowtie> y" 
+shows 
+  
+"\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>  
+    x :== bop (op XOR) (&x) (&y);;
+    y :== bop (op XOR) (&y) (&x);;
+    x :== bop (op XOR) (&x) (&y)
+\<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+   apply (insert assms)
+  apply (rule seq_hoare_r)
+   defer
+   apply (rule seq_hoare_r)
+    apply (rule assigns_hoare_r')
+   apply (rule assigns_hoare_r')
+  apply rel_simp
+  apply (simp add: lens_indep_sym ) 
+    apply (rule bit_xor_def)
+    find_theorems "_ XOR _ = _"
+  apply auto  
+oops
 
+lemma 
+ assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
+  and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
+shows
+"\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>  
+    z :== &x;;
+    x :== &y;;
+    y :== &z
+\<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
+   apply (insert assms)
+  apply (rule seq_hoare_r)
+   defer
+   apply (rule seq_hoare_r)
+    apply (rule assigns_hoare_r')
+   apply (rule assigns_hoare_r')
+  apply rel_simp
+  apply (simp add: lens_indep_sym)
+  done
+       
 lemma increment_semimanual:
   assumes \<open>vwb_lens x\<close> and \<open>x \<bowtie> y\<close>
   shows
@@ -196,7 +251,9 @@ lemma insertion_sort:
   od
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
   by (insert assms) exp_vcg
-
+term "&i <\<^sub>u #\<^sub>u(&array)"
+term "card x" 
+term "length ss"  
 subsubsection Quicksort
 
 text \<open>It's more efficient to choose the pivot from the middle (or rather, the median of

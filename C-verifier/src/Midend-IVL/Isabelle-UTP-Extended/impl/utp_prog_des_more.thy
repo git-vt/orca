@@ -77,8 +77,6 @@ declare pwhile_prog.rep_eq [prog_rep_eq]
 declare pwhile_inv_prog_def [prog_rep_eq]
 declare pwhile_inv_vrt_prog_def [prog_rep_eq]
 
-
-
 lemma Abs_prog_Rep_prog_ndesign:"\<lbrakk>Abs_prog (\<^bold>N P)\<rbrakk>\<^sub>p = (\<^bold>N P)" 
   by (simp add: Abs_prog_inverse H1_H3_idempotent Healthy_def')
 

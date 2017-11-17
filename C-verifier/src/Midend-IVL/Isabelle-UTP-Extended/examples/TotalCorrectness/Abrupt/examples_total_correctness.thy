@@ -49,7 +49,7 @@ lemma swap_test_manual:
   and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
   shows 
   "\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>
-    z \<Midarrow> &x;;
+    z :=\<^sub>D &x;;
     x \<Midarrow> &y;;
     y \<Midarrow> &z
    \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>A\<^sub>B\<^sub>R"
