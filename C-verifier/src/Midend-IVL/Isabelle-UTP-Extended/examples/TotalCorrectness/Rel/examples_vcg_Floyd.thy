@@ -131,13 +131,6 @@ definition \<open>outer_invr i array old_array \<equiv>
 \<close>
 abbreviation \<open>outer_invr\<^sub>u \<equiv> trop outer_invr\<close>
 
-lemma outer_invr_init[vcg_simps]:
-  assumes \<open>mset array = mset old_array\<close>
-  shows \<open>outer_invr (Suc 0) array old_array\<close>
-  unfolding outer_invr_def
-  using assms
-  by (metis sorted_single sorted_take take_0 take_Suc)
-
 definition \<open>inner_invr i j array old_array \<equiv>
   i < length array
 \<and> i \<ge> j
@@ -146,6 +139,38 @@ definition \<open>inner_invr i j array old_array \<equiv>
   sorted (xs\<^sub>1 @ xs\<^sub>2) \<and> (\<forall>y \<in> set xs\<^sub>2. x < y))
 \<close>
 abbreviation \<open>inner_invr\<^sub>u \<equiv> qtop inner_invr\<close>
+
+lemma outer_invr_init[vcg_simps]:
+  assumes \<open>mset array = mset old_array\<close>
+  shows \<open>outer_invr (Suc 0) array old_array\<close>
+  unfolding outer_invr_def
+  using assms
+  by (metis sorted_single sorted_take take_0 take_Suc)
+
+lemma outer_invr_step[vcg_simps]:
+  assumes \<open>inner_invr i j array old_array\<close>
+      and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
+  shows \<open>outer_invr (Suc i) array old_array\<close>
+  using assms unfolding inner_invr_def outer_invr_def Let_def
+  apply (erule_tac disjE1)
+   apply auto
+   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
+      min.absorb2 nth_take sorted.simps)
+  apply (drule (1) insert_with_sorted)
+    apply auto
+   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
+      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
+  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
+    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
+  by (auto simp: min_def)
+
+lemma outer_invr_final[vcg_dests]:
+  assumes \<open>outer_invr i array old_array\<close>
+      and \<open>\<not> i < length array\<close>
+    shows \<open>mset array = mset old_array\<close>
+      and \<open>sorted array\<close>
+  using assms unfolding outer_invr_def
+  by auto
 
 lemma inner_invr_init[vcg_simps]:
   assumes \<open>outer_invr i array old_array\<close>
@@ -205,31 +230,6 @@ next
           swap_at_def xs\<^sub>2_def y y_concat_xs\<^sub>2)
   }
 qed
-
-lemma outer_invr_step[vcg_simps]:
-  assumes \<open>inner_invr i j array old_array\<close>
-    and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
-  shows \<open>outer_invr (Suc i) array old_array\<close>
-  using assms unfolding inner_invr_def outer_invr_def Let_def
-  apply (erule_tac disjE1)
-   apply auto
-   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
-      min.absorb2 nth_take sorted.simps)
-  apply (drule (1) insert_with_sorted)
-    apply auto
-   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
-      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
-  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
-    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
-  by (auto simp: min_def)
-
-lemma outer_invr_final[vcg_dests]:
-  assumes \<open>outer_invr i array old_array\<close>
-      and \<open>\<not> i < length array\<close>
-    shows \<open>mset array = mset old_array\<close>
-      and \<open>sorted array\<close>
-  using assms unfolding outer_invr_def
-  by auto
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
