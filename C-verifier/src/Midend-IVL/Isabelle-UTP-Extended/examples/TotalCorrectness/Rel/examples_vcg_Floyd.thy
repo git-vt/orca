@@ -71,8 +71,7 @@ lemma even_count_method:
 
 subsection Sorting
 definition \<open>outer_invr i array old_array \<equiv>
-  i > 0
-\<and> mset array = mset old_array
+  mset array = mset old_array
 \<and> sorted (take i array) (* everything up to i-1 is sorted *)
 \<close>
 abbreviation \<open>outer_invr\<^sub>u \<equiv> trop outer_invr\<close>
@@ -82,11 +81,10 @@ lemma outer_invr_init[vcg_simps]:
   shows \<open>outer_invr (Suc 0) array old_array\<close>
   unfolding outer_invr_def
   using assms
-  by (metis One_nat_def sorted_single sorted_take take_0 take_Suc zero_less_one)
+  by (metis sorted_single sorted_take take_0 take_Suc)
 
 definition \<open>inner_invr i j array old_array \<equiv>
   i < length array
-\<and> i > 0
 \<and> i \<ge> j
 \<and> mset array = mset old_array
 \<and> (let xs\<^sub>1 = take j array; x = array!j; xs\<^sub>2 = drop (Suc j) (take (Suc i) array) in
@@ -181,9 +179,7 @@ lemma outer_invr_final[vcg_dests]:
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
       and \<open>vwb_lens array\<close> and \<open>array \<sharp> old_array\<close>
-      and \<open>vwb_lens x\<close> and \<open>x \<bowtie> i\<close> and \<open>x \<bowtie> j\<close>
       and \<open>i \<bowtie> array\<close> and \<open>i \<sharp> old_array\<close>
-      and \<open>x \<bowtie> array\<close> and \<open>x \<sharp> old_array\<close>
       and \<open>j \<bowtie> array\<close> and \<open>j \<sharp> old_array\<close>
   shows
   \<open>\<lbrace>&array =\<^sub>u old_array\<rbrace>
