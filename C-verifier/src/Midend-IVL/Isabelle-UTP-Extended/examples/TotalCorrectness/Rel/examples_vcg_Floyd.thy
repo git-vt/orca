@@ -7,42 +7,6 @@ imports
 begin
 
 subsection Increment
-term "x xor"
-term " j XOR s"  
-term "x :== bop (op XOR) (&x) (&y)"  
-term "y :== bop (op XOR) (&y) (&x)"
-term "x :== bop (op XOR) (&x) (&y)"  
-term "uop bitNOT c"  
-term "(uop (op NOT) c)"  
-lemma "bop (op XOR) b c = (uop bitNOT c) "oops 
-lemma  
-  "bop (op XOR) b c =  
-   (bop (op OR)) (bop (op AND) b  (uop bitNOT c)) (bop (op AND) (uop bitNOT b)  c)"
-  apply (rel_simp)
-  apply transfer  
-oops    
-lemma  
-  assumes "weak_lens x" and "weak_lens y" 
-  and "x \<bowtie> y" 
-shows 
-  
-"\<lbrace>&x =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>b\<guillemotright>\<rbrace>  
-    x :== bop (op XOR) (&x) (&y);;
-    y :== bop (op XOR) (&y) (&x);;
-    x :== bop (op XOR) (&x) (&y)
-\<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
-   apply (insert assms)
-  apply (rule seq_hoare_r)
-   defer
-   apply (rule seq_hoare_r)
-    apply (rule assigns_hoare_r')
-   apply (rule assigns_hoare_r')
-  apply rel_simp
-  apply (simp add: lens_indep_sym ) 
-    apply (rule bit_xor_def)
-    find_theorems "_ XOR _ = _"
-  apply auto  
-oops
 
 lemma 
  assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
