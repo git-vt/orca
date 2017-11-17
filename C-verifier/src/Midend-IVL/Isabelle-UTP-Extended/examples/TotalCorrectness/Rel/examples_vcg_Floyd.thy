@@ -107,8 +107,7 @@ abbreviation \<open>inner_invr\<^sub>u \<equiv> qtop inner_invr\<close>
 lemma outer_invr_init[vcg_simps]:
   assumes \<open>mset array = mset old_array\<close>
   shows \<open>outer_invr (Suc 0) array old_array\<close>
-  unfolding outer_invr_def
-  using assms
+  using assms unfolding outer_invr_def
   by (metis sorted_single sorted_take take_0 take_Suc)
 
 lemma outer_invr_step[vcg_simps]:
@@ -124,15 +123,15 @@ lemma outer_invr_step[vcg_simps]:
     apply auto
    apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
       min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
-  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
+  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = array]
     id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
   by (auto simp: min_def)
 
 lemma outer_invr_final[vcg_dests]:
   assumes \<open>outer_invr i array old_array\<close>
       and \<open>\<not> i < length array\<close>
-    shows \<open>mset array = mset old_array\<close>
-      and \<open>sorted array\<close>
+  shows \<open>mset array = mset old_array\<close>
+    and \<open>sorted array\<close>
   using assms unfolding outer_invr_def
   by auto
 
@@ -146,8 +145,8 @@ lemma inner_invr_init[vcg_simps]:
 
 lemma inner_invr_step[vcg_simps]:
   assumes \<open>inner_invr i j array old_array\<close>
-    and \<open>j > 0\<close>
-    and \<open>array!(j - Suc 0) > array!j\<close>
+      and \<open>j > 0\<close>
+      and \<open>array!(j - Suc 0) > array!j\<close>
   shows \<open>inner_invr i (j - Suc 0) (swap_at j array) old_array\<close>
   using assms unfolding inner_invr_def Let_def
   apply clarsimp
