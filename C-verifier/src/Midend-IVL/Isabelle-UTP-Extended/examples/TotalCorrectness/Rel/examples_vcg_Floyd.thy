@@ -229,6 +229,7 @@ definition \<open>qs_partition_invr A oldA lo hi i j pivot \<equiv>
 \<and> lo \<le> i
 \<and> i \<le> j
 \<and> j \<le> hi
+\<and> hi < length A
 \<and> (\<forall>x \<in> set (slice lo i A). x \<le> pivot)
 \<and> (\<forall>x \<in> set (slice i j A). pivot \<le> x)
 \<and> pivot = A!hi
