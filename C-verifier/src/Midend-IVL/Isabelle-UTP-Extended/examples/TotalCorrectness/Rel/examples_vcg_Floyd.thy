@@ -214,9 +214,7 @@ lemma insertion_sort:
   od
   \<lbrace>mset\<^sub>u(&array) =\<^sub>u mset\<^sub>u(old_array) \<and> sorted\<^sub>u(&array)\<rbrace>\<^sub>u\<close>
   by (insert assms) exp_vcg
-term "&i <\<^sub>u #\<^sub>u(&array)"
-term "card x" 
-term "length ss"  
+
 subsubsection Quicksort
 
 text \<open>It's more efficient to choose the pivot from the middle (or rather, the median of
