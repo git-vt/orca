@@ -126,7 +126,7 @@ lemma mu_d_rec_hoare_d_t [hoare_des]:
   apply pred_simp 
   done
 
-lemma mu_p_rec_hoare_p_t'[hoare_des]:
+lemma mu_d_rec_hoare_d_t'[hoare_des]:
   assumes WF: "wf R"
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
   assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
@@ -138,6 +138,39 @@ lemma mu_p_rec_hoare_p_t'[hoare_des]:
   apply (rule mu_d_rec_hoare_d_t[OF WF M H induct_step])
   apply assumption+
   done      
+subsection {*Hoare for frames*}
+
+lemma antiframe_hoare_d_t[hoare_des]:
+  assumes "vwb_lens a"
+  assumes "a \<sharp> r" 
+  assumes "a \<natural> q"    
+  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>D"  
+  shows "\<lbrace>p \<and> r\<rbrace> antiframe\<^sub>D a P \<lbrace>q \<and> r\<rbrace>\<^sub>D"
+  using assms by (rel_simp)
+
+lemma antiframe_goare_d_t_stronger[hoare_des]:
+  assumes "vwb_lens a"
+  assumes "a \<sharp> r" 
+  assumes "a \<natural> q"    
+  assumes "\<lbrace>p \<and> r\<rbrace>P\<lbrace>q\<rbrace>\<^sub>D"  
+  shows "\<lbrace>p \<and> r\<rbrace> antiframe\<^sub>D a P \<lbrace>q \<and> r\<rbrace>\<^sub>D"
+  using assms by (rel_simp)
+        
+lemma frame_hoare_d_t[hoare_des]:
+  assumes "vwb_lens a"
+  assumes "a \<natural> r" 
+  assumes "a \<sharp> q"    
+  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>D"  
+  shows "\<lbrace>p \<and> r\<rbrace> frame\<^sub>D a P \<lbrace>q \<and> r\<rbrace>\<^sub>D"
+  using assms by (rel_simp)  
+
+lemma frame_hoare_d_t_stronger[hoare_des]:
+  assumes "vwb_lens a"
+  assumes "a \<natural> r" 
+  assumes "a \<sharp> q"    
+  assumes "\<lbrace>p \<and> r\<rbrace>P\<lbrace>q\<rbrace>\<^sub>D"  
+  shows "\<lbrace>p \<and> r\<rbrace> frame\<^sub>D a P \<lbrace>q \<and> r\<rbrace>\<^sub>D"
+  using assms by (rel_simp) 
     
 subsection {*Hoare for While-loop*}   
 

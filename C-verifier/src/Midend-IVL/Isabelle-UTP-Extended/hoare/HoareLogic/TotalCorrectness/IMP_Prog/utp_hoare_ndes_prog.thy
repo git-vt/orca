@@ -124,6 +124,44 @@ lemma mu_p_rec_hoare_p_t' [hoare_prog]:
   shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>p F \<lbrace>Post\<rbrace>\<^sub>P"
   by (simp add: hoare_pre_str_d_t[OF I0 mu_p_rec_hoare_p_t[OF WF M induct_step]])
 
+subsection {*Hoare for frames*}
+  
+lemma antiframe_hoare_p_t[hoare_prog]:
+  assumes "vwb_lens a"
+  assumes "a \<sharp> r" 
+  assumes "a \<natural> q"    
+  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>P"  
+  shows "\<lbrace>p \<and> r\<rbrace> pantiframe_prog a P \<lbrace>q \<and> r\<rbrace>\<^sub>P"
+  using assms
+  by (simp add: prog_rep_eq hoare_des)
+
+lemma antiframe_goare_p_t_stronger[hoare_prog]:
+  assumes "vwb_lens a"
+  assumes "a \<sharp> r" 
+  assumes "a \<natural> q"    
+  assumes "\<lbrace>p \<and> r\<rbrace>P\<lbrace>q\<rbrace>\<^sub>P"  
+  shows "\<lbrace>p \<and> r\<rbrace> pantiframe_prog a P \<lbrace>q \<and> r\<rbrace>\<^sub>P"
+  using assms
+  by (simp add: prog_rep_eq hoare_des)    
+    
+lemma frame_hoare_p_t[hoare_prog]:
+  assumes "vwb_lens a"
+  assumes "a \<natural> r" 
+  assumes "a \<sharp> q"    
+  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>P"  
+  shows "\<lbrace>p \<and> r\<rbrace> pframe_prog a P \<lbrace>q \<and> r\<rbrace>\<^sub>P"
+  using assms
+  by (simp add: prog_rep_eq hoare_des)
+
+lemma frame_hoare_p_t_stronger[hoare_prog]:
+  assumes "vwb_lens a"
+  assumes "a \<natural> r" 
+  assumes "a \<sharp> q"    
+  assumes "\<lbrace>p \<and> r\<rbrace>P\<lbrace>q\<rbrace>\<^sub>P"  
+  shows "\<lbrace>p \<and> r\<rbrace> pframe_prog a P \<lbrace>q \<and> r\<rbrace>\<^sub>P"
+  using assms 
+  by (simp add: prog_rep_eq hoare_des)
+  
 subsection {*Hoare for while iteration*}   
 
 lemma while_hoare_p_t [hoare_prog]:

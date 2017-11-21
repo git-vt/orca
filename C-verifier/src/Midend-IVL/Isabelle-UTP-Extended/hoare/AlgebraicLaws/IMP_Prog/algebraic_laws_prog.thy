@@ -259,8 +259,7 @@ lemma while_inv_prog_false:
  
 lemma while_inv_vrt_prog_false:
   shows "(INVR I VRT E WHILE false DO B OD) = SKIP"
-  by (simp add: prog_rep_eq while_ndes_false)  
-        
+  by (simp add: prog_rep_eq while_ndes_false)          
     
 subsection \<open>assume laws\<close>
 
@@ -269,7 +268,5 @@ lemma assume_twice[algebraic_laws_prog]: "((b\<^sup>\<top>\<^sup>P) ; (c\<^sup>\
  
 lemma assert_twice[algebraic_laws_prog]: "(b\<^sub>\<bottom>\<^sub>P ; (c\<^sub>\<bottom>\<^sub>P)) = (b \<and> c)\<^sub>\<bottom>\<^sub>P"
   by (simp add: prog_rep_eq) (metis assert_d_twice assert_des_def) 
-
-
 
 end

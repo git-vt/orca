@@ -87,7 +87,10 @@ lift_definition pantiframe_prog :: "('a \<Longrightarrow> '\<alpha>) \<Rightarro
   "antiframe\<^sub>D" unfolding frame\<^sub>D_def
   by rel_auto 
     
- (*TODO: @Yakoub: Lift frame and anti-frame hoare rules*)   
+declare pframe_prog.rep_eq [prog_rep_eq]
+declare pantiframe_prog.rep_eq [prog_rep_eq]  
+  
+(*TODO: @Yakoub: Lift frame and anti-frame hoare rules*)   
 
 subsection{*Rep Abs and normal designs*}   
 
