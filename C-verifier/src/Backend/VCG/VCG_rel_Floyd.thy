@@ -38,7 +38,7 @@ lemma cond_hoare_r':
   shows \<open>\<lbrace>p\<rbrace>if\<^sub>u b then C\<^sub>1 else C\<^sub>2 \<lbrace>q \<or> s\<rbrace>\<^sub>u\<close>
   by (insert assms, rel_auto)
 
-lemma cond_assert_hoare_r[hoare_rules]: (* Needs some heuristics *)
+lemma cond_assert_hoare_r[hoare_rules]: (* Needs some heuristics? *)
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u\<close>
       and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
       and \<open>`q \<Rightarrow> A`\<close>

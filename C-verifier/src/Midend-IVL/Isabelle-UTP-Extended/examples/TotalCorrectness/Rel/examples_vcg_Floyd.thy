@@ -326,10 +326,10 @@ lemma quicksort_partition[vcg_simps]:
   (while &j <\<^sub>u hi invr qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot) do
     (if\<^sub>u &A(&j)\<^sub>a <\<^sub>u &pivot then
       A :== swap\<^sub>u (&i) (&j) (&A);;
-      i :== (&i + 1);;
-      j :== (&j + 1)
-    else j :== (&j + 1));;
-    (qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j) (&pivot))\<^sub>\<bottom>
+      i :== (&i + 1)
+    else II);;
+    (qs_partition_invr\<^sub>u (&A) oldA lo hi (&i) (&j + 1) (&pivot))\<^sub>\<bottom>;;
+    j :== (&j + 1)
   od);;
   A :== swap\<^sub>u (&i) hi (&A);; (* Don't need `pivot < A!i` check, it's a minor optimization *)
   res :== &i
