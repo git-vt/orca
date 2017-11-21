@@ -122,7 +122,7 @@ lemma slice_update_outofbounds_upper[simp]:
   assumes \<open>j \<le> k\<close>
   shows \<open>slice i j (xs[k := l]) = slice i j xs\<close>
   using assms unfolding slice_def
-  by auto
+  by simp
 
 lemma slice_update2_outofbounds_lower[simp]:
   assumes \<open>k < i\<close>
@@ -163,7 +163,7 @@ lemma slice_length[simp]:
       and \<open>hi \<le> length xs\<close>
   shows \<open>length (slice lo hi xs) = hi - lo\<close>
   using assms unfolding slice_def
-  by auto
+  by simp
 
 lemma nth_slice_offset[simp]:
   assumes \<open>i < hi - lo\<close>
@@ -222,7 +222,7 @@ lemma mset_slice_swap[simp]:
   using assms
   apply (simp add: slice_swap_extract)
   unfolding slice_def
-  by auto
+  by simp
 
 lemma set_slice_swap[simp]:
   assumes \<open>lo \<le> i\<close>
@@ -235,7 +235,7 @@ lemma set_slice_swap[simp]:
   using assms
   apply (simp add: slice_swap_extract)
   unfolding slice_def
-  by auto
+  by simp
 
 lemma set_slice_swap_greaterthan: \<comment> \<open>Not all that useful. Could be more general.\<close>
   fixes xs :: \<open>_::linorder list\<close>
