@@ -194,6 +194,60 @@ next
   }
 qed
 
+<<<<<<< .mine
+lemma outer_invr_step[vcg_simps]:
+  assumes \<open>inner_invr i j array old_array\<close>
+    and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
+  shows \<open>outer_invr (Suc i) array old_array\<close>
+  using assms unfolding inner_invr_def outer_invr_def Let_def
+  apply (erule_tac disjE1)
+   apply auto
+   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
+      min.absorb2 nth_take sorted.simps)
+  apply (drule (1) insert_with_sorted)
+    apply auto
+   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
+      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
+  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
+    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
+  by (auto simp: min_def)
+
+lemma outer_invr_final[vcg_dests]:
+  assumes \<open>outer_invr i array old_array\<close>
+      and \<open>\<not> i < length array\<close>
+    shows \<open>mset array = mset old_array\<close>
+      and \<open>sorted array\<close>
+  using assms unfolding outer_invr_def
+  by auto
+    
+||||||| .r524
+lemma outer_invr_step[vcg_simps]:
+  assumes \<open>inner_invr i j array old_array\<close>
+    and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
+  shows \<open>outer_invr (Suc i) array old_array\<close>
+  using assms unfolding inner_invr_def outer_invr_def Let_def
+  apply (erule_tac disjE1)
+   apply auto
+   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
+      min.absorb2 nth_take sorted.simps)
+  apply (drule (1) insert_with_sorted)
+    apply auto
+   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
+      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
+  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
+    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
+  by (auto simp: min_def)
+
+lemma outer_invr_final[vcg_dests]:
+  assumes \<open>outer_invr i array old_array\<close>
+      and \<open>\<not> i < length array\<close>
+    shows \<open>mset array = mset old_array\<close>
+      and \<open>sorted array\<close>
+  using assms unfolding outer_invr_def
+  by auto
+
+=======
+>>>>>>> .r541
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
       and \<open>vwb_lens array\<close> and \<open>array \<sharp> old_array\<close>
