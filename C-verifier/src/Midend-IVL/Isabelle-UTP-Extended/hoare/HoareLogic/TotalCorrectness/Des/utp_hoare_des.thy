@@ -112,7 +112,7 @@ lemma skip_refine_des:
 
 subsection {*Hoare for recursion*}
 
-lemma mu_p_rec_hoare_p_t [hoare_des]:
+lemma mu_d_rec_hoare_d_t [hoare_des]:
   assumes WF: "wf R"
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
   assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
@@ -135,7 +135,7 @@ lemma mu_p_rec_hoare_p_t'[hoare_des]:
   assumes I0: "`Pre' \<Rightarrow> Pre  `"
   shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
   apply (rule hoare_pre_str_d_t[OF I0])  
-  apply (rule mu_p_rec_hoare_p_t[OF WF M H induct_step])
+  apply (rule mu_d_rec_hoare_d_t[OF WF M H induct_step])
   apply assumption+
   done      
     

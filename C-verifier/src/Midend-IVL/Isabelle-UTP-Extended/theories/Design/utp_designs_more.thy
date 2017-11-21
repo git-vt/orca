@@ -134,5 +134,13 @@ declare While_gfp_ndes_def [urel_defs]
 declare While_inv_ndes_def [urel_defs]
 declare While_lfp_ndes_def [urel_defs]
 declare While_inv_vrt_ndes_def [urel_defs]
+  
+subsection {*Design frame and anti-frame*}
+
+definition frame\<^sub>D :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" where
+[urel_defs]: "frame\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u \<guillemotleft>st\<guillemotright>  \<oplus> $\<Sigma>\<^sub>D on &a))"
+
+definition antiframe\<^sub>D :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" where
+[urel_defs]: "antiframe\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u $\<Sigma>\<^sub>D \<oplus> \<guillemotleft>st\<guillemotright> on &a))"  
 
 end

@@ -76,10 +76,26 @@ definition pwhile_inv_vrt_prog :: "'\<alpha> cond \<Rightarrow>  ('t,'\<alpha>) 
 declare pwhile_prog.rep_eq [prog_rep_eq]
 declare pwhile_inv_prog_def [prog_rep_eq]
 declare pwhile_inv_vrt_prog_def [prog_rep_eq]
+  
+subsection{*Frame and anti-frame*}
+
+lift_definition pframe_prog :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow>  '\<alpha> prog \<Rightarrow> '\<alpha> prog " is
+  "frame\<^sub>D" unfolding frame\<^sub>D_def
+  by rel_auto 
+
+lift_definition pantiframe_prog :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow>  '\<alpha> prog \<Rightarrow> '\<alpha> prog " is
+  "antiframe\<^sub>D" unfolding frame\<^sub>D_def
+  by rel_auto 
+    
+ (*TODO: @Yakoub: Lift frame and anti-frame hoare rules*)   
+
+subsection{*Rep Abs and normal designs*}   
 
 lemma Abs_prog_Rep_prog_ndesign:"\<lbrakk>Abs_prog (\<^bold>N P)\<rbrakk>\<^sub>p = (\<^bold>N P)" 
   by (simp add: Abs_prog_inverse H1_H3_idempotent Healthy_def')
 
 lemmas Abs_prog_Rep_prog_Ncarrier= 
-  Abs_prog_Rep_prog_ndesign[folded Ncarrier_ndesigns]   
+  Abs_prog_Rep_prog_ndesign[folded Ncarrier_ndesigns]  
+  
+  
 end
