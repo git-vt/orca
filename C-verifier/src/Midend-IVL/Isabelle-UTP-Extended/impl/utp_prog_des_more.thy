@@ -86,10 +86,16 @@ lift_definition pframe_prog :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow>  
 lift_definition pantiframe_prog :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow>  '\<alpha> prog \<Rightarrow> '\<alpha> prog " is
   "antiframe\<^sub>D" unfolding frame\<^sub>D_def
   by rel_auto 
-    
+
 declare pframe_prog.rep_eq [prog_rep_eq]
-declare pantiframe_prog.rep_eq [prog_rep_eq]  
+declare pantiframe_prog.rep_eq [prog_rep_eq] 
   
+translations
+  "_frame x P" => "CONST pframe_prog x P"
+  "_frame (_salphaset (_salphamk x)) P" <= "CONST pframe_prog x P"
+  "_antiframe x P" => "CONST pantiframe_prog x P"
+  "_antiframe (_salphaset (_salphamk x)) P" <= "CONST pantiframe_prog x P"
+ 
 (*TODO: @Yakoub: Lift frame and anti-frame hoare rules*)   
 
 subsection{*Rep Abs and normal designs*}   

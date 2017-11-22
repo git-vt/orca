@@ -69,20 +69,6 @@ subsection \<open>Assignment Laws\<close>
 text \<open>In this section we introduce the algebraic laws of programming related to the assignment
       statement.\<close>
 
-lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; (P \<triangleleft> \<not> $b \<triangleright> Q)) =
-   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; Q)"
-  apply rel_simp
-  apply fastforce
-done
-
-lemma [urel_cond]:
-  "S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; (P \<triangleleft> $b \<triangleright> Q)) =
-   S \<turnstile> (\<lceil>true\<rceil>\<^sub>D \<turnstile> (\<lceil>R\<rceil>\<^sub>D \<and> $b\<acute>);; P)"
-  apply pred_simp
-  apply fastforce
-done
-
 lemma usubst_d_cancel [usubst]:
   assumes 1:"weak_lens v"
   shows "($v)\<lbrakk>\<lceil>expr\<rceil>\<^sub>D\<^sub></$v\<rbrakk> = \<lceil>expr\<rceil>\<^sub>D\<^sub><"
@@ -604,6 +590,26 @@ lemma assert_d_twice[udes_comp]: "(b\<^sub>\<bottom>\<^sub>D;; c\<^sub>\<bottom>
   apply (rel_simp)+
     apply blast
   done
+    
+subsection {*Refinement laws*}
+
+lemma cond_refine_des: 
+  assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
+  shows "(p \<turnstile> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
+  using assms by rel_blast
+    
+lemma seq_refine_unrest_des:
+  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
+  assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
+  shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
+  apply (insert assms)  
+  apply rel_auto
+   apply metis+ 
+  done
+    
+lemma skip_refine_des:
+  "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
+  by pred_auto   
 
 
 end

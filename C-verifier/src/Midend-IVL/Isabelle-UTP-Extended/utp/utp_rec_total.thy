@@ -110,7 +110,7 @@ lemma total_rec_utp_test:
      prefer 2
      apply pred_simp+      
   done
-term "\<guillemotleft>measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)\<guillemotright>"    
+ 
 lemma total_rec_test:
   "vwb_lens x \<Longrightarrow> 
    (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    

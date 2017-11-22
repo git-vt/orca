@@ -780,7 +780,8 @@ lemma pre_weak_rel:
  using assms
   by(rel_auto)
     
-lemma post_str_rel: "(p\<Rightarrow>q) \<sqsubseteq> P \<Longrightarrow> `q\<Rightarrow>r` \<Longrightarrow> (p\<Rightarrow>r) \<sqsubseteq> P"
+lemma post_str_rel: 
+  "(p\<Rightarrow>q) \<sqsubseteq> P \<Longrightarrow> `q\<Rightarrow>r` \<Longrightarrow> (p\<Rightarrow>r) \<sqsubseteq> P"
   by pred_blast
         
 lemma cond_refine_rel: 

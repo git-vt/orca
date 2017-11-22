@@ -39,7 +39,7 @@ lemma hoare_post_weak_d_t[hoare_des]:
 
 subsection {*Hoare and assertion logic*}
 
-lemma hoare_r_conj_d_t [hoare_des]: 
+lemma hoare_d_conj_d_t [hoare_des]: 
   assumes"\<lbrace>p\<rbrace>C\<lbrace>r\<rbrace>\<^sub>D" and "\<lbrace>p\<rbrace>C\<lbrace>s\<rbrace>\<^sub>D"
   shows "\<lbrace>p\<rbrace>C\<lbrace>r \<and> s\<rbrace>\<^sub>D"
   by (insert assms) rel_auto
@@ -89,29 +89,31 @@ lemma cond_d_hoare_d'_t [hoare_des]:
   assumes "\<lbrace>p\<rbrace>\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> C\<^sub>1\<lbrace>q\<rbrace>\<^sub>D" and "\<lbrace>p\<rbrace>\<lceil>\<not>b\<rceil>\<^sub>D\<^sub>< \<and> C\<^sub>2\<lbrace>q\<rbrace>\<^sub>D" 
   shows "\<lbrace>p\<rbrace>bif\<^sub>D b then C\<^sub>1 else C\<^sub>2 eif \<lbrace>q\<rbrace>\<^sub>D"
   by (insert assms, rel_auto) 
-
     
-subsection {*Helpers*}
-lemma cond_refine_des: 
-  assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
-  shows "(p \<turnstile> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
-  using assms by rel_blast
+lemma cond_d_hoare_d'_t':
+  assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>D\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>D\<close>
+  shows \<open>\<lbrace>p\<rbrace>bif\<^sub>D b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q \<or> s\<rbrace>\<^sub>D\<close>
+  by (insert assms, rel_auto) metis+
     
-lemma seq_refine_unrest_des:
-  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
-  assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
-  shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
-  apply (insert assms)  
-  apply rel_auto
-   apply metis+ 
-  done
-    
-lemma skip_refine_des:
-  "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
-  by pred_auto   
-
 subsection {*Hoare for recursion*}
 
+lemma mu_d_rec_hoare_d_t [hoare_des]:
+  assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
+  assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+  assumes induct_step:
+    "\<And> P. P is \<^bold>N \<Longrightarrow> \<lbrace>Pre\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
+  shows "\<lbrace>Pre\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
+  unfolding hoare_d_def 
+  thm normal_design_theory_continuous.weak.LFP_greatest  
+    find_theorems name:"mu_"(*TODO: implment normal_design_mu_refine_intro*)
+  apply (rule  design_mu_refine_intro)
+  
+   apply (simp add: ndesign_H1_H3) 
+    thm induct_step[unfolded hoare_d_def]
+    apply (rule induct_step[unfolded hoare_d_def])
+  apply pred_simp 
+  done
+    
 lemma mu_d_rec_hoare_d_t [hoare_des]:
   assumes WF: "wf R"
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
@@ -174,7 +176,7 @@ lemma frame_hoare_d_t_stronger[hoare_des]:
     
 subsection {*Hoare for While-loop*}   
 
-lemma while_hoare_r_t [hoare_des]:
+lemma while_hoare_d_t [hoare_des]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is H1"  
@@ -214,7 +216,19 @@ proof -
      unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
     by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
 qed
+  
+lemma while_hoare_d [hoare_safe]:
+  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>D"
+  shows "\<lbrace>p\<rbrace>while\<^sub>N b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>D"
+  using assms
+  apply (simp add: While_lfp_ndes_def )
+  thm normal_design_theory_continuous.weak.GFP_lowest  
+thm lfp_lowerbound
+   find_theorems name:"normal_design_theory_continuous." name:"LFP"
+  apply (rule_tac normal_design_theory_continuous.weak.LFP_greatest) 
+    apply(rel_auto)
 
+  done
 lemma while_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"

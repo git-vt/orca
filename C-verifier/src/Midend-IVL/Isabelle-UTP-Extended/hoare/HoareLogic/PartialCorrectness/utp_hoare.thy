@@ -159,7 +159,9 @@ lemma while_hoare_r [hoare_safe]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u"
   shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u"
   using assms
-  apply (simp add: while_def hoare_r_def)apply ( rule_tac lfp_lowerbound) apply(rel_auto)
+  apply (simp add: while_def hoare_r_def)
+  apply (rule_tac lfp_lowerbound) 
+  apply(rel_auto)
   done
 
 lemma while_hoare_r' [hoare_safe]:
@@ -168,12 +170,10 @@ lemma while_hoare_r' [hoare_safe]:
   using assms
   by (metis conj_comm hoare_r_conseq p_imp_p taut_true while_hoare_r)
 
-
 lemma while_invr_hoare_r  [hoare_safe]:
   assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>u" and "`pre \<Rightarrow> p`" and "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>post\<rbrace>\<^sub>u"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
-
 
 text {* Frame rule: If starting $S$ in a state satisfying $p establishes q$ in the final state, then
   we can insert an invariant predicate $r$ when $S$ is framed by $a$, provided that $r$ does not
