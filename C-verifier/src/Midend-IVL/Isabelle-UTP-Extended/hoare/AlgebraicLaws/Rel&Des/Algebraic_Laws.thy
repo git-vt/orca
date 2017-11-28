@@ -188,7 +188,7 @@ lemma assign_simultaneous:
   assumes  1: "vwb_lens v2"
   and      2: "v1 \<bowtie> v2"
   shows "(v1,v2 :== e, (&v2)) =  (v1 :== e)"
-  by (simp add: "1" "2" usubst_upd_comm usubst_upd_var_id)
+  by (simp add: 1 2 usubst_upd_comm usubst_upd_var_id)
 
 lemma assign_seq:
   assumes  1: "vwb_lens var2"

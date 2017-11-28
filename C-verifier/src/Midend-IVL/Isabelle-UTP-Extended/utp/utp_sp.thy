@@ -59,9 +59,9 @@ lemma wp_sp_sym:
 lemma it_is_pre_condition:"\<lbrace>C wp Q\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast    
 
-lemma it_is_the_weakest_pre:"`P \<Rightarrow> C wp Q`\<Longrightarrow>\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+lemma it_is_the_weakest_pre:"`P \<Rightarrow> C wp Q` = \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast  
-    
+
 lemma s_pre:"`P \<Rightarrow> C wp Q`=\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast     
 end  

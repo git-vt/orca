@@ -169,10 +169,10 @@ next
     unfolding xs\<^sub>1_def using 2
     by (metis Suc_pred diff_le_self le_less_trans take_hd_drop)
   have xs_butlast: \<open>xs\<^sub>1' = take (j - Suc 0) array\<close>
-    by (smt "2"(3) "2"(4) Suc_pred append1_eq_conv assms(2) diff_le_self le_less_trans take_hd_drop
+    by (smt 2(3) 2(4) Suc_pred append1_eq_conv assms(2) diff_le_self le_less_trans take_hd_drop
         xs\<^sub>1_def xs_last)
   have y: \<open>y = array ! (j - Suc 0)\<close>
-    by (metis (no_types, lifting) "2"(3) "2"(4) Cons_nth_drop_Suc One_nat_def Suc_pred assms(2)
+    by (metis (no_types, lifting) 2(3) 2(4) Cons_nth_drop_Suc One_nat_def Suc_pred assms(2)
         diff_le_self le_less_trans list.sel(1) nth_append_length take_hd_drop xs\<^sub>1_def xs_butlast
         xs_last)
   have xs\<^sub>1'_is_aaker: \<open>xs\<^sub>1' = take (j - Suc 0) (swap_at j array)\<close>
@@ -180,7 +180,7 @@ next
   have y_concat_xs\<^sub>2: \<open>y # xs\<^sub>2 = drop j (take (Suc i) (swap_at j array))\<close>
     using \<open>j > 0\<close>
     apply (auto simp: swap_at_def drop_take list_update_swap)
-    by (smt "2"(3) "2"(4) Cons_nth_drop_Suc Suc_diff_Suc drop_take drop_update_cancel le_less_trans
+    by (smt 2(3) 2(4) Cons_nth_drop_Suc Suc_diff_Suc drop_take drop_update_cancel le_less_trans
         length_list_update lessI nth_list_update_eq take_Suc_Cons xs\<^sub>2_def y)
   from 2 show \<open>sorted (take (j - Suc 0) (swap_at j array) @ drop j (take (Suc i) (swap_at j array)))\<close>
     by (fold xs\<^sub>1_def xs\<^sub>2_def xs_butlast xs\<^sub>1'_is_aaker y_concat_xs\<^sub>2) (simp add: xs_last)
@@ -188,66 +188,12 @@ next
     fix x
     assume \<open>x \<in> set (drop j (take (Suc i) (swap_at j array)))\<close>
     show \<open>swap_at j array!(j - Suc 0) < x\<close>
-      by (smt "2"(2) "2"(3) "2"(4) "2"(7) One_nat_def \<open>x \<in> set (drop j (take (Suc i) (swap_at j
-          array)))\<close> diff_le_self le_less_trans length_list_update nth_list_update_eq set_ConsD
-          swap_at_def xs\<^sub>2_def y y_concat_xs\<^sub>2)
+      by (smt 2(2) 2(3) 2(4) 2(7) One_nat_def \<open>x \<in> set (drop j (take (Suc i) (swap_at j array)))\<close>
+          diff_le_self le_less_trans length_list_update nth_list_update_eq set_ConsD swap_at_def
+          xs\<^sub>2_def y y_concat_xs\<^sub>2)
   }
 qed
 
-<<<<<<< .mine
-lemma outer_invr_step[vcg_simps]:
-  assumes \<open>inner_invr i j array old_array\<close>
-    and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
-  shows \<open>outer_invr (Suc i) array old_array\<close>
-  using assms unfolding inner_invr_def outer_invr_def Let_def
-  apply (erule_tac disjE1)
-   apply auto
-   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
-      min.absorb2 nth_take sorted.simps)
-  apply (drule (1) insert_with_sorted)
-    apply auto
-   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
-      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
-  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
-    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
-  by (auto simp: min_def)
-
-lemma outer_invr_final[vcg_dests]:
-  assumes \<open>outer_invr i array old_array\<close>
-      and \<open>\<not> i < length array\<close>
-    shows \<open>mset array = mset old_array\<close>
-      and \<open>sorted array\<close>
-  using assms unfolding outer_invr_def
-  by auto
-    
-||||||| .r524
-lemma outer_invr_step[vcg_simps]:
-  assumes \<open>inner_invr i j array old_array\<close>
-    and \<open>j = 0 \<or> \<not> array ! j < array ! (j - Suc 0)\<close>
-  shows \<open>outer_invr (Suc i) array old_array\<close>
-  using assms unfolding inner_invr_def outer_invr_def Let_def
-  apply (erule_tac disjE1)
-   apply auto
-   apply (metis Cons_nth_drop_Suc Suc_leI drop_0 length_greater_0_conv length_take less_imp_le
-      min.absorb2 nth_take sorted.simps)
-  apply (drule (1) insert_with_sorted)
-    apply auto
-   apply (smt One_nat_def diff_Suc_less last_conv_nth le_less_trans length_take list.size(3)
-      min.absorb2 not_le_imp_less not_less_iff_gr_or_eq nth_take)
-  using take_take[symmetric, where n = j and m = \<open>Suc i\<close> and xs = \<open>array\<close>]
-    id_take_nth_drop[where xs = \<open>take (Suc i) array\<close> and i = j]
-  by (auto simp: min_def)
-
-lemma outer_invr_final[vcg_dests]:
-  assumes \<open>outer_invr i array old_array\<close>
-      and \<open>\<not> i < length array\<close>
-    shows \<open>mset array = mset old_array\<close>
-      and \<open>sorted array\<close>
-  using assms unfolding outer_invr_def
-  by auto
-
-=======
->>>>>>> .r541
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>
       and \<open>vwb_lens array\<close> and \<open>array \<sharp> old_array\<close>

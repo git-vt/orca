@@ -129,7 +129,7 @@ method exp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule hoare_post_weak
 method solve_dests = safe?; simp?; drule vcg_dests; assumption?; (simp add: vcg_simps)?
 method solve_vcg = assumption|pred_simp?, (simp add: vcg_simps)?;(solve_dests; fail)?
 method vcg_hoare_rule = rule hoare_rules_extra|rule hoare_rules
-method exp_vcg_step = vcg_hoare_rule | solve_vcg; fail
+method exp_vcg_step = vcg_hoare_rule|solve_vcg; fail
 method exp_vcg = exp_vcg_pre, exp_vcg_step+
 
 end
