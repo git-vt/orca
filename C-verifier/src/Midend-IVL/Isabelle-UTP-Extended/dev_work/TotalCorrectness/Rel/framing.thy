@@ -5,7 +5,100 @@ imports
   "../../../../../Backend/VCG/VCG_rel_Floyd"
   "../../../utils/vcg_helpers"
 begin
+lemma blah1: 
+  assumes "vwb_lens g'" "vwb_lens l"
+   assumes  "l \<bowtie> g'" 
+   shows "vwb_lens  (g' +\<^sub>L l)" 
+   using assms 
+    by (simp add: lens_indep_sym plus_vwb_lens) 
 
+    
+ lemma blah12:
+  assumes "vwb_lens g" "vwb_lens g'" "vwb_lens l"
+  assumes "l \<bowtie> g"  " g = g'"
+    defines "gl \<equiv> g' +\<^sub>L l"
+  assumes "gl:[C] = C" 
+  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>u"
+  assumes "`r \<Rightarrow> p`"      
+  shows "\<lbrace>r\<rbrace> l:\<lbrakk>C\<rbrakk> \<lbrace>(\<exists> l \<bullet> q) \<and> (\<exists>g' \<bullet> r)\<rbrace>\<^sub>u"
+  using assms unfolding lens_indep_def
+
+   apply rel_auto 
+  apply (metis (no_types, lifting) vwb_lens_wb wb_lens.get_put)
+  apply pred_simp
+    apply (rename_tac a x)
+    apply (rule_tac x="get\<^bsub>g'\<^esub> a" in exI)
+  
+proof -
+  fix a :: 'b and x :: 'b
+  assume a1: "\<lbrakk>r\<rbrakk>\<^sub>e a"
+  assume a2: "vwb_lens l"
+  assume a3: "vwb_lens g'"
+  assume a4: "\<forall>\<sigma> v u. put\<^bsub>l\<^esub> (put\<^bsub>g'\<^esub> \<sigma> v) u = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> \<sigma> u) v"
+  assume a5: "\<lbrakk>C\<rbrakk>\<^sub>e (a, x)"
+  assume a6: "\<forall>a b. (\<exists>x. \<lbrakk>C\<rbrakk>\<^sub>e (a, x) \<and> b = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> a (get\<^bsub>l\<^esub> x)) (get\<^bsub>g'\<^esub> x)) = \<lbrakk>C\<rbrakk>\<^sub>e (a, b)"
+  obtain bb :: "'b \<Rightarrow> 'b \<Rightarrow> 'b" where
+    "\<forall>x0 x1. (\<exists>v2. \<lbrakk>C\<rbrakk>\<^sub>e (x1, v2) \<and> x0 = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x1 (get\<^bsub>l\<^esub> v2)) (get\<^bsub>g'\<^esub> v2)) = (\<lbrakk>C\<rbrakk>\<^sub>e (x1, bb x0 x1) \<and> x0 = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x1 (get\<^bsub>l\<^esub> (bb x0 x1))) (get\<^bsub>g'\<^esub> (bb x0 x1)))"
+    by moura
+  then have "\<lbrakk>C\<rbrakk>\<^sub>e (a, bb x a) \<and> x = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> a (get\<^bsub>l\<^esub> (bb x a))) (get\<^bsub>g'\<^esub> (bb x a))"
+    using a6 a5 by presburger
+  then show "\<lbrakk>r\<rbrakk>\<^sub>e (put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x (get\<^bsub>l\<^esub> a)) (get\<^bsub>g'\<^esub> a))"
+    using a4 a3 a2 a1 by (metis (no_types) mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
+qed
+term "{$g', $l}:[C] = C"  
+lemma
+  assumes "vwb_lens g" "vwb_lens g'" "vwb_lens l"
+  assumes "l \<bowtie> g" "g' \<subseteq>\<^sub>L g"
+    defines "gl \<equiv> g' +\<^sub>L l"
+  assumes "gl:[C] = C" 
+  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>u"
+  assumes "`r \<Rightarrow> p`"      
+  shows "\<lbrace>r\<rbrace> l:\<lbrakk>C\<rbrakk> \<lbrace>(\<exists> l \<bullet> q) \<and> (\<exists>g' \<bullet> r)\<rbrace>\<^sub>u"
+  using assms unfolding lens_indep_def
+
+   apply rel_auto 
+  apply (metis (no_types, lifting) vwb_lens_wb wb_lens.get_put)
+  apply pred_simp
+  term "lens_get (fst\<^sub>L ;\<^sub>L gl) a"
+        term "lens_get (Z ;\<^sub>L gl) a"
+        term "get\<^bsub>Z ;\<^sub>L g\<^esub> (put \<^bsub>Z ;\<^sub>L g\<^esub> a (get\<^bsub>g\<^esub> a))"
+        apply (rule_tac x="get\<^bsub> g'\<^esub> (put\<^bsub>g\<^esub> a (get\<^bsub>g\<^esub> x))" in exI) find_theorems "(?a = ?b) = (?b = ?a)"
+          
+        apply (subst (asm) eq_commute[of "get\<^bsub>_\<^esub> (get\<^bsub>g\<^esub> _)" "get\<^bsub>_\<^esub> (get\<^bsub>g\<^esub> _)"])
+        apply (simp) 
+        thm wb_lens.get_put [of Z ]  
+        apply (simp add: vwb_lens_wb wb_lens.get_put)  
+
+        oops    
+lemma
+  assumes "vwb_lens g" "vwb_lens g'" "vwb_lens l"
+  assumes "l \<bowtie> g'" 
+  assumes "{&g', &l}:[C] = C" 
+  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>u"
+  assumes "`r \<Rightarrow> p`"      
+  shows "\<lbrace>r\<rbrace> l:\<lbrakk>C\<rbrakk> \<lbrace>(\<exists> l \<bullet> q) \<and> (\<exists>g' \<bullet> r)\<rbrace>\<^sub>u"
+  using assms unfolding lens_indep_def
+
+   apply rel_auto 
+  apply (metis (no_types, lifting) vwb_lens_wb wb_lens.get_put)
+  apply pred_simp
+
+  apply (rule_tac x="get\<^bsub> g'\<^esub> a" in exI) sledgehammer
+proof -
+  fix a :: 'd and x :: 'd
+  assume a1: "\<lbrakk>r\<rbrakk>\<^sub>e a"
+  assume a2: "vwb_lens l"
+  assume a3: "\<lbrakk>C\<rbrakk>\<^sub>e (a, x)"
+  assume a4: "\<forall>a b. (\<exists>x. \<lbrakk>C\<rbrakk>\<^sub>e (a, x) \<and> b = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> a (get\<^bsub>l\<^esub> x)) (get\<^bsub>g'\<^esub> x)) = \<lbrakk>C\<rbrakk>\<^sub>e (a, b)"
+  assume a5: "\<forall>\<sigma> v u. put\<^bsub>l\<^esub> (put\<^bsub>g'\<^esub> \<sigma> v) u = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> \<sigma> u) v"
+  obtain dd :: "'d \<Rightarrow> 'd \<Rightarrow> 'd" where
+    "\<forall>x0 x1. (\<exists>v2. \<lbrakk>C\<rbrakk>\<^sub>e (x1, v2) \<and> x0 = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x1 (get\<^bsub>l\<^esub> v2)) (get\<^bsub>g'\<^esub> v2)) = (\<lbrakk>C\<rbrakk>\<^sub>e (x1, dd x0 x1) \<and> x0 = put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x1 (get\<^bsub>l\<^esub> (dd x0 x1))) (get\<^bsub>g'\<^esub> (dd x0 x1)))"
+    by moura
+  then have "put\<^bsub>\<lparr>lens_get = get\<^bsub>g'\<^esub>, lens_put = put\<^bsub>g'\<^esub>, \<dots> = lens.more g'\<rparr>\<^esub> (put\<^bsub>l\<^esub> a (get\<^bsub>l\<^esub> (dd x a))) (get\<^bsub>g'\<^esub> (dd x a)) = x"
+    using a4 a3 by (metis (no_types) lens.surjective)
+  then show "\<lbrakk>r\<rbrakk>\<^sub>e (put\<^bsub>g'\<^esub> (put\<^bsub>l\<^esub> x (get\<^bsub>l\<^esub> a)) (get\<^bsub>g'\<^esub> a))"
+    using a5 a2 a1 by (metis (no_types) assms(2) lens.surjective mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
+qed       
 definition \<open>EXINV l P \<equiv> \<^bold>\<exists>st \<bullet> P\<lbrakk>(\<guillemotleft>st\<guillemotright> \<oplus> &\<Sigma> on &l)/&\<Sigma>\<rbrakk>\<close>
 
 subsection \<open>Modification is existential\<close>
