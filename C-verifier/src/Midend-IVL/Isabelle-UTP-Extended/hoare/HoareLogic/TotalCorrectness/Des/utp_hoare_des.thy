@@ -97,7 +97,100 @@ lemma cond_d_hoare_d'_t':
     
 subsection {*Hoare for recursion*}
 
-lemma mu_d_rec_hoare_d_t [hoare_des]:
+lemma ndesign_mu_refine_intro:
+  assumes "(C \<turnstile>\<^sub>n S) \<sqsubseteq> F(C \<turnstile>\<^sub>n S)" "` \<lceil>C\<rceil>\<^sub>D\<^sub>< \<Rightarrow> (\<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F)`"
+  shows "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<mu>\<^sub>N F"
+proof -
+   from assms have "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<nu>\<^sub>N F"
+     by (simp add: ndesign_H1_H3 normal_design_theory_continuous.GFP_upperbound)
+  with assms show ?thesis
+    by (rel_auto, metis (no_types, lifting))
+qed
+
+
+lemma H3_design:
+  assumes  "$ok\<acute> \<sharp> Q"
+  shows "H3(\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) = \<lceil>P\<rceil>\<^sub>< \<turnstile> Q"
+  using assms
+  by rel_blast
+    
+lemma design_is_H1_H3 [closure]:
+  "$ok\<acute> \<sharp> Q \<Longrightarrow> (\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) is \<^bold>N"
+  by (simp add: H1_design H3_design Healthy_def')
+
+lemma H3_rdesign:
+  "H3(\<lceil>P\<rceil>\<^sub>< \<turnstile>\<^sub>r Q) = \<lceil>P\<rceil>\<^sub>< \<turnstile>\<^sub>r Q"
+  by rel_blast
+thm ndesign_refine_intro 
+thm rdesign_refine_intro
+(*this theorem gives the intuition that I want *)
+
+lemma reverse_impl_refine:
+  "`Q2 \<Rightarrow> Q1`  = (Q1 \<sqsubseteq>  Q2)"
+  by pred_auto
+thm ndesign_refine_intro[simplified reverse_impl_refine]
+thm H1_H3_is_normal_design 
+  thm H1_H2_is_rdesign  
+  thm H1_H3_is_design
+  find_theorems 
+lemma 123:"\<^bold>N(P) = P \<Longrightarrow> \<^bold>H(P) = P" 
+  using H1_H3_impl_H2[unfolded Healthy_def]
+  by auto
+    
+lemma H1_H2_mu_refine_intro: "\<^bold>N(P) = (\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D (P))"
+  thm H1_H3_impl_H2[unfolded Healthy_def, of P]
+   apply (subst  H1_H3_impl_H2[unfolded Healthy_def, of P] ) 
+  apply (subst H1_H3_is_rdesign)
+  apply (simp add: H1_idem Healthy_def')
+  apply (simp add: H1_H3_commute H3_idem Healthy_def)
+  oops
+    
+lemma H2_split:
+  shows "H2(P) = (P\<^sup>f \<or> (P\<^sup>t \<and> $ok\<acute>))"
+   unfolding  H2_def 
+   by (simp add: H2_def J_split)
+ thm skip_d_ndes_def 
+ thm J_def
+ find_theorems name:"design" name:"def"
+
+lemma "P;;J =(P\<^sup>f \<or> (P\<^sup>t \<and> $ok\<acute>))"
+  apply rel_simp   apply (metis (full_types))
+done
+    
+lemma "H3(P) =  (P\<^sup>f  \<or> (P\<^sup>t  \<and> $ok \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u $\<Sigma>\<^sub>D))" 
+  apply rel_simp  sledgeha
+    
+theorem H1_H3_eq_rdesign:
+  "\<^bold>N(P) =(\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D (P))"
+proof -
+  have "\<^bold>N(P) = ($ok \<Rightarrow> H3(P))"
+    by (simp add: H1_def Healthy_def')
+  also have "... = ($ok \<Rightarrow> (P\<^sup>f \<or> (P\<^sup>t \<and> $ok\<acute>)))"
+    by (metis H2_split)
+  also have "... = ($ok \<and> (\<not> P\<^sup>f) \<Rightarrow> $ok\<acute> \<and> P\<^sup>t)"
+    by (pred_auto)
+  also have "... = ($ok \<and> (\<not> P\<^sup>f) \<Rightarrow> $ok\<acute> \<and> $ok \<and> P\<^sup>t)"
+    by (pred_auto)
+  also have "... = ($ok \<and> \<lceil>pre\<^sub>D(P)\<rceil>\<^sub>D \<Rightarrow> $ok\<acute> \<and> $ok \<and> \<lceil>post\<^sub>D(P)\<rceil>\<^sub>D)"
+    by (simp add: ok_post ok_pre)
+  also have "... = ($ok \<and> \<lceil>pre\<^sub>D(P)\<rceil>\<^sub>D \<Rightarrow> $ok\<acute> \<and> \<lceil>post\<^sub>D(P)\<rceil>\<^sub>D)"
+    by (pred_auto)
+  also have "... =  \<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D(P)"
+    sorry
+  finally show ?thesis .
+qed
+  
+lemma 
+  assumes "P is \<^bold>N"
+  assumes "P \<sqsubseteq> F P"
+  assumes "`\<lceil>pre\<^sub>D(P)\<rceil>\<^sub>D  \<Rightarrow> \<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F`"  
+  shows   "P \<sqsubseteq> \<mu>\<^sub>N F" 
+  thm utp_designs.H1_H2_mu_refine_intro
+  thm  H1_H2_eq_rdesign 
+    thm H1_H3_eq_design
+  thm H1_H3_impl_H2[THEN H1_H2_eq_rdesign]  
+
+lemma mu_nd_rec_hoare_d_partial [hoare_des]:
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
   assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
   assumes induct_step:
@@ -106,7 +199,7 @@ lemma mu_d_rec_hoare_d_t [hoare_des]:
   unfolding hoare_d_def 
   thm normal_design_theory_continuous.weak.LFP_greatest  
     find_theorems name:"mu_"(*TODO: implment normal_design_mu_refine_intro*)
-  apply (rule  design_mu_refine_intro)
+  apply (rule utp_designs.H1_H2_mu_refine_intro[OF utp_designs.H1_H3_impl_H2])
   
    apply (simp add: ndesign_H1_H3) 
     thm induct_step[unfolded hoare_d_def]

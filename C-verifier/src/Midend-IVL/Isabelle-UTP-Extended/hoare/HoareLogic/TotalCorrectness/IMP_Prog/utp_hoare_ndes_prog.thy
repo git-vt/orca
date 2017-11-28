@@ -160,7 +160,28 @@ lemma frame_hoare_p_t_stronger[hoare_prog]:
   shows "\<lbrace>p \<and> r\<rbrace> a:\<lbrakk>P\<rbrakk> \<lbrace>q \<and> r\<rbrace>\<^sub>P"
   using assms 
   by (simp add: prog_rep_eq hoare_des)
-  
+lemma blah1: 
+  assumes "vwb_lens g'" "vwb_lens l"
+   assumes  "l \<bowtie> g'" 
+   shows "vwb_lens  (g' +\<^sub>L l)" 
+   using assms 
+    by (simp add: lens_indep_sym plus_vwb_lens) 
+
+    
+lemma
+  assumes "vwb_lens g" "vwb_lens g'" "vwb_lens l"
+  assumes "l \<bowtie> g" "g' \<subseteq>\<^sub>L g"
+    defines "gl \<equiv> g' +\<^sub>L l"
+  assumes "gl:[C] = C" 
+  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>P"
+  assumes "`r \<Rightarrow> p`"      
+  shows "\<lbrace>r\<rbrace> l:\<lbrakk>C\<rbrakk> \<lbrace>(\<exists> l \<bullet> q) \<and> (\<exists>g' \<bullet> r)\<rbrace>\<^sub>P"
+  using assms unfolding lens_indep_def
+  apply (simp add: prog_rep_eq )
+   apply rel_auto 
+  apply (metis (no_types, lifting) vwb_lens_wb wb_lens.get_put)
+
+ oops
 subsection {*Hoare for while iteration*}   
 
 lemma while_invr_hoare_p_t [hoare_prog]:
@@ -181,5 +202,6 @@ lemma while_invr_vrt_hoare_p_t [hoare_des]:
   unfolding pwhile_inv_prog_def
   by (simp add: prog_rep_eq while_hoare_ndesign_t[unfolded While_inv_ndes_def, OF WF I0  Rep_prog_H1_H3_closed[THEN H1_H3_impl_H2, THEN H1_H2_impl_H1] induct_step[unfolded prog_rep_eq] PHI])
 
+    
 
 end
