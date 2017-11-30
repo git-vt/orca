@@ -7,7 +7,6 @@ imports
   "~~/src/HOL/Library/Multiset"
 begin
 recall_syntax \<comment> \<open>Fixes notation issue with inclusion of HOL libraries.\<close>
- (*TODO @Yakoub: Fix the F** of the priorities of the syntax*)
 
 subsection \<open>Notation\<close>
 
@@ -15,7 +14,7 @@ text \<open>We need multisets for concise list invariants for sorting. Also, int
 sometimes needed as some loop methods mix array indices and loop variables (which sometimes rely on
 going below 0 for termination). Bitwise operations and record access/update are included for
 completeness.\<close>
-  
+
 text \<open>A helper function for record updating.\<close>
 lift_definition rec_update_wrapper :: \<open>('a, '\<alpha>) uexpr \<Rightarrow> ('a \<Rightarrow> 'a, '\<alpha>) uexpr\<close> is
   \<open>\<lambda>v s _. v s\<close> .
@@ -39,22 +38,22 @@ syntax
   "_ubu_neg"    :: \<open>(nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr \<Rightarrow> (nat, '\<alpha>) uexpr\<close>	 ("-\<^bsub>u'/_\<^esub> _" [200, 150] 150)
 
 translations
-  "_umset" == "CONST uop CONST mset"
-  "_uint" == "CONST uop CONST int"
-  "_unat" == "CONST uop CONST nat"
-  "f\<lparr>kf\<rparr>\<^sub>r" => "CONST uop kf f"
-  "f(k \<mapsto> v)\<^sub>r" => "CONST bop k (CONST rec_update_wrapper v) f"
-  "_ubs_and" == "CONST bop (CONST s_bitop (op AND))"
-  "_ubu_and" == "CONST bop (CONST u_bitop (op AND))"
-  "_ubs_or" == "CONST bop (CONST s_bitop (op OR))"
-  "_ubu_or" == "CONST bop (CONST u_bitop (op OR))"
-  "_ubs_lsh" == "CONST trop CONST s_lsh"
-  "_ubu_lsh" == "CONST trop CONST u_lsh"
-  "_ubs_rsh" == "CONST trop CONST s_rsh"
-  "_ubu_rsh" == "CONST trop CONST u_rsh"
-  "_ubs_not" == "CONST bop CONST s_not"
-  "_ubu_not" == "CONST bop CONST u_not"
-  "_ubu_neg" == "CONST bop CONST u_neg"
+  "_umset" \<rightleftharpoons> "CONST uop CONST mset"
+  "_uint" \<rightleftharpoons> "CONST uop CONST int"
+  "_unat" \<rightleftharpoons> "CONST uop CONST nat"
+  "f\<lparr>kf\<rparr>\<^sub>r" \<rightharpoonup> "CONST uop kf f"
+  "f(k \<mapsto> v)\<^sub>r" \<rightharpoonup> "CONST bop k (CONST rec_update_wrapper v) f"
+  "_ubs_and" \<rightleftharpoons> "CONST bop (CONST s_bitop (op AND))"
+  "_ubu_and" \<rightleftharpoons> "CONST bop (CONST u_bitop (op AND))"
+  "_ubs_or" \<rightleftharpoons> "CONST bop (CONST s_bitop (op OR))"
+  "_ubu_or" \<rightleftharpoons> "CONST bop (CONST u_bitop (op OR))"
+  "_ubs_lsh" \<rightleftharpoons> "CONST trop CONST s_lsh"
+  "_ubu_lsh" \<rightleftharpoons> "CONST trop CONST u_lsh"
+  "_ubs_rsh" \<rightleftharpoons> "CONST trop CONST s_rsh"
+  "_ubu_rsh" \<rightleftharpoons> "CONST trop CONST u_rsh"
+  "_ubs_not" \<rightleftharpoons> "CONST bop CONST s_not"
+  "_ubu_not" \<rightleftharpoons> "CONST bop CONST u_not"
+  "_ubu_neg" \<rightleftharpoons> "CONST bop CONST u_neg"
 
 subsection \<open>Extra stuff to work more-arg functions into UTP\<close>
 
@@ -73,10 +72,10 @@ lift_definition sepop ::
    ('a, '\<alpha>) uexpr \<Rightarrow> ('b, '\<alpha>) uexpr \<Rightarrow> ('c, '\<alpha>) uexpr \<Rightarrow> ('d, '\<alpha>) uexpr \<Rightarrow> ('e, '\<alpha>) uexpr \<Rightarrow>
    ('f, '\<alpha>) uexpr \<Rightarrow> ('g, '\<alpha>) uexpr \<Rightarrow> ('h, '\<alpha>) uexpr\<close>
   is \<open>\<lambda>f u v w x y z a b. f (u b) (v b) (w b) (x b) (y b) (z b) (a b)\<close> .
-update_uexpr_rep_eq_thms \<comment> \<open>Necessary to get the above utilized by {pred,rel}_{auto,simp}\<close>
+update_uexpr_rep_eq_thms \<comment> \<open>Necessary to get the above utilized by \{pred,rel\}\_\{auto,simp\}\<close>
 
 text \<open>The below lemmas do not seem useful in general but are included for completeness.\<close>
-lemma qiop_ueval [ueval]: \<open>\<lbrakk>qiop f v x y z w\<rbrakk>\<^sub>eb = f (\<lbrakk>v\<rbrakk>\<^sub>eb) (\<lbrakk>x\<rbrakk>\<^sub>eb) (\<lbrakk>y\<rbrakk>\<^sub>eb) (\<lbrakk>z\<rbrakk>\<^sub>eb) (\<lbrakk>w\<rbrakk>\<^sub>eb)\<close>
+lemma qiop_ueval [ueval]: \<open>\<lbrakk>qiop f v x y z w\<rbrakk>\<^sub>e b = f (\<lbrakk>v\<rbrakk>\<^sub>e b) (\<lbrakk>x\<rbrakk>\<^sub>e b) (\<lbrakk>y\<rbrakk>\<^sub>e b) (\<lbrakk>z\<rbrakk>\<^sub>e b) (\<lbrakk>w\<rbrakk>\<^sub>e b)\<close>
   by transfer simp
 
 lemma subst_qiop [usubst]: \<open>\<sigma> \<dagger> qiop f t u v w x = qiop f (\<sigma> \<dagger> t) (\<sigma> \<dagger> u) (\<sigma> \<dagger> v) (\<sigma> \<dagger> w) (\<sigma> \<dagger> x)\<close>
@@ -93,7 +92,7 @@ lemma lit_qiop_simp [lit_simps]:
   \<open>\<guillemotleft>i x y z u t\<guillemotright> = qiop i \<guillemotleft>x\<guillemotright> \<guillemotleft>y\<guillemotright> \<guillemotleft>z\<guillemotright> \<guillemotleft>u\<guillemotright> \<guillemotleft>t\<guillemotright>\<close>
   by transfer simp
 
-lemma sxop_ueval [ueval]: \<open>\<lbrakk>sxop f v x y z w t\<rbrakk>\<^sub>eb = f (\<lbrakk>v\<rbrakk>\<^sub>eb) (\<lbrakk>x\<rbrakk>\<^sub>eb) (\<lbrakk>y\<rbrakk>\<^sub>eb) (\<lbrakk>z\<rbrakk>\<^sub>eb) (\<lbrakk>w\<rbrakk>\<^sub>eb) (\<lbrakk>t\<rbrakk>\<^sub>eb)\<close>
+lemma sxop_ueval [ueval]: \<open>\<lbrakk>sxop f v x y z w t\<rbrakk>\<^sub>e b = f (\<lbrakk>v\<rbrakk>\<^sub>eb) (\<lbrakk>x\<rbrakk>\<^sub>eb) (\<lbrakk>y\<rbrakk>\<^sub>eb) (\<lbrakk>z\<rbrakk>\<^sub>eb) (\<lbrakk>w\<rbrakk>\<^sub>eb) (\<lbrakk>t\<rbrakk>\<^sub>eb)\<close>
   by transfer simp
 
 lemma subst_sxop [usubst]:

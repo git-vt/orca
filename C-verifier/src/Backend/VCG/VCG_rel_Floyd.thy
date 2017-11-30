@@ -94,7 +94,7 @@ syntax
   "_nu_annot" :: \<open>pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<nu> _ [_] \<bullet> _" [0, 10] 10)
 
 translations
-  "\<nu> X [P] \<bullet> p" == "CONST annot_rec P (\<lambda>X. p)"
+  "\<nu> X [P] \<bullet> p" \<rightleftharpoons> "CONST annot_rec P (\<lambda>X. p)"
 
 lemma nu_hoare_r(* [hoare_rules] *):
   assumes PRE: \<open>`P' \<Rightarrow> P`\<close>
