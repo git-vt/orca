@@ -3,7 +3,7 @@ theory utp_hoare_ndes_prog
 imports "../../../AlgebraicLaws/IMP_Prog/algebraic_laws_prog"
 
 begin
-section {*Hoare logic for designs*}  
+section {*Hoare logic for programs*}  
 named_theorems hoare_prog
 
 subsection {*Hoare triple definition*}
@@ -68,9 +68,7 @@ lemma assigns_p_hoare_p'_t [hoare_prog]:
   by (simp add: prog_rep_eq hoare_des)
 
 lemma assigns_p_floyd_p_t [hoare_prog]:
-  assumes \<open>vwb_lens x\<close>
-  shows \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>P\<close>
-  using assms
+  \<open>\<lbrace>\<guillemotleft>vwb_lens x\<guillemotright>\<and> p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>P\<close>
   by (simp add: prog_rep_eq hoare_des)
 
 subsection {*Hoare for Sequential Composition*}
@@ -169,19 +167,24 @@ lemma blah1:
 
     
 lemma
-  assumes "vwb_lens g" "vwb_lens g'" "vwb_lens l"
-  assumes "l \<bowtie> g" "g' \<subseteq>\<^sub>L g"
-    defines "gl \<equiv> g' +\<^sub>L l"
-  assumes "gl:[C] = C" 
-  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>P"
-  assumes "`r \<Rightarrow> p`"      
+  assumes 1:"vwb_lens g" 
+  assumes 2:"vwb_lens g'" 
+  assumes 3:"vwb_lens l"
+  assumes 4:"l \<bowtie> g" 
+  assumes 8:"g' \<subseteq>\<^sub>L g"
+  assumes 5:"{&g', &l}:[C] = C" 
+  assumes 6:"\<lbrace>p\<rbrace>C\<lbrace>q\<rbrace>\<^sub>P"
+  assumes 7:"`r \<Rightarrow> p`"     
   shows "\<lbrace>r\<rbrace> l:\<lbrakk>C\<rbrakk> \<lbrace>(\<exists> l \<bullet> q) \<and> (\<exists>g' \<bullet> r)\<rbrace>\<^sub>P"
-  using assms unfolding lens_indep_def
+  using 1 2 3 4 5 6 7 unfolding lens_indep_def
   apply (simp add: prog_rep_eq )
    apply rel_auto 
   apply (metis (no_types, lifting) vwb_lens_wb wb_lens.get_put)
-
- oops
+ apply (rule_tac x="get\<^bsub> g'\<^esub> more" in exI) using 8 4
+  by (smt assms(1) assms(2) assms(3) lens_get_put_quasi_commute lens_put_of_quotient mwb_lens.put_put vwb_lens.put_eq vwb_lens_mwb)
+ oops a pply (smt lens.surjective mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
+  done
+    
 subsection {*Hoare for while iteration*}   
 
 lemma while_invr_hoare_p_t [hoare_prog]:
@@ -199,9 +202,35 @@ lemma while_invr_vrt_hoare_p_t [hoare_des]:
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
   shows "\<lbrace>Pre\<rbrace>INVR I VRT \<guillemotleft>R\<guillemotright>  WHILE b DO body OD\<lbrace>Post\<rbrace>\<^sub>P"
-  unfolding pwhile_inv_prog_def
   by (simp add: prog_rep_eq while_hoare_ndesign_t[unfolded While_inv_ndes_def, OF WF I0  Rep_prog_H1_H3_closed[THEN H1_H3_impl_H2, THEN H1_H2_impl_H1] induct_step[unfolded prog_rep_eq] PHI])
 
-    
+lemma while_invr_vrt_hoare_p_t' [hoare_des]:
+  assumes WF: "`uop wf R`"
+  assumes I0: "`Pre \<Rightarrow> I`"
+  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>uR\<rbrace>\<^sub>P"  
+  assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
+  shows "\<lbrace>Pre\<rbrace>INVR I VRT R WHILE b DO body OD\<lbrace>Post\<rbrace>\<^sub>P"
+  unfolding pwhile_inv_vrt_prog_def
+  apply (simp add: prog_rep_eq)
+  unfolding  hoare_d_def While_lfp_ndes_def
+  apply (rule ndesign_mu_wf_refine_intro[OF _ mono_Monotone_utp_order[OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b ]])
+  using WF apply rel_blast 
+
+  by (simp add: prog_rep_eq while_hoare_ndesign_t[unfolded While_inv_ndes_def, OF WF I0  Rep_prog_H1_H3_closed[THEN H1_H3_impl_H2, THEN H1_H2_impl_H1] induct_step[unfolded prog_rep_eq] PHI])
+
+term "`uop wf R`"    
+section {*VCG*} 
+lemma increment_method: 
+ "\<lbrace>\<guillemotleft>vwb_lens x\<guillemotright> \<and> \<guillemotleft>vwb_lens y\<guillemotright> \<and>&y >\<^sub>u 0\<rbrace>
+    x :== 0 ; 
+    INVR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
+    VRT uop measure (\<lambda>_ \<bullet> (&y + 1) - &x) 
+    WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
+  \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
+  apply (rule hoare_post_weak_p_t)
+   apply (rule seq_hoare_p_t)
+    apply (rule assigns_p_floyd_p_t)
+oops
+find_theorems name:"H1_H2_impl_"    
 
 end

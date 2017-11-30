@@ -611,5 +611,5 @@ lemma skip_refine_des:
   "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
   by pred_auto   
 
-
+find_theorems name:"design_theory_continuous.LFP_lemma3"
 end
