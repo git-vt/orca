@@ -1,7 +1,15 @@
 theory utp_rec_total_des
   imports "../hoare/AlgebraicLaws/Design/Algebraic_laws_design"
 begin
+  
+lemma Hcarrier_hdesigns:(*This should be generated automatically in utp_theory*)
+  "\<H>\<^bsub>DES\<^esub> P = \<^bold>H P"
+  by (simp add: des_hcond_def)
 
+lemma is_Hcarrier_is_hdesigns:(*This should be generated automatically in utp_theory*)
+  "(P is \<H>\<^bsub>DES\<^esub>) = (P is \<^bold>H)" 
+  by (simp add: des_hcond_def)
+    
 lemma Ncarrier_ndesigns:(*This should be generated automatically in utp_theory*)
   "\<H>\<^bsub>NDES\<^esub> P = \<^bold>N P"
   by (simp add: ndes_hcond_def)
@@ -11,31 +19,36 @@ lemma is_Ncarrier_is_ndesigns:(*This should be generated automatically in utp_th
   by (simp add: ndes_hcond_def)
     
 lemma mu_design_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
-  "\<mu>\<^sub>D B is \<H>\<^bsub>DES\<^esub>"    
-  by (metis (no_types) Healthy_def' des_hcond_def design_theory_continuous.LFP_closed)
-
+  "\<mu>\<^sub>D B is \<H>\<^bsub>DES\<^esub>"
+  by (simp add: is_Hcarrier_is_hdesigns)
 
 lemma mu_normal_design_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
   "\<mu>\<^sub>N B is \<H>\<^bsub>NDES\<^esub>"
-  by (metis (no_types) Healthy_def' ndes_hcond_def normal_design_theory_continuous.LFP_closed) 
+  by (simp add: is_Ncarrier_is_ndesigns)
+    
+lemma design_is_healthy_DES_intro:
+  "$ok\<acute> \<sharp> P \<Longrightarrow> P \<turnstile> Q is \<H>\<^bsub>DES\<^esub>" 
+proof -
+  assume 1:"$ok\<acute> \<sharp> P" 
+  have H_DES_is_H1_H2: "((P \<turnstile> Q is \<H>\<^bsub>DES\<^esub>) = (P \<turnstile> Q is \<^bold>H))"
+    unfolding Healthy_def 
+    by (simp add: des_hcond_def)
+  then show ?thesis unfolding H2_def Healthy_def
+    by (simp add: H1_distrib_left_J H1_design J_left_unit_H1_design_intro[OF 1])
+qed    
 
-lemma design_is_healthy_des:"$ok\<acute> \<sharp> Pre \<Longrightarrow> Pre \<turnstile> Post is \<H>\<^bsub>DES\<^esub>" 
-  apply rel_simp 
-  apply fastforce
-done    
-
-lemma rdesign_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
+lemma rdesign_is_healthy_DES[simp]: (*This should be generated automatically in utp_theory*)
   "Pre \<turnstile>\<^sub>r Post is \<H>\<^bsub>DES\<^esub>"
-  by (simp add: rdesign_def design_is_healthy_des unrest)  
-
-lemma ndesign_is_healthy_des[simp]: (*This should be generated automatically in utp_theory*)
+  unfolding des_hcond_def using rdesign_is_H1_H2
+  by assumption
+    
+lemma ndesign_is_healthy_NDES[simp]: (*This should be generated automatically in utp_theory*)
   "Pre \<turnstile>\<^sub>n Post is \<H>\<^bsub>NDES\<^esub>"
-  apply rel_simp 
-  apply fastforce
-done
+   unfolding ndes_hcond_def using ndesign_H1_H3
+  by assumption
     
 lemma Mono_utp_orderD: (*This should be generated automatically in utp_theory*)
-  assumes M: "Mono\<^bsub>utp_order H\<^esub> B"
+  assumes "Mono\<^bsub>utp_order H\<^esub> B"
   and     "x is H"
   and     "y is H"
   and     "y \<sqsubseteq> x"    
@@ -53,29 +66,28 @@ lemma  design_mu_wf_refine_intro:
   shows "(Pre \<turnstile> Post) \<sqsubseteq> \<mu>\<^sub>D B"            
 proof -   
   {
-  fix st
-  have "(Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<mu>\<^sub>D B" 
-    using WF proof (induction rule: wf_induct_rule)
-    case (less st)
-    hence 0: "(Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<mu>\<^sub>D B"
-      by rel_blast
-    from M H design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
-    have 1: "\<mu>\<^sub>D B \<sqsubseteq>  B (\<mu>\<^sub>D B)"
-      by blast
-    from 0 1 have 2:"(Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile> Post \<sqsubseteq> B (\<mu>\<^sub>D B)"
-      by simp
-    have 3: "B ((Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile> Post) \<sqsubseteq> B (\<mu>\<^sub>D B)"
-      apply (rule Mono_utp_orderD [OF M _ _ 0], simp)
-      using Okey1
-      apply rel_simp
-      apply fastforce
-    done    
-    have 4:"(Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<dots>" 
-      by (rule induct_step)
-    show ?case
-      using order_trans[OF 3 4] Okey1 H M design_theory_continuous.LFP_lemma2 dual_order.trans mono_Monotone_utp_order 
-      by blast
-  qed
+    fix st
+    have "(Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<mu>\<^sub>D B" 
+      using WF proof (induction rule: wf_induct_rule)
+      case (less st)
+      hence 0: "(Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<mu>\<^sub>D B"
+        by rel_blast
+      from M H design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
+      have 1: "\<mu>\<^sub>D B \<sqsubseteq>  B (\<mu>\<^sub>D B)"
+        by blast
+      from 0 1 have 2:"(Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile> Post \<sqsubseteq> B (\<mu>\<^sub>D B)"
+        by simp
+      have 3: "B ((Pre \<and> (\<lceil>E\<rceil>\<^sub>D\<^sub><, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile> Post) \<sqsubseteq> B (\<mu>\<^sub>D B)"
+      proof (rule Mono_utp_orderD[OF M "mu_design_is_healthy_des" "design_is_healthy_DES_intro" 0], goal_cases)
+        case 1
+        then show ?case by (simp add: Okey1 unrest)
+      qed  
+      have 4:"(Pre \<and> \<lceil>E\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile> Post \<sqsubseteq> \<dots>" 
+        by (rule induct_step)
+      show ?case
+        using order_trans[OF 3 4] Okey1 H M design_theory_continuous.LFP_lemma2 dual_order.trans mono_Monotone_utp_order 
+        by blast
+    qed
   }
   thus ?thesis
     by pred_simp

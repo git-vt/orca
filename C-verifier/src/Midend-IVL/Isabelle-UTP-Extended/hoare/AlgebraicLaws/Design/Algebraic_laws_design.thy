@@ -377,6 +377,13 @@ lemma H1_distrib_left_design:
   "H1 (P ;; (Q\<^sub>1 \<turnstile> Q\<^sub>2)) = (H1 P ;; (Q\<^sub>1 \<turnstile> Q\<^sub>2))"
   by rel_auto 
     
+lemma J_left_unit_H1_design_intro:
+  "$ok\<acute> \<sharp> P \<Longrightarrow> ((P \<turnstile> Q) ;; J) = (P \<turnstile> Q)"
+proof (rel_simp, goal_cases)
+  case (1 ok\<^sub>v more ok\<^sub>v' morea)
+  then show ?case by fastforce
+qed  
+
 lemma H1_distrib_left_rdesign:
   "H1 (P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) = (H1 P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2))"
   by rel_auto 
@@ -777,7 +784,7 @@ next
   then show ?case using assms(3) unfolding ndesign_def rdesign_def by assumption
 next
   case 4
-  then show ?case using assms(4) unfolding ndesign_def rdesign_def  by assumption
+  then show ?case using assms(4) unfolding ndesign_def rdesign_def by assumption
 qed
 
 lemma seq_refine_unrest_ndesign:
