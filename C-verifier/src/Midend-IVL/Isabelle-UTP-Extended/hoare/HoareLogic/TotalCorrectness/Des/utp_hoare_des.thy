@@ -233,14 +233,29 @@ lemma while_hoare_ndesign_t [hoare_des]:
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H" 
-  proof (rule weaker_if_d_seq_r_H1_H3_closed[OF BH])
-    show "SKIP\<^sub>D is \<^bold>N" by rel_auto
-  qed 
-  from mono_Monotone_utp_order [OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b body SKIP\<^sub>D] H
-    normal_design_theory_continuous.LFP_weak_unfold  
+    by(rule weaker_if_d_seq_r_H1_H3_closed[OF BH skip_d_is_H1_H3])
+  from mono_Monotone_utp_order[OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b body SKIP\<^sub>D] 
   have M_des: "Mono\<^bsub>uthy_order NDES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
     by simp
   have *:"(I \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>  \<sqsubseteq> \<mu>\<^sub>N (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif))"
+  proof (induction rule: ndesign_mu_wf_refine_intro [where Pre="I" and E = "E", OF WF M_des H])
+    case (1 e)
+    have seq_left_part: "(b \<and> I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n \<lceil>I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>> \<sqsubseteq> body"
+       proof (induction rule: order_trans[OF induct_step[unfolded hoare_d_def, where st = e]])
+         case 1
+         then show ?case by simp 
+       qed 
+    have seq_right_part: 
+        "(I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> (I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>" 
+      by simp
+    from seq_left_part seq_right_part
+      have seq_both_parts: "(b \<and> I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> body ;; ((I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>)"
+        by (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>e\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ],simp_all add: unrest)
+       have if_false_part: "(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> SKIP\<^sub>D"     
+        using PHI by rel_blast
+      
+    then show ?case sorry
+  qed 
   proof (rule ndesign_mu_wf_refine_intro[where Pre="I" and E = "E", OF WF M_des H])
     { fix st
       have if_false_part: "(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> SKIP\<^sub>D"     

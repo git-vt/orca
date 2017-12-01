@@ -73,6 +73,10 @@ lemma simpl_pre_skip_d_var:
   shows "($x \<and> SKIP\<^sub>D =\<^sub>u $ok) = (SKIP\<^sub>D =\<^sub>u $ok \<and> $x\<acute>)"
   by rel_auto
 
+lemma skip_d_is_H1_H2:
+  "SKIP\<^sub>D is \<^bold>H" 
+  by rel_auto
+
 lemma skip_d_post_left_unit[udes_comp]:
   "(S \<turnstile> (SKIP\<^sub>D;; Q)) = (S \<turnstile> Q)"
   apply pred_simp
@@ -732,19 +736,78 @@ lemma cond_refine_des:
   assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
   shows "(p \<turnstile> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
   using assms by rel_blast
+
+find_theorems "_ \<sqsubseteq> (_ ;; _)"    
+find_theorems "_ \<sqsubseteq> _"   
+thm seq_refine_unrest 
+find_theorems name:"Orderings." name:"I" 
+lemma seq_refine_des_intro:
+  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
+  assumes "((p \<and> $ok) \<Rightarrow> ($ok\<acute> \<and> \<lceil>s\<rceil>\<^sub>>)) \<sqsubseteq> f" and "((\<lceil>s\<rceil>\<^sub>< \<and> $ok)\<Rightarrow> ($ok\<acute> \<and> q)) \<sqsubseteq> fa"
+  shows "((p \<and> $ok) \<Rightarrow> ($ok\<acute> \<and> q)) \<sqsubseteq> (f ;; fa)"
+  using assms by rel_blast  
+    
+lemma refine_reverse_impl:
+  "`Q \<Rightarrow> P` \<Longrightarrow>  P \<sqsubseteq> Q" 
+  by rel_auto
     
 lemma seq_refine_unrest_des:
   assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
   assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
   shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
-  apply (insert assms)  
-  apply rel_auto
-   apply metis+ 
+  using assms
+  apply (pred_simp)  
+  apply rel_simp
+  apply metis
   done
     
+lemma seq_refine_unrest_rdesign:
+  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
+  assumes "(p \<turnstile>\<^sub>r \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> P" "(\<lceil>s\<rceil>\<^sub>< \<turnstile>\<^sub>r q) \<sqsubseteq> Q"
+  shows "(p \<turnstile>\<^sub>r q) \<sqsubseteq> (P ;; Q)"
+  unfolding ndesign_def rdesign_def
+proof (rule seq_refine_unrest_des[of _ _ _ s], goal_cases)
+  case 1
+  then show ?case using assms(1) by pred_simp
+next
+  case 2
+  then show ?case using assms(2) by pred_simp
+next
+  case 3
+  then show ?case using assms(3) unfolding ndesign_def rdesign_def by assumption
+next
+  case 4
+  then show ?case using assms(4) unfolding ndesign_def rdesign_def  by assumption
+qed
+
+lemma seq_refine_unrest_ndesign:
+  fixes q:: "'a hrel"
+  assumes "in\<alpha> \<sharp> q"
+  assumes "(p \<turnstile>\<^sub>n \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> P" and "(s \<turnstile>\<^sub>n q) \<sqsubseteq> Q"
+  shows "(p \<turnstile>\<^sub>n q) \<sqsubseteq> (P ;; Q)"
+  unfolding ndesign_def 
+proof (rule seq_refine_unrest_rdesign[of "\<lceil>p\<rceil>\<^sub><" "q" _ s], goal_cases)
+  case 1
+  then show ?case by pred_simp
+next
+  case 2
+  then show ?case using assms(1) by assumption 
+next
+  case 3
+  then show ?case using assms(2) unfolding ndesign_def by assumption 
+next
+  case 4
+  then show ?case using assms(3) unfolding ndesign_def by assumption 
+qed  
+
+    
 lemma skip_refine_des:
-  "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))` \<Longrightarrow> (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
-  by pred_auto   
+  assumes "`(SKIP\<^sub>D \<Rightarrow> (p \<turnstile> q))`"
+  shows " (p \<turnstile> q) \<sqsubseteq> SKIP\<^sub>D"
+proof (rule refine_reverse_impl, goal_cases)
+  case 1
+  then show ?case using assms by pred_simp 
+qed
 
 find_theorems name:"design_theory_continuous.LFP_lemma3"
 end
