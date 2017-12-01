@@ -601,6 +601,9 @@ lemma seqr_right_unit [simp]:
     
 lemma seqr_assoc: "P ;; (Q ;; R) = (P ;; Q) ;; R"
   by rel_auto
+
+lemma seqr_assoc': "(P ;; Q) ;; R = P ;; (Q ;; R) "
+  by rel_auto    
     
 lemma upower_inductl: "Q \<sqsubseteq> (P ;; Q \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P \<^bold>^ n ;; R"
 proof (induct n)

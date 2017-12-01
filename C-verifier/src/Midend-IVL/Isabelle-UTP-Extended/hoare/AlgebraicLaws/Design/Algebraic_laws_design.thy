@@ -8,8 +8,23 @@ text \<open>In this section we introduce the semantic rules related to the diffe
 theory Algebraic_laws_design
   imports Algebraic_laws_design_aux
 begin
+  
+subsection \<open>design, rdesign and ndesign laws\<close>
+  
+lemma design_is_H1:
+  "(P \<turnstile> Q) is H1"  
+  by pred_auto 
 
-
+lemma H3_design:
+  assumes  "$ok\<acute> \<sharp> Q"
+  shows "H3(\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) = \<lceil>P\<rceil>\<^sub>< \<turnstile> Q"
+  using assms
+  by rel_blast
+    
+lemma design_is_H1_H3 [closure]:
+  "$ok\<acute> \<sharp> Q \<Longrightarrow> (\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) is \<^bold>N"
+  by (simp add: H1_design H3_design Healthy_def')
+    
 section {*Algebraic laws for designs*}
 
 subsection Skip
@@ -347,26 +362,146 @@ lemma assign_d_cond_d_If [udes_cond]:
   "(bif\<^sub>D bexp then (v :=\<^sub>D exp1) else (v :=\<^sub>D exp2) eif) =
    (v :=\<^sub>D (exp1 \<triangleleft> bexp \<triangleright> exp2))"
   by rel_auto
-  
-lemma design_is_H1:
-  "(P \<turnstile> Q) is H1"  
-  by pred_auto 
 
-lemma weaker_seq_r_H1_H2_closed [closure]:
+subsection \<open>Sequential composition laws for designs\<close>
+
+lemma H1_distrib_left_J:
+  "H1 (P ;; J) = (H1 P ;;  J)"
+  by rel_auto 
+
+lemma H1_distrib_left_design:
+  "H1 (P ;; (Q\<^sub>1 \<turnstile> Q\<^sub>2)) = (H1 P ;; (Q\<^sub>1 \<turnstile> Q\<^sub>2))"
+  by rel_auto 
+    
+lemma H1_distrib_left_rdesign:
+  "H1 (P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) = (H1 P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2))"
+  by rel_auto 
+
+lemma H1_distrib_left_ndesign:
+  "H1 (P ;; (q \<turnstile>\<^sub>n Q)) = (H1 P ;; (q \<turnstile>\<^sub>n Q))"
+  by rel_auto 
+    
+lemma weaker_seq_r_H1_H2_closed[closure]:
   assumes "P is H1"  "Q is \<^bold>H"
   shows "(P ;; Q) is \<^bold>H"
 proof -
- obtain Q\<^sub>1 Q\<^sub>2 where "Q = Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2"
-   by (metis H1_H2_commute H1_H2_is_rdesign H2_idem Healthy_def assms(2)) 
+  obtain Q\<^sub>1 Q\<^sub>2 where Q_def:"Q = Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2" and Q\<^sub>1_Q\<^sub>2_is_H1_H2:"Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2 is \<^bold>H"
+    using assms(2) unfolding Healthy_def
+   by (metis H1_H2_eq_rdesign )
    moreover have "(P ;; (Q\<^sub>1 \<turnstile>\<^sub>r Q\<^sub>2)) is \<^bold>H"
    proof -
-     have "H1 P = P"
-       by (metis Healthy_def assms(1))
-     then show ?thesis
-       by (metis (no_types) H1_H3_commute H1_H3_idempotent H1_H3_impl_H2 H3_def Healthy_def assms(2) calculation design_left_unit seq_r_H1_H2_closed seqr_assoc)
-   qed 
+     have *:"H1 P = P" 
+       using assms(1)[unfolded Healthy_def] .
+     then show ?thesis using Q\<^sub>1_Q\<^sub>2_is_H1_H2 unfolding  Healthy_def H2_def 
+       by (simp add: H1_rdesign H1_distrib_left_J H1_distrib_left_rdesign  seqr_assoc')
+     qed 
   ultimately show ?thesis by simp
-qed             
+qed      
+  
+lemma weaker_seq_r_H1_H3_closed:
+  assumes 1: "P is H1"
+  assumes 2: "Q is \<^bold>N"
+  shows      "(P;; Q) is \<^bold>N" 
+proof -
+ from 1 2 have 11:"\<lfloor>pre\<^sub>D Q\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D Q = Q"
+    by (metis ndesign_form)
+  then show ?thesis
+    using 1 2 
+  proof -
+    have seq_r_H1_H2_closed_def: "\<forall>P Q. \<not> (P is H1) \<or> \<not> (Q is \<^bold>H) \<or> P ;; Q is (\<lambda>P. \<^bold>H P)"
+      using weaker_seq_r_H1_H2_closed by fastforce
+    have "\<forall>P. (P is \<^bold>N \<longrightarrow> P is \<^bold>H) = (\<not> (P is \<^bold>N) \<or> P is \<^bold>H)"
+      by auto
+    then have "\<forall>P. \<not> (P is \<^bold>N) \<or> P is \<^bold>H" 
+      using H1_H3_impl_H2 by blast
+    then have "Q is \<^bold>H" using 2
+           by blast
+    then have "P ;; Q is (\<lambda>P. \<^bold>H P)"
+      using seq_r_H1_H2_closed_def 1 by blast 
+    from this[THEN H1_H2_impl_H1] show ?thesis 
+      using 11[simplified HOL.eq_commute] H3_ndesign[of "\<lfloor>pre\<^sub>D Q\<rfloor>\<^sub><" "post\<^sub>D Q"]
+        unfolding Healthy_def H3_def 
+        by (metis seqr_assoc)
+  qed
+qed
+
+theorem H1_H3_eq_ndesign:
+  assumes 1:"out\<alpha> \<sharp> pre\<^sub>D(P)"
+  shows   "(\<^bold>N(P)) = (\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D(P))"
+proof -
+  from 1 have f2: "H3 P = H3 (H2 P)"
+     by (metis H2_H3_absorb H2_H3_commute)
+  have "\<^bold>H P = \<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D P"
+    using 1 by (simp add: H1_H2_eq_rdesign ndesign_def)
+  then show ?thesis
+    using f2 by (simp add: H1_H3_commute H3_ndesign)
+qed 
+  
+subsection \<open>Conditional laws for designs\<close> 
+  
+lemma if_d_mono:
+  "mono (\<lambda>X. bif\<^sub>D b then P ;; X else Q eif)"
+  by (auto intro: monoI seqr_mono cond_mono) 
+
+lemma weaker_if_d_seq_r_H1_H3_closed:
+  assumes 1: "P is H1"
+    and     2: "Q is \<^bold>N"
+  shows "(\<lambda>X. bif\<^sub>D b then P ;; X else Q eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"   
+proof (rule  FuncSet.Pi_I)
+  fix x :: "('b, 'a) rel_des"
+  assume 11: "x \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+  have ndesign_split: "\<forall>u. \<not> (u is \<^bold>N) \<or> \<lfloor>pre\<^sub>D u::'a hrel\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D u = u"
+    using ndesign_form by blast
+  have seq_is_ndesign: "P ;; x is (\<lambda>u. \<^bold>N (u::'a hrel_des))"
+    using 11 1 weaker_seq_r_H1_H3_closed by blast
+  then have "bif\<^sub>D b then P ;; x else Q eif = 
+               bif\<^sub>D b then \<lfloor>pre\<^sub>D (P ;; x)::'a hrel\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D (P ;; x) else \<lfloor>pre\<^sub>D Q\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D Q eif"
+    using ndesign_split 2 by presburger
+  then have H3_if_d_idemp: "H3 bif\<^sub>D b then P ;; x else Q eif = bif\<^sub>D b then P ;; x else Q eif"
+    by (simp add: H3_ndesign ndesign_dcond)
+  have H3_seq_idemp: "(P ;; x::'a hrel_des) = H3 (P ;; x)"
+    using seq_is_ndesign ndesign_split by (metis (no_types) H3_ndesign)
+  have "Q = H3 Q"
+    using ndesign_split 2 by (metis (no_types) H3_ndesign)
+  then show "bif\<^sub>D b then P ;; x else Q eif \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+    using H3_seq_idemp H3_if_d_idemp seq_is_ndesign 2 by (simp add: H1_def Healthy_def' spec_cond_dist)
+qed
+  
+subsection \<open>Recursion laws for designs\<close>  
+
+lemma ndesign_mu_refine_intro:
+  assumes "(C \<turnstile>\<^sub>n S) \<sqsubseteq> F(C \<turnstile>\<^sub>n S)" "` \<lceil>C\<rceil>\<^sub>D\<^sub>< \<Rightarrow> (\<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F)`"
+  shows "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<mu>\<^sub>N F"
+proof -
+   from assms have "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<nu>\<^sub>N F"
+     by (simp add: ndesign_H1_H3 normal_design_theory_continuous.GFP_upperbound)
+  with assms show ?thesis
+    by (rel_auto, metis (no_types, lifting))
+qed
+
+lemma H1_H3_mu_refine_intro:
+  assumes 1:"P is \<^bold>N"
+  assumes 2:"P \<sqsubseteq> F P"
+  assumes 3:"out\<alpha> \<sharp> pre\<^sub>D(P)"  
+  assumes 4:"`\<lceil>\<lfloor>pre\<^sub>D(P:: 'a hrel_des)\<rfloor>\<^sub><\<rceil>\<^sub>D\<^sub><  \<Rightarrow> (\<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F)`"  
+  shows   "P \<sqsubseteq> \<mu>\<^sub>N F"
+proof -
+  from 3 H1_H3_eq_ndesign[of P]
+  have is_H1_H3_eq_ndesign:
+    "\<^bold>N P = \<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D P"  
+    by simp 
+  also have pre_post_ndesign_mu_refine:"\<dots> \<sqsubseteq> \<mu>\<^sub>N F"    
+  proof - 
+    have "\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D P \<sqsubseteq> F (\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D P)"
+      using 1 2 ndesign_form[of P]
+      by simp
+    also have "`\<lceil>\<lfloor>pre\<^sub>D P\<rfloor>\<^sub><\<rceil>\<^sub>D\<^sub>< \<Rightarrow> \<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F`"
+      using 4 by simp
+    ultimately show ?thesis by (rule ndesign_mu_refine_intro)
+  qed      
+  finally show ?thesis using 1 pre_post_ndesign_mu_refine ndesign_form[of P]
+    by simp 
+qed
 
 subsection \<open>While laws for designs\<close>
   

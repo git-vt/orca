@@ -94,114 +94,41 @@ lemma cond_d_hoare_d'_t':
   by (insert assms, rel_auto) metis+
     
 subsection {*Hoare for recursion*}
-
-lemma ndesign_mu_refine_intro:
-  assumes "(C \<turnstile>\<^sub>n S) \<sqsubseteq> F(C \<turnstile>\<^sub>n S)" "` \<lceil>C\<rceil>\<^sub>D\<^sub>< \<Rightarrow> (\<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F)`"
-  shows "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<mu>\<^sub>N F"
-proof -
-   from assms have "(C \<turnstile>\<^sub>n S) \<sqsubseteq> \<nu>\<^sub>N F"
-     by (simp add: ndesign_H1_H3 normal_design_theory_continuous.GFP_upperbound)
-  with assms show ?thesis
-    by (rel_auto, metis (no_types, lifting))
-qed
-
-
-lemma H3_design:
-  assumes  "$ok\<acute> \<sharp> Q"
-  shows "H3(\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) = \<lceil>P\<rceil>\<^sub>< \<turnstile> Q"
-  using assms
-  by rel_blast
-    
-lemma design_is_H1_H3 [closure]:
-  "$ok\<acute> \<sharp> Q \<Longrightarrow> (\<lceil>P\<rceil>\<^sub>< \<turnstile> Q) is \<^bold>N"
-  by (simp add: H1_design H3_design Healthy_def')
-
-lemma H3_rdesign:
-  "H3(\<lceil>P\<rceil>\<^sub>< \<turnstile>\<^sub>r Q) = \<lceil>P\<rceil>\<^sub>< \<turnstile>\<^sub>r Q"
-  by rel_blast
-
-lemma reverse_impl_refine:
-  "`Q2 \<Rightarrow> Q1`  = (Q1 \<sqsubseteq>  Q2)"
-  by pred_auto    
-lemma H1_H2_mu_refine_intro: "\<^bold>N(P) = (\<lfloor>pre\<^sub>D(P)\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D (P))"
-  thm H1_H3_impl_H2[unfolded Healthy_def, of P]
-  oops
-
-lemma 
-  assumes "P is \<^bold>N"
-  assumes "P \<sqsubseteq> F P"
-  assumes "`\<lceil>pre\<^sub>D(P)\<rceil>\<^sub>D  \<Rightarrow> \<mu>\<^sub>N F \<Leftrightarrow> \<nu>\<^sub>N F`"  
-  shows   "P \<sqsubseteq> \<mu>\<^sub>N F" 
-  thm utp_designs.H1_H2_mu_refine_intro
-  thm  H1_H2_eq_rdesign 
-    thm H1_H3_eq_design
-oops
-
- (*regarde sa*) 
   
-lemma nu_refine_intro[]:
-  assumes \<open>(C \<Rightarrow> S) \<sqsubseteq> F(C \<Rightarrow> S)\<close>
-  shows \<open>(C \<Rightarrow> S) \<sqsubseteq> \<nu> F\<close>
-  using assms
-  by (simp add: lfp_lowerbound)
-find_theorems name:"normal_design_theory_continuous.weak.LFP"    
-thm nu_refine_intro
-  
-lemma mu_nd_rec_hoare_d_partial [hoare_des]:
-  assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
-  assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+lemma nu_ndesign_rec_hoare_d_partial [hoare_des]:
   assumes induct_step:
     "\<And> P. P is \<^bold>N \<Longrightarrow> \<lbrace>Pre\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
-  shows "\<lbrace>Pre\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
-  unfolding hoare_d_def
-    
- proof -          
-  {
-    have "Pre  \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> \<mu>\<^sub>N F" 
-      proof -
-        from M H normal_design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
-        have 1: "\<mu>\<^sub>N F \<sqsubseteq>  F (\<mu>\<^sub>N F)" by blast
-        have 2:"F(Pre  \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>) \<sqsubseteq> F (\<mu>\<^sub>N F)"
-          apply (rule Mono_utp_orderD [OF M, of "(\<mu>\<^sub>N F)" "(Pre  \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>)"])
-            apply simp+
-            apply rel_blast
-        by simp    
-   (* 
-    hence 0: "(Pre \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n Post \<sqsubseteq> \<mu>\<^sub>N B"
-      by rel_blast
-    from M H normal_design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
-    have 1: "\<mu>\<^sub>N B \<sqsubseteq>  B (\<mu>\<^sub>N B)"
-      by blast
-    from 0 1 have 2:"(Pre \<and> (E,\<guillemotleft>e\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n Post \<sqsubseteq> B (\<mu>\<^sub>N B)"
-      by simp
-    have 3: "B ((Pre \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n Post) \<sqsubseteq> B (\<mu>\<^sub>N B)"
-      by (auto intro: Mono_utp_orderD M 0)
-    have 4:"(Pre \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n Post \<sqsubseteq> \<dots>" 
-      by (rule induct_step)
-    show ?case
-      using order_trans[OF 3 4] H M normal_design_theory_continuous.LFP_lemma2 dual_order.trans mono_Monotone_utp_order 
-      by blast
-  qed*)
-   sorry 
-  }
-  thus ?thesis
-    unfolding hoare_d_def .
+  shows "\<lbrace>Pre\<rbrace>\<nu>\<^sub>N F\<lbrace>Post\<rbrace>\<^sub>D" 
+proof -
+  have is_ndesign: "Pre \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> is \<^bold>N"
+    using ndesign_H1_H3[of Pre "\<lceil>Post\<rceil>\<^sub>>"]
+    by simp 
+  also have fp_refine_spec:"Pre \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> F (Pre \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>)"
+    by (rule induct_step[unfolded hoare_d_def, OF  is_ndesign, simplified]) 
+  ultimately show ?thesis 
+    unfolding hoare_d_def
+    by (rule normal_design_theory_continuous.GFP_upperbound)
 qed
-    
+
 lemma mu_d_rec_hoare_d_t [hoare_des]:
   assumes WF: "wf R"
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
   assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
   assumes induct_step:
-    "\<And> st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
+    "\<And>st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
   shows "\<lbrace>Pre\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
-  unfolding hoare_d_def 
-  apply (rule ndesign_mu_wf_refine_intro[OF WF M H, of _ E])
-  apply (rule induct_step[unfolded hoare_d_def])
-  apply (simp add: ndesign_H1_H3)  
-  apply pred_simp 
-  done
+proof -
+  { fix e 
+    have "(Pre \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> F ((Pre \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>)"
+      by (rule induct_step[unfolded hoare_d_def, 
+                           OF ndesign_H1_H3[of "(Pre \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>)" "\<lceil>Post\<rceil>\<^sub>>"] order_refl]) 
+  }
+  then show ?thesis  
+    unfolding hoare_d_def 
+    by (rule ndesign_mu_wf_refine_intro[OF WF M H, of _ E])
+qed
 
+  
 lemma mu_d_rec_hoare_d_t'[hoare_des]:
   assumes WF: "wf R"
   assumes  M: "Mono\<^bsub>uthy_order NDES\<^esub> F"  
@@ -210,10 +137,8 @@ lemma mu_d_rec_hoare_d_t'[hoare_des]:
     "\<And> st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
   assumes I0: "`Pre' \<Rightarrow> Pre  `"
   shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
-  apply (rule hoare_pre_str_d_t[OF I0])  
-  apply (rule mu_d_rec_hoare_d_t[OF WF M H induct_step])
-  apply assumption+
-  done      
+  by (rule hoare_pre_str_d_t[OF I0 mu_d_rec_hoare_d_t[OF WF M H induct_step], simplified])
+          
 subsection {*Hoare for frames*}
 
 lemma antiframe_hoare_d_t[hoare_des]:
@@ -298,45 +223,6 @@ lemma while_hoare_d [hoare_safe]:
    apply (rule mu_d_rec_hoare_d_t')
    oops
      
-lemma if_d_mono:
-  "mono (\<lambda>X. bif\<^sub>D b then P ;; X else Q eif)"
-  by (auto intro: monoI seqr_mono cond_mono) 
-
-lemma blah1:
-  assumes 1: "P is H1"
-  and     2: "Q is \<^bold>N"
-  shows " (P;; Q) is \<^bold>N" 
-proof -
- from 1 2 have "\<lfloor>pre\<^sub>D Q\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D Q = Q"
-    by (metis ndesign_form)
-  then show ?thesis
-    using 1 2 
-    by (metis (no_types) H1_H2_impl_H1 H1_H3_impl_H2 H3_def H3_ndesign Healthy_def seqr_assoc weaker_seq_r_H1_H2_closed)
-qed
-
-lemma blah2:
-  assumes 1: "P is H1"
-  and     2: "Q is \<^bold>N"
-  shows "(\<lambda>X. bif\<^sub>D b then P ;; X else Q eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"   
-  proof (rule  FuncSet.Pi_I)
-    fix x :: "('b, 'a) rel_des"
-    assume 11: "x \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
-    have ndesign_split: "\<forall>u. \<not> (u is \<^bold>N) \<or> \<lfloor>pre\<^sub>D u::'a hrel\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D u = u"
-      using ndesign_form by blast
-    have seq_is_ndesign: "P ;; x is (\<lambda>u. \<^bold>N (u::'a hrel_des))"
-      using 11 1 blah1 by blast
-    then have "bif\<^sub>D b then P ;; x else Q eif = 
-               bif\<^sub>D b then \<lfloor>pre\<^sub>D (P ;; x)::'a hrel\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D (P ;; x) else \<lfloor>pre\<^sub>D Q\<rfloor>\<^sub>< \<turnstile>\<^sub>n post\<^sub>D Q eif"
-      using ndesign_split 2 by presburger
-    then have H3_if_d_idemp: "H3 bif\<^sub>D b then P ;; x else Q eif = bif\<^sub>D b then P ;; x else Q eif"
-      by (simp add: H3_ndesign ndesign_dcond)
-    have H3_seq_idemp: "(P ;; x::'a hrel_des) = H3 (P ;; x)"
-      using seq_is_ndesign ndesign_split by (metis (no_types) H3_ndesign)
-    have "Q = H3 Q"
-      using ndesign_split 2 by (metis (no_types) H3_ndesign)
-    then show "bif\<^sub>D b then P ;; x else Q eif \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
-      using H3_seq_idemp H3_if_d_idemp seq_is_ndesign 2 by (simp add: H1_def Healthy_def' spec_cond_dist)
-  qed
 
 lemma while_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
@@ -347,8 +233,9 @@ lemma while_hoare_ndesign_t [hoare_des]:
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
 proof -
   have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H" 
-    using BH
-    apply pred_simp apply rel_simp  apply smt done   
+  proof (rule weaker_if_d_seq_r_H1_H3_closed[OF BH])
+    show "SKIP\<^sub>D is \<^bold>N" by rel_auto
+  qed 
   from mono_Monotone_utp_order [OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b body SKIP\<^sub>D] H
     normal_design_theory_continuous.LFP_weak_unfold  
   have M_des: "Mono\<^bsub>uthy_order NDES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
@@ -405,5 +292,5 @@ lemma while_vrt_hoare_ndesign_t' [hoare_des]:
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt \<guillemotleft>R\<guillemotright> do body od\<lbrace>Post\<rbrace>\<^sub>D"
   using assms while_hoare_ndesign_t[of R Pre I body b E Post]
   by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)    
-    
+thy_deps    
 end

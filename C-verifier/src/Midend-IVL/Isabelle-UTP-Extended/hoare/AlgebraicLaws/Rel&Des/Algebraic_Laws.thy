@@ -772,6 +772,10 @@ theorem RA7: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
   by (rel_auto)
 
 subsection \<open>Refinement rules\<close>
+
+lemma reverse_impl_refine:
+  "`Q2 \<Rightarrow> Q1`  = (Q1 \<sqsubseteq> Q2)"
+  by pred_auto    
   
 lemma pre_weak_rel:
   assumes "`Pre \<Rightarrow> I`"
@@ -806,6 +810,5 @@ lemma seq_refine_unrest:
   using assms by rel_blast    
     
 lemmas skip_refine' = post_str_rel[OF skip_r_refine_orig]
-
 
 end
