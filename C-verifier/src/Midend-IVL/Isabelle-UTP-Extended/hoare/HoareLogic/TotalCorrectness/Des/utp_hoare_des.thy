@@ -62,7 +62,9 @@ lemma assigns_d_hoare_d'_t [hoare_des]:
   by rel_auto
 
 lemma assigns_d_floyd_d_t [hoare_des]:
- \<open>\<lbrace>\<guillemotleft>vwb_lens x\<guillemotright> \<and> p\<rbrace>x :=\<^sub>D e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>D\<close>
+  assumes "vwb_lens x"
+  shows \<open>\<lbrace>p\<rbrace>x :=\<^sub>D e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>D\<close>
+    using assms
   apply rel_simp
   apply transfer
   apply (rule_tac x = \<open>get\<^bsub>x\<^esub> more\<close> in exI)
@@ -135,7 +137,7 @@ lemma mu_d_rec_hoare_d_t'[hoare_des]:
   assumes  H: "F \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
   assumes induct_step:
     "\<And> st P. P is \<^bold>N \<Longrightarrow> \<lbrace>(Pre \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>)\<rbrace> P \<lbrace>Post\<rbrace>\<^sub>D \<Longrightarrow> \<lbrace>Pre \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>Post\<rbrace>\<^sub>D"  
-  assumes I0: "`Pre' \<Rightarrow> Pre  `"
+  assumes I0: "`Pre' \<Rightarrow> Pre`"
   shows "\<lbrace>Pre'\<rbrace>\<mu>\<^sub>N F \<lbrace>Post\<rbrace>\<^sub>D" 
   by (rule hoare_pre_str_d_t[OF I0 mu_d_rec_hoare_d_t[OF WF M H induct_step], simplified])
           
@@ -174,56 +176,7 @@ lemma frame_hoare_d_t_stronger[hoare_des]:
   using assms by (rel_simp) 
     
 subsection {*Hoare for While-loop*}   
-
-lemma while_hoare_d_t [hoare_des]:
-  assumes WF: "wf R"
-  assumes I0: "`Pre \<Rightarrow> I`"
-  assumes BH :" body is H1"  
-  assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
-  assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
-  shows "\<lbrace>Pre\<rbrace>while\<^sub>D b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
-proof -
-  have M: "mono (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
-    by (auto intro: monoI seqr_mono cond_mono) 
-  have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>H\<rbrakk>\<^sub>H" 
-    using BH
-    apply pred_simp apply rel_simp  apply smt done   
-  from mono_Monotone_utp_order [OF M, of "\<H>\<^bsub>DES\<^esub>"] H
-          design_theory_continuous.LFP_weak_unfold  
-  have M_des: "Mono\<^bsub>uthy_order DES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
-    by auto
-  have *:"(I \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>  \<sqsubseteq> \<mu>\<^sub>D (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif))"  
-     unfolding ndesign_def rdesign_def
-    apply (rule design_mu_wf_refine_intro[where Pre="\<lceil>I\<rceil>\<^sub>D\<^sub><" and E = "E", OF WF M_des H])  
-    apply pred_simp
-   apply pred_simp
-  apply (rule  cond_refine_des)
-    subgoal for st
-      apply (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ])
-            apply pred_simp
-           apply pred_simp
-       apply (rule order_trans[OF induct_step[unfolded hoare_d_def],  where st1 = st]) 
-        apply pred_simp
-        apply pred_simp
-      done
-     apply (rule skip_refine_des)      
-     using PHI
-       apply rel_blast
-  done    
-  show ?thesis    
-  unfolding  hoare_d_def While_inv_des_def While_lfp_des_def
-     unfolding  hoare_d_def While_inv_ndes_def While_lfp_ndes_def
-    by (rule hoare_pre_str_d_t[unfolded hoare_d_def ,of _ "I", OF I0 *]) 
-qed
-  
-lemma while_hoare_d [hoare_safe]:
-  assumes "\<lbrace>p \<and> b\<rbrace>C\<lbrace>p\<rbrace>\<^sub>D"
-  shows "\<lbrace>p\<rbrace>while\<^sub>N b do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>D"
-   apply (simp add: While_lfp_ndes_def )
-   apply (rule mu_d_rec_hoare_d_t')
-   oops
-     
-
+    
 lemma while_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
@@ -231,64 +184,42 @@ lemma while_hoare_ndesign_t [hoare_des]:
   assumes induct_step:"\<And> st. \<lbrace>b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> body \<lbrace>I \<and>(E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>D"  
   assumes PHI:"`(\<not> b \<and> I) \<Rightarrow> Post`"  
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I do body od\<lbrace>Post\<rbrace>\<^sub>D"
-proof -
-  have H: "(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif) \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H" 
-    by(rule weaker_if_d_seq_r_H1_H3_closed[OF BH skip_d_is_H1_H3])
-  from mono_Monotone_utp_order[OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b body SKIP\<^sub>D] 
-  have M_des: "Mono\<^bsub>uthy_order NDES\<^esub>(\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif)"
-    by simp
-  have *:"(I \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>  \<sqsubseteq> \<mu>\<^sub>N (\<lambda>X. bif\<^sub>D b then body ;; X else SKIP\<^sub>D eif))"
-  proof (induction rule: ndesign_mu_wf_refine_intro [where Pre="I" and E = "E", OF WF M_des H])
-    case (1 e)
-    have seq_left_part: "(b \<and> I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n \<lceil>I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>> \<sqsubseteq> body"
-       proof (induction rule: order_trans[OF induct_step[unfolded hoare_d_def, where st = e]])
-         case 1
-         then show ?case by simp 
-       qed 
-    have seq_right_part: 
-        "(I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> (I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>" 
-      by simp
-    from seq_left_part seq_right_part
-    have seq_both_parts: "(b \<and> I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> body ;; ((I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>)"
-        thm seq_refine_unrest_des
-        by (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>e\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ],simp_all add: unrest)
-       have if_false_part: "(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> SKIP\<^sub>D"     
-        using PHI by rel_blast
-      
-    then show ?case sorry
-  qed 
-  proof (rule ndesign_mu_wf_refine_intro[where Pre="I" and E = "E", OF WF M_des H])
-    { fix st
-      have if_false_part: "(\<not> \<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> SKIP\<^sub>D"     
-        using PHI by rel_blast
-      have seq_left_part: "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> body"        
-      proof (rule order_trans[OF induct_step[unfolded hoare_d_def],  where st1 = st]) 
-        show "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>> \<sqsubseteq>
-              (b \<and> I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>>"
-          by pred_simp
-      qed    
-      have seq_right_part: 
-        "\<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> \<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>" 
-        by pred_simp 
-      from seq_left_part seq_right_part 
-      have seq_both_sides:
-        "(\<lceil>b\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>D\<^sub><) \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>> \<sqsubseteq> body ;; (\<lceil>I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rceil>\<^sub>D\<^sub>< \<turnstile> \<lceil>Post\<rceil>\<^sub>D\<^sub>>)"
-        by (rule_tac seq_refine_unrest_des[where s= "I \<and> (E,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>" ],simp_all add: unrest)
-      from seq_both_sides  if_false_part   
-      have "(I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> bif\<^sub>D b then body ;;
-            ((I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>) else SKIP\<^sub>D eif"
-        unfolding ndesign_def rdesign_def
-        by (rule  cond_refine_des)
-      thus "(I \<and> E =\<^sub>u \<guillemotleft>st\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>> \<sqsubseteq> bif\<^sub>D b then body ;;
-            ((I \<and> (E, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>) \<turnstile>\<^sub>n \<lceil>Post\<rceil>\<^sub>>) else SKIP\<^sub>D eif"  
-        unfolding ndesign_def rdesign_def . 
-    }
-  qed   
-  show ?thesis    
-    unfolding hoare_d_def While_inv_ndes_def While_lfp_ndes_def
-    by (rule hoare_pre_str_d_t[unfolded hoare_d_def , OF I0 *]) 
-qed
+  unfolding  While_inv_ndes_def While_lfp_ndes_def
+proof (rule mu_d_rec_hoare_d_t'[OF WF _ _ _ I0, where  E = "E"], goal_cases)
+  case 1
+  then show ?case by (rule mono_Monotone_utp_order[OF if_d_mono, of "\<H>\<^bsub>NDES\<^esub>" b body SKIP\<^sub>D])
+next
+  case 2
+  then show ?case by (rule weaker_if_d_seq_r_H1_H3_closed[OF BH skip_d_is_H1_H3])
+next
+  case (3 e P)
+  assume P_is_N: "P is \<^bold>N " 
+  assume P_is_wf:"\<lbrace>I \<and> (E, \<guillemotleft>e\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>P\<lbrace>Post\<rbrace>\<^sub>D"  
+  show ?case
+    proof (rule cond_d_hoare_d_t, goal_cases)
+      case 1
+      then show ?case
+        proof (rule seq_hoare_d_t[of _ _ "I \<and>(E,\<guillemotleft>e\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>"], goal_cases)
+          case 1
+          then show ?case using induct_step by assumption
+        next
+          case 2
+          then show ?case using P_is_wf by assumption 
+        qed
 
+    next
+      case 2
+      then show ?case 
+        proof (rule hoare_pre_str_d_t[of _ Post], goal_cases)
+          case 1
+          then show ?case using PHI by pred_simp 
+        next
+          case 2
+          then show ?case by (rule skip_d_hoare_d_t) 
+        qed
+    qed
+qed
+  
 lemma while_vrt_hoare_ndesign_t [hoare_des]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
@@ -299,7 +230,7 @@ lemma while_vrt_hoare_ndesign_t [hoare_des]:
   using assms while_hoare_ndesign_t[of R Pre I body b E Post]
   by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)
 
-lemma while_vrt_hoare_ndesign_t' [hoare_des]:
+lemma while_inv_vrt_hoare_ndesign_t' [hoare_des]:
   assumes WF: "wf R"
   assumes I0: "`Pre \<Rightarrow> I`"
   assumes BH :" body is H1"  
@@ -308,5 +239,5 @@ lemma while_vrt_hoare_ndesign_t' [hoare_des]:
   shows "\<lbrace>Pre\<rbrace>while\<^sub>N b invr I vrt \<guillemotleft>R\<guillemotright> do body od\<lbrace>Post\<rbrace>\<^sub>D"
   using assms while_hoare_ndesign_t[of R Pre I body b E Post]
   by (simp add: While_inv_ndes_def While_inv_vrt_ndes_def)    
-thy_deps    
+    
 end

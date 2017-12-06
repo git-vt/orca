@@ -743,16 +743,6 @@ lemma cond_refine_des:
   assumes "((b \<and> p) \<turnstile> q) \<sqsubseteq> C\<^sub>1" and "((\<not>b \<and> p) \<turnstile> q)\<sqsubseteq> C\<^sub>2" 
   shows "(p \<turnstile> q) \<sqsubseteq> (C\<^sub>1 \<triangleleft> b \<triangleright> C\<^sub>2)"
   using assms by rel_blast
-
-find_theorems "_ \<sqsubseteq> (_ ;; _)"    
-find_theorems "_ \<sqsubseteq> _"   
-thm seq_refine_unrest 
-find_theorems name:"Orderings." name:"I" 
-lemma seq_refine_des_intro:
-  assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
-  assumes "((p \<and> $ok) \<Rightarrow> ($ok\<acute> \<and> \<lceil>s\<rceil>\<^sub>>)) \<sqsubseteq> f" and "((\<lceil>s\<rceil>\<^sub>< \<and> $ok)\<Rightarrow> ($ok\<acute> \<and> q)) \<sqsubseteq> fa"
-  shows "((p \<and> $ok) \<Rightarrow> ($ok\<acute> \<and> q)) \<sqsubseteq> (f ;; fa)"
-  using assms by rel_blast  
     
 lemma refine_reverse_impl:
   "`Q \<Rightarrow> P` \<Longrightarrow>  P \<sqsubseteq> Q" 
@@ -762,11 +752,13 @@ lemma seq_refine_unrest_des:
   assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"
   assumes "(p \<turnstile> \<lceil>s\<rceil>\<^sub>D\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>D\<^sub>< \<turnstile> q) \<sqsubseteq> Q"
   shows "(p \<turnstile> q) \<sqsubseteq> (P ;; Q)"
-  using assms
-  apply (pred_simp)  
-  apply rel_simp
-  apply metis
-  done
+ using assms    
+proof ( pred_simp, goal_cases)
+  case (1 ok\<^sub>v more ok\<^sub>v' morea y)
+  then show ?case 
+    by (rel_simp) 
+       (metis (no_types, lifting) "1"(16) "1"(18) "1"(3) des_vars.surjective)  
+qed
     
 lemma seq_refine_unrest_rdesign:
   assumes "out\<alpha> \<sharp> p" "in\<alpha> \<sharp> q"

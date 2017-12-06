@@ -32,6 +32,90 @@ where "\<lfloor>P\<rfloor>\<^sub><\<^sub>D \<equiv> \<lfloor>\<lfloor>P\<rfloor>
 abbreviation drop_post_uexpr_des ("\<lfloor>_\<rfloor>\<^sub>>\<^sub>D")
 where "\<lfloor>P\<rfloor>\<^sub>>\<^sub>D \<equiv> \<lfloor>\<lfloor>P\<rfloor>\<^sub>D\<rfloor>\<^sub>>"    
 
+subsection {*Syntax directed laws on operators of designs*}
+
+lemma lift_pre_des_uconj_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>< \<and> \<lceil>q\<rceil>\<^sub>D\<^sub><) = \<lceil>p \<and> q\<rceil>\<^sub>D\<^sub><"
+  by rel_simp
+
+lemma lift_post_des_uconj_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>> \<and> \<lceil>q\<rceil>\<^sub>D\<^sub>>) = \<lceil>p \<and> q\<rceil>\<^sub>D\<^sub>>"
+  by rel_simp
+
+lemma lift_pre_des_udisj_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>< \<or> \<lceil>q\<rceil>\<^sub>D\<^sub><) = \<lceil>p \<or> q\<rceil>\<^sub>D\<^sub><"
+  by rel_simp
+
+lemma lift_post_des_udisj_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>> \<or> \<lceil>q\<rceil>\<^sub>D\<^sub>>) = \<lceil>p \<or> q\<rceil>\<^sub>D\<^sub>>"
+  by rel_simp
+
+lemma lift_pre_des_uimpl_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>D\<^sub><) = \<lceil>p \<Rightarrow> q\<rceil>\<^sub>D\<^sub><"
+  by rel_simp
+
+lemma lift_post_des_uimpl_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>> \<Rightarrow> \<lceil>q\<rceil>\<^sub>D\<^sub>>) = \<lceil>p \<Rightarrow> q\<rceil>\<^sub>D\<^sub>>"
+  by rel_simp
+    
+lemma lift_pre_des_uiff_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>< \<Leftrightarrow> \<lceil>q\<rceil>\<^sub>D\<^sub><) = \<lceil>p \<Leftrightarrow> q\<rceil>\<^sub>D\<^sub><"
+  by rel_simp
+
+lemma lift_post_des_uiff_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>> \<Leftrightarrow> \<lceil>q\<rceil>\<^sub>D\<^sub>>) = \<lceil>p \<Leftrightarrow> q\<rceil>\<^sub>D\<^sub>>"
+  by rel_simp    
+
+lemma lift_pre_des_ueq_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>< =\<^sub>u \<lceil>q\<rceil>\<^sub>D\<^sub><) = \<lceil>p =\<^sub>u q\<rceil>\<^sub>D\<^sub><"
+  by rel_simp
+
+lemma lift_post_des_ueq_distribute[simp]:
+  "(\<lceil>p\<rceil>\<^sub>D\<^sub>> =\<^sub>u \<lceil>q\<rceil>\<^sub>D\<^sub>>) = \<lceil>p =\<^sub>u q\<rceil>\<^sub>D\<^sub>>"
+  by rel_simp 
+
+subsection {*Syntax directed laws on drop operators of designs*}
+
+lemma drop_pre_des_uconj_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub><\<^sub>D \<and> \<lfloor>q\<rfloor>\<^sub><\<^sub>D) = \<lfloor>p \<and> q\<rfloor>\<^sub><\<^sub>D"
+  by rel_simp
+
+lemma drop_post_des_uconj_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D \<and> \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p \<and> q\<rfloor>\<^sub>>\<^sub>D"
+  by rel_simp
+
+lemma drop_pre_des_udisj_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub><\<^sub>D \<or> \<lfloor>q\<rfloor>\<^sub><\<^sub>D) = \<lfloor>p \<or> q\<rfloor>\<^sub><\<^sub>D "
+  by rel_simp
+
+lemma drop_post_des_udisj_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D \<or> \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p \<or> q\<rfloor>\<^sub>>\<^sub>D"
+  by rel_simp
+
+lemma drop_pre_des_uimpl_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub><\<^sub>D \<Rightarrow> \<lfloor>q\<rfloor>\<^sub><\<^sub>D) = \<lfloor>p \<Rightarrow> q\<rfloor>\<^sub><\<^sub>D "
+  by rel_simp
+
+lemma drop_post_des_uimpl_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D \<Rightarrow> \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p \<Rightarrow> q\<rfloor>\<^sub>>\<^sub>D"
+  by rel_simp
+    
+lemma drop_pre_des_uiff_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub><\<^sub>D \<Leftrightarrow> \<lfloor>q\<rfloor>\<^sub><\<^sub>D) = \<lfloor>p \<Leftrightarrow> q\<rfloor>\<^sub><\<^sub>D"
+  by rel_simp
+
+lemma drop_post_des_uiff_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D \<Leftrightarrow> \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p \<Leftrightarrow> q\<rfloor>\<^sub>>\<^sub>D"
+  by rel_simp    
+
+lemma drop_pre_des_ueq_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub><\<^sub>D =\<^sub>u \<lfloor>q\<rfloor>\<^sub><\<^sub>D) = \<lfloor>p =\<^sub>u q\<rfloor>\<^sub><\<^sub>D"
+  by rel_simp
+
+lemma drop_post_des_ueq_distribute[simp]:
+  "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D =\<^sub>u \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p =\<^sub>u q\<rfloor>\<^sub>>\<^sub>D"
+  by rel_simp 
+    
 section {*Normal Design setup*}
 
 abbreviation ndesign_lfp :: "('\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des) \<Rightarrow> '\<alpha> hrel_des" ("\<mu>\<^sub>N") where
