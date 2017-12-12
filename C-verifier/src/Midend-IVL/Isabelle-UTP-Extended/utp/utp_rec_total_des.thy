@@ -179,25 +179,5 @@ next
   case (4 e)
   then show ?case using induct_step by simp  
 qed
-term "uop measure (\<lambda>_ \<bullet> Rdd)"
-lemma ndesign_mu_uwf_refine_introsda: 
-  assumes        M: "Mono\<^bsub>uthy_order NDES\<^esub> B"
-    and      H: "B \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
-    and  induct_step:
-    "\<And>e. ((Pre \<and> E =\<^sub>u \<guillemotleft>e\<guillemotright>) \<turnstile>\<^sub>n Post) \<sqsubseteq> (B ((Pre \<and> (E,\<guillemotleft>e\<guillemotright>)\<^sub>u\<in>\<^sub>u (uop measure (\<lambda>_ \<bullet> E))) \<turnstile>\<^sub>n Post))"
-  shows "(Pre \<turnstile>\<^sub>n Post) \<sqsubseteq> \<mu>\<^sub>N B" 
-   term "(measure o Rep_uexpr) E" 
-proof (induction rule: ndesign_mu_wf_refine_intro[of R _ _ E ])
-  case 1
-  then show ?case using WF by rel_blast 
-next
-  case 2
-  then show ?case using M by assumption 
-next
-  case 3
-  then show ?case using H by assumption   
-next
-  case (4 e)
-  then show ?case using induct_step by simp  
-qed   
+
 end

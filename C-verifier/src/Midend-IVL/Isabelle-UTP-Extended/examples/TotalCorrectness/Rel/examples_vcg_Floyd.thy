@@ -7,7 +7,7 @@ imports
 begin
 
 subsection Increment
-
+thy_deps
 lemma 
  assumes "weak_lens x" and "weak_lens y" and "weak_lens z"
   and "x \<bowtie> y" and "x \<bowtie> z" and "y \<bowtie> z"
@@ -81,7 +81,7 @@ lemma even_count_method:
   \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>u\<close>
   apply (insert assms)
   apply exp_vcg
-   apply solve_vcg
+   apply solve_vcg 
    apply (elim disjE conjE) (* auto seems to go faster with this *)
     apply auto[1]
    apply (simp add: mod_pos_pos_trivial)
@@ -169,10 +169,10 @@ next
     unfolding xs\<^sub>1_def using 2
     by (metis Suc_pred diff_le_self le_less_trans take_hd_drop)
   have xs_butlast: \<open>xs\<^sub>1' = take (j - Suc 0) array\<close>
-    by (smt 2(3) 2(4) Suc_pred append1_eq_conv assms(2) diff_le_self le_less_trans take_hd_drop
+    by (smt "2"(3) "2"(4) Suc_pred append1_eq_conv assms(2) diff_le_self le_less_trans take_hd_drop
         xs\<^sub>1_def xs_last)
   have y: \<open>y = array ! (j - Suc 0)\<close>
-    by (metis (no_types, lifting) 2(3) 2(4) Cons_nth_drop_Suc One_nat_def Suc_pred assms(2)
+    by (metis (no_types, lifting) "2"(3) "2"(4) Cons_nth_drop_Suc One_nat_def Suc_pred assms(2)
         diff_le_self le_less_trans list.sel(1) nth_append_length take_hd_drop xs\<^sub>1_def xs_butlast
         xs_last)
   have xs\<^sub>1'_is_aaker: \<open>xs\<^sub>1' = take (j - Suc 0) (swap_at j array)\<close>
@@ -180,7 +180,7 @@ next
   have y_concat_xs\<^sub>2: \<open>y # xs\<^sub>2 = drop j (take (Suc i) (swap_at j array))\<close>
     using \<open>j > 0\<close>
     apply (auto simp: swap_at_def drop_take list_update_swap)
-    by (smt 2(3) 2(4) Cons_nth_drop_Suc Suc_diff_Suc drop_take drop_update_cancel le_less_trans
+    by (smt "2"(3) "2"(4) Cons_nth_drop_Suc Suc_diff_Suc drop_take drop_update_cancel le_less_trans
         length_list_update lessI nth_list_update_eq take_Suc_Cons xs\<^sub>2_def y)
   from 2 show \<open>sorted (take (j - Suc 0) (swap_at j array) @ drop j (take (Suc i) (swap_at j array)))\<close>
     by (fold xs\<^sub>1_def xs\<^sub>2_def xs_butlast xs\<^sub>1'_is_aaker y_concat_xs\<^sub>2) (simp add: xs_last)
@@ -188,11 +188,12 @@ next
     fix x
     assume \<open>x \<in> set (drop j (take (Suc i) (swap_at j array)))\<close>
     show \<open>swap_at j array!(j - Suc 0) < x\<close>
-      by (smt 2(2) 2(3) 2(4) 2(7) One_nat_def \<open>x \<in> set (drop j (take (Suc i) (swap_at j array)))\<close>
-          diff_le_self le_less_trans length_list_update nth_list_update_eq set_ConsD swap_at_def
-          xs\<^sub>2_def y y_concat_xs\<^sub>2)
+      by (smt "2"(2) "2"(3) "2"(4) "2"(7) One_nat_def \<open>x \<in> set (drop j (take (Suc i) (swap_at j
+          array)))\<close> diff_le_self le_less_trans length_list_update nth_list_update_eq set_ConsD
+          swap_at_def xs\<^sub>2_def y y_concat_xs\<^sub>2)
   }
 qed
+
 
 lemma insertion_sort:
   assumes \<open>lens_indep_all [i, j]\<close>

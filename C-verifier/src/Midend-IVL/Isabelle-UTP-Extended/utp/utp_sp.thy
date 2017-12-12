@@ -45,6 +45,7 @@ lemma it_is_the_strongest_post:
 lemma so:
   "`p sp C \<Rightarrow> Q` = \<lbrace>p\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast
+    
 theorem sp_hoare_link:
   "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>u \<longleftrightarrow> (r \<sqsubseteq> p sp Q)"
   by rel_auto   

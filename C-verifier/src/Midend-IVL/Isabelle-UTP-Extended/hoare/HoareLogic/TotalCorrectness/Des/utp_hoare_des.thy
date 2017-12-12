@@ -90,7 +90,7 @@ lemma cond_d_hoare_d'_t [hoare_des]:
   shows "\<lbrace>p\<rbrace>bif\<^sub>D b then C\<^sub>1 else C\<^sub>2 eif \<lbrace>q\<rbrace>\<^sub>D"
   by (insert assms, rel_auto) 
     
-lemma cond_d_hoare_d'_t':
+lemma cond_d_hoare_d'_t'[hoare_des]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>D\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>D\<close>
   shows \<open>\<lbrace>p\<rbrace>bif\<^sub>D b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q \<or> s\<rbrace>\<^sub>D\<close>
   by (insert assms, rel_auto) metis+
