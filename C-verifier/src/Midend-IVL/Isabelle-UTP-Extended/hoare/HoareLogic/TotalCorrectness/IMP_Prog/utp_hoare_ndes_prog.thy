@@ -315,15 +315,34 @@ lemmas [lens_laws_vcg_simps] =
   lens_indep.lens_put_irr2
   
 method vcg_default_solver = assumption|pred_simp?;(simp add: lens_laws_vcg_simps)?;fail
+
+method vcg_default_goal_post_processing = 
+       (pred_simp?,(unfold lens_indep_all_alt)?; (simp add: lens_laws_vcg_simps)?;safe?;clarsimp?)
+   
+method vcg_pp_solver methods post_processing = assumption|pred_simp?, post_processing?;fail
   
 method vcg_step_solver methods solver = 
        (hoare_sp_vcg_rule | solver)
-  
+                   
 method hoare_sp_vcg_step_solver = vcg_step_solver \<open>vcg_default_solver\<close>
-
-  
-text {* The defer processing in the sequel was inspired by tutorial5.thy in Peter Lammich course
+    
+text {* The defer processing and the thin)tac processing in the sequel was inspired by tutorial5.thy in Peter Lammich course
         \url{https://bitbucket.org/plammich/certprog_public/downloads/}*}
+ 
+subsection \<open>Deterministic Repeated Elimination Rule\<close>
+text \<open>Attention: Slightly different semantics than @{method elim}: repeats the 
+  rule as long as possible, but only on the first subgoal.\<close>
+
+method_setup vcg_elim_determ = \<open>
+  Attrib.thms >> (fn thms => fn ctxt => 
+    SIMPLE_METHOD (REPEAT_DETERM1 (HEADGOAL (ematch_tac ctxt thms))))\<close>
+text \<open>The \<open>DETERM\<close> combinator on method level\<close>
+method_setup determ = \<open>
+  Method.text_closure >>
+    (fn (text) => fn ctxt => fn using => fn st =>
+      Seq.DETERM (Method.evaluate_runtime text ctxt using) st
+    )
+\<close>
   
 definition DEFERRED :: "bool \<Rightarrow> bool" where "DEFERRED P = P"
 lemma DEFERREDD: "DEFERRED P \<Longrightarrow> P" by (auto simp: DEFERRED_def)
@@ -344,8 +363,10 @@ method  hoare_sp_vcg_steps = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFE
 
 method  hoare_sp_vcg_steps_pp = hoare_sp_vcg_steps; pred_simp?
   
-method hoare_sp_vcg_all = (hoare_sp_vcg_pre, (hoare_sp_vcg_step_solver| vcg_defer)+, (unfold DEFERRED_def)?)(*This tactic loops because of vcg_defer*)
- 
+method hoare_sp_default_vcg_all = (hoare_sp_vcg_pre, (hoare_sp_vcg_step_solver| vcg_defer)+, (unfold DEFERRED_def)?)(*This tactic loops because of vcg_defer*)
+
+method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_processing)
+  
 lemma increment_method: 
   assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
   shows  
@@ -356,24 +377,10 @@ lemma increment_method:
       WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
     \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_vcg_all)    
+  apply (hoare_sp_pp_vcg_all)    
   done
     
 subsection {* I want to see the problem of nested existential*}
-  
-lemma  
-  assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
-  shows  
-    "\<lbrace>&y >\<^sub>u 0\<rbrace>
-      x :== 0 ; 
-      INVR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
-      VRT \<guillemotleft>(measure o Rep_uexpr) ((&y + 1) - &x)\<guillemotright> 
-      WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
-    \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
-  apply (insert assms) (*Make this automatic*)
-    apply hoare_sp_vcg_steps
-
-  oops
   
 lemma ushExE:
   assumes " \<lbrakk>\<^bold>\<exists> v \<bullet> P\<rbrakk>\<^sub>e a"
@@ -394,30 +401,142 @@ lemma even_count:
   assumes "vwb_lens x" "vwb_lens y" "vwb_lens i" "vwb_lens j"  
   shows  
     "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd =\<^sub>u 1\<rbrace>
-      (i :== &start;
-     j :== 0) (* THIS PRIORITY SUCKS! *) ; 
-     INVR &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u ((&i + 1) - &start) div 2 \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
-     VRT \<guillemotleft>measure (nat o (Rep_uexpr ((&endd + 1) - &i)))\<guillemotright>
-     WHILE &i <\<^sub>u &endd
-     DO
-       IF &i mod 2 =\<^sub>u 0 
-       THEN j :== (&j + 1)
-       ELSE SKIP 
-       FI;
-      i :== (&i + 1)
-     OD
+       i :== &start;
+       j :== 0 ; 
+       INVR &start =\<^sub>u 0 \<and> &endd =\<^sub>u 1 \<and> &j =\<^sub>u ((&i + 1) - &start) div 2 \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
+       VRT \<guillemotleft>measure (nat o (Rep_uexpr ((&endd + 1) - &i)))\<guillemotright>
+       WHILE &i <\<^sub>u &endd
+       DO
+         IF &i mod 2 =\<^sub>u 0 
+         THEN j :== (&j + 1)
+         ELSE SKIP 
+         FI;
+        i :== (&i + 1)
+       OD
     \<lbrace>&j =\<^sub>u 1\<rbrace>\<^sub>P"
-  apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_vcg_steps; pred_simp?) 
-   apply (unfold lens_indep_all_alt) 
-   apply (simp_all add: lens_laws_vcg_simps)
-  apply (elim disjE conjE) 
-    apply (simp)
-   apply auto[]
-    apply (simp) 
-  apply (simp add: mod_pos_pos_trivial)
+  apply (insert assms) (*Make this automatic*) 
+  supply   mod_pos_pos_trivial[simp]
+  apply (hoare_sp_pp_vcg_all)
   done
     
+named_theorems beautify_thms     
+lemma thin_vwb_lens[beautify_thms]: "vwb_lens l \<Longrightarrow> P \<Longrightarrow> P" .   
+lemma [beautify_thms]: "\<not> ief_lens i \<Longrightarrow> P \<Longrightarrow> P" .  
+lemma [beautify_thms]: "i\<bowtie>j \<Longrightarrow> P \<Longrightarrow> P" .  
+lemma [beautify_thms]: "i\<noteq>(j::_\<Longrightarrow>_) \<Longrightarrow> P \<Longrightarrow> P" .  
+lemma [beautify_thms]: "get\<^bsub>i\<^esub> A = x \<Longrightarrow> P \<Longrightarrow> P" .  
+    
+lemma even_count_gen:
+  assumes "lens_indep_all [i, start, j, endd]"
+  assumes "vwb_lens x" "vwb_lens y" "vwb_lens i" "vwb_lens j"  
+  shows  
+    "\<lbrace>&start =\<^sub>u \<guillemotleft>0::int\<guillemotright> \<and> &endd >\<^sub>u 0 \<rbrace>
+       i :== &start;
+       j :== 0 ; 
+       INVR &start =\<^sub>u 0 \<and>  &j =\<^sub>u ((&i + 1) - &start) div 2 \<and> &i \<le>\<^sub>u &endd \<and> &i \<ge>\<^sub>u &start
+       VRT \<guillemotleft>measure (nat o (Rep_uexpr ((&endd + 1) - &i)))\<guillemotright>
+       WHILE &i <\<^sub>u &endd
+       DO
+         IF &i mod 2 =\<^sub>u 0 
+         THEN j :== (&j + 1)
+         ELSE SKIP 
+         FI;
+        i :== (&i + 1)
+       OD
+    \<lbrace>&j =\<^sub>u ((&endd + 1)div 2)\<rbrace>\<^sub>P"  
+  apply (insert assms) (*Make this automatic*)
+  apply (hoare_sp_pp_vcg_all)
+  apply (vcg_elim_determ beautify_thms)
+    apply (simp add: zdiv_zadd1_eq)
+  done    
+(*
+  CLR r;; CLR w;;
+  r::=$l;; w::=$l;;
+  WHILE $r<$h DO (
+    IF a\<^bold>[$r\<^bold>] > \<acute>5 THEN
+      a\<^bold>[$w\<^bold>] ::= a\<^bold>[$r\<^bold>];;
+      w::=$w+\<acute>1
+    ELSE SKIP;;
+    r::=$r+\<acute>1
+  );;
+  h::=$w
+*)  
+term 
+"Abs_uexpr (\<lambda> st. \<exists>a\<^sub>0 h\<^sub>0 . (Rep_uexpr (&y) st)  = a\<^sub>0  \<and> 
+                           (Rep_uexpr (&h) st)  = h\<^sub>0 \<and> 
+                           h\<^sub>0 = a\<^sub>0 \<and> (Rep_uexpr (&l) st) \<le> h\<^sub>0)"
+term 
+  "\<^bold>\<exists>(l\<^sub>0, h\<^sub>0, a\<^sub>0) \<bullet> #\<^sub>u(&a::(int list, _) uexpr) =\<^sub>u a\<^sub>0 \<and> &h =\<^sub>u h\<^sub>0 \<and> &l =\<^sub>u l\<^sub>0 \<and> l\<^sub>0 \<le>\<^sub>u h\<^sub>0"
+
+lemma " (\<^bold>\<exists>(a\<^sub>0, h\<^sub>0) \<bullet> #\<^sub>u(&a::(int list, _) uexpr) =\<^sub>u h\<^sub>0) =
+       Abs_uexpr (\<lambda> st. \<exists>a\<^sub>0 h\<^sub>0 . (Rep_uexpr (#\<^sub>u(&a::(int list, _) uexpr)) st)  = h\<^sub>0)"
+apply pred_simp 
+  by (metis lit.rep_eq)  
+thm "lens_indepI"
+lemma lens_indepE:
+  assumes "x \<bowtie> y"
+  assumes " \<And> v u \<sigma>. put\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> \<sigma> v) u = put\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> \<sigma> u) v \<Longrightarrow> 
+                   get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> \<sigma> u) = get\<^bsub>y\<^esub> \<sigma> \<Longrightarrow> 
+                   get\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> \<sigma> v) = get\<^bsub>x\<^esub> \<sigma> \<Longrightarrow> Q"
+  shows Q
+  using assms unfolding lens_indep_def
+  by auto
+
+lemma 
+  assumes "lens_indep_all [l, h, r, w]"
+  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> r" "a \<bowtie> w"
+  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
+  shows  
+ "\<lbrace>\<^bold>\<exists>(l\<^sub>0, h\<^sub>0, a\<^sub>0, r\<^sub>0, w\<^sub>0) \<bullet> (&a::(int list, _) uexpr) =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and>  #\<^sub>u(\<guillemotleft>a\<^sub>0\<guillemotright>) =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and>  
+                          &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<and> &l =\<^sub>u \<guillemotleft>l\<^sub>0\<guillemotright> \<and> \<guillemotleft>l\<^sub>0\<guillemotright> \<le>\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright>\<rbrace> 
+      r:== &l; w :==&l;
+      INVR \<^bold>\<exists>(l\<^sub>0, h\<^sub>0, a\<^sub>0 , r\<^sub>0, w\<^sub>0) \<bullet> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<and> &a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and> #\<^sub>u(\<guillemotleft>a\<^sub>0\<guillemotright>) =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and> 
+                                    \<guillemotleft>l\<^sub>0\<guillemotright>\<le>\<^sub>u\<guillemotleft>w\<^sub>0\<guillemotright> \<and>  \<guillemotleft>w\<^sub>0\<guillemotright>\<le>\<^sub>u\<guillemotleft>r\<^sub>0\<guillemotright> \<and> \<guillemotleft>r\<^sub>0\<guillemotright>\<le>\<^sub>u\<guillemotleft>h\<^sub>0\<guillemotright> \<and>
+           \<guillemotleft>a\<^sub>0\<guillemotright> =\<^sub>u  \<guillemotleft>filter (\<lambda> x . 5 < x) (a\<^sub>0)\<guillemotright>
+      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
+      WHILE &r<\<^sub>u &h
+      DO 
+       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
+       THEN a :== (trop list_update (&a) (&r) (&a(&w)\<^sub>a)) ;
+            w :== (&w + 1)
+       ELSE SKIP
+       FI ;
+       r:== (&r+1)
+      OD;
+      h :==&w
+     \<lbrace>\<^bold>\<exists>(l\<^sub>0, h\<^sub>0, a\<^sub>0 , r\<^sub>0, w\<^sub>0) \<bullet> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<and> &a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and> #\<^sub>u(\<guillemotleft>a\<^sub>0\<guillemotright>) =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and>
+                             \<guillemotleft>h\<^sub>0\<guillemotright> \<le>\<^sub>u \<guillemotleft>l\<^sub>0\<guillemotright> \<and>  
+                             \<guillemotleft>a\<^sub>0\<guillemotright> =\<^sub>u  \<guillemotleft>filter (\<lambda> x . 5 < x) (a\<^sub>0)\<guillemotright>\<rbrace>\<^sub>P"
+  apply (insert assms) (*Make this automatic*)
+  apply (hoare_sp_pp_vcg_all)
+oops
+lemma 
+  assumes "lens_indep_all [l, h, r, w]"
+  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> r" "a \<bowtie> w"
+  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
+  shows  
+ "\<lbrace> #\<^sub>u(&a) =\<^sub>u &h \<and> &l \<le>\<^sub>u &h\<rbrace> 
+      r:== &l; w :==&l;
+      INVR #\<^sub>u(&a) =\<^sub>u &h \<and> 
+           &l \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h \<and>
+           &a =\<^sub>u  bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&a)
+      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
+      WHILE &r<\<^sub>u &h
+      DO 
+       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
+       THEN a :== (trop list_update (&a) (&r) (&a(&w)\<^sub>a)) ;
+            w :== (&w + 1)
+       ELSE SKIP
+       FI ;
+       r:== (&r+1)
+      OD;
+      h :==&w
+     \<lbrace> #\<^sub>u(&a) =\<^sub>u &h \<and> &h \<le>\<^sub>u &l \<and> &a =\<^sub>u  bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&a)\<rbrace>\<^sub>P"
+  apply (insert assms) (*Make this automatic*)
+  apply (hoare_sp_pp_vcg_all)
+  apply (tactic \<open>Skip_Proof.cheat_tac @{context} 1\<close>)+ done  
+  oops
+    ..
 subsection {* I want to solve the problem of nested existential*}
    
 term "Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st)  = y\<^sub>0  \<and> y\<^sub>0 > 0)" 
