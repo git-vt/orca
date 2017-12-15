@@ -445,22 +445,26 @@ lemma even_count_gen:
        OD
     \<lbrace>&j =\<^sub>u ((&endd + 1)div 2)\<rbrace>\<^sub>P"  
   apply (insert assms) (*Make this automatic*)
+     apply (hoare_sp_default_vcg_all)
+   apply (pred_simp)
+    
+  unfolding lens_indep_all_alt
+   apply simp
+   apply safe
+     apply (simp only: lens_laws_vcg_simps)
+     apply (simp only: lens_laws_vcg_simps)
+    apply (simp only: lens_laws_vcg_simps)
+    apply (simp only: lens_laws_vcg_simps)
+    apply clarsimp+
+        apply (simp only: lens_laws_vcg_simps)
+    apply simp
+   apply (vcg_default_goal_post_processing)
+
   apply (hoare_sp_pp_vcg_all)
   apply (vcg_elim_determ beautify_thms)
     apply (simp add: zdiv_zadd1_eq)
   done    
-(*
-  CLR r;; CLR w;;
-  r::=$l;; w::=$l;;
-  WHILE $r<$h DO (
-    IF a\<^bold>[$r\<^bold>] > \<acute>5 THEN
-      a\<^bold>[$w\<^bold>] ::= a\<^bold>[$r\<^bold>];;
-      w::=$w+\<acute>1
-    ELSE SKIP;;
-    r::=$r+\<acute>1
-  );;
-  h::=$w
-*)  
+
 term 
 "Abs_uexpr (\<lambda> st. \<exists>a\<^sub>0 h\<^sub>0 . (Rep_uexpr (&y) st)  = a\<^sub>0  \<and> 
                            (Rep_uexpr (&h) st)  = h\<^sub>0 \<and> 
@@ -508,35 +512,159 @@ lemma
                              \<guillemotleft>h\<^sub>0\<guillemotright> \<le>\<^sub>u \<guillemotleft>l\<^sub>0\<guillemotright> \<and>  
                              \<guillemotleft>a\<^sub>0\<guillemotright> =\<^sub>u  \<guillemotleft>filter (\<lambda> x . 5 < x) (a\<^sub>0)\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic*)
+  apply (hoare_sp_default_vcg_all)
+
   apply (hoare_sp_pp_vcg_all)
+  oops
+    
+lemma get_intro: (*generalise this law for any binary operation*)
+  "(\<And>v. get\<^bsub>a\<^esub> A = v  \<Longrightarrow> v = uexpression) \<Longrightarrow> get\<^bsub>a\<^esub> A = uexpression"
+  by auto
+
+    
+lemma get_intro_gen: (*It can mess up if used with unification since it will generate schematic vars*)
+  "(\<And>v. (get\<^bsub>a\<^esub> A) = v \<Longrightarrow> F v) \<Longrightarrow> F (get\<^bsub>a\<^esub> A)"
+   by auto  
+
+lemma get_intro_gen': 
+  "(\<forall> v. (get\<^bsub>a\<^esub> A) = v  \<longrightarrow> F v) \<Longrightarrow> F (get\<^bsub>a\<^esub> A)"
+  by auto  
+    
+lemma put_get_elim:
+  "get\<^bsub>X\<^esub> (put\<^bsub>X\<^esub> \<sigma> v\<^sub>1) = v\<^sub>2 \<Longrightarrow>  vwb_lens X \<Longrightarrow> 
+   (v\<^sub>1 = v\<^sub>2 \<Longrightarrow> Q) \<Longrightarrow> Q"
+ by simp  
+
+lemma get_put_elim:
+  "vwb_lens X \<Longrightarrow> 
+   put\<^bsub>X\<^esub> \<sigma>\<^sub>1 (get\<^bsub>X\<^esub> \<sigma>\<^sub>1) = \<sigma>\<^sub>2 \<Longrightarrow> (\<sigma>\<^sub>1 = \<sigma>\<^sub>2 \<Longrightarrow> Q) \<Longrightarrow> Q"
+ by simp  
+
+(*
+  CLR r;; CLR w;;
+  r::=$l;; w::=$l;;
+  WHILE $r<$h DO (
+    IF a\<^bold>[$r\<^bold>] > \<acute>5 THEN
+      a\<^bold>[$w\<^bold>] ::= a\<^bold>[$r\<^bold>];;
+      w::=$w+\<acute>1
+    ELSE SKIP;;
+    r::=$r+\<acute>1
+  );;
+  h::=$w
+
+l=l\<^sub>0 \<and> h=h\<^sub>0 \<and> l\<^sub>0\<le>w \<and> w\<le>r \<and> r\<le>h \<and>
+      lran a l w = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l r) \<and>
+      lran a r h = lran a\<^sub>0 r h
+*)  
+value "take (2 - 0) [1,2::int,3]"  
+term "take\<^sub>u(&w - &l, &a) =\<^sub>u  
+      (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r - &l, &a)))"
+
+term "bop drop (&h - &r) (&a) =\<^sub>u drop\<^sub>u(&h - &r, &a)"
+value "drop (2 -1) [1,2::int,3]"
+value "list_update [1,2::int,3] 2 "  
+term "l=l\<^sub>0 \<and> h\<le>h\<^sub>0 \<and> lran a l h = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l\<^sub>0 h\<^sub>0)"
+  
+  (*lemma lran_eq_iff: "lran a l h = lran a' l h \<longleftrightarrow> (\<forall>i. l\<le>i \<and> i<h \<longrightarrow> a i = a' i)"  
+  apply (induction a l h rule: lran.induct)
+  apply (rewrite in "\<hole> = _" lran.simps)
+  apply (rewrite in "_ = \<hole>" lran.simps)
+  apply auto
+  by (metis antisym_conv not_less zless_imp_add1_zle)*)
+
+term " (\<^bold>\<forall>i \<bullet> undefined)"
+
+term "((take\<^sub>u(&h  - &l, &a)) =\<^sub>u (take\<^sub>u(&h  - &l, &a')))"
+
+
+lemma blah:
+  "(take (h - l) a = take (h-l) a') \<longleftrightarrow> 
+   (\<forall> i. l \<le> i \<and> i < h \<longrightarrow> (nth a i  = nth a' i ))"
+proof (induction a )
+  case Nil
+  then show ?case
+  proof (induction a' )
+    case Nil
+    then show ?case by auto 
+  next
+    case (Cons a a')
+    then show ?case apply auto sorry
+  qed 
+    sorry
+next
+  case (Cons a1 a2)
+  then show ?case sorry
+qed
+
+lemma 
+  "
+    5 < nth xb x \<Longrightarrow>
+    x < length(xb) \<Longrightarrow>
+    xa \<le> x \<Longrightarrow>
+    take xa xb = filter (op < 5) (take x xb) \<Longrightarrow>
+    take ( xa) (xb[xa :=  nth xb x]) = filter (op < 5) (take ( x) (xb[xa :=  nth xb x]))"
 oops
+value "filter (op < 5) (take 2 [0,1,2,3,4::int,5])" 
+  
+  
+value "(take 2 ([0,1,2,3,4::int,5][1:= nth [0,1,2,3,4::int,5] 2 ]))"
+value "take 1 [0]"
+ value "nth [0::int] 0" 
 lemma 
   assumes "lens_indep_all [l, h, r, w]"
   assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> r" "a \<bowtie> w"
+  assumes "old_a \<bowtie> l"  "old_a \<bowtie> h" "old_a \<bowtie> r" "old_a \<bowtie> w"  
   assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
   shows  
- "\<lbrace> #\<^sub>u(&a) =\<^sub>u &h \<and> &l \<le>\<^sub>u &h\<rbrace> 
+ "\<lbrace>  &l =\<^sub>u 0 \<and> #\<^sub>u(&old_a::(int list, _)uexpr) =\<^sub>u &h \<and> &l \<le>\<^sub>u &h \<and>&a =\<^sub>u &old_a  \<rbrace> 
       r:== &l; w :==&l;
-      INVR #\<^sub>u(&a) =\<^sub>u &h \<and> 
+      INVR  #\<^sub>u(&old_a)  =\<^sub>u &h  \<and> &l =\<^sub>u 0 \<and>
            &l \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h \<and>
-           &a =\<^sub>u  bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&a)
+            &a =\<^sub>u  (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &old_a)))\<and>
+           take\<^sub>u(&w- &l, &a) =\<^sub>u  
+           (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &old_a)))\<and>
+           drop\<^sub>u(&h- &r, &a) =\<^sub>u drop\<^sub>u(&h- &r, &old_a)
+   
       VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
       WHILE &r<\<^sub>u &h
       DO 
        IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-       THEN a :== (trop list_update (&a) (&r) (&a(&w)\<^sub>a)) ;
+       THEN a :== (trop list_update (&a) (&w) (&a(&r)\<^sub>a)) ;
             w :== (&w + 1)
        ELSE SKIP
        FI ;
        r:== (&r+1)
       OD;
       h :==&w
-     \<lbrace> #\<^sub>u(&a) =\<^sub>u &h \<and> &h \<le>\<^sub>u &l \<and> &a =\<^sub>u  bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&a)\<rbrace>\<^sub>P"
+     \<lbrace> (take\<^sub>u(&h  - &l, &a)) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&h  - &l, &old_a))\<rbrace>\<^sub>P"
+
   apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_pp_vcg_all)
-  apply (tactic \<open>Skip_Proof.cheat_tac @{context} 1\<close>)+ done  
+   supply blah[simp]
+  apply (hoare_sp_pp_vcg_all) 
+        apply (vcg_elim_determ beautify_thms)
+    prefer 3
+
+  apply (simp only: lens_laws_vcg_simps)
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+       apply (simp only: )
+       apply (tactic \<open>ematch_tac  @{context} @{thms put_get_elim} 1\<close>)
+  prefer 2                                                
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+    
+       apply (simp only: weak_lens.put_get)
+  find_theorems name:".get_put"
+    find_theorems name:".put_get"
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+       apply (determ \<open>(rule get_intro_gen)\<close>)
+          apply (determ \<open>(rule get_intro_gen')\<close>)
+    back back back back 
+     apply (simp only: )
+       apply (simp only: lens_laws_vcg_simps)
+    apply (simp only: lens_laws_vcg_simps)
   oops
-    ..
+    
 subsection {* I want to solve the problem of nested existential*}
    
 term "Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st)  = y\<^sub>0  \<and> y\<^sub>0 > 0)" 
