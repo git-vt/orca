@@ -1,5 +1,5 @@
 theory utp_rec_total_des
-  imports "../hoare/AlgebraicLaws/Design/Algebraic_laws_design"
+  imports "../AlgebraicLaws/Algebraic_laws_design"
 begin
 section {*Total correctness for recursion*}
  
