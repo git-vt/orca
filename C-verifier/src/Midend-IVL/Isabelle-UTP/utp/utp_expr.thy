@@ -33,14 +33,15 @@ text \<open> The term @{term "\<lbrakk>e\<rbrakk>\<^sub>e b"} effectively refers
     
 named_theorems ueval and lit_simps
 
+  
+lift_definition var :: "('t \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t, '\<alpha>) uexpr" is "lens_get".
+    
 subsection \<open> Core expression constructs \<close>
   
-text \<open> A variable expression corresponds to the lens $get$ function associated with a variable. 
+text \<open>A variable expression corresponds to the lens $get$ function associated with a variable. 
   Specifically, given a lens the expression always returns that portion of the state-space
-  referred to by the lens. \<close>
-
-lift_definition var :: "('t \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t, '\<alpha>) uexpr" is lens_get .
-
+  referred to by the lens.\<close>
+  
 text \<open> A literal is simply a constant function expression, always returning the same value
   for any binding. \<close>
 

@@ -3,7 +3,21 @@ section \<open>Lens Algebraic Operators\<close>
 theory Lens_Algebra
 imports Lens_Laws
 begin
+subsection \<open>Control\<close>
 
+text \<open>Before building up UTP expressions we define LENS_GET_TAG. It is a wrapper 
+      for expressions generated using lens_get. It is a control flag for the VCG
+      that allows a post-processing to deal with nested lens_get terms. Thus, 
+      provides nicer and more readable proof goal 
+      (ie. proof goals without get functions in conclusions). LENS_PUT_TAG is similar,
+      however, it is applied to lens_put\<close>
+  
+definition LENS_GET_TAG :: "'t \<Rightarrow>'t" 
+  where [simp]:"LENS_GET_TAG v = v"
+    
+definition LENS_PUT_TAG :: "'s \<Rightarrow>'s" 
+  where [simp]:"LENS_PUT_TAG v = v"
+    
 subsection \<open>Lens Composition, Plus, Unit, and Identity\<close>
 
 text \<open>
@@ -43,7 +57,7 @@ text \<open>The product functor lens similarly parallel composes two lenses, but
   have different sources and so the resulting source is also a product.\<close>
 
 definition lens_prod :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrightarrow> 'd) \<Rightarrow> ('a \<times> 'b \<Longrightarrow> 'c \<times> 'd)" (infixr "\<times>\<^sub>L" 85) where
-[lens_defs]: "lens_prod X Y = \<lparr> lens_get = map_prod get\<^bsub>X\<^esub> get\<^bsub>Y\<^esub>
+[lens_defs]: "lens_prod X Y = \<lparr> lens_get = map_prod (get\<^bsub>X\<^esub>) (get\<^bsub>Y\<^esub>)
                               , lens_put = \<lambda> (u, v) (x, y). (put\<^bsub>X\<^esub> u x, put\<^bsub>Y\<^esub> v y) \<rparr>"
 
 text \<open>The $\lfst$ and $\lsnd$ lenses project the first and second elements, respectively, of a
@@ -81,8 +95,8 @@ text \<open>The quotient operator $X \lquot Y$ shortens lens $X$ by cutting off 
   thus the dual of the composition operator.\<close>
 
 definition lens_quotient :: "('a \<Longrightarrow> 'c) \<Rightarrow> ('b \<Longrightarrow> 'c) \<Rightarrow> 'a \<Longrightarrow> 'b" (infixr "'/\<^sub>L" 90) where
-[lens_defs]: "X /\<^sub>L Y = \<lparr> lens_get = \<lambda> \<sigma>. get\<^bsub>X\<^esub> (create\<^bsub>Y\<^esub> \<sigma>)
-                       , lens_put = \<lambda> \<sigma> v. get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (create\<^bsub>Y\<^esub> \<sigma>) v) \<rparr>"
+[lens_defs]: "X /\<^sub>L Y = \<lparr> lens_get = \<lambda> \<sigma>. (get\<^bsub>X\<^esub> (create\<^bsub>Y\<^esub> \<sigma>))
+                       , lens_put = \<lambda> \<sigma> v.  (get\<^bsub>Y\<^esub> (put\<^bsub>X\<^esub> (create\<^bsub>Y\<^esub> \<sigma>) v)) \<rparr>"
 
 text \<open>Lens override uses a lens to replace part of a source type with a given value for the
   corresponding view.\<close>
@@ -178,7 +192,8 @@ lemma id_bij_lens: "bij_lens 1\<^sub>L"
 
 lemma inv_id_lens: "inv\<^sub>L 1\<^sub>L = 1\<^sub>L"
   by (auto simp add: lens_inv_def id_lens_def lens_create_def)
-
+    
+    
 lemma lens_inv_bij: "bij_lens X \<Longrightarrow> bij_lens (inv\<^sub>L X)"
   by (unfold_locales, simp_all add: lens_inv_def lens_create_def)
 
@@ -195,7 +210,7 @@ lemma lens_comp_assoc: "(X ;\<^sub>L Y) ;\<^sub>L Z = X ;\<^sub>L (Y ;\<^sub>L Z
 
 lemma lens_comp_left_id [simp]: "1\<^sub>L ;\<^sub>L X = X"
   by (simp add: id_lens_def lens_comp_def)
-
+    
 lemma lens_comp_right_id [simp]: "X ;\<^sub>L 1\<^sub>L = X"
   by (simp add: id_lens_def lens_comp_def)
 

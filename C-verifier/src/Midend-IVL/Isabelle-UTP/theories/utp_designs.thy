@@ -1422,7 +1422,7 @@ proof -
     by (simp add: ndesign_composition_wp wp alpha )
   finally show ?thesis .
 qed
-    
+ 
 lemma ndes_seqr_abort: 
   assumes "P is \<^bold>N"
   shows "P ;; \<bottom>\<^sub>D = (\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<and> post\<^sub>D P wp false) \<turnstile>\<^sub>n false"
@@ -1433,7 +1433,7 @@ proof -
     by (simp add: ndesign_composition_wp alpha)
   finally show ?thesis .
 qed
-      
+    
 lemma wp_assigns_d [wp]: "\<langle>\<sigma>\<rangle>\<^sub>D wp\<^sub>D r = \<sigma> \<dagger> r"
   by (rel_auto)
 

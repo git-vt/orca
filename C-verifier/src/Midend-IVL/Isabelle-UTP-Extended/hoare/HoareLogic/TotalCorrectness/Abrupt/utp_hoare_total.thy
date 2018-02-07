@@ -144,3 +144,4 @@ lemma   "\<lbrace>\<guillemotleft>x\<bowtie>y\<guillemotright> \<and> \<guillemo
   unfolding lens_indep_def
   by rel_simp  
 end
+

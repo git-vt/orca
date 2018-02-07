@@ -1,4 +1,3 @@
-
 section "Algebraic laws for abrupt designs"
 theory algebraic_laws_fault
 imports algebraic_laws_fault_aux
@@ -448,3 +447,4 @@ subsection {*Try Catch laws*}
 
 
 end
+

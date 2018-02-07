@@ -116,7 +116,7 @@ lemma drop_post_des_ueq_distribute[simp]:
   "(\<lfloor>p\<rfloor>\<^sub>>\<^sub>D =\<^sub>u \<lfloor>q\<rfloor>\<^sub>>\<^sub>D) = \<lfloor>p =\<^sub>u q\<rfloor>\<^sub>>\<^sub>D"
   by rel_simp 
     
-section {*Normal Design setup*}
+section {*Normal design syntax setup*}
 
 abbreviation ndesign_lfp :: "('\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des) \<Rightarrow> '\<alpha> hrel_des" ("\<mu>\<^sub>N") where
 "\<mu>\<^sub>N F \<equiv> \<^bold>\<mu>\<^bsub>NDES\<^esub> F"
@@ -165,66 +165,219 @@ where [urel_defs]:
         \<lbrakk>init ;; body ;; 
          Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
  
-subsection{*Design Iterations*}
+subsection{*Design iterations*}
+
+(*The generic from_until_loop definition is from the paper called :
+  Loop invariants: analysis, classification, and examples*)
   
-definition While_gfp_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>D _ do _ od")
-where "while\<^sup>\<top>\<^sup>D b do B od = (\<nu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
-
-definition While_lfp_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>D _ do _ od") 
-where "while\<^sub>\<bottom>\<^sub>D b do B od =  (\<mu>\<^sub>D X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
-
-abbreviation While_bot_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ do _ od") 
-where "while\<^sub>D b do B od \<equiv> while\<^sub>\<bottom>\<^sub>D b do B od"
-
-text {*While loops with invariant decoration*}
-
-definition While_inv_des :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ invr _ do _ od") 
-where "while\<^sub>D b invr p do S od = while\<^sub>D b do S od"
-
-text {*While loops with invariant and variant decoration*}
-  
-definition While_inv_vrt_des :: 
-  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>'\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>D _ invr _ vrt _ do _ od") 
-where "while\<^sub>D b invr p vrt e do S od = while\<^sub>D b do S od"
-  
-declare While_gfp_des_def [urel_defs]
-declare While_inv_des_def [urel_defs]
-declare While_lfp_des_def [urel_defs]
-declare While_inv_vrt_des_def [urel_defs]
-
-subsection{*Normal Design Iterations*}   
-  
-definition While_gfp_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>N _ do _ od")
-where "while\<^sup>\<top>\<^sup>N b do B od = (\<nu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
-
-definition While_lfp_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>N _ do _ od") 
-where "while\<^sub>\<bottom>\<^sub>N b do B od =  (\<mu>\<^sub>N X \<bullet> bif\<^sub>D b then (B ;; X) else SKIP\<^sub>D eif)"
-
-abbreviation While_bot_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ do _ od") 
-where "while\<^sub>N b do B od \<equiv> while\<^sub>\<bottom>\<^sub>N b do B od"
-
-text {*While loops with invariant decoration*}
-
-definition While_inv_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ invr _ do _ od") 
-where "while\<^sub>N b invr p do S od = while\<^sub>N b do S od"
+definition from_until_gfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>D _ until _ do _ od") 
+where "from\<^sup>\<top>\<^sup>D init until exit do body od =  
+       init ;; (\<nu>\<^sub>D X \<bullet> bif\<^sub>D \<not> exit then (body ;; X) else SKIP\<^sub>D eif)" 
     
-text {*While loops with invariant and variant decoration*}
+definition from_until_lfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>D _ until _ do _ od") 
+where "from\<^sub>\<bottom>\<^sub>D init until exit do body od =  
+       init ;; (\<mu>\<^sub>D X \<bullet> bif\<^sub>D \<not> exit then (body ;; X) else SKIP\<^sub>D eif)" 
+    
+definition while_gfp_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>D _ do _ od")
+where "while\<^sup>\<top>\<^sup>D b do body od = from\<^sup>\<top>\<^sup>D SKIP\<^sub>D until \<not> b do body od"
 
-definition While_inv_vrt_ndes :: 
-  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>N _ invr _ vrt _ do _ od") 
-where "while\<^sub>N b invr p vrt e do S od = while\<^sub>N b do S od"
+definition while_lfp_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>D _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>D b do body od = from\<^sub>\<bottom>\<^sub>D SKIP\<^sub>D until \<not> b do body od"
 
-declare While_gfp_ndes_def [urel_defs]
-declare While_inv_ndes_def [urel_defs]
-declare While_lfp_ndes_def [urel_defs]
-declare While_inv_vrt_ndes_def [urel_defs]
+definition do_while_gfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>D _ od")
+where "do body while\<^sup>\<top>\<^sup>D b od = from\<^sup>\<top>\<^sup>D body until \<not> b do body od"
+
+definition do_while_lfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>D _ od") 
+  where "do body while\<^sub>\<bottom>\<^sub>D b od = from\<^sub>\<bottom>\<^sub>D body until \<not> b do body od"
+    
+definition for_gfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>D '(_,_,_') do _ od")
+where "for\<^sup>\<top>\<^sup>D (init, b, incr) do body od = from\<^sup>\<top>\<^sup>D init until \<not> b do body ;; incr od"
+
+definition for_lfp_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>D '(_,_,_') do _ od")
+where "for\<^sub>\<bottom>\<^sub>D (init, b, incr) do body od = from\<^sub>\<bottom>\<^sub>D init until \<not> b do body ;; incr od"
+  
+text {*Iterations with invariant decoration*}
+
+definition from_until_lfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>D _ invr _ until _ do _ od") 
+where "from\<^sub>\<bottom>\<^sub>D init invr invar until exit do body od = from\<^sub>\<bottom>\<^sub>D init until exit do body od"  
+
+definition from_until_gfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>D _ invr _ until _ do _ od") 
+where "from\<^sup>\<top>\<^sup>D init invr invar until exit do body od =  from\<^sup>\<top>\<^sup>D init until exit do body od"  
+
+definition while_lfp_invr_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>D _ invr _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>D b invr invar do body od = while\<^sub>\<bottom>\<^sub>D b do body od"
+
+definition while_gfp_invr_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>D _ invr _ do _ od") 
+where "while\<^sup>\<top>\<^sup>D b invr invar do body od = while\<^sup>\<top>\<^sup>D b do body od"
+
+definition do_while_gfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>D _ invr _ od")
+where "do body while\<^sup>\<top>\<^sup>D b invr invar od = from\<^sup>\<top>\<^sup>D body until \<not> b do body od"
+
+definition do_while_lfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>D _ invr _ od") 
+where "do body while\<^sub>\<bottom>\<^sub>D b invr invar od = from\<^sub>\<bottom>\<^sub>D body until \<not> b do body od"
+    
+definition for_gfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>D '(_,_,_') invr _ do _ od")
+where "for\<^sup>\<top>\<^sup>D (init, b, incr) invr invar do body od = from\<^sup>\<top>\<^sup>D init until \<not> b do body ;; incr od"
+
+definition for_lfp_invr_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>D '(_,_,_') invr _ do _ od")
+where "for\<^sub>\<bottom>\<^sub>D (init, b, incr) invr invar do body od = from\<^sub>\<bottom>\<^sub>D init until \<not> b do body ;; incr od"
+
+text {*Iterations with invariant and variant decoration*}
+  
+definition from_until_lfp_invr_vrt_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>D _ invr _ vrt _ until _ do _ od") 
+where "from\<^sub>\<bottom>\<^sub>D init invr invar vrt vari until exit do body od = from\<^sub>\<bottom>\<^sub>D init until exit do body od"
+
+definition from_until_gfp_invr_vrt_des :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>D _ invr _ vrt _ until _ do _ od") 
+where "from\<^sup>\<top>\<^sup>D init invr invar vrt vari until exit do body od = from\<^sup>\<top>\<^sup>D init until exit do body od"
+    
+definition while_lfp_invr_vrt_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>'\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>D _ invr _ vrt _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>D b invr invar vrt vari do S od = while\<^sub>\<bottom>\<^sub>D b do S od"
+
+definition while_gfp_invr_vrt_des :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>'\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>D _ invr _ vrt _ do _ od") 
+where "while\<^sup>\<top>\<^sup>D b invr invar vrt vari do S od = while\<^sup>\<top>\<^sup>D b do S od"
+
+definition do_while_gfp_invr_vrt_des :: 
+   "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>D _ invr _ vrt _ od")
+where "do body while\<^sup>\<top>\<^sup>D b invr invar vrt vari od = from\<^sup>\<top>\<^sup>D body until \<not> b do body od"
+
+definition do_while_lfp_invr_vrt_des :: 
+   "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>D _ invr _ vrt _ od") 
+where "do body while\<^sub>\<bottom>\<^sub>D b invr invar vrt vari od = from\<^sub>\<bottom>\<^sub>D body until \<not> b do body od"
+
+definition for_gfp_invr_vrt_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>D '(_,_,_') invr _ vrt_ do _ od")
+where "for\<^sup>\<top>\<^sup>D (init, b, incr) invr invar vrt vari do body od = from\<^sup>\<top>\<^sup>D init until \<not> b do body ;; incr od"
+
+definition for_lfp_invr_vrt_des :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>D '(_,_,_') invr _ vrt _ do _ od")
+where "for\<^sub>\<bottom>\<^sub>D (init, b, incr) invr invar vrt vari do body od = from\<^sub>\<bottom>\<^sub>D init until \<not> b do body ;; incr od"
+  
+subsection{*Normal design iterations*}   
+
+(*The generic from_until_loop definition is from the paper called :
+  Loop invariants: analysis, classification, and examples*)
+  
+definition from_until_gfp_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>N _ until _ do _ od") 
+  where "from\<^sup>\<top>\<^sup>N init until exit do body od =  
+         init ;; (\<nu>\<^sub>N X \<bullet> bif\<^sub>D \<not> exit then (body ;; X) else SKIP\<^sub>D eif)" 
+  
+definition from_until_lfp_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>N _ until _ do _ od") 
+  where "from\<^sub>\<bottom>\<^sub>N init until exit do body od =  
+         init ;; (\<mu>\<^sub>N X \<bullet> bif\<^sub>D \<not> exit then (body ;; X) else SKIP\<^sub>D eif)" 
+
+definition while_gfp_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>N _ do _ od")
+where "while\<^sup>\<top>\<^sup>N b do body od = from\<^sup>\<top>\<^sup>N SKIP\<^sub>D  until \<not> b do body od"
+
+definition while_lfp_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>N _ do _ od") 
+  where "while\<^sub>\<bottom>\<^sub>N b do body od =  from\<^sub>\<bottom>\<^sub>N SKIP\<^sub>D  until \<not> b do body od"
+    
+definition do_while_gfp_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>N _ od")
+where "do body while\<^sup>\<top>\<^sup>N b od = from\<^sup>\<top>\<^sup>N body until \<not> b do body od"
+
+definition do_while_lfp_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>N _ od") 
+  where "do body while\<^sub>\<bottom>\<^sub>N b od = from\<^sub>\<bottom>\<^sub>N body until \<not> b do body od"
+    
+definition for_gfp_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>N '(_,_,_') do _ od")
+where "for\<^sup>\<top>\<^sup>N (init, b, incr) do body od = from\<^sup>\<top>\<^sup>N init until \<not> b do body ;; incr od"
+
+definition for_lfp_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>N '(_,_,_') do _ od")
+where "for\<^sub>\<bottom>\<^sub>N (init, b, incr) do body od = from\<^sub>\<bottom>\<^sub>N init until \<not> b do body ;; incr od"
+    
+text {*Iterations with invariant decoration*}
+
+definition from_until_lfp_invr_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>N _ invr _ until _ do _ od") 
+  where "from\<^sub>\<bottom>\<^sub>N init invr invar until exit do body od =  from\<^sub>\<bottom>\<^sub>N init until exit do body od"
+
+definition from_until_gfp_invr_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>N _ invr _ until _ do _ od") 
+  where "from\<^sup>\<top>\<^sup>N init invr invar until exit do body od =  from\<^sup>\<top>\<^sup>N init until exit do body od"
+
+definition while_lfp_invr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>N _ invr _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>N b invr invar do body od = while\<^sub>\<bottom>\<^sub>N b do body od"
+
+definition while_gfp_invr_ndes :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>N _ invr _ do _ od") 
+where "while\<^sup>\<top>\<^sup>N b invr invar do body od = while\<^sup>\<top>\<^sup>N b do body od"
+
+definition do_while_gfp_invr_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>N _ invr _ od")
+where "do body while\<^sup>\<top>\<^sup>N b invr invar od = from\<^sup>\<top>\<^sup>N body until \<not> b do body od"
+
+definition do_while_lfp_invr_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>N _ invr _ od") 
+where "do body while\<^sub>\<bottom>\<^sub>N b invr invar od = from\<^sub>\<bottom>\<^sub>N body until \<not> b do body od"  
+  
+definition for_gfp_invr_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>N '(_,_,_') invr _ do _ od")
+where "for\<^sup>\<top>\<^sup>N (init, b, incr) invr invar do body od = from\<^sup>\<top>\<^sup>N init until \<not> b do body ;; incr od"
+
+definition for_lfp_invr_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow>  '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>N '(_,_,_') invr _ do _ od")
+where "for\<^sub>\<bottom>\<^sub>N (init, b, incr) invr invar do body od = from\<^sub>\<bottom>\<^sub>N init until \<not> b do body ;; incr od"
+  
+text {*Iterations with invariant and variant decoration*}
+  
+definition from_until_lfp_invr_vrt_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>N _ invr _ vrt _ until _ do _ od") 
+  where "from\<^sub>\<bottom>\<^sub>N init invr invar vrt vari until exit do body od =  from\<^sub>\<bottom>\<^sub>N init until exit do body od"
+
+definition from_until_gfp_invr_vrt_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>N _ invr _ vrt _ until _ do _ od") 
+  where "from\<^sup>\<top>\<^sup>N init invr invar vrt vari until exit do body od =  from\<^sup>\<top>\<^sup>N init until exit do body od"
+    
+definition while_lfp_invr_vrt_ndes :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sub>\<bottom>\<^sub>N _ invr _ vrt _ do _ od") 
+where "while\<^sub>\<bottom>\<^sub>N b invr invar vrt vari do body od = while\<^sub>\<bottom>\<^sub>N b do body od"
+
+definition while_gfp_invr_vrt_ndes :: 
+  "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("while\<^sup>\<top>\<^sup>N _ invr _ vrt _ do _ od") 
+where "while\<^sup>\<top>\<^sup>N b invr invar vrt vari do body od = while\<^sup>\<top>\<^sup>N b do body od"
+
+definition do_while_gfp_invr_vrt_ndes :: 
+   "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sup>\<top>\<^sup>N _ invr _ vrt _ od")
+where "do body while\<^sup>\<top>\<^sup>N b invr invar vrt vari od = from\<^sup>\<top>\<^sup>N body until \<not> b do body od"
+
+definition do_while_lfp_invr_vrt_ndes :: 
+   "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des" ("do _ while\<^sub>\<bottom>\<^sub>N _ invr _ vrt _ od") 
+   where "do body while\<^sub>\<bottom>\<^sub>N b invr invar vrt vari od = from\<^sub>\<bottom>\<^sub>N body until \<not> b do body od"
+     
+definition for_gfp_invr_vrt_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sup>\<top>\<^sup>N '(_,_,_') invr _ vrt_ do _ od")
+where "for\<^sup>\<top>\<^sup>N (init, b, incr) invr invar vrt vari do body od = from\<^sup>\<top>\<^sup>N init until \<not> b do body ;; incr od"
+
+definition for_lfp_invr_vrt_ndes :: 
+  "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>N '(_,_,_') invr _ vrt _ do _ od")
+where "for\<^sub>\<bottom>\<^sub>N (init, b, incr) invr invar vrt vari do body od = from\<^sub>\<bottom>\<^sub>N init until \<not> b do body ;; incr od"
   
 subsection {*Design frame and anti-frame*}
 
 definition frame\<^sub>D :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" where
-[urel_defs]: "frame\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u \<guillemotleft>st\<guillemotright>  \<oplus> $\<Sigma>\<^sub>D on &a))"
+[urel_defs]: "frame\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u \<guillemotleft>st\<guillemotright> \<oplus> $\<Sigma>\<^sub>D on &a))"
 
 definition antiframe\<^sub>D :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" where
 [urel_defs]: "antiframe\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u $\<Sigma>\<^sub>D \<oplus> \<guillemotleft>st\<guillemotright> on &a))"  
 
 end
+

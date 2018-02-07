@@ -19,7 +19,7 @@ shows
 \<lbrace>&x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> &y =\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>\<^sub>u"
    apply (insert assms)
   apply (rule seq_hoare_r)
-   defer
+   defer             
    apply (rule seq_hoare_r)
     apply (rule assigns_hoare_r')
    apply (rule assigns_hoare_r')
@@ -87,7 +87,42 @@ lemma even_count_method:
    apply (simp add: mod_pos_pos_trivial)
    apply solve_vcg
   done
+lemma 
+  assumes "lens_indep_all [l, h, h\<^sub>0 ,r, w]"
+  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> h\<^sub>0" "a \<bowtie> r" "a \<bowtie> w"
+  assumes "a\<^sub>0 \<bowtie> l"  "a\<^sub>0 \<bowtie> a" "a\<^sub>0 \<bowtie> h" "a\<^sub>0 \<bowtie> h\<^sub>0" "a\<^sub>0 \<bowtie> r" "a\<^sub>0 \<bowtie> w"  
+  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
+  shows  
+    (* a=a\<^sub>0 \<and> h=h\<^sub>0 \<and> l\<le>h*)
+ "\<lbrace>&h =\<^sub>u \<guillemotleft>7::nat\<guillemotright> \<and> 0 \<le>\<^sub>u &h  \<and> &a =\<^sub>u \<guillemotleft>[1,6,7,9,3,2,9::int]\<guillemotright>\<rbrace> 
+      (r:== 0;; w :==0;;
+      while  &r<\<^sub>u &h invr  0 \<le>\<^sub>u &h \<and> &h =\<^sub>u \<guillemotleft>7\<guillemotright> \<and>
+            0 \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h (*\<and> 
+            &w =\<^sub>u  #\<^sub>u(bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&r, &a))
+            \<and> 
+           (take\<^sub>u(&w , &a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r, \<guillemotleft>[1,6,7,9,3,2,9::int]\<guillemotright>)))
 
+             \<and>
+           
+            ((take\<^sub>u(&w , &a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r, &a\<^sub>0))))
+           \<and>
+           (drop\<^sub>u((&r + 1), &a)) =\<^sub>u (drop\<^sub>u((&r + 1), &a\<^sub>0)) 
+
+      I=\<lambda>(h\<^sub>0,a\<^sub>0). vars l h (a:imap) r w in 
+      h=h\<^sub>0 \<and> l\<le>w \<and> w\<le>r \<and> r\<le>h \<and>
+      lran a l w = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l r) \<and>
+      lran a r h = lran a\<^sub>0 r h*)
+     do (if\<^sub>u (&a)(&r)\<^sub>a >\<^sub>u (5)
+       then a :== swap\<^sub>u (&w) (&r) (\<guillemotleft>[1,6,7,9,3,2,9::int]\<guillemotright>) ;;
+            w :== (&w + 1)
+       else II) ;;
+       r:== (&r+1) 
+      od) ;;
+      h :==&w
+      (*  h\<le>h\<^sub>0 \<and> lran a l h = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l h\<^sub>0)*)
+     \<lbrace>&h =\<^sub>u &w \<rbrace>\<^sub>u"
+  apply (insert assms)
+  apply exp_vcg done
 subsection Sorting
 definition \<open>outer_invr i array old_array \<equiv>
   mset array = mset old_array

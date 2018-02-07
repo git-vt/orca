@@ -1,4 +1,3 @@
-
 section "Auxiliary algebraic laws for abrupt designs"
 theory algebraic_laws_fault_aux
 imports "../../../theories/Fault/utp_fault_designs"
@@ -344,3 +343,4 @@ subsection {*block abrupt usubst*}
 subsection {*Catch abrupt usubst*}
 
 end
+

@@ -101,3 +101,5 @@ lemma cond_not_cond_L6_left_des_variant[urel_cond]:
   by rel_auto
 
 end
+
+

@@ -191,3 +191,4 @@ lemma frame_hoare_r' [hoare_safe]:
   by (simp add: frame_hoare_r utp_pred_laws.inf.commute)    
 
 end
+

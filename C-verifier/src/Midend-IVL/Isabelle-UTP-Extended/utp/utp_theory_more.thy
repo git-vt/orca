@@ -925,3 +925,4 @@ corollary ex_retract_id:
   shows "retract (ex x \<Leftarrow>\<langle>ex x, id\<rangle>\<Rightarrow> id)"
   using assms ex_retract[where H="id"] by (auto)
 end
+

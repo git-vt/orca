@@ -61,7 +61,7 @@ text {* The next function looks up the expression associated with a variable in 
   by use of the \emph{get} lens function. *}
 
 lift_definition usubst_lookup :: "('\<alpha>,'\<beta>) psubst \<Rightarrow> ('a \<Longrightarrow> '\<beta>) \<Rightarrow> ('a, '\<alpha>) uexpr" ("\<langle>_\<rangle>\<^sub>s")
-is "\<lambda> \<sigma> x b. get\<^bsub>x\<^esub> (\<sigma> b)" .
+is "\<lambda> \<sigma> x b. (get\<^bsub>x\<^esub> (\<sigma> b))" .
 
 text {* Substitutions also exhibit a natural notion of unrestriction which states that $\sigma$
   does not restrict $x$ if application of $\sigma$ to an arbitrary state $\rho$ will not effect
@@ -202,7 +202,7 @@ proof (rule injI)
              (\<forall>a b. get\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> a b) = get\<^bsub>x\<^esub> a) \<and> (\<forall>a b. get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> a b) = get\<^bsub>y\<^esub> a)"
     by (simp add: assms(3) lens_indep.lens_put_irr2 lens_indep_comm)
   then show "b\<^sub>1 = b\<^sub>2"
-    by (metis a assms(1) assms(2) pr_var_def var.rep_eq vwb_lens.source_determination vwb_lens_def wb_lens_def weak_lens.put_get)   
+    by (metis  a assms(1) assms(2) pr_var_def var.rep_eq vwb_lens.source_determination vwb_lens_def wb_lens_def weak_lens.put_get)   
 qed
   
 lemma usubst_upd_var_id [usubst]:

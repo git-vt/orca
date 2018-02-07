@@ -292,7 +292,8 @@ by rel_auto
 subsection {* Relational alphabet extension *}
 
 lift_definition rel_alpha_ext :: "'\<beta> hrel \<Rightarrow> ('\<beta> \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel" (infix "\<oplus>\<^sub>R" 65)
-is "\<lambda> P x (b1, b2). P (get\<^bsub>x\<^esub> b1, get\<^bsub>x\<^esub> b2) \<and> (\<forall> b. b1 \<oplus>\<^sub>L b on x = b2 \<oplus>\<^sub>L b on x)" .
+is "\<lambda> P x (b1, b2). P ((get\<^bsub>x\<^esub> b1), (get\<^bsub>x\<^esub> b2)) \<and> 
+                     (\<forall> b. b1 \<oplus>\<^sub>L b on x = b2 \<oplus>\<^sub>L b on x)" .
 
 lemma rel_alpha_ext_alt_def:
   assumes "vwb_lens y" "x +\<^sub>L y \<approx>\<^sub>L 1\<^sub>L" "x \<bowtie> y"
