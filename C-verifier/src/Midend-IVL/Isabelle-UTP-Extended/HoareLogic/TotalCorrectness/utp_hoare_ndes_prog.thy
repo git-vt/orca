@@ -1,6 +1,6 @@
 theory utp_hoare_ndes_prog
 
-imports "../../AlgebraicLaws/IMP_Prog/algebraic_laws_prog"
+imports "../../AlgebraicLaws/algebraic_laws_prog"
 
 begin
 

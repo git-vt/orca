@@ -1,7 +1,7 @@
 section \<open>Algebraic laws for abrupt designs\<close>
 
 theory algebraic_laws_prog
-  imports "../../impl/utp_prog_des_more"
+  imports "../impl/utp_prog_des_more"
 begin
 
 (* TODO: add laws for assigns when composed with try catch... *)

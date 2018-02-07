@@ -1,7 +1,7 @@
 section {* Imperative Programs *}
   
 theory utp_prog
-  imports "../../Isabelle-UTP-extended/hoare/HoareLogic/TotalCorrectness/utp_hoare_des"
+  imports "../../Isabelle-UTP-extended/HoareLogic/TotalCorrectness/utp_hoare_des"
 begin
   
 subsection {* Program Type *}

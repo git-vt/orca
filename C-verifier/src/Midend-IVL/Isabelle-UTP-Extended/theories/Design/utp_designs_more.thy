@@ -1,5 +1,5 @@
 theory utp_designs_more
-imports   "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_AUX"
+imports   "../../AlgebraicLaws/Algebraic_Laws_AUX"
 begin
 
 section {*Syntax setup*}

@@ -6,7 +6,7 @@ text \<open>In this section we introduce the semantic rules related to the diffe
       language, and this before any deductive proof verification activity or formal testing.\<close>
 
 theory Algebraic_Laws_aux
-  imports "../../../../Isabelle-UTP/theories/utp_designs"
+  imports "../../Isabelle-UTP/theories/utp_designs"
 begin
 
 subsection \<open>Complementing usubst\<close>
