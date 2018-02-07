@@ -19,7 +19,7 @@ imports
   utp_deduct
   utp_rel
   utp_tactics
-  "../../Isabelle-UTP-Extended/hoare/HoareLogic/PartialCorrectness/utp_hoare"
+  "../../Isabelle-UTP-Extended/HoareLogic/PartialCorrectness/utp_hoare"
   "../../Isabelle-UTP-Extended/utp/utp_rec_total"
   "../../Isabelle-UTP-Extended/utp/utp_sp"
   utp_wp

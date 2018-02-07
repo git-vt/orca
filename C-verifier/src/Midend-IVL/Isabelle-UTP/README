@@ -1,6 +1,5 @@
-This folder contains setup for the specification and the verification framework based on UTP theory.
-The setup consists of an extension of Foster et al. UTP formalization with total correctness, faults, abrupts and
-new designs that captures a sophisticated control flow statements such as exceptions,
-scoping, guards etc. 
+This forlder contains the implementation of Isabelle/UTP on which Orca is based on.
 
-The best way to start using the framework is to look at the folder examples.
+For more details on CONTRIBUTORS, LISENCE adn COPYRIGHT see:
+
+https://www-users.cs.york.ac.uk/~simonf/utp-isabelle/

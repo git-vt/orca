@@ -1,7 +1,7 @@
 section {* UTP Theories *}
 
 theory utp_theory
-imports "../../Isabelle-UTP-Extended/hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws"
+imports "../../Isabelle-UTP-Extended/AlgebraicLaws/Algebraic_Laws"
 
 begin
 

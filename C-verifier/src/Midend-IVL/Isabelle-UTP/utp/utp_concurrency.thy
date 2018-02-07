@@ -4,8 +4,7 @@ theory utp_concurrency
   imports
    utp_theory 
    utp_tactics
-   "../../Isabelle-UTP-Extended/hoare/HoareLogic/PartialCorrectness/utp_hoare"
-   "../../Isabelle-UTP-Extended/hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws" 
+   "../../Isabelle-UTP-Extended/HoareLogic/PartialCorrectness/utp_hoare"
 
 begin
 

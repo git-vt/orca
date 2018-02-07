@@ -1,7 +1,7 @@
 section {* Relational operational semantics *}
  
 theory utp_rel_opsem
-  imports "../../Isabelle-UTP-Extended/hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws"
+  imports "../../Isabelle-UTP-Extended/AlgebraicLaws/Algebraic_Laws"
 begin
 
 text {* This theory uses the laws of relational calculus to create a basic operational semantics.
