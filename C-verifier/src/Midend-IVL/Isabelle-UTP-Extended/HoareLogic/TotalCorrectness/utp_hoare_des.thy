@@ -1,3 +1,13 @@
+(*****************************************************************************************)
+(* Orca: A Functional Correctness Verifier for Imperative Programs Based on Isabelle/UTP *)
+(*                                                                                       *)
+(* Copyright (c) 2016-2018 Virginia Tech, USA                                            *)
+(* This software may be distributed and modified according to the terms of               *)
+(* the GNU Lesser General Public License version 3.0 or any later version.               *)
+(* Note that NO WARRANTY is provided.                                                    *)
+(* See CONTRIBUTORS, LICENSE and CITATION files for details.                             *)
+(*****************************************************************************************)
+
 theory utp_hoare_des
 
 imports "../../utp/utp_rec_total_des"
