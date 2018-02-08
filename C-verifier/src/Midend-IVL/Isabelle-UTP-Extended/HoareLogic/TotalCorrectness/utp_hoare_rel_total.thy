@@ -11,7 +11,7 @@
 section \<open>Verification Condition Testing\<close>
 
 theory utp_hoare_rel_total
-  imports "../../PartialCorrectness/utp_hoare"
+  imports "../PartialCorrectness/utp_hoare"
 begin
   
 definition while_invT :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sub>\<bottom> _ invr _ do _ od" 71) where

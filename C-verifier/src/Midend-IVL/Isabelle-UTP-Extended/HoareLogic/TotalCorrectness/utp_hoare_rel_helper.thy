@@ -10,8 +10,8 @@
 
 subsection {* Relational Hoare calculus *}
 
-theory utp_hoare_helper
-imports utp_hoare_total 
+theory utp_hoare_rel_helper
+imports utp_hoare_rel_total 
 begin
 named_theorems utp_hoare_hp
 

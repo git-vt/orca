@@ -10,8 +10,8 @@
 
 section {* UTP Theories *}
 
-theory utp_theory
-imports "../../Isabelle-UTP-Extended/hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws"
+theory utp_theory_more
+imports "../AlgebraicLaws/Algebraic_Laws"
 
 begin
 

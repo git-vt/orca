@@ -11,7 +11,7 @@
 theory utp_heap_scratch
 imports   "../../../Isabelle-UTP/utp/utp" 
           "../../../Isabelle-UTP/theories/utp_designs"  
-          "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_aux"
+          "../../AlgebraicLaws/Algebraic_Laws_aux"
 begin
 subsection {*UTP heap alphabet*}
 

@@ -12,7 +12,7 @@ theory utp_heap
 imports   "../../../Isabelle-UTP/utp/utp" 
           "../../../Isabelle-UTP/theories/utp_designs"  
           "../../umm_heap/TypHeap"
-          "../../hoare/AlgebraicLaws/Rel&Des/Algebraic_Laws_aux"
+          "../../AlgebraicLaws/Algebraic_Laws_aux"
 begin
 subsection {*UTP heap alphabet*}
 

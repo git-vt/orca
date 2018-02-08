@@ -9,7 +9,7 @@
 (*****************************************************************************************)
 
 theory utp_fault_rea_designs
-imports  utp_reactive
+imports  "../../../Isabelle-UTP/theories/utp_reactive"
 begin
 subsection {*Sequential C-program alphabet*}
 

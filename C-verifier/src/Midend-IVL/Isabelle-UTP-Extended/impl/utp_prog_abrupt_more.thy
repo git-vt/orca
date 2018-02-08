@@ -12,7 +12,7 @@ section {* Imperative Programs *}
   
 theory utp_prog_abrupt_more
   imports 
-    "../hoare/HoareLogic/TotalCorrectness/IMP_Prog/utp_hoare_ndes_prog"
+    "../HoareLogic/TotalCorrectness/utp_hoare_ndes_prog"
 begin
 
 section {*Abrupt*}

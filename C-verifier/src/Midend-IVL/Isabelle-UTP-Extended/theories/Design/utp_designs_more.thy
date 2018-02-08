@@ -9,7 +9,7 @@
 (*****************************************************************************************)
 
 theory utp_designs_more
-imports   "../../AlgebraicLaws/Algebraic_Laws_AUX"
+imports   "../../AlgebraicLaws/Algebraic_Laws_aux"
 begin
 
 section {*Syntax setup*}
