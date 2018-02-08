@@ -1,15 +1,18 @@
-section \<open>Binary Operations\<close>
-
-theory BitOps
-imports
-  Main
-  "~~/src/HOL/Word/Bits_Bit" (* Maybe Word.thy instead *)
-begin
-
-text \<open>Bits of BitOperations.thy and MoreWord.thy from the VAMP machine model theories,
-Copyright 2003-2009 Kara Abdul-Qadar, Matthias Daum, Mark Hillebrand, Dirk Leinenbach,
-Elena Petrova, Mareike Schmidt, Alexandra Tsyban, and Martin Wildmoser
-and licensed under the German-Jurisdiction Creative Commons Attribution Non-commercial Share Alike
+(******************************************************************************
+ * Orca: A Functional Correctness Verifier for Imperative Programs
+ *       Based on Isabelle/UTP
+ *
+ * Copyright (c) 2016-2018 Virginia Tech, USA
+ *               2016-2018 Technische Universität München, Germany
+ *               2016-2018 University of York, UK
+ *               2016-2018 Université Paris-Saclay, Univ. Paris-Sud, France
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU Lesser General Public License version 3.0 or any later version.
+ * Note that NO WARRANTY is provided.
+ *
+ * See CONTRIBUTORS, LICENSE and CITATION files for details.
+ ******************************************************************************)
 2.0 License (https://creativecommons.org/licenses/by-nc/2.0/de/legalcode), simplified English
 version at https://creativecommons.org/licenses/by-nc/2.0/de/deed.en.
 

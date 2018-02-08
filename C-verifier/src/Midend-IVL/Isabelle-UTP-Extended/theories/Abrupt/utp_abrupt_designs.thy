@@ -1,15 +1,18 @@
-(*****************************************************************************************)
-(* Orca: A Functional Correctness Verifier for Imperative Programs Based on Isabelle/UTP *)
-(*                                                                                       *)
-(* Copyright (c) 2016-2018 Virginia Tech, USA                                            *)
-(*               2016-2018 Technische Universität München, Germany                       *)
-(*               2016-2018 University of York, UK                                        *)
-(*               2016-2018 Université Paris-Saclay, Univ. Paris-Sud, France              *)
-(* This software may be distributed and modified according to the terms of               *)
-(* the GNU Lesser General Public License version 3.0 or any later version.               *)
-(* Note that NO WARRANTY is provided.                                                    *)
-(* See CONTRIBUTORS, LICENSE and CITATION files for details.                             *)
-(*****************************************************************************************)
+(******************************************************************************
+ * Orca: A Functional Correctness Verifier for Imperative Programs
+ *       Based on Isabelle/UTP
+ *
+ * Copyright (c) 2016-2018 Virginia Tech, USA
+ *               2016-2018 Technische Universität München, Germany
+ *               2016-2018 University of York, UK
+ *               2016-2018 Université Paris-Saclay, Univ. Paris-Sud, France
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU Lesser General Public License version 3.0 or any later version.
+ * Note that NO WARRANTY is provided.
+ *
+ * See CONTRIBUTORS, LICENSE and CITATION files for details.
+ ******************************************************************************)
 
 theory utp_abrupt_designs
 imports   "../Design/utp_designs_more"
