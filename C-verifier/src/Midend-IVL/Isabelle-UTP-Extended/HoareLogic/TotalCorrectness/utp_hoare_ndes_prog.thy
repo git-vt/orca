@@ -17,7 +17,6 @@
 theory utp_hoare_ndes_prog
 
 imports "../../AlgebraicLaws/algebraic_laws_prog"
-
 begin
 
 section {*Helper*}    
@@ -975,7 +974,14 @@ text {*In the followin we illustrate the effect of domain theory based approach.
        the reasoning.*} 
      
 lemma GET_REMOVER: obtains x where "lens_get L s = x" by blast
-   
+    
+method get_remover =
+  (match conclusion in "?P (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
+  vcg_elim_determ thin_rl[of "lens_get _ _ = _"]
+
+method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
+method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
+
 lemma gcd_correct:
   assumes "lens_indep_all [a,r, b, x]"
   assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
@@ -994,38 +1000,9 @@ lemma gcd_correct:
   apply (insert assms)    
   apply (hoare_sp_pp_vcg_all)
     
-    (*Debut goal post-processing*)
-     apply (rule_tac L=x and s=A in GET_REMOVER)  
-     apply (rule_tac L=a and s=A in GET_REMOVER)  
-     apply (rule_tac L=b and s=A in GET_REMOVER)  
-     apply (simp only:)
-     apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-    (*Fin: goal post-processing*)
-    
-     apply (auto simp: gcd_diff1_nat) []
-    
-    apply (rule_tac L=x and s=A in GET_REMOVER)  
-    apply (rule_tac L=a and s=A in GET_REMOVER)  
-    apply (rule_tac L=b and s=A in GET_REMOVER)  
-    apply (simp only:)
-    apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-    
-    apply (auto simp: gcd_diff1_nat) []
-    
-   apply (rule_tac L=r and s=A in GET_REMOVER)  
-   apply (rule_tac L=a and s=A in GET_REMOVER)  
-   apply (rule_tac L=b and s=A in GET_REMOVER)  
-   apply (simp only:)
-   apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-   apply (metis gcd.commute gcd_diff1_nat not_le)
-    
-  apply (rule_tac L=r and s=A in GET_REMOVER)  
-  apply (rule_tac L=a and s=A in GET_REMOVER)  
-  apply (rule_tac L=b and s=A in GET_REMOVER)  
-  apply (simp only:)
-  apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-  apply (metis gcd.commute gcd_diff1_nat not_le)
-  done         
+     apply get_remover_auto
+    apply get_remover_auto
+  by get_remover_metis+
  
 lemma gcd_correct':
   assumes "lens_indep_all [a,r, b, x]"
@@ -1044,24 +1021,10 @@ lemma gcd_correct':
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)    
   apply (hoare_sp_pp_vcg_all)  
-     (*Debut goal post-processing*)
-     apply (rule_tac L=x and s=A in GET_REMOVER)  
-     apply (rule_tac L=a and s=A in GET_REMOVER)  
-     apply (rule_tac L=b and s=A in GET_REMOVER)  
-     apply (simp only:)
-     apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-     (*Fin: goal post-processing*)
     
-     apply (auto simp: gcd_diff1_nat) []
+   apply get_remover_auto
     
-   apply (rule_tac L=r and s=A in GET_REMOVER)  
-   apply (rule_tac L=a and s=A in GET_REMOVER)  
-   apply (rule_tac L=b and s=A in GET_REMOVER)  
-   apply (simp only:)
-   apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])
-   
-   apply (metis gcd.commute gcd_diff1_nat not_le)
-  done        
+  by get_remover_metis
     
     
 subsection {*filter program*}
