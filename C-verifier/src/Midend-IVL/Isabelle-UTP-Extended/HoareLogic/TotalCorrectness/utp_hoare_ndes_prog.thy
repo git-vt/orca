@@ -1013,27 +1013,30 @@ lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_
 
 (*Prototype by Peter for variable renaming*)
 method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' (fn i => fn st => 
-        if Thm.nprems_of st = 0 then all_tac st
-        else
-          let 
-          val _ = Thm.rename_params_rule
-          val _ = Thm.renamed_prop
-          fun cnv (Const (@{const_name Trueprop},_)$ (Const (@{const_name LVAR},_) $(Free (name,_)) $ Bound i)) = SOME (name,i)
-            | cnv _ = NONE
-  
-          val newnames = Logic.get_goal (Thm.prop_of st) i 
-            |> Logic.strip_assums_hyp 
-            |> map_filter cnv
-            |> sort (apfst snd #> apsnd snd #> int_ord #> rev_order)
-            |> map fst
-            |> map (fn x => x ^ "'")
-  
-        in 
-          @{print} newnames;
-          rename_tac newnames i st 
-        end
-    ) 
-)\<close>  
+  if i > Thm.nprems_of st then all_tac st
+  else
+    let 
+      fun cnv (Const (@{const_name Trueprop},_)$ (Const (@{const_name LVAR},_) $(Free (name,_)) $ Bound i)) = SOME (name,i)
+        | cnv _ = NONE
+      val (_, _, Bi, _) = Thm.dest_state (st, i)
+      val free_names = Term.fold_aterms (fn Free (x, _) => insert (op =) x | _ => I) Bi [];
+      val newnames = Logic.get_goal (Thm.prop_of st) i 
+        |> Logic.strip_assums_hyp 
+        |> map_filter cnv
+        |> sort (apply2 snd #> int_ord #> rev_order)
+        |> (fn newnames =>
+             fold_map (fn (name, i) => fn free_names =>
+                         let fun aux n =
+                               if List.exists (fn n0 => n0 = n) free_names then aux (n ^ "'") else n
+                             val name = aux name
+                         in ((name, i), name :: free_names) end)
+                      newnames
+                      free_names)
+        |> #1
+        |> map fst
+    in 
+      rename_tac newnames i st 
+    end))\<close>  
     
 (*Frederic's method for removing get functions from the goal*)    
 method get_remover =
