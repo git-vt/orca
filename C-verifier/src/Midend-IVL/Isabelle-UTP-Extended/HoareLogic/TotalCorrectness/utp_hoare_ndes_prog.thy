@@ -3,9 +3,9 @@
  *       Based on Isabelle/UTP
  *
  * Copyright (c) 2016-2018 Virginia Tech, USA
- *               2016-2018 Technische Universität München, Germany
+ *               2016-2018 Technische Universit�t M�nchen, Germany
  *               2016-2018 University of York, UK
- *               2016-2018 Université Paris-Saclay, Univ. Paris-Sud, France
+ *               2016-2018 Universit� Paris-Saclay, Univ. Paris-Sud, France
  *
  * This software may be distributed and modified according to the terms of
  * the GNU Lesser General Public License version 3.0 or any later version.
@@ -13,10 +13,10 @@
  *
  * See CONTRIBUTORS, LICENSE and CITATION files for details.
  ******************************************************************************)
-
 theory utp_hoare_ndes_prog
 
 imports "../../AlgebraicLaws/algebraic_laws_prog"
+
 begin
 
 section {*Helper*}    
@@ -492,62 +492,68 @@ lemma from_until_invr_vrt_hoare_prog_consequence:
  
 lemma from_until_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P" 
   unfolding from_until_lfp_prog_def_alt
-  by (simp add: uintro PHI seq_hoare_prog[OF seq_step] 
+  by (simp add: uintro PHI seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
                        while_hoare_prog_consequence[OF WF uimp_refl _ I0' induct_step uimp_refl])
 
 lemma from_until_invr_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"   
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding from_until_lfp_invr_prog_def
-  using from_until_hoare_prog_wp [OF WF seq_step PHI I0' induct_step] .
+  using from_until_hoare_prog_wp [OF WF I0 seq_step PHI I0' induct_step] .
     
 lemma from_until_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"    
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar VRT \<guillemotleft>R\<guillemotright> UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding from_until_lfp_invr_vrt_prog_def
-  using from_until_hoare_prog_wp [OF WF seq_step PHI I0' induct_step] .
+  using from_until_hoare_prog_wp [OF WF I0 seq_step PHI I0' induct_step] .
     
 lemma from_until_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"    
   assumes induct_step: "\<And>st. \<lbrace>\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P" 
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>`"     
   shows "\<lbrace>p\<rbrace>FROM init UNTIL exit DO body OD\<lbrace>exit \<and> invar\<rbrace>\<^sub>P" 
   unfolding from_until_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] 
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
                        while_hoare_prog_consequence[OF WF uimp_refl _ uimp_refl induct_step I0])
 
 lemma from_until_invr_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"  
   assumes induct_step: "\<And>st. \<lbrace>\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P" 
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>`"     
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar UNTIL exit DO body OD\<lbrace>exit \<and> invar\<rbrace>\<^sub>P" 
   unfolding from_until_lfp_invr_prog_def
-  using from_until_hoare_prog_sp[OF WF seq_step induct_step I0] .  
+  using from_until_hoare_prog_sp[OF WF seq_step I0' induct_step I0] .  
 
 lemma from_until_invr_vrt_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+   assumes I0': "`q'' \<Rightarrow> invar`"    
   assumes induct_step: "\<And>st. \<lbrace>\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P" 
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>`"     
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar VRT \<guillemotleft>R\<guillemotright> UNTIL exit DO body OD\<lbrace>exit \<and> invar\<rbrace>\<^sub>P" 
   unfolding from_until_lfp_invr_vrt_prog_def
-  using from_until_hoare_prog_sp[OF WF seq_step induct_step I0] .
+  using from_until_hoare_prog_sp[OF WF seq_step I0' induct_step I0] .
 
 subsection {*Hoare for do_while_loop*}     
 
@@ -611,59 +617,72 @@ lemma do_while_invr_vrt_hoare_prog_consequence:
     
 lemma do_while_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>DO body WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])  
+  unfolding do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma do_while_invr_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+   assumes I0: "`p \<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>DO body INVAR invar WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
-  unfolding do_while_lfp_invr_prog_def
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])  
-    
+  unfolding do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+
 lemma do_while_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
   assumes WF: "wf R"
+  assumes I0: "`p \<Rightarrow> p''`"   
   assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>DO body INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
-  unfolding do_while_lfp_invr_vrt_prog_def    
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])  
-    
+  unfolding do_while_lfp_invr_vrt_prog_def do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+
 lemma do_while_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"  
   assumes induct_step: "\<And> st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
-  shows "\<lbrace>p\<rbrace>DO body WHILE b OD\<lbrace>\<not>b  \<and> invar\<rbrace>\<^sub>P" 
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step uimp_refl uimp_refl induct_step I0])  
- 
+  shows "\<lbrace>p\<rbrace>DO body WHILE b OD\<lbrace>\<not>b  \<and> invar\<rbrace>\<^sub>P"
+  unfolding  do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                   while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
 lemma do_while_invr_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"  
   assumes induct_step: "\<And> st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
   shows "\<lbrace>p\<rbrace>DO body INVAR invar WHILE b OD\<lbrace>\<not>b  \<and> invar\<rbrace>\<^sub>P"
-  unfolding do_while_lfp_invr_prog_def  
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step uimp_refl uimp_refl induct_step I0])  
-
+  unfolding do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                   while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+                 
 lemma do_while_invr_vrt_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"  
   assumes induct_step: "\<And> st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
   shows "\<lbrace>p\<rbrace>DO body INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b OD\<lbrace>\<not>b  \<and> invar\<rbrace>\<^sub>P"
-  unfolding do_while_lfp_invr_vrt_prog_def  
-  by (rule do_while_hoare_prog_consequence[OF WF seq_step uimp_refl uimp_refl induct_step I0])  
-
+  unfolding do_while_lfp_invr_vrt_prog_def do_while_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                   while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+                 
 subsection {*Hoare for for_loop*}     
     
 lemma for_hoare_prog_minimal:
@@ -725,59 +744,74 @@ lemma for_invr_vrt_hoare_prog_consequence:
     
 lemma for_hoare_prog_wp:
   assumes WF : "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p\<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) DO body OD\<lbrace>q\<rbrace>\<^sub>P"
-  by (rule for_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])
+  unfolding for_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma for_invr_hoare_prog_wp:
   assumes WF : "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar DO body OD\<lbrace>q\<rbrace>\<^sub>P"
-  unfolding for_lfp_invr_prog_def  
-  by (rule for_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])
+  unfolding for_lfp_invr_prog_def for_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma for_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
   assumes WF : "wf R"
-  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes I0: "`p \<Rightarrow> p''`"  
+  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar VRT \<guillemotleft>R\<guillemotright>DO body OD\<lbrace>q\<rbrace>\<^sub>P"
-  unfolding for_lfp_invr_vrt_prog_def  
-  by (rule for_hoare_prog_consequence[OF WF seq_step PHI I0' induct_step uimp_refl])
+  unfolding for_lfp_invr_vrt_prog_def for_lfp_prog_def_alt
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma for_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0': "`q'' \<Rightarrow> invar`"  
   assumes induct_step: "\<And>st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body;incr\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) DO body OD\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>P"
-  by (rule for_hoare_prog_consequence[OF WF seq_step uimp_refl  uimp_refl induct_step I0])
-
+  unfolding for_lfp_prog_def_alt  
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+ 
 lemma for_invr_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0':  "`q'' \<Rightarrow> invar`"
   assumes induct_step: "\<And>st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body;incr\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar DO body OD\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>P"
-  unfolding for_lfp_invr_prog_def  
-  by (rule for_hoare_prog_consequence[OF WF seq_step uimp_refl  uimp_refl induct_step I0])    
+  unfolding for_lfp_invr_prog_def for_lfp_prog_def_alt  
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+     
     
 lemma for_invr_vrt_hoare_prog_sp:
   assumes WF: "wf R"
-  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>q''\<rbrace>\<^sub>P"
+  assumes I0':"`q''\<Rightarrow> invar`" 
   assumes induct_step: "\<And>st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body;incr\<lbrace>q' st\<rbrace>\<^sub>P"
   assumes I0: "\<And>st. `q' st \<Rightarrow> invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>`"  
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar VRT \<guillemotleft>R\<guillemotright>DO body OD\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>P"
-  unfolding for_lfp_invr_vrt_prog_def  
-  by (rule for_hoare_prog_consequence[OF WF seq_step uimp_refl  uimp_refl induct_step I0])
-    
+  unfolding for_lfp_invr_vrt_prog_def for_lfp_prog_def_alt  
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
+                while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+     
 lemmas loop_invr_vrt_hoare_prog_sp_instantiated [hoare_sp_rules] = 
        while_invr_vrt_hoare_prog_sp [where e = "&\<Sigma>"]
        for_invr_vrt_hoare_prog_sp [where e = "&\<Sigma>"]
@@ -973,15 +1007,45 @@ text {*In the followin we illustrate the effect of domain theory based approach.
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
        the reasoning.*} 
      
-lemma GET_REMOVER: obtains x where "lens_get L s = x" by blast
+definition "LVAR L x = True"  
+  
+lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_def by blast
+
+(*Prototype by Peter for variable renaming*)
+method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' (fn i => fn st => 
+        if Thm.nprems_of st = 0 then all_tac st
+        else
+          let 
+          val _ = Thm.rename_params_rule
+          val _ = Thm.renamed_prop
+          fun cnv (Const (@{const_name Trueprop},_)$ (Const (@{const_name LVAR},_) $(Free (name,_)) $ Bound i)) = SOME (name,i)
+            | cnv _ = NONE
+  
+          val newnames = Logic.get_goal (Thm.prop_of st) i 
+            |> Logic.strip_assums_hyp 
+            |> map_filter cnv
+            |> sort (apfst snd #> apsnd snd #> int_ord #> rev_order)
+            |> map fst
+            |> map (fn x => x ^ "'")
+  
+        in 
+          @{print} newnames;
+          rename_tac newnames i st 
+        end
+    ) 
+)\<close>  
     
+(*Frederic's method for removing get functions from the goal*)    
 method get_remover =
-  (match conclusion in "?P (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
-  vcg_elim_determ thin_rl[of "lens_get _ _ = _"]
+  (match conclusion in "_ (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
+  get_disambiguator,
+  vcg_elim_determ thin_rl[of "lens_get _ _ = _"] thin_rl[of "LVAR _ _"]
 
 method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
 method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
-
+  
+  
+  
 lemma gcd_correct:
   assumes "lens_indep_all [a,r, b, x]"
   assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
@@ -998,12 +1062,11 @@ lemma gcd_correct:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)    
-  apply (hoare_sp_pp_vcg_all)
-    
-     apply get_remover_auto
-    apply get_remover_auto
-  by get_remover_metis+
- 
+  apply (hoare_sp_pp_vcg_all; get_remover)
+     apply (auto simp: gcd_diff1_nat)
+   apply (metis gcd.commute gcd_diff1_nat not_le)+
+  done  
+     
 lemma gcd_correct':
   assumes "lens_indep_all [a,r, b, x]"
   assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
@@ -1020,13 +1083,41 @@ lemma gcd_correct':
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)    
-  apply (hoare_sp_pp_vcg_all)  
+  apply (hoare_sp_pp_vcg_all; get_remover)
+     apply (auto simp: gcd_diff1_nat)
+   apply (metis gcd.commute gcd_diff1_nat not_le)+
+  done  
     
-   apply get_remover_auto
-    
-  by get_remover_metis
-    
-    
+
+section {*Arrays*}
+  
+subsection {*Array Max program: one-variable loop*}
+
+lemma 
+  assumes "a \<bowtie> i" "a \<bowtie> r" "r \<bowtie> i" 
+  assumes "vwb_lens i" "vwb_lens r" "vwb_lens a"
+  shows  
+  "\<lbrace>uop length (&a)\<ge>\<^sub>u1\<rbrace> 
+     FROM i :== 0 ; r :== bop nth (&a:: (int list, 'a) uexpr) 0 
+     INVAR  0 \<le>\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length (&a) \<and>&r =\<^sub>uuop Max ran\<^sub>u(bop take (&i) (&a)) 
+     VRT  \<guillemotleft>measure (Rep_uexpr ((&i+1) - uop length (&a)))\<guillemotright>  
+     UNTIL &i =\<^sub>u uop length (&a) 
+     DO i :== (&i + 1);
+        IF &r <\<^sub>u  bop nth (&a) (&i) 
+        THEN r :== bop nth (&a) (&i)
+        ELSE SKIP
+        FI  
+     OD   
+  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(&a) \<rbrace>\<^sub>P"  
+  apply (insert assms)  
+    apply (hoare_sp_vcg_pre)
+   apply (hoare_sp_vcg_step)
+      apply (hoare_sp_vcg_step)
+      apply (hoare_sp_vcg_step)
+       apply (hoare_sp_vcg_step)
+       apply (hoare_sp_vcg_step)
+     apply (hoare_sp_vcg_step)
+oops  
 subsection {*filter program*}
   
 definition \<open>swap i j xs = xs[i := xs!j, j := xs!i]\<close>
@@ -1117,31 +1208,6 @@ lemma take_eq_iff:
    take h a = take h a' \<longleftrightarrow> (\<forall>i. 0\<le>i \<and> i<h \<longrightarrow>  nth a i = nth a' i)"
   by (metis le0 nth_equalityI order_refl take_all)
 
-definition 
-  "filter_inv1 a r w (a\<^sub>0::int list) w\<^sub>0 r\<^sub>0= 
-   (*execution path1*)
- ( &r \<le>\<^sub>u  #\<^sub>u(&a) \<and> &w \<le>\<^sub>u  &r \<and> 0 \<le>\<^sub>u  &w \<and> 0 \<le>\<^sub>u  &r \<and>
-   (
-   (5 <\<^sub>u bop nth (\<guillemotleft>a\<^sub>0\<guillemotright>)(\<guillemotleft>r\<^sub>0\<guillemotright>) \<and> \<guillemotleft>r\<^sub>0\<guillemotright> <\<^sub>u #\<^sub>u(\<guillemotleft>a\<^sub>0\<guillemotright>)  \<and>
-   (*&a =\<^sub>u swap\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> (\<guillemotleft>r\<^sub>0\<guillemotright>) \<guillemotleft>a\<^sub>0\<guillemotright> \<and>
-   &w =\<^sub>u (\<guillemotleft>w\<^sub>0\<guillemotright> + 1) \<and>*) 
-   (take\<^sub>u(\<guillemotleft>w\<^sub>0\<guillemotright> , &a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(\<guillemotleft>r\<^sub>0\<guillemotright>, \<guillemotleft>a\<^sub>0\<guillemotright>)))) \<or>
-  
-  (*execution path2*)
-  (
-   \<not>(5 <\<^sub>u bop nth (&a)(\<guillemotleft>r\<^sub>0\<guillemotright>)) \<and> \<guillemotleft>r\<^sub>0\<guillemotright> <\<^sub>u #\<^sub>u(&a) \<and>
-   take\<^sub>u(#\<^sub>u(drop\<^sub>u(\<guillemotleft>r\<^sub>0\<guillemotright>, &a)),drop\<^sub>u(\<guillemotleft>r\<^sub>0\<guillemotright>, &a)) =\<^sub>u take\<^sub>u(#\<^sub>u(drop\<^sub>u(\<guillemotleft>r\<^sub>0\<guillemotright>, &a)),drop\<^sub>u(\<guillemotleft>r\<^sub>0\<guillemotright>,  &a)))) \<and> 
-     &r =\<^sub>u (\<guillemotleft>r\<^sub>0\<guillemotright> + 1)
-
-)"
-
-term "(\<^bold>\<forall>(a\<^sub>0, r\<^sub>0, w\<^sub>0 , h\<^sub>0)\<bullet> \<^bold>\<exists>(a:: int list \<Longrightarrow> 'a, r, w, h)\<bullet> 
-       &r \<le>\<^sub>u  #\<^sub>u(&a) \<and> &w \<le>\<^sub>u  &r \<and> 0 \<le>\<^sub>u  &w \<and> 0 \<le>\<^sub>u  &r \<and> &r =\<^sub>u (\<guillemotleft>r\<^sub>0\<guillemotright> + 1))"  
-lemma " \<exists>a. a \<le> length(a\<^sub>0) \<and> (\<exists>b. take a b = filter (op < 5) a\<^sub>0)"
-  using length_filter_le take_all by blast
-lemma " \<exists>a. a \<le> length(a\<^sub>0) \<and> (\<exists>b. take a b = filter (op < 5) a\<^sub>0)"
-  using length_filter_le take_all by blast
-
 lemma
   assumes "vwb_lens (r:: nat \<Longrightarrow> 'b)"
   assumes " r \<sharp> (r\<^sub>0:: (nat, 'b) uexpr)" (*somehow logical variables are all variables satisfying this*)
@@ -1171,28 +1237,78 @@ lemma filter_prog_loop_body_correct:
    apply (insert assms)
    apply (hoare_sp_pp_vcg_all)
   done
-   
-     
-lemma "5 < nth xb x \<Longrightarrow> x < get\<^bsub>h\<^esub> A \<Longrightarrow> h\<^sub>0 = get\<^bsub>h\<^esub> A \<Longrightarrow> xb = a\<^sub>0\<Longrightarrow>  h\<^sub>0 = length a\<^sub>0 \<Longrightarrow>
-        take (Suc 0) (swap 0 x xb) = filter (op < 5) (take (Suc ( x)) a\<^sub>0)"
+
+lemma 
+  assumes "lens_indep_all [h,r, w]"
+  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w"  "olda \<bowtie> a" "olda \<bowtie> h"  "olda \<bowtie> r" "olda \<bowtie> w"
+  assumes "vwb_lens a" "vwb_lens olda" "vwb_lens h" "vwb_lens r" "vwb_lens w"
+  shows  
+   "\<lbrace>&r =\<^sub>u0 \<and> &a =\<^sub>u &olda \<and> &h =\<^sub>u (uop length (&olda)) \<and> &r <\<^sub>u &h \<and> &w \<le>\<^sub>u  &r\<rbrace> 
+        IF (&a)(&r)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)
+        THEN a :== swap\<^sub>u (&w) (&r) (&a);
+             w :== (&w + 1)
+        ELSE SKIP
+        FI ;
+        r:== (&r+1)
+    \<lbrace>&h =\<^sub>u (uop length (&a)) \<and> &h =\<^sub>u (uop length (&olda)) \<and> &w \<le>\<^sub>u  &r \<and> &r \<le>\<^sub>u &h \<and> 
+     (\<^bold>\<exists>(w\<^sub>0, r\<^sub>0)\<bullet>  \<guillemotleft>w\<^sub>0\<guillemotright> \<le>\<^sub>u  \<guillemotleft>r\<^sub>0\<guillemotright> \<and> \<guillemotleft>r\<^sub>0\<guillemotright> \<le>\<^sub>u &h \<and> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> + 1 \<and> 
+     trop If ((&olda)(\<guillemotleft>r\<^sub>0\<guillemotright>)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)) (&a =\<^sub>u  swap\<^sub>u (\<guillemotleft>w\<^sub>0\<guillemotright>) (\<guillemotleft>r\<^sub>0\<guillemotright>) (&olda) \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> +1) (&a =\<^sub>u &olda \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright>))\<rbrace>\<^sub>P"
+  apply (insert assms)
+  apply (hoare_sp_pp_vcg_all)
+     apply (auto simp: Suc_leI )
+    using list_update_id by fastforce
+  unfolding swap_def
+ 
+  oops
+    
+lemma blah:
+  "x < (y::'a::preorder)\<Longrightarrow> z\<le> x \<Longrightarrow> z < y"
+  apply (simp add: le_less_trans)
+  done    
+
+lemma "x < length (xb) \<Longrightarrow> xa \<le> x \<Longrightarrow> 
+     (take x (swap xa x xb) @ [nth (swap xa x xb) x]) = take x (swap xa x xb)"   
   unfolding swap_def
   apply auto
-   
- oops
+  oops  
+term "[r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> (\<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s  (pr_var w))"    
+lemma "a \<bowtie> w \<Longrightarrow>a \<bowtie> r \<Longrightarrow> r \<bowtie> w \<Longrightarrow> vwb_lens w \<Longrightarrow>
+  [r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> (\<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s (pr_var w)) = \<guillemotleft>va\<guillemotright>" 
+  by (simp add: lens_indep_sym pr_var_def subst_var usubst_lookup_id usubst_lookup_upd usubst_lookup_upd_indep)
+term "`(\<^bold>\<exists> v \<bullet> ((\<^bold>\<exists> va \<bullet> (\<^bold>\<exists> vb \<bullet> (\<guillemotleft>5\<guillemotright> <\<^sub>u \<guillemotleft>vb\<guillemotright>(\<guillemotleft>v\<guillemotright>)\<^sub>a \<and>
+                                       \<guillemotleft>v\<guillemotright> <\<^sub>u h \<and>
+                                       (\<guillemotleft>v\<guillemotright> \<le>\<^sub>u h \<and>
+                                        \<guillemotleft>va\<guillemotright> \<le>\<^sub>u \<guillemotleft>v\<guillemotright> \<and>
+                                        h =\<^sub>u #\<^sub>u(\<guillemotleft>vb\<guillemotright>) \<and>
+                                        h =\<^sub>u #\<^sub>u(olda) \<and>
+                                        bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>va\<guillemotright> + 1, \<guillemotleft>vb\<guillemotright>) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>v\<guillemotright> + 1, olda)) \<and>
+                                       [r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> \<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s 1\<^sub>L =\<^sub>u \<guillemotleft>st\<guillemotright>) \<and>
+                                      a =\<^sub>u swap\<^sub>u \<guillemotleft>va\<guillemotright> \<guillemotleft>v\<guillemotright> \<guillemotleft>vb\<guillemotright>) \<and>
+                             w =\<^sub>u \<guillemotleft>va\<guillemotright> + 1) \<or>
+                    \<not> \<guillemotleft>5\<guillemotright> <\<^sub>u a(\<guillemotleft>v\<guillemotright>)\<^sub>a \<and>
+                    \<guillemotleft>v\<guillemotright> <\<^sub>u h \<and>
+                    (\<guillemotleft>v\<guillemotright> \<le>\<^sub>u h \<and>
+                     w \<le>\<^sub>u \<guillemotleft>v\<guillemotright> \<and>
+                     h =\<^sub>u #\<^sub>u(a) \<and> h =\<^sub>u #\<^sub>u(olda) \<and> bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(w + 1, a) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>v\<guillemotright> + 1, olda)) \<and>
+                    \<langle>[r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s 1\<^sub>L =\<^sub>u \<guillemotleft>st\<guillemotright>) \<and>
+                   r =\<^sub>u \<guillemotleft>v\<guillemotright> + 1) \<Rightarrow>
+           (r \<le>\<^sub>u h \<and>
+            w \<le>\<^sub>u r \<and> h =\<^sub>u #\<^sub>u(a) \<and> h =\<^sub>u #\<^sub>u(olda) \<and> bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(w + 1, a) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(r + 1, olda)) \<and>
+           (1\<^sub>L, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>measure \<lbrakk>h - r\<rbrakk>\<^sub>e\<guillemotright>`"
+
 lemma filter_prog_correct:
   assumes "lens_indep_all [h,r, w]"
-  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w" 
-  assumes "vwb_lens a" "vwb_lens h" "vwb_lens r" "vwb_lens w"
+  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w"  "olda \<bowtie> a" "olda \<bowtie> h"  "olda \<bowtie> r" "olda \<bowtie> w"
+  assumes "vwb_lens a" "vwb_lens olda" "vwb_lens h" "vwb_lens r" "vwb_lens w"
   shows  
- "\<lbrace>&a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and> &h =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and> \<guillemotleft>h\<^sub>0\<guillemotright> =\<^sub>u uop length \<guillemotleft>a\<^sub>0\<guillemotright>\<rbrace> 
+  "\<lbrace>&h =\<^sub>u (uop length (&a)) \<and> &a =\<^sub>u &olda\<rbrace> 
       r:== 0; w :==0;
-      INVR &h =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and> &r \<le>\<^sub>u  &h \<and> &w \<le>\<^sub>u  &r \<and> 
-           (take\<^sub>u(&w,  swap\<^sub>u (&w) (&r) (&a) ) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&r,  \<guillemotleft>a\<^sub>0\<guillemotright>) ))
-             
+      INVAR &r \<le>\<^sub>u  &h \<and> &w \<le>\<^sub>u  &r \<and> &h =\<^sub>u (uop length (&a)) \<and>   &h =\<^sub>u (uop length (&olda))\<and>  
+             bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&w +1 , (&a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&r + 1, (&olda)) ) 
       VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
       WHILE &r<\<^sub>u &h
       DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
+       IF (&a)(&r)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)
        THEN a :== swap\<^sub>u (&w) (&r) (&a);
             w :== (&w + 1)
        ELSE SKIP
@@ -1200,15 +1316,40 @@ lemma filter_prog_correct:
        r:== (&r+1)
       OD;
       h :==&w
- \<lbrace>&h \<le>\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and> ( take\<^sub>u(&h, &a) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) \<guillemotleft>a\<^sub>0\<guillemotright>) ) \<rbrace>\<^sub>P" 
+  \<lbrace>&h \<le>\<^sub>u  &w \<and> ( take\<^sub>u(&h, &a) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&olda)) ) \<rbrace>\<^sub>P" 
   apply (insert assms)
-      
-  apply (hoare_sp_pp_vcg_all)  
-    prefer 3
-    
-  oops
- term "gcd"   
-  
+  apply (hoare_sp_vcg_pre)
+   apply (hoare_sp_vcg_step)
+    apply (hoare_sp_vcg_step)
+    apply assumption
+     apply (hoare_sp_vcg_step)
+    apply (hoare_sp_vcg_step)
+    apply assumption
+   apply (hoare_sp_vcg_step)
+    apply (hoare_sp_vcg_step)
+       apply simp
+  term "pr_var s"
+  unfolding lens_indep_all_alt
+    apply clarsimp
+      apply (simp add: usubst )
+      apply pred_simp
+     apply hoare_sp_vcg_step
+        apply hoare_sp_vcg_step
+        apply hoare_sp_vcg_step
+        apply hoare_sp_vcg_step
+        apply assumption
+       apply hoare_sp_vcg_step
+       apply assumption
+     apply hoare_sp_vcg_step
+     apply hoare_sp_vcg_step
+     apply assumption
+    apply clarsimp
+    apply (simp add: usubst pr_var_def lens_indep_sym )
+    apply (vcg_default_goal_post_processing)
+  oops   
+
+find_theorems "take (Suc _) (_) = _"
+  value "take 2 [1::int, 2,3]"  
 lemma 
   assumes "lens_indep_all [h,r, w]"
   assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w" 
