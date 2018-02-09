@@ -3,9 +3,9 @@
  *       Based on Isabelle/UTP
  *
  * Copyright (c) 2016-2018 Virginia Tech, USA
- *               2016-2018 Technische Universit�t M�nchen, Germany
+ *               2016-2018 Technische Universität München, Germany
  *               2016-2018 University of York, UK
- *               2016-2018 Universit� Paris-Saclay, Univ. Paris-Sud, France
+ *               2016-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *
  * This software may be distributed and modified according to the terms of
  * the GNU Lesser General Public License version 3.0 or any later version.
@@ -13,10 +13,10 @@
  *
  * See CONTRIBUTORS, LICENSE and CITATION files for details.
  ******************************************************************************)
+
 theory utp_hoare_ndes_prog
 
 imports "../../AlgebraicLaws/algebraic_laws_prog"
-
 begin
 
 section {*Helper*}    
