@@ -869,9 +869,9 @@ lemmas [lens_laws_vcg_simps] =
   lens_indep.lens_put_irr1
   lens_indep.lens_put_irr2
   
-method vcg_default_solver = assumption|pred_simp?;(simp add: LENS_GET_TAG_def lens_laws_vcg_simps)?;fail
+method vcg_default_solver = assumption|pred_simp?;(simp add: lens_laws_vcg_simps)?;fail
 
-method  vcg_pp_solver = ((unfold lens_indep_all_alt LENS_GET_TAG_def)?, (simp add:  lens_laws_vcg_simps)?, safe?; (simp add:  lens_laws_vcg_simps)?)
+method  vcg_pp_solver = ((unfold lens_indep_all_alt )?, (simp add:  lens_laws_vcg_simps)?, safe?; (simp add:  lens_laws_vcg_simps)?)
   
 method vcg_default_goal_post_processing = 
        ((pred_simp+)?; vcg_pp_solver?;vcg_elim_determ beautify_thms)?
@@ -883,8 +883,6 @@ method vcg_step_solver methods solver =
 definition DEFERRED :: "bool \<Rightarrow> bool" where "DEFERRED P = P"
 lemma DEFERREDD: "DEFERRED P \<Longrightarrow> P" by (auto simp: DEFERRED_def)
 
-lemma LENS_GET_RULE: "P  \<Longrightarrow> LENS_GET_TAG P" by simp
-
 method vcg_can_defer =
   (match conclusion 
       in "DEFERRED _" \<Rightarrow> fail  -- \<open>Refuse to defer already deferred goals\<close>
@@ -892,12 +890,6 @@ method vcg_can_defer =
          "\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>P" \<Rightarrow> fail  -- \<open>Refuse to defer Hoare triples (They are no VCs!)\<close>
        \<bar> 
          "_" \<Rightarrow> succeed)
-       
-method vcg_can_elim =
-  (match conclusion 
-      in "get\<^bsub>_\<^esub> _ = _" \<Rightarrow> succeed  -- \<open>elim get function from conclusions\<close>
-       \<bar> 
-         "_" \<Rightarrow> fail)  
        
 method vcg_defer = (vcg_can_defer, rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)
 
@@ -910,21 +902,207 @@ method  hoare_sp_vcg_steps_pp = hoare_sp_vcg_steps; pred_simp?
 method hoare_sp_default_vcg_all = (hoare_sp_vcg_pre, (vcg_step_solver \<open>vcg_default_solver\<close>| vcg_defer)+, (unfold DEFERRED_def)?)
 
 method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_processing)
+  
+subsection {*VCG post-processing*}      
+  
+definition "LVAR L x = True"  
+  
+lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_def by blast
+
+(*Prototype by Peter for variable renaming*)
+method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' (fn i => fn st => 
+  if i > Thm.nprems_of st then all_tac st
+  else
+    let 
+      fun cnv (Const (@{const_name Trueprop},_)$ (Const (@{const_name LVAR},_) $(Free (name,_)) $ Bound i)) = SOME (name,i)
+        | cnv _ = NONE
+      val (_, _, Bi, _) = Thm.dest_state (st, i)
+      val free_names = Term.fold_aterms (fn Free (x, _) => insert (op =) x | _ => I) Bi [];
+      val newnames = Logic.get_goal (Thm.prop_of st) i 
+        |> Logic.strip_assums_hyp 
+        |> map_filter cnv
+        |> sort (apply2 snd #> int_ord #> rev_order)
+        |> (fn newnames =>
+             fold_map (fn (name, i) => fn free_names =>
+                         let fun aux n =
+                               if List.exists (fn n0 => n0 = n) free_names then aux (n ^ "'") else n
+                             val name = aux name
+                         in ((name, i), name :: free_names) end)
+                      newnames
+                      free_names)
+        |> #1
+        |> map fst
+    in 
+      rename_tac newnames i st 
+    end))\<close>  
+    
+(*Frederic's method for removing get functions from the goal*)    
+method get_remover =
+  (match conclusion in "_ (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
+  get_disambiguator,
+  vcg_elim_determ thin_rl[of "lens_get _ _ = _"] thin_rl[of "LVAR _ _"]
+ 
+method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
+method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
+  
+  
 
 section {*Experiments on VCG*}
 
-subsection {* Through these experiments I want to observe the follwoing problems: 
+subsection {* Through these experiments I want to observe the following problems: 
               - I want to deal with the problem of nested existential
-              - I want to deal with the problem of blow up due to the semantic machinary comming with lenses
+              - I want to deal with the problem of blow up due to the semantic machinery coming with lenses
               - I want to have modularity
 
 *}
   
-declare LENS_GET_TAG_def[simp del]   (*continue from here + add LENS_PUT_TAG*)  
+lemma "vwb_lens y \<Longrightarrow> x \<bowtie> y \<Longrightarrow>\<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s y =  (&y)"
 
-definition LENS_GET_STOP :: "'t \<Rightarrow>'t" 
-  where "LENS_GET_STOP v = v"
-      
+  by (simp add: lens_indep_sym pr_var_def usubst_lookup_id usubst_lookup_upd_indep)
+
+definition "SUBST_TAG \<sigma> e\<^sub>1 e\<^sub>2 = True"     
+
+lemma SUBST_DEBUG: 
+  obtains e\<^sub>2 where "e\<^sub>2 = subst \<sigma> e\<^sub>1" "SUBST_TAG \<sigma> e\<^sub>2 e\<^sub>1" unfolding SUBST_TAG_def by blast
+
+lemma SUBST_DEBUG'': 
+  obtains e and e\<^sub>2 where "e\<^sub>2 = subst (subst_upd id L e) e\<^sub>1"  
+                         "SUBST_TAG L e e\<^sub>1" unfolding SUBST_TAG_def 
+  by blast    
+
+definition "ZERO_SUBST_TAG v = True" 
+definition "ONE_SUBST_TAG v = True"
+definition "LIT_SUBST_TAG v = True"
+definition "VAR_SUBST_TAG x = True"  
+definition "UOP_SUBST_TAG f a = True"    
+definition "BOP_SUBST_TAG f a b = True"
+definition "TROP_SUBST_TAG f a b c = True"
+definition "QTOP_SUBST_TAG f a b c d = True"
+  
+lemma ZERO_SUBST_DEBUG: 
+  "(ZERO_SUBST_TAG 0 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding ZERO_SUBST_TAG_def 
+  by blast 
+
+lemma ONE_SUBST_DEBUG: 
+  "(ONE_SUBST_TAG 1 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding ONE_SUBST_TAG_def 
+  by blast 
+    
+lemma LIT_SUBST_DEBUG: 
+  obtains e where "e = lit v " "LIT_SUBST_TAG v" 
+  unfolding LIT_SUBST_TAG_def 
+  by blast  
+
+lemma VAR_SUBST_DEBUG: 
+  obtains e where "e = utp_expr.var x " "VAR_SUBST_TAG x" 
+  unfolding VAR_SUBST_TAG_def 
+  by blast
+    
+lemma UOP_SUBST_DEBUG: 
+  obtains e where "e = uop f a" "UOP_SUBST_TAG f a" 
+  unfolding UOP_SUBST_TAG_def 
+  by blast
+    
+lemma BOP_SUBST_DEBUG: 
+  obtains e where "e = bop f a b"  "BOP_SUBST_TAG f a b" 
+  unfolding BOP_SUBST_TAG_def 
+  by blast     
+
+lemma TROP_SUBST_DEBUG: 
+  obtains e where "e = trop f a b c"  "TROP_SUBST_TAG f a b c" 
+  unfolding TROP_SUBST_TAG_def 
+  by blast     
+    
+lemma QTOP_SUBST_DEBUG: 
+  obtains e where "e = qtop f a b c d "  "QTOP_SUBST_TAG f a b c d" 
+  unfolding QTOP_SUBST_TAG_def 
+  by blast 
+
+definition "VWB_VAR_TAG x = True"
+definition "WB_VAR_TAG x = True"
+definition "WEAK_VAR_TAG x = True"
+definition "MWB_VAR_TAG x = True"  
+    
+lemma VWB_VAR_DEBUG: 
+  obtains e where "e = vwb_lens x " "VWB_VAR_TAG x" 
+  unfolding VWB_VAR_TAG_def 
+  by blast
+
+lemma MWB_VAR_DEBUG: 
+  obtains e where "e = mwb_lens x " "MWB_VAR_TAG x" 
+  unfolding MWB_VAR_TAG_def 
+  by blast   
+    
+lemma WB_VAR_DEBUG: 
+  obtains e where "e = wb_lens x " "WB_VAR_TAG x" 
+  unfolding WB_VAR_TAG_def 
+  by blast  
+    
+lemma WEAK_VAR_DEBUG: 
+  obtains e where "e = wb_lens x " "WEAK_VAR_TAG x" 
+  unfolding WEAK_VAR_TAG_def 
+  by blast  
+
+lemma vwb_lens_weak[simp]: 
+  "vwb_lens x \<Longrightarrow> weak_lens x"
+  by simp    
+
+method vwb_lens_debugger =
+  (match conclusion in 
+   "vwb_lens x" for x \<Rightarrow>
+   \<open> rule VWB_VAR_DEBUG[where x= x],assumption\<close>)
+  |(match conclusion in 
+   "wb_lens x" for x \<Rightarrow>
+   \<open>rule WB_VAR_DEBUG[where x= x],(simp only: vwb_lens_wb)\<close>)
+  |(match conclusion in 
+   "mwb_lens x" for x \<Rightarrow>
+   \<open>rule MWB_VAR_DEBUG[where x= x],(simp only: vwb_lens_mwb)\<close>)
+  |(match conclusion in 
+   "mwb_lens x" for x \<Rightarrow>
+   \<open>rule WEAK_VAR_DEBUG[where x= x],(simp only: vwb_lens_weak)\<close>)
+  
+method subst_debugger = 
+   (match conclusion in  
+    "`(_ (subst _ 0)) \<Rightarrow> _`"  \<Rightarrow>
+     \<open>(simp only:subst_zero), rule ZERO_SUBST_DEBUG\<close>)   
+    | (match conclusion in   
+    "`(_ (subst _ 1)) \<Rightarrow> _`"  \<Rightarrow>
+     \<open>(simp only:subst_one), rule ONE_SUBST_DEBUG\<close>)
+    |(match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (utp_expr.var x))) \<Rightarrow> _`" for x \<Rightarrow>
+     \<open>(simp only:subst_var),rule VAR_SUBST_DEBUG[where x= x]\<close>)
+    |(match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (lit v))) \<Rightarrow> _`" for v \<Rightarrow>
+     \<open>(simp only:subst_lit),rule LIT_SUBST_DEBUG[where v= v]\<close>)
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (uop f a))) \<Rightarrow> _`" for f a \<Rightarrow>
+     \<open>simp only: subst_uop, rule UOP_SUBST_DEBUG[where f= f and a = a]\<close>) 
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (bop f a b))) \<Rightarrow> _`" for f a b \<Rightarrow>
+     \<open>simp only:subst_bop, rule BOP_SUBST_DEBUG[where f= f and a= a and b = b]\<close>)
+   | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a + b))) \<Rightarrow> _`" for a b \<Rightarrow>
+     \<open>simp only:subst_plus, rule BOP_SUBST_DEBUG[where f= "(op +)" and a= a and b = b]\<close>)
+   | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a - b))) \<Rightarrow> _`" for a b \<Rightarrow>
+     \<open>simp only:subst_minus, rule BOP_SUBST_DEBUG[where f= "(op -)" and a= a and b = b]\<close>)
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a * b))) \<Rightarrow> _`" for a b \<Rightarrow>
+     \<open>simp only:subst_times, rule BOP_SUBST_DEBUG[where f= "(op *)" and a= a and b = b]\<close>)
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a div b))) \<Rightarrow> _`" for a b \<Rightarrow>
+     \<open>simp only:subst_div, rule BOP_SUBST_DEBUG[where f= "(op div)" and a= a and b = b]\<close>)
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (trop f a b c))) \<Rightarrow> _`" for f a b c\<Rightarrow>
+     \<open>simp only:subst_trop, rule TROP_SUBST_DEBUG[where f=f and a=a and b=b and c=c]\<close> ) 
+    | (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (qtop f a b c d))) \<Rightarrow> _`" for f a b c d\<Rightarrow>
+     \<open> simp only:subst_qtop, rule QTOP_SUBST_DEBUG[where f=f and a=a and b=b and c=c and d=d]\<close>) 
+
+lemma " (0 <\<^sub>u &y)\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> = (0 <\<^sub>u \<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s (pr_var y))"
+  by (simp only: subst_bop subst_uop subst_trop  subst_qtop subst_lit subst_var zero_uexpr_def)  
+    
 lemma increment_method: 
   assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
   shows  
@@ -935,10 +1113,71 @@ lemma increment_method:
       WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
     \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-     apply (hoare_sp_pp_vcg_all)   
-  done
-  
+  apply (hoare_sp_vcg_steps, unfold  pr_var_def; (vwb_lens_debugger| subst_debugger+ |vcg_defer))
+    (*CONTINUE FROM HERE*)
+    apply (succeed)
+       apply simp
+      apply simp
+    
+     apply (subst_debugger)
+    apply (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (bop f a b))) \<Rightarrow> _`" for f a b \<Rightarrow>
+     \<open> simp only:subst_bop, rule BOP_SUBST_DEBUG[where f= f and a= a and b = b]\<close>)
+        apply (subst_debugger)
+     apply (match conclusion in 
+    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (utp_expr.var x))) \<Rightarrow> _`" for x \<Rightarrow>
+     \<open>(simp only:subst_var), rule VAR_SUBST_DEBUG[where x= x]  \<close>)
+
+       apply (simp only: usubst)
+      apply (subst vwb_lens_mwb)
+      find_theorems "vwb_lens _ \<Longrightarrow> mwb_lens _"
+      
+
+    thm BOP_DEBUG[where f= "(op <)"]
+       apply (rule  BOP_DEBUG[where f= "(op <)" and a= 0 and b = "utp_expr.var y"])
+      apply (simp only: pr_var_def)
+    
+     apply (subst_debugger)
+     (*Before doing this.. I have to extract the substitutions and the expressions from the upred first*)
+      apply (rule SUBST_DEBUG''[where L = x and e\<^sub>1 = "bop(op <) (0) (&y)"])
+   
+       apply (subst (asm) subst_bop)
+      apply (subst (asm)  subst_var)
+      apply (subst (asm)  zero_uexpr_def )
+     apply (subst (asm) subst_lit)
+     apply (subst (asm) usubst)
+       prefer 3
+       apply (subst (asm) usubst)
+    apply (erule subst)
+    apply (simp only: usubst  lens_indep_sym)
+  oops
+term "pr_var"  
 subsection {*even count program*} 
+lemma even_count_gen:
+  assumes "lens_indep_all [i,j, endd]"
+  assumes "vwb_lens x" "vwb_lens i" "vwb_lens j"  
+  shows  
+    "\<lbrace>&endd >\<^sub>u 0 \<rbrace>
+       i :== \<guillemotleft>0::int\<guillemotright>;
+       j :== 0 ; 
+       INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u &endd) 
+       VRT \<guillemotleft>measure (nat o (Rep_uexpr (&endd - &i)))\<guillemotright>
+       WHILE &i <\<^sub>u &endd
+       DO
+         IF &i mod 2 =\<^sub>u 0 
+         THEN j :== (&j + 1)
+         ELSE SKIP 
+         FI;
+        i :== (&i + 1)
+       OD
+    \<lbrace>&j =\<^sub>u (&endd + 1)div 2\<rbrace>\<^sub>P" 
+  apply (insert assms)(*Make this automatic*)
+  apply (hoare_sp_pp_vcg_all)
+     apply (rule_tac L=endd and s=A in GET_REMOVER)  
+     apply (simp only:)
+     apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])  
+    apply (simp_all add: zdiv_zadd1_eq)
+  done   
 
 lemma even_count_gen:
   assumes "lens_indep_all [i,j, endd]"
@@ -1006,49 +1245,7 @@ text {*In the followin we illustrate the effect of domain theory based approach.
        However in gcd_correct' we use the max function from HOL library. 
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
        the reasoning.*} 
-     
-definition "LVAR L x = True"  
-  
-lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_def by blast
 
-(*Prototype by Peter for variable renaming*)
-method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' (fn i => fn st => 
-  if i > Thm.nprems_of st then all_tac st
-  else
-    let 
-      fun cnv (Const (@{const_name Trueprop},_)$ (Const (@{const_name LVAR},_) $(Free (name,_)) $ Bound i)) = SOME (name,i)
-        | cnv _ = NONE
-      val (_, _, Bi, _) = Thm.dest_state (st, i)
-      val free_names = Term.fold_aterms (fn Free (x, _) => insert (op =) x | _ => I) Bi [];
-      val newnames = Logic.get_goal (Thm.prop_of st) i 
-        |> Logic.strip_assums_hyp 
-        |> map_filter cnv
-        |> sort (apply2 snd #> int_ord #> rev_order)
-        |> (fn newnames =>
-             fold_map (fn (name, i) => fn free_names =>
-                         let fun aux n =
-                               if List.exists (fn n0 => n0 = n) free_names then aux (n ^ "'") else n
-                             val name = aux name
-                         in ((name, i), name :: free_names) end)
-                      newnames
-                      free_names)
-        |> #1
-        |> map fst
-    in 
-      rename_tac newnames i st 
-    end))\<close>  
-    
-(*Frederic's method for removing get functions from the goal*)    
-method get_remover =
-  (match conclusion in "_ (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
-  get_disambiguator,
-  vcg_elim_determ thin_rl[of "lens_get _ _ = _"] thin_rl[of "LVAR _ _"]
-
-method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
-method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
-  
-  
-  
 lemma gcd_correct:
   assumes "lens_indep_all [a,r, b, x]"
   assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
@@ -1241,427 +1438,17 @@ lemma filter_prog_loop_body_correct:
    apply (hoare_sp_pp_vcg_all)
   done
 
-lemma 
-  assumes "lens_indep_all [h,r, w]"
-  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w"  "olda \<bowtie> a" "olda \<bowtie> h"  "olda \<bowtie> r" "olda \<bowtie> w"
-  assumes "vwb_lens a" "vwb_lens olda" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
-   "\<lbrace>&r =\<^sub>u0 \<and> &a =\<^sub>u &olda \<and> &h =\<^sub>u (uop length (&olda)) \<and> &r <\<^sub>u &h \<and> &w \<le>\<^sub>u  &r\<rbrace> 
-        IF (&a)(&r)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)
-        THEN a :== swap\<^sub>u (&w) (&r) (&a);
-             w :== (&w + 1)
-        ELSE SKIP
-        FI ;
-        r:== (&r+1)
-    \<lbrace>&h =\<^sub>u (uop length (&a)) \<and> &h =\<^sub>u (uop length (&olda)) \<and> &w \<le>\<^sub>u  &r \<and> &r \<le>\<^sub>u &h \<and> 
-     (\<^bold>\<exists>(w\<^sub>0, r\<^sub>0)\<bullet>  \<guillemotleft>w\<^sub>0\<guillemotright> \<le>\<^sub>u  \<guillemotleft>r\<^sub>0\<guillemotright> \<and> \<guillemotleft>r\<^sub>0\<guillemotright> \<le>\<^sub>u &h \<and> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> + 1 \<and> 
-     trop If ((&olda)(\<guillemotleft>r\<^sub>0\<guillemotright>)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)) (&a =\<^sub>u  swap\<^sub>u (\<guillemotleft>w\<^sub>0\<guillemotright>) (\<guillemotleft>r\<^sub>0\<guillemotright>) (&olda) \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> +1) (&a =\<^sub>u &olda \<and> &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright>))\<rbrace>\<^sub>P"
-  apply (insert assms)
-  apply (hoare_sp_pp_vcg_all)
-     apply (auto simp: Suc_leI )
-    using list_update_id by fastforce
-  unfolding swap_def
  
-  oops
-    
-lemma blah:
-  "x < (y::'a::preorder)\<Longrightarrow> z\<le> x \<Longrightarrow> z < y"
-  apply (simp add: le_less_trans)
-  done    
-
-lemma "x < length (xb) \<Longrightarrow> xa \<le> x \<Longrightarrow> 
-     (take x (swap xa x xb) @ [nth (swap xa x xb) x]) = take x (swap xa x xb)"   
-  unfolding swap_def
-  apply auto
-  oops  
-term "[r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> (\<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s  (pr_var w))"    
-lemma "a \<bowtie> w \<Longrightarrow>a \<bowtie> r \<Longrightarrow> r \<bowtie> w \<Longrightarrow> vwb_lens w \<Longrightarrow>
-  [r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> (\<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s (pr_var w)) = \<guillemotleft>va\<guillemotright>" 
-  by (simp add: lens_indep_sym pr_var_def subst_var usubst_lookup_id usubst_lookup_upd usubst_lookup_upd_indep)
-term "`(\<^bold>\<exists> v \<bullet> ((\<^bold>\<exists> va \<bullet> (\<^bold>\<exists> vb \<bullet> (\<guillemotleft>5\<guillemotright> <\<^sub>u \<guillemotleft>vb\<guillemotright>(\<guillemotleft>v\<guillemotright>)\<^sub>a \<and>
-                                       \<guillemotleft>v\<guillemotright> <\<^sub>u h \<and>
-                                       (\<guillemotleft>v\<guillemotright> \<le>\<^sub>u h \<and>
-                                        \<guillemotleft>va\<guillemotright> \<le>\<^sub>u \<guillemotleft>v\<guillemotright> \<and>
-                                        h =\<^sub>u #\<^sub>u(\<guillemotleft>vb\<guillemotright>) \<and>
-                                        h =\<^sub>u #\<^sub>u(olda) \<and>
-                                        bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>va\<guillemotright> + 1, \<guillemotleft>vb\<guillemotright>) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>v\<guillemotright> + 1, olda)) \<and>
-                                       [r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>, w \<mapsto>\<^sub>s \<guillemotleft>va\<guillemotright>] \<dagger> \<langle>[a \<mapsto>\<^sub>s \<guillemotleft>vb\<guillemotright>]\<rangle>\<^sub>s 1\<^sub>L =\<^sub>u \<guillemotleft>st\<guillemotright>) \<and>
-                                      a =\<^sub>u swap\<^sub>u \<guillemotleft>va\<guillemotright> \<guillemotleft>v\<guillemotright> \<guillemotleft>vb\<guillemotright>) \<and>
-                             w =\<^sub>u \<guillemotleft>va\<guillemotright> + 1) \<or>
-                    \<not> \<guillemotleft>5\<guillemotright> <\<^sub>u a(\<guillemotleft>v\<guillemotright>)\<^sub>a \<and>
-                    \<guillemotleft>v\<guillemotright> <\<^sub>u h \<and>
-                    (\<guillemotleft>v\<guillemotright> \<le>\<^sub>u h \<and>
-                     w \<le>\<^sub>u \<guillemotleft>v\<guillemotright> \<and>
-                     h =\<^sub>u #\<^sub>u(a) \<and> h =\<^sub>u #\<^sub>u(olda) \<and> bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(w + 1, a) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(\<guillemotleft>v\<guillemotright> + 1, olda)) \<and>
-                    \<langle>[r \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s 1\<^sub>L =\<^sub>u \<guillemotleft>st\<guillemotright>) \<and>
-                   r =\<^sub>u \<guillemotleft>v\<guillemotright> + 1) \<Rightarrow>
-           (r \<le>\<^sub>u h \<and>
-            w \<le>\<^sub>u r \<and> h =\<^sub>u #\<^sub>u(a) \<and> h =\<^sub>u #\<^sub>u(olda) \<and> bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(w + 1, a) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(r + 1, olda)) \<and>
-           (1\<^sub>L, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>measure \<lbrakk>h - r\<rbrakk>\<^sub>e\<guillemotright>`"
-
-lemma filter_prog_correct:
-  assumes "lens_indep_all [h,r, w]"
-  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w"  "olda \<bowtie> a" "olda \<bowtie> h"  "olda \<bowtie> r" "olda \<bowtie> w"
-  assumes "vwb_lens a" "vwb_lens olda" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
-  "\<lbrace>&h =\<^sub>u (uop length (&a)) \<and> &a =\<^sub>u &olda\<rbrace> 
-      r:== 0; w :==0;
-      INVAR &r \<le>\<^sub>u  &h \<and> &w \<le>\<^sub>u  &r \<and> &h =\<^sub>u (uop length (&a)) \<and>   &h =\<^sub>u (uop length (&olda))\<and>  
-             bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&w +1 , (&a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&r + 1, (&olda)) ) 
-      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
-      WHILE &r<\<^sub>u &h
-      DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (\<guillemotleft>5\<guillemotright>)
-       THEN a :== swap\<^sub>u (&w) (&r) (&a);
-            w :== (&w + 1)
-       ELSE SKIP
-       FI ;
-       r:== (&r+1)
-      OD;
-      h :==&w
-  \<lbrace>&h \<le>\<^sub>u  &w \<and> ( take\<^sub>u(&h, &a) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (&olda)) ) \<rbrace>\<^sub>P" 
-  apply (insert assms)
-  apply (hoare_sp_vcg_pre)
-   apply (hoare_sp_vcg_step)
-    apply (hoare_sp_vcg_step)
-    apply assumption
-     apply (hoare_sp_vcg_step)
-    apply (hoare_sp_vcg_step)
-    apply assumption
-   apply (hoare_sp_vcg_step)
-    apply (hoare_sp_vcg_step)
-       apply simp
-  term "pr_var s"
-  unfolding lens_indep_all_alt
-    apply clarsimp
-      apply (simp add: usubst )
-      apply pred_simp
-     apply hoare_sp_vcg_step
-        apply hoare_sp_vcg_step
-        apply hoare_sp_vcg_step
-        apply hoare_sp_vcg_step
-        apply assumption
-       apply hoare_sp_vcg_step
-       apply assumption
-     apply hoare_sp_vcg_step
-     apply hoare_sp_vcg_step
-     apply assumption
-    apply clarsimp
-    apply (simp add: usubst pr_var_def lens_indep_sym )
-    apply (vcg_default_goal_post_processing)
-  oops   
-
-find_theorems "take (Suc _) (_) = _"
-  value "take 2 [1::int, 2,3]"  
-lemma 
-  assumes "lens_indep_all [h,r, w]"
-  assumes "a \<bowtie> h"  "a \<bowtie> r" "a \<bowtie> w" 
-  assumes "vwb_lens a" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
- "\<lbrace>&w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<and> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> \<and> &a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and> &h =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and>  
-   \<guillemotleft>h\<^sub>0\<guillemotright> =\<^sub>u uop length \<guillemotleft>a\<^sub>0\<guillemotright>\<rbrace> 
-      r:== 0; w :==0;
-      INVR  &h =\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright> \<and> &r \<le>\<^sub>u  &h \<and> &w \<le>\<^sub>u  &r \<and>
-            take\<^sub>u(&w, &a) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r ,(swap\<^sub>u (&w) (&r) ( \<guillemotleft>a\<^sub>0\<guillemotright>)))))
-      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
-      WHILE &r<\<^sub>u &h
-      DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-       THEN a :== swap\<^sub>u (&w) (&r) (&a);
-            w :== (&w + 1)
-       ELSE SKIP
-       FI ;
-       r:== (&r+1)
-      OD;
-      h :==&w
- \<lbrace>&h \<le>\<^sub>u \<guillemotleft>h\<^sub>0\<guillemotright>   \<and>
-            take\<^sub>u(&h, &a) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) \<guillemotleft>a\<^sub>0\<guillemotright>) \<rbrace>\<^sub>P" 
-   apply (insert assms)
-  apply (hoare_sp_pp_vcg_all)
-  unfolding swap_def
-
-
-  oops
-    
-lemma 
-  assumes "lens_indep_all [l, h, h\<^sub>0 ,r, w]"
-  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> h\<^sub>0" "a \<bowtie> r" "a \<bowtie> w"
-  assumes "a\<^sub>0 \<bowtie> l"  "a\<^sub>0 \<bowtie> a" "a\<^sub>0 \<bowtie> h" "a\<^sub>0 \<bowtie> h\<^sub>0" "a\<^sub>0 \<bowtie> r" "a\<^sub>0 \<bowtie> w"  
-  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
-    (* a=a\<^sub>0 \<and> h=h\<^sub>0 \<and> l\<le>h*)
- "\<lbrace>&h =\<^sub>u \<guillemotleft>7::nat\<guillemotright> \<and> 0 \<le>\<^sub>u &h  \<and> &a =\<^sub>u \<guillemotleft>[1,6,7,8,3,2,9::int]\<guillemotright>\<rbrace> 
-      r:== 0; w :==0;
-      INVR  0 \<le>\<^sub>u &h \<and> &h =\<^sub>u \<guillemotleft>7\<guillemotright> \<and>
-            0 \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h \<and> 
-            &w =\<^sub>u  #\<^sub>u(bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) take\<^sub>u(&r, swap\<^sub>u (&w) (&r) (\<guillemotleft>[1,6,7,8,3,2,9::int]\<guillemotright>)))
-            (*\<and> 
-           (take\<^sub>u(&w , &a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r, \<guillemotleft>[1,6,7,9,3,2,9::int]\<guillemotright>)))
-
-             \<and>
-           
-            ((take\<^sub>u(&w , &a)) =\<^sub>u (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r, &a\<^sub>0))))
-           \<and>
-           (drop\<^sub>u((&r + 1), &a)) =\<^sub>u (drop\<^sub>u((&r + 1), &a\<^sub>0)) 
-
-      I=\<lambda>(h\<^sub>0,a\<^sub>0). vars l h (a:imap) r w in 
-      h=h\<^sub>0 \<and> l\<le>w \<and> w\<le>r \<and> r\<le>h \<and>
-      lran a l w = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l r) \<and>
-      lran a r h = lran a\<^sub>0 r h*)
-      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
-      WHILE &r<\<^sub>u &h
-      DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-       THEN a :== swap\<^sub>u (&w) (&r) (\<guillemotleft>[1,6,7,8,3,2,9::int]\<guillemotright>);
-            w :== (&w + 1)
-       ELSE SKIP
-       FI ;
-       r:== (&r+1)
-      OD;
-      h :==&w
-      (*  h\<le>h\<^sub>0 \<and> lran a l h = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l h\<^sub>0)*)
-     \<lbrace>&h =\<^sub>u 4 \<rbrace>\<^sub>P"
-  apply (insert assms) (* Make this automatic*)
-  apply hoare_sp_default_vcg_all
-    apply vcg_default_goal_post_processing
-   apply vcg_default_goal_post_processing
-  unfolding swap_def     
-    apply vcg_default_goal_post_processing
-    
-   oops  
-          
-find_theorems name: "LENS_GET_TAG_THMS"    
-find_theorems name: "rep_eq" "(Rep_uexpr ?e = ?t)"  
-update_uexpr_rep_eq_thms -- {* Read @{thm [source] uexpr_rep_eq_thms} here. *}  
-thm uexpr_rep_eq_thms  
- 
-lemma 
-  assumes "lens_indep_all [l, h, r, w]"
-  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> r" "a \<bowtie> w"
-  assumes "old_a \<bowtie> l"  "old_a \<bowtie> a" "old_a \<bowtie> h" "old_a \<bowtie> r" "old_a \<bowtie> w"  
-  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
- "\<lbrace>&l =\<^sub>u 0 \<and>  &l \<le>\<^sub>u &h \<and> #\<^sub>u(&a::(int list, _)uexpr)=\<^sub>u &h\<rbrace> 
-      r:== &l; w :==&l;
-      INVR &l =\<^sub>u 0 \<and>  #\<^sub>u(&a)  =\<^sub>u &h  \<and>
-           &l \<le>\<^sub>u &h \<and> &l \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h \<and>
-            &a =\<^sub>u  (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &a)))\<and>
-           take\<^sub>u(&w- &l, &a) =\<^sub>u  
-           (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &a)))
-      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
-      WHILE &r<\<^sub>u &h
-      DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-       THEN a :== (trop list_update (&a) (&w) (&a(&r)\<^sub>a)) ;
-            w :== (&w + 1)
-       ELSE SKIP
-       FI ;
-       r:== (&r+1)
-      OD;
-      h :==&w
-     \<lbrace>(drop\<^sub>u(&r - &w, &a)) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (drop\<^sub>u(&r - &w, &a))\<rbrace>\<^sub>P"
-  apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_default_vcg_all) 
-    apply pred_simp
-  oops  
-    
-lemma lens_indepE:
-  assumes "x \<bowtie> y"
-  assumes " \<And> v u \<sigma>. put\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> \<sigma> v) u = put\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> \<sigma> u) v \<Longrightarrow> 
-                   get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> \<sigma> u) = get\<^bsub>y\<^esub> \<sigma> \<Longrightarrow> 
-                   get\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> \<sigma> v) = get\<^bsub>x\<^esub> \<sigma> \<Longrightarrow> Q"
-  shows Q
-  using assms unfolding lens_indep_def
-  by auto
-    
-lemma get_intro: (*generalise this law for any binary operation*)
-  "(\<And>v. get\<^bsub>a\<^esub> A = v  \<Longrightarrow> v = uexpression) \<Longrightarrow> get\<^bsub>a\<^esub> A = uexpression"
-  by auto
-    
-
-(*
-  CLR r;; CLR w;;
-  r::=$l;; w::=$l;;
-  WHILE $r<$h DO (
-    IF a\<^bold>[$r\<^bold>] > \<acute>5 THEN
-      a\<^bold>[$w\<^bold>] ::= a\<^bold>[$r\<^bold>];;
-      w::=$w+\<acute>1
-    ELSE SKIP;;
-    r::=$r+\<acute>1
-  );;
-  h::=$w
-
-l=l\<^sub>0 \<and> h=h\<^sub>0 \<and> l\<^sub>0\<le>w \<and> w\<le>r \<and> r\<le>h \<and>
-      lran a l w = filter (\<lambda>x. 5<x) (lran a\<^sub>0 l r) \<and>
-      lran a r h = lran a\<^sub>0 r h
-*)  
-
-ML {*
-
-val exists_get  = (Subgoal.FOCUS (fn focus => let 
-                                val term_concl =  Thm.term_of(focus |> #concl);
-                                val term_get = (Const (@{const_name "Lens_Laws.lens_get"}, @{typ "('a, 'b, 'c) lens_scheme \<Rightarrow> 'b \<Rightarrow> 'a"}));
-                                val term_get_safe_extract = (term_get) (*|> Thm.cterm_of (focus |> #context)|> Thm.term_of*)
-                                val exists_subterm_get = (term_concl |> ((fn c => c = term_get_safe_extract) |> Term.exists_subterm))
-                              in
-                                if exists_subterm_get 
-                                then  no_tac
-                                else  all_tac 
-                              end)) ;
-*}                                                  
-ML 
-{* open HOLogic;
-mk_binop
-*} 
-term "lens_put X y d"
-ML 
-{*
-val term_put = @{term "lens_put X s v"};
-
-@{term "lens_get X (lens_put Y (lens_put Xy \<sigma> v) v)"} |> ((fn c => c = term_put)|> Term.exists_subterm)
-*}
-
-ML 
-{*
-val term_get = @{term "lens_get"};(*I l faut trouver une representation plus generale pour comparer
-                                   SINON utilise le type de get  *)
-
-@{term "lens_get X (lens_get X s)"} |> ((fn c => c = term_get)|> Term.exists_subterm)
-*}
-ML 
-{*
-fun ex P tm = P tm orelse
-      (case tm of
-        t $ u => ex P t orelse ex P u
-      | Abs (_, _, t) => ex P t
-      | _ => false);
-
-@{term "lens_get X (lens_put Y (lens_put y \<sigma> v) v)"} |> ((fn c => c = term_get)|> ex);
-
-@{term "lens_get X (lens_get X s)"}|> ((fn c => (case c of Const (_,@{typ "(_, _, _) lens_scheme \<Rightarrow> _ \<Rightarrow> _"}) => true 
-                                                         | _ $ Const (_,@{typ "(_, _, _) lens_scheme \<Rightarrow> _ \<Rightarrow> _"}) => true
-                                                         | Const (_,@{typ "(_, _, _) lens_scheme \<Rightarrow> _ \<Rightarrow> _"})$ _ => true
-                                                         | _ $Const (_,@{typ "(_, _, _) lens_scheme \<Rightarrow> _ \<Rightarrow> _"})$ _ => true  
-                                                         | _ => false))|> Term.exists_subterm);
-@{term "lens_get X (lens_get X s)"}
-*}
-
-
-ML {*Theory.setup (Method.setup @{binding exists_get_tac} 
-                  (Scan.succeed (fn ctxt => ((SIMPLE_METHOD' (exists_get ctxt)))))
-                  "checks occurens of get_lens in a given goal conclusion");
-
-
-*}
-  
-lemma aext_rep_eq':
-  "LENS_GET_TAG (\<lbrakk>x \<oplus>\<^sub>p xa\<rbrakk>\<^sub>e = (\<lambda>b. \<lbrakk>x\<rbrakk>\<^sub>e (get\<^bsub>xa\<^esub> b)))"
-  unfolding LENS_GET_TAG_def
-  by (simp add: utp_tactics.uexpr_rep_eq_thms(8))  
-find_theorems name: "rep_eq" "LENS_GET_TAG (Rep_uexpr ?e = ?t)"
+find_theorems name: "rep_eq" "LENS_GET_TAG (Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
 (*
 On a trois theorem qui genere get functions:
   - utp_expr.var.rep_eq
   - utp_subst.usubst_lookup.rep_eq
   - utp_rel.rel_alpha_ext.rep_eq
 
-In order to tag this laws with GET_TAG, we add a definition: GET_TAG P = P
-We use this definition as a wrapper for the 3 theorems listed above.
-
-In order to make pred_simp use this get tag:
-
-- We add GET_TAG to the simpset in order we do not affact the UTP setup
-- We remove GET_TAG from simpset in the VCG theory in order it appears in our goals
-
-Once we have GET_TAG in our goals we can control these goals...
-
 *)
-thm utp_expr.var.rep_eq  
+
  
-lemma 
-  assumes "lens_indep_all [l, h, r, w]"
-  assumes "a \<bowtie> l"  "a \<bowtie> h" "a \<bowtie> r" "a \<bowtie> w"
-  assumes "old_a \<bowtie> l"  "old_a \<bowtie> h" "old_a \<bowtie> r" "old_a \<bowtie> w"  
-  assumes "vwb_lens a" "vwb_lens l" "vwb_lens h" "vwb_lens r" "vwb_lens w"
-  shows  
- "\<lbrace>  &l =\<^sub>u 0 \<and> #\<^sub>u(&old_a::(int list, _)uexpr) =\<^sub>u &h \<and> &l \<le>\<^sub>u &h \<and>&a =\<^sub>u &old_a  \<rbrace> 
-      r:== &l; w :==&l;
-      INVR  #\<^sub>u(&old_a)  =\<^sub>u &h  \<and> &l =\<^sub>u 0 \<and>
-           &l \<le>\<^sub>u &w \<and> &w \<le>\<^sub>u &r \<and> &r\<le>\<^sub>u &h \<and>
-            &a =\<^sub>u  (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &old_a)))\<and>
-           take\<^sub>u(&w- &l, &a) =\<^sub>u  
-           (bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&r  - &l, &old_a)))\<and>
-           drop\<^sub>u(&h- &r, &a) =\<^sub>u drop\<^sub>u(&h- &r, &old_a)
-   
-      VRT  \<guillemotleft>measure ((Rep_uexpr (&h - &r)))\<guillemotright>
-      WHILE &r<\<^sub>u &h
-      DO 
-       IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-       THEN a :== (trop list_update (&a) (&w) (&a(&r)\<^sub>a)) ;
-            w :== (&w + 1)
-       ELSE SKIP
-       FI ;
-       r:== (&r+1)
-      OD;
-      h :==&w
-     \<lbrace> (take\<^sub>u(&h  - &l, &a)) =\<^sub>u bop filter (\<lambda> x \<bullet> \<guillemotleft>5 < x\<guillemotright>) (take\<^sub>u(&h  - &l, &old_a))\<rbrace>\<^sub>P"
- 
-  apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_pp_vcg_all)
-
-           apply (vcg_elim_determ beautify_thms)
-           apply (vcg_can_elim, determ \<open>(rule get_intro_gen)\<close>)+
-  oops
-    
-subsection {* I want to solve the problem of nested existential*}
-   
-term "Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st)  = y\<^sub>0  \<and> y\<^sub>0 > 0)" 
-term "Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st) =  y\<^sub>0 \<and> (Rep_uexpr (&x) st) \<le> y\<^sub>0 \<and> y\<^sub>0 > 0)"    
-term "Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st)  = y\<^sub>0 \<and> (Rep_uexpr (&x) st) = y\<^sub>0) "  
-term "(\<lambda> x \<bullet> &y >\<^sub>u x)  "
-term "((\<lambda> f x. f x) o Rep_uexpr) (&y >\<^sub>u 0)"  
-term "\<guillemotleft>\<lambda> st. x = (Rep_uexpr (&y >\<^sub>u 0) st)\<guillemotright>"
-term "\<guillemotleft>\<lambda> st. y\<^sub>0 = Rep_uexpr (&y) st\<guillemotright> "
-term "(&y >\<^sub>u 0)"  
-
-
-lemma udeduct_tautI': "\<forall> b. \<lbrakk>p\<rbrakk>\<^sub>eb  \<Longrightarrow> `p`"
-  using taut.rep_eq by blast    
-lemma blahblah: 
-  assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
-  shows  
-    "\<lbrace>Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st) = y\<^sub>0  \<and> y\<^sub>0 > 0)\<rbrace>
-      x :== 0 ; 
-      INVR Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st) =  y\<^sub>0 \<and> (Rep_uexpr (&x) st) \<le> y\<^sub>0 \<and> y\<^sub>0 > 0)
-      VRT \<guillemotleft>(measure o Rep_uexpr) ((&y + 1) - &x)\<guillemotright> 
-      WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
-    \<lbrace>Abs_uexpr (\<lambda> st. (Rep_uexpr (&y) st) = y\<^sub>0 \<and> (Rep_uexpr (&x) st) = y\<^sub>0)\<rbrace>\<^sub>P"
-  apply (insert assms) (*Make this automatic*)
-  apply (hoare_sp_vcg_steps; pred_simp?) 
-   apply (unfold lens_indep_all_alt) 
-   apply (simp_all add: lens_laws_vcg_simps)
-  apply (elim disjE conjE) 
-    apply (simp)
-       apply simp
-      apply simp
-     apply (simp add: usubst)
-     apply (rule  udeduct_tautI)
-    apply (rule uintro)
-     apply (erule ushExE)
-     apply (erule ushExE')
-    apply (subst (asm) Abs_uexpr_inverse)
-     apply (subst Abs_uexpr_inverse)
-    
-  find_theorems name:"Abs_uexp"
-    find_theorems name:"Rep_uexp"
-    thm utp_expr.rep_eq
-    apply simp
-     apply pred_simp
-    apply (subst (asm) HOL.eq_commute[symmetric])
-    apply (simp)
-    apply (vcg_default_solver)+
-  apply (hoare_sp_vcg_all) 
- done    
 (*
 TODO List for next iteration:
 
@@ -1669,8 +1456,7 @@ TODO List for next iteration:
 - Make an eisbach version for vcg_step
 - Hide lens_indep in hoare triple 
 - Hide lens properties: such as vwb_lens
-*)          
-find_theorems name:"H1_H2_impl_"    
+*)    
 
 end
 

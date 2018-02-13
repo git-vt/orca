@@ -3,20 +3,6 @@ section \<open>Lens Algebraic Operators\<close>
 theory Lens_Algebra
 imports Lens_Laws
 begin
-subsection \<open>Control\<close>
-
-text \<open>Before building up UTP expressions we define LENS_GET_TAG. It is a wrapper 
-      for expressions generated using lens_get. It is a control flag for the VCG
-      that allows a post-processing to deal with nested lens_get terms. Thus, 
-      provides nicer and more readable proof goal 
-      (ie. proof goals without get functions in conclusions). LENS_PUT_TAG is similar,
-      however, it is applied to lens_put\<close>
-  
-definition LENS_GET_TAG :: "'t \<Rightarrow>'t" 
-  where [simp]:"LENS_GET_TAG v = v"
-    
-definition LENS_PUT_TAG :: "'s \<Rightarrow>'s" 
-  where [simp]:"LENS_PUT_TAG v = v"
     
 subsection \<open>Lens Composition, Plus, Unit, and Identity\<close>
 
