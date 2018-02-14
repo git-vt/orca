@@ -817,27 +817,18 @@ lemmas loop_invr_vrt_hoare_prog_sp_instantiated [hoare_sp_rules] =
        for_invr_vrt_hoare_prog_sp [where e = "&\<Sigma>"]
        do_while_invr_vrt_hoare_prog_sp [where e = "&\<Sigma>"]
        from_until_invr_vrt_hoare_prog_sp[where e = "&\<Sigma>"]
-
-term "(measure o Rep_uexpr) ((&y + 1) - &x)"  
-  
+ 
 section {*VCG*} 
-    
-named_theorems beautify_thms     
-lemma thin_vwb_lens[beautify_thms]: "vwb_lens l \<Longrightarrow> P \<Longrightarrow> P" . 
-lemma thin_weak_lens[beautify_thms]: "weak_lens l \<Longrightarrow> P \<Longrightarrow> P" .    
-lemma [beautify_thms]: "\<not> ief_lens i \<Longrightarrow> P \<Longrightarrow> P" .  
-lemma [beautify_thms]: "i\<bowtie>j \<Longrightarrow> P \<Longrightarrow> P" .  
-lemma [beautify_thms]: "i\<noteq>(j::_\<Longrightarrow>_) \<Longrightarrow> P \<Longrightarrow> P" .
-lemma [beautify_thms]: "i\<noteq>(j::_\<Longrightarrow>_) \<longrightarrow> i \<bowtie> j \<Longrightarrow> P \<Longrightarrow> P" .    
-lemma [beautify_thms]: "get\<^bsub>i\<^esub> A = x \<Longrightarrow> P \<Longrightarrow> P" .  
-      
+  
+subsection {*VCG General Purpose Tactics*}      
+text{* Automating premises insertion*}  
 method_setup insert_assms = \<open>Scan.succeed (fn _ => CONTEXT_METHOD (fn facts => fn (ctxt,st) => let
    val tac = HEADGOAL (Method.insert_tac ctxt facts)
    val ctxt = Method.set_facts [] ctxt
  in Method.CONTEXT ctxt (tac st)
  end))\<close>                      
                        
-text {* The defer processing and the thin)tac processing in the sequel was inspired by tutorial5.thy in Peter Lammich course
+text {* The defer processing and the thin_tac processing in the sequel was inspired by tutorial5.thy in Peter Lammich course
         \url{https://bitbucket.org/plammich/certprog_public/downloads/}*}
  
 subsection \<open>Deterministic Repeated Elimination Rule\<close>
@@ -856,29 +847,9 @@ method_setup determ = \<open>
     )
 \<close>        
 (*method insert_assms =  tactic \<open>@{context} |>  Assumption.all_prems_of |> (@{context} |>  Method.insert_tac) |> FIRSTGOAL\<close>*)
-                      
-method hoare_sp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule post_weak_prog_hoare  
 
-method hoare_sp_rule_apply = rule hoare_sp_rules
-
-method hoare_wp_rule_apply = rule hoare_wp_rules
-
-method hoare_annotaion_rule_apply = rule hoare_wp_rules  
-named_theorems lens_laws_vcg_simps
-lemmas [lens_laws_vcg_simps] =
-  lens_indep.lens_put_irr1
-  lens_indep.lens_put_irr2
-  
-method vcg_default_solver = assumption|pred_simp?;(simp add: lens_laws_vcg_simps)?;fail
-
-method  vcg_pp_solver = ((unfold lens_indep_all_alt )?, (simp add:  lens_laws_vcg_simps)?, safe?; (simp add:  lens_laws_vcg_simps)?)
-  
-method vcg_default_goal_post_processing = 
-       ((pred_simp+)?; vcg_pp_solver?;vcg_elim_determ beautify_thms)?
-  
-method vcg_step_solver methods solver = 
-       (hoare_sp_rule_apply | solver)
-
+text {*vcg_can_defer is a tactic that succeed if the conclusion of a goal is not Hoare triple
+       or if it has no DEFERRED markup*}  
   
 definition DEFERRED :: "bool \<Rightarrow> bool" where "DEFERRED P = P"
 lemma DEFERREDD: "DEFERRED P \<Longrightarrow> P" by (auto simp: DEFERRED_def)
@@ -891,21 +862,14 @@ method vcg_can_defer =
        \<bar> 
          "_" \<Rightarrow> succeed)
        
-method vcg_defer = (vcg_can_defer, rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)
-
-method  hoare_sp_vcg_step = (hoare_sp_rule_apply | vcg_defer)
+method vcg_defer = (vcg_can_defer, rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)    
   
-method  hoare_sp_vcg_steps = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFERRED_def)
-
-method  hoare_sp_vcg_steps_pp = hoare_sp_vcg_steps; pred_simp?
+subsection {*VCG Post Processing Tactics*} 
   
-method hoare_sp_default_vcg_all = (hoare_sp_vcg_pre, (vcg_step_solver \<open>vcg_default_solver\<close>| vcg_defer)+, (unfold DEFERRED_def)?)
-
-method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_processing)
+text{*Tactics and methods in this section are used to do Post-Processing on the generated VCs.
+      Namely, The application of symbolic execution laws from the theory usubst
+     to the VCs in a very controlled way.*}  
   
-subsection {*VCG post-processing*}      
-  
-
 lemma vwb_lens_weak[simp]: 
   "vwb_lens x \<Longrightarrow> weak_lens x"
   by simp    
@@ -1124,6 +1088,18 @@ method wf_debugger =
   (match conclusion in 
    "wf expr" for expr \<Rightarrow>
    \<open>rule WF_DEBUG[where expr = expr], simp\<close>)     
+
+
+method vcg_upreds_post_processing = (vwb_lens_debugger|wf_debugger|subst_debugger| 
+                                     subst_lookup_debugger)
+  
+subsection {*VCG Goal Beautify Tactics*}    
+
+text{*Tactics and methods in this section are used to beautify the goals before presenting them to the user.
+      Namely, after the application of post-processing a lot of semantic machinery and debugging information
+      remains existing in the different proof goals. The methods below clean it up since these 
+      assumptions are useless at this point.
+    *}
   
 definition "LVAR L x = True"  
   
@@ -1165,8 +1141,63 @@ method get_remover =
 method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
 method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
   
-  
+       
+named_theorems beautify_thms     
+lemma thin_vwb_lens[beautify_thms]: "vwb_lens l \<Longrightarrow> P \<Longrightarrow> P" . 
+lemma thin_weak_lens[beautify_thms]: "weak_lens l \<Longrightarrow> P \<Longrightarrow> P" .    
+lemma [beautify_thms]: "\<not> ief_lens i \<Longrightarrow> P \<Longrightarrow> P" .  
+lemma [beautify_thms]: "i\<bowtie>j \<Longrightarrow> P \<Longrightarrow> P" .  
+lemma [beautify_thms]: "i\<noteq>(j::_\<Longrightarrow>_) \<Longrightarrow> P \<Longrightarrow> P" .
+lemma [beautify_thms]: "i\<noteq>(j::_\<Longrightarrow>_) \<longrightarrow> i \<bowtie> j \<Longrightarrow> P \<Longrightarrow> P" .    
+lemma [beautify_thms]: "get\<^bsub>i\<^esub> A = x \<Longrightarrow> P \<Longrightarrow> P" .
 
+subsection {*VCG Core Tactics*}    
+    
+method hoare_sp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule post_weak_prog_hoare  
+
+method hoare_sp_rule_apply = rule hoare_sp_rules
+
+method hoare_wp_rule_apply = rule hoare_wp_rules
+
+method hoare_annotaion_rule_apply = rule hoare_wp_rules  
+named_theorems lens_laws_vcg_simps
+lemmas [lens_laws_vcg_simps] =
+  lens_indep.lens_put_irr1
+  lens_indep.lens_put_irr2
+  
+method vcg_default_solver = assumption|pred_simp?;(simp add: lens_laws_vcg_simps)?;fail
+
+method  vcg_pp_solver = ((unfold lens_indep_all_alt )?, (simp add:  lens_laws_vcg_simps)?, safe?; (simp add:  lens_laws_vcg_simps)?)
+  
+method vcg_default_goal_post_processing = 
+       ((pred_simp+)?; vcg_pp_solver?;vcg_elim_determ beautify_thms)?
+  
+method vcg_step_solver methods solver = 
+       (hoare_sp_rule_apply | solver)
+
+
+method  hoare_sp_vcg_step = (hoare_sp_rule_apply | vcg_defer)
+  
+method  hoare_sp_vcg_steps = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFERRED_def)
+
+method vcg_hol_post_processing = 
+   (pred_simp(*pred_simp need to be applied in a controlled way*))?,
+   (simp only:  lens_laws_vcg_simps)?
+ 
+method hoare_sp_vcg_steps_pp = 
+    (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
+                               ((simp only: distinct.simps HOL.conj_assoc HOL.simp_thms List.list.set Set.ball_simps Set.insert_iff Set.empty_iff)+)?,
+                                 safe?, 
+                                 (simp only:  lens_laws_vcg_simps)?,
+                                 (vcg_upreds_post_processing+)?,
+                                 vcg_hol_post_processing(*ADD BEAUTIFY STEP HERE*)))
+ 
+  
+method hoare_sp_default_vcg_all = (hoare_sp_vcg_pre, (vcg_step_solver \<open>vcg_default_solver\<close>| vcg_defer)+, (unfold DEFERRED_def)?)
+
+method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_processing)
+  
+  
 section {*Experiments on VCG*}
 
 subsection {* Through these experiments I want to observe the following problems: 
@@ -1180,8 +1211,12 @@ lemma " (0 <\<^sub>u &y)\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> =
   by (simp only: subst_bop subst_uop subst_trop  subst_qtop subst_lit subst_var zero_uexpr_def)  
 term "bop conj a b" 
 thm utp_pred.subst_conj  
+lemma "\<not> y \<in> {}"
+  using [[simp_trace]]
+  by simp  
 lemma increment_method: 
-  assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
+  assumes "lens_indep_all [x, y]"
+  assumes "vwb_lens x"  "vwb_lens y"
   shows  
     "\<lbrace>&y >\<^sub>u 0\<rbrace>
       x :== 0 ; 
@@ -1190,24 +1225,10 @@ lemma increment_method:
       WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
     \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-  apply (((hoare_sp_vcg_steps, unfold pr_var_def in_var_def out_var_def); (vwb_lens_debugger| wf_debugger |subst_debugger | subst_lookup_debugger |vcg_defer)+), (unfold DEFERRED_def))
-    prefer 5
-      
-       apply subst_debugger
-       apply subst_debugger
-     apply subst_debugger+
-       apply subst_lookup_debugger+
-    
-    apply (match conclusion in 
-    "_ (\<lambda> _. (subst _ (a \<and> b)))" for a b \<Rightarrow>
-     \<open>succeed\<close>)
-    
-    using [[simp_trace]]
-    apply (simp only: usubst)
-  (*; (vwb_lens_debugger| wf_debugger |subst_debugger | subst_lookup_debugger |vcg_defer)+), (unfold DEFERRED_def)
-
-    CONTINUE FROM HERE*)
-  oops
+  apply (hoare_sp_vcg_steps_pp)                      
+   (*ADD BEAUTIFY STEP*) 
+   (*CONTINUE FROM HERE*) 
+  done
     
 subsection {*even count program*} 
 lemma even_count_gen:
