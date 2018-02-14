@@ -905,6 +905,226 @@ method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_pr
   
 subsection {*VCG post-processing*}      
   
+
+lemma vwb_lens_weak[simp]: 
+  "vwb_lens x \<Longrightarrow> weak_lens x"
+  by simp    
+    
+lemma 
+  "vwb_lens y \<Longrightarrow> x \<bowtie> y \<Longrightarrow>\<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s y =  (&y)"
+  by (simp add: lens_indep_sym pr_var_def usubst_lookup_id usubst_lookup_upd_indep)   
+  
+definition "ZERO_SUBST_TAG expr = True" 
+definition "ONE_SUBST_TAG expr = True"
+definition "LIT_SUBST_TAG expr = True"
+definition "VAR_SUBST_TAG expr = True"  
+definition "UOP_SUBST_TAG expr = True"    
+definition "BOP_SUBST_TAG expr = True"
+definition "TROP_SUBST_TAG expr= True"
+definition "QTOP_SUBST_TAG expr = True"
+  
+lemma ZERO_SUBST_DEBUG: 
+  "(ZERO_SUBST_TAG 0 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding ZERO_SUBST_TAG_def 
+  by blast 
+
+lemma ONE_SUBST_DEBUG: 
+  "(ONE_SUBST_TAG 1 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding ONE_SUBST_TAG_def 
+  by blast 
+    
+lemma LIT_SUBST_DEBUG: 
+  "(LIT_SUBST_TAG (lit v) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding LIT_SUBST_TAG_def 
+  by blast  
+
+lemma VAR_SUBST_DEBUG: 
+  "(VAR_SUBST_TAG (utp_expr.var x) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding VAR_SUBST_TAG_def 
+  by blast
+    
+lemma UOP_SUBST_DEBUG: 
+  "(UOP_SUBST_TAG (uop f a) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding UOP_SUBST_TAG_def 
+  by blast
+    
+lemma BOP_SUBST_DEBUG: 
+  "(BOP_SUBST_TAG (bop f a b) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding BOP_SUBST_TAG_def 
+  by blast     
+    
+lemma EQ_UPRED_SUBST_DEBUG: 
+  "(BOP_SUBST_TAG (eq_upred a b) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding BOP_SUBST_TAG_def 
+  by blast
+    
+lemma TROP_SUBST_DEBUG: 
+  "(TROP_SUBST_TAG (trop f a b c) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding TROP_SUBST_TAG_def 
+  by blast     
+    
+lemma QTOP_SUBST_DEBUG: 
+  "(QTOP_SUBST_TAG (qtop f a b c d) \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding QTOP_SUBST_TAG_def 
+  by blast 
+    
+method subst_debugger = 
+    (*Zero*)
+   (match conclusion in  
+    "_ (\<lambda> _. subst _ 0)"  \<Rightarrow>
+     \<open>rule ZERO_SUBST_DEBUG , (simp only:subst_zero)\<close>)
+    (*Zero*)   
+    | (match conclusion in   
+    "_ (\<lambda> _. subst _ 1)"  \<Rightarrow>
+     \<open>rule ONE_SUBST_DEBUG , (simp only:subst_one)\<close>)
+    (*UTP vars*) 
+    |(match conclusion in 
+    "_ (\<lambda> _. (subst _ (utp_expr.var x)))" for x \<Rightarrow>
+     \<open>rule VAR_SUBST_DEBUG[where x= x], (simp only:subst_var)\<close>)
+   (*UTP Literals*)
+    |(match conclusion in 
+    "_ (\<lambda> _ . (subst _ (lit v)))" for v \<Rightarrow>
+     \<open>rule LIT_SUBST_DEBUG[where v= v], (simp only:subst_lit)\<close>)
+    (*UTP Unary operation*)
+    | (match conclusion in 
+    "_ (\<lambda> _ .(subst _ (uop f a)))" for f a \<Rightarrow>
+     \<open>rule UOP_SUBST_DEBUG[where f= f and a = a], simp only: subst_uop\<close>) 
+    (*Derived UOP for UTP Logical Operators*)
+    | (match conclusion in 
+    "_ (\<lambda> _ .(subst _ (\<not> a)))" for  a \<Rightarrow>
+     \<open>rule UOP_SUBST_DEBUG[where f= "Not" and a = a], simp only: subst_uop\<close>)
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (\<^bold>\<forall>x \<bullet> P x)))" for P \<Rightarrow>
+     \<open>rule UOP_SUBST_DEBUG[where f= "All" and a= "(\<lambda>x \<bullet> P x)" ] , simp only: utp_pred.subst_shAll\<close>) 
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (\<^bold>\<exists>x \<bullet> P x)))" for P \<Rightarrow>
+     \<open>rule UOP_SUBST_DEBUG[where f= "Ex" and a= "(\<lambda>x \<bullet> P x)" ] , simp only: utp_pred.subst_shEx\<close>)
+   (*UTP Binary operation*)
+    | (match conclusion in 
+    "_ (\<lambda> _ . (subst _ (bop f a b)))" for f a b \<Rightarrow>
+     \<open> rule BOP_SUBST_DEBUG[where f= f and a= a and b = b], simp only:subst_bop\<close>) 
+   (*Derived BOP for UTP Arith Operators*)
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a =\<^sub>u b)))" for a b \<Rightarrow>
+     \<open>rule EQ_UPRED_SUBST_DEBUG[where a= a and b = b], simp only:subst_eq_upred\<close>)
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a + b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op +)" and a= a and b = b], simp only:subst_plus\<close>)
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a - b)))" for a b \<Rightarrow>
+     \<open> rule BOP_SUBST_DEBUG[where f= "(op -)" and a= a and b = b], simp only:subst_minus\<close>)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a * b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op *)" and a= a and b = b],simp only:subst_times \<close>)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a div b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op div)" and a= a and b = b], simp only:subst_div\<close>)
+    (*Derived BOP Logical Operators*)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<and> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<and>)" and a= a and b = b] , simp only: utp_pred.subst_conj\<close>)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<or> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<or>)" and a= a and b = b] , simp only: utp_pred.subst_disj\<close>)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<Rightarrow> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<longrightarrow>)" and a= a and b = b] , simp only: utp_pred.subst_impl\<close>)     
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<Leftrightarrow> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<longleftrightarrow>)" and a= a and b = b] , simp only: utp_pred.subst_iff\<close>)
+   | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<sqinter> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<sqinter>)" and a= a and b = b] , simp only: utp_pred.subst_sup\<close>)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<squnion> b)))" for a b \<Rightarrow>
+     \<open>rule BOP_SUBST_DEBUG[where f= "(op \<squnion>)" and a= a and b = b] , simp only: utp_pred.subst_inf\<close>)
+   (*UTP Ternary operation*)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (trop f a b c)))" for f a b c\<Rightarrow>
+     \<open>rule TROP_SUBST_DEBUG[where f=f and a=a and b=b and c=c] , simp only:subst_trop\<close>)
+    (*UTP Quaternary operation*)
+    | (match conclusion in 
+    "_ (\<lambda> _. (subst _ (qtop f a b c d)))" for f a b c d\<Rightarrow>
+     \<open>rule QTOP_SUBST_DEBUG[where f=f and a=a and b=b and c=c and d=d],  simp only:subst_qtop\<close>)
+
+
+definition "SUBST_ID_LOOKUP_TAG \<sigma> x = True"  
+definition "SUBST_UPD_LOOKUP_TAG \<sigma> x y = True" 
+definition "UEX_BOUNDED x = x" 
+
+lemma SUBST_UPD_LOOKUP_DEBUG: 
+  "(SUBST_UPD_LOOKUP_TAG \<sigma> (UEX_BOUNDED x) y \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding SUBST_UPD_LOOKUP_TAG_def 
+  by blast 
+
+lemma SUBST_ID_LOOKUP_DEBUG: 
+  "(SUBST_ID_LOOKUP_TAG id y \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding SUBST_ID_LOOKUP_TAG_def 
+  by blast 
+    
+method subst_lookup_debugger = 
+     (match conclusion in  
+     "_ (\<lambda> _. (usubst_lookup id y))" for  y  \<Rightarrow>
+      \<open>rule SUBST_ID_LOOKUP_DEBUG[where y=y], 
+       (simp only: usubst_lookup_id)\<close>)
+    |
+     (match conclusion in  
+      "_ (\<lambda> _. (usubst_lookup (subst_upd \<sigma> x  _) y))" for \<sigma> x y  \<Rightarrow>
+       \<open>rule SUBST_UPD_LOOKUP_DEBUG[where \<sigma>=\<sigma> and x=x and y=y], 
+        (simp only: usubst_lookup_upd_indep usubst_lookup_ovar_unrest
+                    usubst_lookup_ivar_unrest usubst_lookup_upd 
+                    vwb_lens_mwb vwb_lens_wb lens_indep_sym)\<close>)  
+ 
+definition "VWB_VAR_TAG x = True"
+definition "WB_VAR_TAG x = True"
+definition "WEAK_VAR_TAG x = True"
+definition "MWB_VAR_TAG x = True"  
+
+lemma VWB_VAR_DEBUG: 
+  obtains e where "e = vwb_lens x " "VWB_VAR_TAG x" 
+  unfolding VWB_VAR_TAG_def 
+  by blast
+
+lemma MWB_VAR_DEBUG: 
+  obtains e where "e = mwb_lens x " "MWB_VAR_TAG x" 
+  unfolding MWB_VAR_TAG_def 
+  by blast   
+    
+lemma WB_VAR_DEBUG: 
+  obtains e where "e = wb_lens x " "WB_VAR_TAG x" 
+  unfolding WB_VAR_TAG_def 
+  by blast  
+    
+lemma WEAK_VAR_DEBUG: 
+  obtains e where "e = wb_lens x " "WEAK_VAR_TAG x" 
+  unfolding WEAK_VAR_TAG_def 
+  by blast  
+
+method vwb_lens_debugger =
+  (match conclusion in 
+   "vwb_lens x" for x \<Rightarrow>
+   \<open> rule VWB_VAR_DEBUG[where x= x],assumption\<close>)
+  |(match conclusion in 
+   "wb_lens x" for x \<Rightarrow>
+   \<open>rule WB_VAR_DEBUG[where x= x],(simp only: vwb_lens_wb)\<close>)
+  |(match conclusion in 
+   "mwb_lens x" for x \<Rightarrow>
+   \<open>rule MWB_VAR_DEBUG[where x= x],(simp only: vwb_lens_mwb)\<close>)
+  |(match conclusion in 
+   "mwb_lens x" for x \<Rightarrow>
+   \<open>rule WEAK_VAR_DEBUG[where x= x],(simp only: vwb_lens_weak)\<close>)
+
+definition "WF_TAG expr = True"
+   
+lemma WF_DEBUG:
+ "(WF_TAG expr \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
+  unfolding WF_TAG_def by simp
+
+method wf_debugger =
+  (match conclusion in 
+   "wf expr" for expr \<Rightarrow>
+   \<open>rule WF_DEBUG[where expr = expr], simp\<close>)     
+  
 definition "LVAR L x = True"  
   
 lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_def by blast
@@ -955,154 +1175,11 @@ subsection {* Through these experiments I want to observe the following problems
               - I want to have modularity
 
 *}
-  
-lemma "vwb_lens y \<Longrightarrow> x \<bowtie> y \<Longrightarrow>\<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s y =  (&y)"
-
-  by (simp add: lens_indep_sym pr_var_def usubst_lookup_id usubst_lookup_upd_indep)
-
-definition "SUBST_TAG \<sigma> e\<^sub>1 e\<^sub>2 = True"     
-
-lemma SUBST_DEBUG: 
-  obtains e\<^sub>2 where "e\<^sub>2 = subst \<sigma> e\<^sub>1" "SUBST_TAG \<sigma> e\<^sub>2 e\<^sub>1" unfolding SUBST_TAG_def by blast
-
-lemma SUBST_DEBUG'': 
-  obtains e and e\<^sub>2 where "e\<^sub>2 = subst (subst_upd id L e) e\<^sub>1"  
-                         "SUBST_TAG L e e\<^sub>1" unfolding SUBST_TAG_def 
-  by blast    
-
-definition "ZERO_SUBST_TAG v = True" 
-definition "ONE_SUBST_TAG v = True"
-definition "LIT_SUBST_TAG v = True"
-definition "VAR_SUBST_TAG x = True"  
-definition "UOP_SUBST_TAG f a = True"    
-definition "BOP_SUBST_TAG f a b = True"
-definition "TROP_SUBST_TAG f a b c = True"
-definition "QTOP_SUBST_TAG f a b c d = True"
-  
-lemma ZERO_SUBST_DEBUG: 
-  "(ZERO_SUBST_TAG 0 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
-  unfolding ZERO_SUBST_TAG_def 
-  by blast 
-
-lemma ONE_SUBST_DEBUG: 
-  "(ONE_SUBST_TAG 1 \<Longrightarrow> thesis) \<Longrightarrow> thesis" 
-  unfolding ONE_SUBST_TAG_def 
-  by blast 
-    
-lemma LIT_SUBST_DEBUG: 
-  obtains e where "e = lit v " "LIT_SUBST_TAG v" 
-  unfolding LIT_SUBST_TAG_def 
-  by blast  
-
-lemma VAR_SUBST_DEBUG: 
-  obtains e where "e = utp_expr.var x " "VAR_SUBST_TAG x" 
-  unfolding VAR_SUBST_TAG_def 
-  by blast
-    
-lemma UOP_SUBST_DEBUG: 
-  obtains e where "e = uop f a" "UOP_SUBST_TAG f a" 
-  unfolding UOP_SUBST_TAG_def 
-  by blast
-    
-lemma BOP_SUBST_DEBUG: 
-  obtains e where "e = bop f a b"  "BOP_SUBST_TAG f a b" 
-  unfolding BOP_SUBST_TAG_def 
-  by blast     
-
-lemma TROP_SUBST_DEBUG: 
-  obtains e where "e = trop f a b c"  "TROP_SUBST_TAG f a b c" 
-  unfolding TROP_SUBST_TAG_def 
-  by blast     
-    
-lemma QTOP_SUBST_DEBUG: 
-  obtains e where "e = qtop f a b c d "  "QTOP_SUBST_TAG f a b c d" 
-  unfolding QTOP_SUBST_TAG_def 
-  by blast 
-
-definition "VWB_VAR_TAG x = True"
-definition "WB_VAR_TAG x = True"
-definition "WEAK_VAR_TAG x = True"
-definition "MWB_VAR_TAG x = True"  
-    
-lemma VWB_VAR_DEBUG: 
-  obtains e where "e = vwb_lens x " "VWB_VAR_TAG x" 
-  unfolding VWB_VAR_TAG_def 
-  by blast
-
-lemma MWB_VAR_DEBUG: 
-  obtains e where "e = mwb_lens x " "MWB_VAR_TAG x" 
-  unfolding MWB_VAR_TAG_def 
-  by blast   
-    
-lemma WB_VAR_DEBUG: 
-  obtains e where "e = wb_lens x " "WB_VAR_TAG x" 
-  unfolding WB_VAR_TAG_def 
-  by blast  
-    
-lemma WEAK_VAR_DEBUG: 
-  obtains e where "e = wb_lens x " "WEAK_VAR_TAG x" 
-  unfolding WEAK_VAR_TAG_def 
-  by blast  
-
-lemma vwb_lens_weak[simp]: 
-  "vwb_lens x \<Longrightarrow> weak_lens x"
-  by simp    
-
-method vwb_lens_debugger =
-  (match conclusion in 
-   "vwb_lens x" for x \<Rightarrow>
-   \<open> rule VWB_VAR_DEBUG[where x= x],assumption\<close>)
-  |(match conclusion in 
-   "wb_lens x" for x \<Rightarrow>
-   \<open>rule WB_VAR_DEBUG[where x= x],(simp only: vwb_lens_wb)\<close>)
-  |(match conclusion in 
-   "mwb_lens x" for x \<Rightarrow>
-   \<open>rule MWB_VAR_DEBUG[where x= x],(simp only: vwb_lens_mwb)\<close>)
-  |(match conclusion in 
-   "mwb_lens x" for x \<Rightarrow>
-   \<open>rule WEAK_VAR_DEBUG[where x= x],(simp only: vwb_lens_weak)\<close>)
-  
-method subst_debugger = 
-   (match conclusion in  
-    "`(_ (subst _ 0)) \<Rightarrow> _`"  \<Rightarrow>
-     \<open>(simp only:subst_zero), rule ZERO_SUBST_DEBUG\<close>)   
-    | (match conclusion in   
-    "`(_ (subst _ 1)) \<Rightarrow> _`"  \<Rightarrow>
-     \<open>(simp only:subst_one), rule ONE_SUBST_DEBUG\<close>)
-    |(match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (utp_expr.var x))) \<Rightarrow> _`" for x \<Rightarrow>
-     \<open>(simp only:subst_var),rule VAR_SUBST_DEBUG[where x= x]\<close>)
-    |(match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (lit v))) \<Rightarrow> _`" for v \<Rightarrow>
-     \<open>(simp only:subst_lit),rule LIT_SUBST_DEBUG[where v= v]\<close>)
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (uop f a))) \<Rightarrow> _`" for f a \<Rightarrow>
-     \<open>simp only: subst_uop, rule UOP_SUBST_DEBUG[where f= f and a = a]\<close>) 
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (bop f a b))) \<Rightarrow> _`" for f a b \<Rightarrow>
-     \<open>simp only:subst_bop, rule BOP_SUBST_DEBUG[where f= f and a= a and b = b]\<close>)
-   | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a + b))) \<Rightarrow> _`" for a b \<Rightarrow>
-     \<open>simp only:subst_plus, rule BOP_SUBST_DEBUG[where f= "(op +)" and a= a and b = b]\<close>)
-   | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a - b))) \<Rightarrow> _`" for a b \<Rightarrow>
-     \<open>simp only:subst_minus, rule BOP_SUBST_DEBUG[where f= "(op -)" and a= a and b = b]\<close>)
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a * b))) \<Rightarrow> _`" for a b \<Rightarrow>
-     \<open>simp only:subst_times, rule BOP_SUBST_DEBUG[where f= "(op *)" and a= a and b = b]\<close>)
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (a div b))) \<Rightarrow> _`" for a b \<Rightarrow>
-     \<open>simp only:subst_div, rule BOP_SUBST_DEBUG[where f= "(op div)" and a= a and b = b]\<close>)
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (trop f a b c))) \<Rightarrow> _`" for f a b c\<Rightarrow>
-     \<open>simp only:subst_trop, rule TROP_SUBST_DEBUG[where f=f and a=a and b=b and c=c]\<close> ) 
-    | (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (qtop f a b c d))) \<Rightarrow> _`" for f a b c d\<Rightarrow>
-     \<open> simp only:subst_qtop, rule QTOP_SUBST_DEBUG[where f=f and a=a and b=b and c=c and d=d]\<close>) 
 
 lemma " (0 <\<^sub>u &y)\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> = (0 <\<^sub>u \<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s (pr_var y))"
   by (simp only: subst_bop subst_uop subst_trop  subst_qtop subst_lit subst_var zero_uexpr_def)  
-    
+term "bop conj a b" 
+thm utp_pred.subst_conj  
 lemma increment_method: 
   assumes "vwb_lens x" "x \<bowtie> y" "vwb_lens y"
   shows  
@@ -1113,45 +1190,25 @@ lemma increment_method:
       WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
     \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-  apply (hoare_sp_vcg_steps, unfold  pr_var_def; (vwb_lens_debugger| subst_debugger+ |vcg_defer))
-    (*CONTINUE FROM HERE*)
-    apply (succeed)
-       apply simp
-      apply simp
-    
-     apply (subst_debugger)
-    apply (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (bop f a b))) \<Rightarrow> _`" for f a b \<Rightarrow>
-     \<open> simp only:subst_bop, rule BOP_SUBST_DEBUG[where f= f and a= a and b = b]\<close>)
-        apply (subst_debugger)
-     apply (match conclusion in 
-    "`(\<^bold>\<exists> _ \<bullet> _ (subst _ (utp_expr.var x))) \<Rightarrow> _`" for x \<Rightarrow>
-     \<open>(simp only:subst_var), rule VAR_SUBST_DEBUG[where x= x]  \<close>)
-
-       apply (simp only: usubst)
-      apply (subst vwb_lens_mwb)
-      find_theorems "vwb_lens _ \<Longrightarrow> mwb_lens _"
+  apply (((hoare_sp_vcg_steps, unfold pr_var_def in_var_def out_var_def); (vwb_lens_debugger| wf_debugger |subst_debugger | subst_lookup_debugger |vcg_defer)+), (unfold DEFERRED_def))
+    prefer 5
       
-
-    thm BOP_DEBUG[where f= "(op <)"]
-       apply (rule  BOP_DEBUG[where f= "(op <)" and a= 0 and b = "utp_expr.var y"])
-      apply (simp only: pr_var_def)
+       apply subst_debugger
+       apply subst_debugger
+     apply subst_debugger+
+       apply subst_lookup_debugger+
     
-     apply (subst_debugger)
-     (*Before doing this.. I have to extract the substitutions and the expressions from the upred first*)
-      apply (rule SUBST_DEBUG''[where L = x and e\<^sub>1 = "bop(op <) (0) (&y)"])
-   
-       apply (subst (asm) subst_bop)
-      apply (subst (asm)  subst_var)
-      apply (subst (asm)  zero_uexpr_def )
-     apply (subst (asm) subst_lit)
-     apply (subst (asm) usubst)
-       prefer 3
-       apply (subst (asm) usubst)
-    apply (erule subst)
-    apply (simp only: usubst  lens_indep_sym)
+    apply (match conclusion in 
+    "_ (\<lambda> _. (subst _ (a \<and> b)))" for a b \<Rightarrow>
+     \<open>succeed\<close>)
+    
+    using [[simp_trace]]
+    apply (simp only: usubst)
+  (*; (vwb_lens_debugger| wf_debugger |subst_debugger | subst_lookup_debugger |vcg_defer)+), (unfold DEFERRED_def)
+
+    CONTINUE FROM HERE*)
   oops
-term "pr_var"  
+    
 subsection {*even count program*} 
 lemma even_count_gen:
   assumes "lens_indep_all [i,j, endd]"
