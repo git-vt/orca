@@ -1445,22 +1445,10 @@ lemma max_program_correct:
     
 
 find_theorems name: "rep_eq" "LENS_GET_TAG (Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
-(*
-On a trois theorem qui genere get functions:
-  - utp_expr.var.rep_eq
-  - utp_subst.usubst_lookup.rep_eq
-  - utp_rel.rel_alpha_ext.rep_eq
-
-*)
-
  
 (*
 TODO List for next iteration:
 
-- Create an instantiation of while loop where E = "&\<Sigma>"
-- Make an eisbach version for vcg_step
-- Hide lens_indep in hoare triple 
-- Hide lens properties: such as vwb_lens
 *)    
 
 end
