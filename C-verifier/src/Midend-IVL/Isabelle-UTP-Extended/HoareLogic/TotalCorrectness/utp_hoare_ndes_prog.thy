@@ -873,10 +873,8 @@ text{*Tactics and methods in this section are used to do Post-Processing on the 
 lemma vwb_lens_weak[simp]: 
   "vwb_lens x \<Longrightarrow> weak_lens x"
   by simp    
-    
-lemma 
-  "vwb_lens y \<Longrightarrow> x \<bowtie> y \<Longrightarrow>\<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s y =  (&y)"
-  by (simp add: lens_indep_sym pr_var_def usubst_lookup_id usubst_lookup_upd_indep)   
+
+text \<open>substitution simplifier for debugging mode\<close>  
   
 definition "ZERO_SUBST_TAG expr = True" 
 definition "ONE_SUBST_TAG expr = True"
@@ -1037,7 +1035,9 @@ method subst_lookup_debugger =
        \<open>rule SUBST_UPD_LOOKUP_DEBUG[where \<sigma>=\<sigma> and x=x and y=y], 
         (simp only: usubst_lookup_upd_indep usubst_lookup_ovar_unrest
                     usubst_lookup_ivar_unrest usubst_lookup_upd 
-                    vwb_lens_mwb vwb_lens_wb lens_indep_sym)\<close>)  
+                    vwb_lens_mwb vwb_lens_wb lens_indep_sym)\<close>) 
+       
+text \<open>very well behaved lens simplifier for debugging mode\<close>  
  
 definition "VWB_VAR_TAG x = True"
 definition "WB_VAR_TAG x = True"
@@ -1064,19 +1064,21 @@ lemma WEAK_VAR_DEBUG:
   unfolding WEAK_VAR_TAG_def 
   by blast  
 
+method_setup print_VWB_VAR_DEBUG  = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD (print_tac ctxt "VWB_VAR_DEBUG is not applied"))\<close>  
+
 method vwb_lens_debugger =
   (match conclusion in 
    "vwb_lens x" for x \<Rightarrow>
-   \<open> rule VWB_VAR_DEBUG[where x= x],assumption\<close>)
+   \<open>(rule VWB_VAR_DEBUG[where x= x],assumption) (*if this fails add a debug message here*)\<close>)
   |(match conclusion in 
    "wb_lens x" for x \<Rightarrow>
-   \<open>rule WB_VAR_DEBUG[where x= x],(simp only: vwb_lens_wb)\<close>)
+   \<open>rule WB_VAR_DEBUG[where x= x],(simp only: vwb_lens_wb)(*if this fails add a debug message here*)\<close>)
   |(match conclusion in 
    "mwb_lens x" for x \<Rightarrow>
-   \<open>rule MWB_VAR_DEBUG[where x= x],(simp only: vwb_lens_mwb)\<close>)
+   \<open>rule MWB_VAR_DEBUG[where x= x],(simp only: vwb_lens_mwb)(*if this fails add a debug message here*)\<close>)
   |(match conclusion in 
    "mwb_lens x" for x \<Rightarrow>
-   \<open>rule WEAK_VAR_DEBUG[where x= x],(simp only: vwb_lens_weak)\<close>)
+   \<open>rule WEAK_VAR_DEBUG[where x= x],(simp only: vwb_lens_weak)(*if this fails add a debug message here*)\<close>)
 
 definition "WF_TAG expr = True"
    
@@ -1087,11 +1089,40 @@ lemma WF_DEBUG:
 method wf_debugger =
   (match conclusion in 
    "wf expr" for expr \<Rightarrow>
-   \<open>rule WF_DEBUG[where expr = expr], simp\<close>)     
+   \<open>rule WF_DEBUG[where expr = expr], simp\<close>) 
+ 
+text \<open>Post processing for debugging mode\<close>  
+          
+method vcg_upreds_post_processing_debugger = 
+       (vwb_lens_debugger(*TODO: if this fails add a debug message here*)
+        |wf_debugger(*TODO: if this fails add a debug message here*)
+        |subst_debugger(*TODO: if this fails add a debug message here*)
+        |subst_lookup_debugger(*TODO: if this fails add a debug message here*))
+        
+text \<open>substitution simplifier for non debugging mode\<close>
 
+named_theorems usubst_simplifier 
+declare usubst[usubst_simplifier] 
+declare vwb_lens_weak[usubst_simplifier]
+declare vwb_lens_mwb[usubst_simplifier] 
+declare vwb_lens_wb[usubst_simplifier] 
+declare lens_indep_sym[usubst_simplifier] 
 
-method vcg_upreds_post_processing = (vwb_lens_debugger|wf_debugger|subst_debugger| 
-                                     subst_lookup_debugger)
+text \<open>very well behaved lens simplifier for non-debugging mode\<close>
+  
+named_theorems vwb_simplifier
+declare vwb_lens_wb[vwb_simplifier]
+declare vwb_lens_mwb[vwb_simplifier]
+declare vwb_lens_weak[vwb_simplifier]
+declare bij_lens_vwb[vwb_simplifier]
+declare Lens_Algebra.id_bij_lens[vwb_simplifier] 
+ 
+text \<open>Post processing for non debugging mode\<close>  
+
+method vcg_upreds_post_processing = 
+        (assumption|simp only: vwb_simplifier)
+        |simp
+        |(simp only:usubst_simplifier)
   
 subsection {*VCG Goal Beautify Tactics*}    
 
@@ -1104,8 +1135,9 @@ text{*Tactics and methods in this section are used to beautify the goals before 
 definition "LVAR L x = True"  
   
 lemma GET_REMOVER: obtains x where "lens_get L s = x" "LVAR L x" unfolding LVAR_def by blast
-
+ 
 (*Prototype by Peter for variable renaming*)
+  
 method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' (fn i => fn st => 
   if i > Thm.nprems_of st then all_tac st
   else
@@ -1140,8 +1172,7 @@ method get_remover =
  
 method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
 method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
-  
-       
+        
 named_theorems beautify_thms     
 lemma thin_vwb_lens[beautify_thms]: "vwb_lens l \<Longrightarrow> P \<Longrightarrow> P" . 
 lemma thin_weak_lens[beautify_thms]: "weak_lens l \<Longrightarrow> P \<Longrightarrow> P" .    
@@ -1160,60 +1191,78 @@ method hoare_sp_rule_apply = rule hoare_sp_rules
 method hoare_wp_rule_apply = rule hoare_wp_rules
 
 method hoare_annotaion_rule_apply = rule hoare_wp_rules  
+  
 named_theorems lens_laws_vcg_simps
+  
 lemmas [lens_laws_vcg_simps] =
   lens_indep.lens_put_irr1
   lens_indep.lens_put_irr2
-  
-method vcg_default_solver = assumption|pred_simp?;(simp add: lens_laws_vcg_simps)?;fail
 
-method  vcg_pp_solver = ((unfold lens_indep_all_alt )?, (simp add:  lens_laws_vcg_simps)?, safe?; (simp add:  lens_laws_vcg_simps)?)
-  
-method vcg_default_goal_post_processing = 
-       ((pred_simp+)?; vcg_pp_solver?;vcg_elim_determ beautify_thms)?
-  
 method vcg_step_solver methods solver = 
        (hoare_sp_rule_apply | solver)
 
-
-method  hoare_sp_vcg_step = (hoare_sp_rule_apply | vcg_defer)
+text \<open>A one step vcg without post processing nor debugging information. The output of this
+      method is: for the goal, on which it is applied to, a upred.\<close>
   
+method  hoare_sp_vcg_step = (hoare_sp_rule_apply | vcg_defer)
+
+text \<open>A multiple step vcg without post processing nor debugging information. The output of this
+      method is proof goals of the form of upreds.\<close>  
 method  hoare_sp_vcg_steps = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFERRED_def)
 
+method vcg_hol_post_processing_debugger = 
+   (pred_simp(*TODO: pred_simp need to be applied in a controlled way*))?,
+   (simp only:  lens_laws_vcg_simps)?(*TODO: if this fails add a debug message here*)
+  
+named_theorems lens_get_lens_put_simplifer
+declare lens_laws_vcg_simps[lens_get_lens_put_simplifer]  
+declare vwb_simplifier[lens_get_lens_put_simplifer]
+declare mwb_lens.put_put[lens_get_lens_put_simplifer] 
+declare weak_lens.put_get[lens_get_lens_put_simplifer]
+declare wb_lens.get_put [lens_get_lens_put_simplifer]
+declare bij_lens.strong_get_put  [lens_get_lens_put_simplifer]
+  
 method vcg_hol_post_processing = 
-   (pred_simp(*pred_simp need to be applied in a controlled way*))?,
-   (simp only:  lens_laws_vcg_simps)?
+   (pred_simp(*TODO:pred_simp need to be applied in a controlled way*))?,
+   (auto simp only: lens_get_lens_put_simplifer)?
+
+text \<open>Lens indep all simplifier for non debugging mode\<close>
+  
+named_theorems lens_indep_all_simplifier
+declare distinct.simps[lens_indep_all_simplifier]
+declare HOL.conj_assoc[lens_indep_all_simplifier]
+declare HOL.simp_thms[lens_indep_all_simplifier]
+declare List.list.set[lens_indep_all_simplifier]
+declare Set.ball_simps[lens_indep_all_simplifier]  
+declare Set.insert_iff[lens_indep_all_simplifier] 
+declare Set.empty_iff [lens_indep_all_simplifier]
+               
+method hoare_sp_vcg_steps_pp_debugger = 
+    (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
+                               ((simp only: lens_indep_all_simplifier)+ (*TODO: Substitute with a debug mode version*))?,
+                                 clarsimp?, 
+                                 (simp only: lens_laws_vcg_simps)? (*TODO: Substitute with a debug mode version*),
+                                 (vcg_upreds_post_processing_debugger+)?,
+                                 vcg_hol_post_processing_debugger(*TODO: ADD BEAUTIFY STEP HERE*)))
  
 method hoare_sp_vcg_steps_pp = 
     (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
-                               ((simp only: distinct.simps HOL.conj_assoc HOL.simp_thms List.list.set Set.ball_simps Set.insert_iff Set.empty_iff)+)?,
-                                 safe?, 
-                                 (simp only:  lens_laws_vcg_simps)?,
+                               ((simp only: lens_indep_all_simplifier)+)?,
+                                 clarsimp?, 
+                                 (simp only:lens_laws_vcg_simps)?,
                                  (vcg_upreds_post_processing+)?,
-                                 vcg_hol_post_processing(*ADD BEAUTIFY STEP HERE*)))
- 
-  
-method hoare_sp_default_vcg_all = (hoare_sp_vcg_pre, (vcg_step_solver \<open>vcg_default_solver\<close>| vcg_defer)+, (unfold DEFERRED_def)?)
+                                  vcg_hol_post_processing(*TODO: ADD BEAUTIFY STEP HERE + TODO: ADD SOLVING STEP HERE*)))  
 
-method hoare_sp_pp_vcg_all = (hoare_sp_default_vcg_all; vcg_default_goal_post_processing)
-  
-  
+    
 section {*Experiments on VCG*}
 
 subsection {* Through these experiments I want to observe the following problems: 
-              - I want to deal with the problem of nested existential
-              - I want to deal with the problem of blow up due to the semantic machinery coming with lenses
-              - I want to have modularity
+              - I want to deal with the problem of nested existential(SOLVED)
+              - I want to deal with the problem of blow up due to the semantic machinery coming with lenses(SOLVED)
+              - I want to have modularity(NOT SOLVED)
 
 *}
 
-lemma " (0 <\<^sub>u &y)\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> = (0 <\<^sub>u \<langle>[x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>]\<rangle>\<^sub>s (pr_var y))"
-  by (simp only: subst_bop subst_uop subst_trop  subst_qtop subst_lit subst_var zero_uexpr_def)  
-term "bop conj a b" 
-thm utp_pred.subst_conj  
-lemma "\<not> y \<in> {}"
-  using [[simp_trace]]
-  by simp  
 lemma increment_method: 
   assumes "lens_indep_all [x, y]"
   assumes "vwb_lens x"  "vwb_lens y"
@@ -1225,12 +1274,11 @@ lemma increment_method:
       WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
     \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-  apply (hoare_sp_vcg_steps_pp)                      
-   (*ADD BEAUTIFY STEP*) 
-   (*CONTINUE FROM HERE*) 
+    apply hoare_sp_vcg_steps_pp                           
   done
     
 subsection {*even count program*} 
+
 lemma even_count_gen:
   assumes "lens_indep_all [i,j, endd]"
   assumes "vwb_lens x" "vwb_lens i" "vwb_lens j"  
@@ -1238,26 +1286,23 @@ lemma even_count_gen:
     "\<lbrace>&endd >\<^sub>u 0 \<rbrace>
        i :== \<guillemotleft>0::int\<guillemotright>;
        j :== 0 ; 
-       INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u &endd) 
+       INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u &endd) 
        VRT \<guillemotleft>measure (nat o (Rep_uexpr (&endd - &i)))\<guillemotright>
        WHILE &i <\<^sub>u &endd
        DO
-         IF &i mod 2 =\<^sub>u 0 
+         IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u 0 
          THEN j :== (&j + 1)
          ELSE SKIP 
          FI;
         i :== (&i + 1)
        OD
-    \<lbrace>&j =\<^sub>u (&endd + 1)div 2\<rbrace>\<^sub>P" 
+    \<lbrace>&j =\<^sub>u (&endd + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_pp_vcg_all)
-     apply (rule_tac L=endd and s=A in GET_REMOVER)  
-     apply (simp only:)
-     apply (vcg_elim_determ thin_rl[of "lens_get _ _ = _"])  
-    apply (simp_all add: zdiv_zadd1_eq)
+  apply (hoare_sp_vcg_steps_pp; get_remover?)
+    apply presburger+    
   done   
 
-lemma even_count_gen:
+lemma even_count_gen':
   assumes "lens_indep_all [i,j, endd]"
   assumes "vwb_lens x" "vwb_lens i" "vwb_lens j"  
   shows  
@@ -1276,7 +1321,7 @@ lemma even_count_gen:
        OD
     \<lbrace>&j =\<^sub>u (&endd + 1)div 2\<rbrace>\<^sub>P"  
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_pp_vcg_all)
+  apply (hoare_sp_vcg_steps_pp; get_remover?)
     apply (simp_all add: zdiv_zadd1_eq)
   done    
     
@@ -1310,9 +1355,7 @@ lemma sqrt_prog_correct:
    \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u &n \<and> &n <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
   apply (insert assms)
    supply Isqrt_aux [simp]
-  apply (hoare_sp_pp_vcg_all)
-   (* I still have the problem with read only vars, ie., if a var is read only the get function show up in the goal
-                                  One solution is to have an alternative definition for usubst_lookup*)
+  apply(hoare_sp_vcg_steps_pp)
   done    
     
 subsection {*gcd*}
@@ -1340,7 +1383,7 @@ lemma gcd_correct:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)    
-  apply (hoare_sp_pp_vcg_all; get_remover)
+    apply (hoare_sp_vcg_steps_pp; get_remover)
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
@@ -1360,10 +1403,10 @@ lemma gcd_correct':
     FI
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
-  apply (insert assms)    
-  apply (hoare_sp_pp_vcg_all; get_remover)
-     apply (auto simp: gcd_diff1_nat)
-   apply (metis gcd.commute gcd_diff1_nat not_le)+
+  apply (insert assms)  
+  apply (hoare_sp_vcg_steps_pp; get_remover?)
+     apply (simp add: gcd_diff1_nat)
+   apply (metis gcd.commute gcd_diff1_nat not_le)
   done  
     
 
@@ -1371,152 +1414,36 @@ section {*Arrays*}
   
 subsection {*Array Max program: one-variable loop*}
 
-lemma 
+lemma max_program_correct:
   assumes "a \<bowtie> i" "a \<bowtie> r" "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" "vwb_lens a"
   shows  
-  "\<lbrace>uop length (&a)\<ge>\<^sub>u1\<rbrace> 
-     FROM i :== 0 ; r :== bop nth (&a:: (int list, 'a) uexpr) 0 
-     INVAR  0 \<le>\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length (&a) \<and>&r =\<^sub>uuop Max ran\<^sub>u(bop take (&i) (&a)) 
-     VRT  \<guillemotleft>measure (Rep_uexpr ((&i+1) - uop length (&a)))\<guillemotright>  
-     UNTIL &i =\<^sub>u uop length (&a) 
-     DO i :== (&i + 1);
+  "\<lbrace>uop length (&a)\<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth (&a:: (int list, 'a) uexpr) 0\<rbrace> 
+     (*FROM i :== 0 ; r :== bop nth (&a:: (int list, 'a) uexpr) 0*) 
+     INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length (&a) \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) (&a)) 
+     VRT  \<guillemotleft>measure (Rep_uexpr (uop length (&a) - (&i)))\<guillemotright>  
+     WHILE \<not>(&i =\<^sub>u uop length (&a)) 
+     DO 
         IF &r <\<^sub>u  bop nth (&a) (&i) 
         THEN r :== bop nth (&a) (&i)
         ELSE SKIP
-        FI  
+        FI;
+        i :== (&i + 1)
      OD   
   \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(&a) \<rbrace>\<^sub>P"  
-  apply (insert assms)  
-    apply (hoare_sp_vcg_pre)
-   apply (hoare_sp_vcg_step)
-      apply (hoare_sp_vcg_step)
-      apply (hoare_sp_vcg_step)
-       apply (hoare_sp_vcg_step)
-       apply (hoare_sp_vcg_step)
-     apply (hoare_sp_vcg_step)
-oops  
-subsection {*filter program*}
-  
-definition \<open>swap i j xs = xs[i := xs!j, j := xs!i]\<close>
-abbreviation \<open>swap\<^sub>u \<equiv> trop swap\<close>
-
-lemma set_swap[simp]:
-  assumes \<open>i < length xs\<close>
-      and \<open>j < length xs\<close>
-    shows \<open>set (swap i j xs) = set xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-lemma swap_commute:
-  \<open>swap i j xs = swap j i xs\<close>
-  unfolding swap_def
-  by (cases \<open>i = j\<close>) (auto simp: list_update_swap)
-
-lemma swap_id[simp]:
-  assumes \<open>i < length xs\<close>
-  shows \<open>swap i i xs = xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-lemma drop_swap[simp]:
-  assumes \<open>i < n\<close>
-      and \<open>j < n\<close>
-  shows \<open>drop n (swap i j xs) = drop n xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-lemma take_swap[simp]:
-  assumes \<open>n \<le> i\<close>
-      and \<open>n \<le> j\<close>
-  shows \<open>take n (swap i j xs) = take n xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-lemma swap_length_id[simp]:
-  assumes \<open>i < length xs\<close>
-      and \<open>j < length xs\<close>
-  shows \<open>length (swap i j xs) = length xs\<close>
-  using assms unfolding swap_def
-  by simp
-
-lemma swap_nth1[simp]:
-  assumes \<open>i < length xs\<close>
-      and \<open>j < length xs\<close>
-  shows \<open>swap i j xs ! i = xs ! j\<close>
-  using assms unfolding swap_def
-  by (simp add: nth_list_update)
-
-lemma swap_nth2[simp]:
-  assumes \<open>i < length xs\<close>
-      and \<open>j < length xs\<close>
-  shows \<open>swap i j xs ! j = xs ! i\<close>
-  using assms unfolding swap_def
-  by (simp add: nth_list_update)
-
-lemma take_empty[simp]: 
-  "take 0 a = []"
-  " h = length a \<Longrightarrow>take h a = [] \<longleftrightarrow> h = 0"
-  by auto+
-    
-lemma take_bwd_simp:"length a = h \<Longrightarrow> take h a = (if  0 < h then take (h -1) a @ [nth  a (h-1)] else [])" 
-  by (metis One_nat_def Suc_pred diff_less hd_drop_conv_nth neq0_conv take_eq_Nil take_hd_drop zero_less_one)
-
-lemma take_append1[simp]:
-  " length a = h +1 \<Longrightarrow>take (h + 1) a = take h a  @ [nth a h]"
-  apply (subst (1) take_bwd_simp)
-   apply auto
+  apply (insert assms)    
+  apply (hoare_sp_vcg_steps_pp; get_remover?)
+  subgoal for A a'
+    by (cases a'; auto)
+  subgoal for A i a'
+    apply (clarsimp simp: take_Suc_conv_app_nth)  
+    apply (subst Max_insert) by auto
+  subgoal for A i a'
+    apply (clarsimp simp: take_Suc_conv_app_nth)  
+    apply (subst Max_insert) by auto
   done  
-
-lemma take_tail[simp]: 
-  "h = length a \<Longrightarrow>  take h (drop 1 a)  = tl (take h a)"
-  by (simp add: drop_Suc)
     
-lemma take_butlast[simp]: 
-  "h = length a \<Longrightarrow> take (h-1) a = butlast (take h a)"
-  by (metis butlast_take le_refl)
 
-lemma take_upd_outside[simp]:
-  "i<0 \<Longrightarrow> h = length a\<Longrightarrow>take  h (a[i:=x])  = take h a"
-  "h\<le>i \<Longrightarrow> h = length a\<Longrightarrow> take h (a[i:=x])  = take h a"
-  by auto
- 
-lemma take_eq_iff: 
-  "h = length a \<Longrightarrow> h = length a' \<Longrightarrow>
-   take h a = take h a' \<longleftrightarrow> (\<forall>i. 0\<le>i \<and> i<h \<longrightarrow>  nth a i = nth a' i)"
-  by (metis le0 nth_equalityI order_refl take_all)
-
-lemma
-  assumes "vwb_lens (r:: nat \<Longrightarrow> 'b)"
-  assumes " r \<sharp> (r\<^sub>0:: (nat, 'b) uexpr)" (*somehow logical variables are all variables satisfying this*)
-  shows  
-  "\<lbrace>&r =\<^sub>u r\<^sub>0\<rbrace> 
-     r:== (&r+1)
-    \<lbrace> &r =\<^sub>u (r\<^sub>0 + 1) \<rbrace>\<^sub>P"
-  apply (insert assms)
-  apply (hoare_sp_default_vcg_all)
-  done
-    
-lemma filter_prog_loop_body_correct:
-  assumes "lens_indep_all [r, w]"
-  assumes "a \<bowtie> r" "a \<bowtie> w"  "r \<bowtie> w" 
-  assumes "vwb_lens a" "vwb_lens r" "vwb_lens w"
-  shows  
-   "\<lbrace>&w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<and> &r =\<^sub>u \<guillemotleft>r\<^sub>0\<guillemotright> \<and> &a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright>\<rbrace> 
-        IF (&a)(&r)\<^sub>a >\<^sub>u (5)
-        THEN a :== swap\<^sub>u (&w) (&r) (&a);
-             w :== (&w + 1)
-        ELSE SKIP
-        FI ;
-        r:== (&r+1)
-    \<lbrace>((\<not>(\<guillemotleft>a\<^sub>0\<guillemotright>(\<guillemotleft>r\<^sub>0\<guillemotright>)\<^sub>a >\<^sub>u 5) \<and> &a =\<^sub>u \<guillemotleft>a\<^sub>0\<guillemotright> \<and>  &w =\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright>) \<or> 
-      (\<guillemotleft>a\<^sub>0\<guillemotright>(\<guillemotleft>r\<^sub>0\<guillemotright>)\<^sub>a >\<^sub>u 5 \<and> &a =\<^sub>u swap\<^sub>u \<guillemotleft>w\<^sub>0\<guillemotright> \<guillemotleft>r\<^sub>0\<guillemotright> \<guillemotleft>a\<^sub>0\<guillemotright> \<and>  &w =\<^sub>u (\<guillemotleft>w\<^sub>0\<guillemotright> + 1))) \<and> 
-       &r =\<^sub>u (\<guillemotleft>r\<^sub>0\<guillemotright> +1) \<rbrace>\<^sub>P"
-   apply (insert assms)
-   apply (hoare_sp_pp_vcg_all)
-  done
-
- 
 find_theorems name: "rep_eq" "LENS_GET_TAG (Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
 (*
 On a trois theorem qui genere get functions:
