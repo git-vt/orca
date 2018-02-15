@@ -1298,7 +1298,7 @@ lemma even_count_gen:
        OD
     \<lbrace>&j =\<^sub>u (&endd + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_vcg_steps_pp; get_remover?)
+  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
     apply presburger+    
   done   
 
@@ -1321,7 +1321,7 @@ lemma even_count_gen':
        OD
     \<lbrace>&j =\<^sub>u (&endd + 1)div 2\<rbrace>\<^sub>P"  
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_vcg_steps_pp; get_remover?)
+  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
     apply (simp_all add: zdiv_zadd1_eq)
   done    
     
@@ -1355,7 +1355,7 @@ lemma sqrt_prog_correct:
    \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u &n \<and> &n <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
   apply (insert assms)
    supply Isqrt_aux [simp]
-  apply(hoare_sp_vcg_steps_pp)
+  apply(hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
   done    
     
 subsection {*gcd*}
@@ -1383,7 +1383,7 @@ lemma gcd_correct:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)    
-    apply (hoare_sp_vcg_steps_pp; get_remover)
+    apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
@@ -1404,7 +1404,7 @@ lemma gcd_correct':
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
   apply (insert assms)  
-  apply (hoare_sp_vcg_steps_pp; get_remover?)
+  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
      apply (simp add: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)
   done  
@@ -1419,7 +1419,6 @@ lemma max_program_correct:
   assumes "vwb_lens i" "vwb_lens r" "vwb_lens a"
   shows  
   "\<lbrace>uop length (&a)\<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth (&a:: (int list, 'a) uexpr) 0\<rbrace> 
-     (*FROM i :== 0 ; r :== bop nth (&a:: (int list, 'a) uexpr) 0*) 
      INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length (&a) \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) (&a)) 
      VRT  \<guillemotleft>measure (Rep_uexpr (uop length (&a) - (&i)))\<guillemotright>  
      WHILE \<not>(&i =\<^sub>u uop length (&a)) 
@@ -1432,11 +1431,11 @@ lemma max_program_correct:
      OD   
   \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(&a) \<rbrace>\<^sub>P"  
   apply (insert assms)    
-  apply (hoare_sp_vcg_steps_pp; get_remover?)
+  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
   subgoal for A a'
     by (cases a'; auto)
   subgoal for A i a'
-    apply (clarsimp simp: take_Suc_conv_app_nth)  
+    apply (clarsimp simp: take_Suc_conv_app_nth)
     apply (subst Max_insert) by auto
   subgoal for A i a'
     apply (clarsimp simp: take_Suc_conv_app_nth)  
