@@ -1219,8 +1219,8 @@ declare lens_laws_vcg_simps[lens_get_lens_put_simplifer]
 declare vwb_simplifier[lens_get_lens_put_simplifer]
 declare mwb_lens.put_put[lens_get_lens_put_simplifer] 
 declare weak_lens.put_get[lens_get_lens_put_simplifer]
-declare wb_lens.get_put [lens_get_lens_put_simplifer]
-declare bij_lens.strong_get_put  [lens_get_lens_put_simplifer]
+declare wb_lens.get_put[lens_get_lens_put_simplifer]
+declare bij_lens.strong_get_put[lens_get_lens_put_simplifer]
   
 method vcg_hol_post_processing = 
    (pred_simp(*TODO:pred_simp need to be applied in a controlled way*))?,
@@ -1241,19 +1241,18 @@ method hoare_sp_vcg_steps_pp_debugger =
     (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
                                ((simp only: lens_indep_all_simplifier)+ (*TODO: Substitute with a debug mode version*))?,
                                  clarsimp?, 
-                                 (simp only: lens_laws_vcg_simps)? (*TODO: Substitute with a debug mode version*),
                                  (vcg_upreds_post_processing_debugger+)?,
-                                 vcg_hol_post_processing_debugger(*TODO: ADD BEAUTIFY STEP HERE*)))
+                                 vcg_hol_post_processing_debugger))
  
 method hoare_sp_vcg_steps_pp = 
     (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
                                ((simp only: lens_indep_all_simplifier)+)?,
-                                 clarsimp?, 
-                                 (simp only:lens_laws_vcg_simps)?,
+                                 clarsimp?,
                                  (vcg_upreds_post_processing+)?,
-                                  vcg_hol_post_processing(*TODO: ADD BEAUTIFY STEP HERE + TODO: ADD SOLVING STEP HERE*)))  
+                                  vcg_hol_post_processing(*TODO: ADD SOLVING STEP HERE*)))  
 
-    
+method vcg_hoare_sp_steps_pp_beautify = 
+  (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)    
 section {*Experiments on VCG*}
 
 subsection {* Through these experiments I want to observe the following problems: 
@@ -1267,61 +1266,61 @@ lemma increment_method:
   assumes "lens_indep_all [x, y]"
   assumes "vwb_lens x"  "vwb_lens y"
   shows  
-    "\<lbrace>&y >\<^sub>u 0\<rbrace>
-      x :== 0 ; 
-      INVAR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
-      VRT \<guillemotleft>(measure o Rep_uexpr) (&y - &x)\<guillemotright> 
-      WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
-    \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
+"\<lbrace>&y >\<^sub>u 0\<rbrace>
+   x :== 0 ; 
+   INVAR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
+   VRT \<guillemotleft>(measure o Rep_uexpr) (&y - &x)\<guillemotright> 
+   WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
+ \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-    apply hoare_sp_vcg_steps_pp                           
+    apply vcg_hoare_sp_steps_pp_beautify                           
   done
     
 subsection {*even count program*} 
 
 lemma even_count_gen:
-  assumes "lens_indep_all [i,j, endd]"
-  assumes "vwb_lens x" "vwb_lens i" "vwb_lens j"  
+  assumes "lens_indep_all [i,j]"
+  assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>&endd >\<^sub>u 0 \<rbrace>
-       i :== \<guillemotleft>0::int\<guillemotright>;
-       j :== 0 ; 
-       INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u &endd) 
-       VRT \<guillemotleft>measure (nat o (Rep_uexpr (&endd - &i)))\<guillemotright>
-       WHILE &i <\<^sub>u &endd
-       DO
-         IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u 0 
-         THEN j :== (&j + 1)
-         ELSE SKIP 
-         FI;
-        i :== (&i + 1)
-       OD
-    \<lbrace>&j =\<^sub>u (&endd + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
+"\<lbrace>\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0 \<rbrace>
+   i :== \<guillemotleft>0::int\<guillemotright>;
+   j :== 0 ; 
+   INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
+   VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
+   WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
+   DO
+     IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u 0 
+     THEN j :== (&j + 1)
+     ELSE SKIP 
+     FI;
+    i :== (&i + 1)
+   OD
+ \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
+  apply vcg_hoare_sp_steps_pp_beautify
     apply presburger+    
   done   
 
 lemma even_count_gen':
   assumes "lens_indep_all [i,j, endd]"
-  assumes "vwb_lens x" "vwb_lens i" "vwb_lens j"  
+  assumes  "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>&endd >\<^sub>u 0 \<rbrace>
-       i :== \<guillemotleft>0::int\<guillemotright>;
-       j :== 0 ; 
-       INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u &endd) 
-       VRT \<guillemotleft>measure (nat o (Rep_uexpr (&endd - &i)))\<guillemotright>
-       WHILE &i <\<^sub>u &endd
-       DO
-         IF &i mod 2 =\<^sub>u 0 
-         THEN j :== (&j + 1)
-         ELSE SKIP 
-         FI;
-        i :== (&i + 1)
-       OD
-    \<lbrace>&j =\<^sub>u (&endd + 1)div 2\<rbrace>\<^sub>P"  
+"\<lbrace>\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0\<rbrace>
+   i :== \<guillemotleft>0::int\<guillemotright>;
+   j :== 0 ; 
+   INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
+   VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
+   WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
+   DO
+     IF &i mod 2 =\<^sub>u 0 
+     THEN j :== (&j + 1)
+     ELSE SKIP 
+     FI;
+    i :== (&i + 1)
+   OD
+ \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
   apply (insert assms)(*Make this automatic*)
-  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
+  apply vcg_hoare_sp_steps_pp_beautify
     apply (simp_all add: zdiv_zadd1_eq)
   done    
     
@@ -1340,22 +1339,21 @@ lemma Isqrt_aux:
   by (smt combine_common_factor mult_right_mono semiring_normalization_rules(3))
       
 lemma sqrt_prog_correct:
-  assumes "lens_indep_all [n, r]"
-  assumes "vwb_lens r" "vwb_lens n" 
+  assumes "vwb_lens r"
   shows
- "\<lbrace>0 \<le>\<^sub>u &n \<rbrace>
-      r :== 1 ; 
-      INVAR 0\<le>\<^sub>u &n \<and> bop Isqrt (&n) (&r)
-      VRT  \<guillemotleft>measure (nat o (Rep_uexpr ((&n + 1) - &r)))\<guillemotright>
-      WHILE (&r * &r \<le>\<^sub>u &n)
-      DO 
-       r :== (&r + 1)
-      OD;
-      r :== (&r - 1)
-   \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u &n \<and> &n <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
+"\<lbrace>0 \<le>\<^sub>u \<guillemotleft>input_val\<guillemotright>\<rbrace>
+   r :== 1 ; 
+   INVAR 0\<le>\<^sub>u \<guillemotleft>input_val\<guillemotright> \<and> bop Isqrt (\<guillemotleft>input_val\<guillemotright>) (&r)
+   VRT  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>input_val\<guillemotright> + 1) - &r)))\<guillemotright>
+   WHILE (&r * &r \<le>\<^sub>u \<guillemotleft>input_val\<guillemotright>)
+   DO 
+    r :== (&r + 1)
+   OD;
+   r :== (&r - 1)
+ \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u \<guillemotleft>input_val\<guillemotright> \<and> \<guillemotleft>input_val\<guillemotright> <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
   apply (insert assms)
    supply Isqrt_aux [simp]
-  apply(hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
+  apply vcg_hoare_sp_steps_pp_beautify
   done    
     
 subsection {*gcd*}
@@ -1365,14 +1363,14 @@ text {*In the followin we illustrate the effect of domain theory based approach.
        @{term "(trop If (&r >\<^sub>u &x) (&r) (&x))"}. This leads to long proof. 
        However in gcd_correct' we use the max function from HOL library. 
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
-       the reasoning.*} 
-
+       the reasoning.*}
+  
 lemma gcd_correct:
-  assumes "lens_indep_all [a,r, b, x]"
-  assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
+  assumes "lens_indep_all [r, x]"
+  assumes "vwb_lens r" "vwb_lens x" 
   shows  
-"\<lbrace>&r =\<^sub>u &a \<and> &x =\<^sub>u &b \<and> &b>\<^sub>u 0 \<and> &a>\<^sub>u 0\<rbrace> 
-   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd (&a) (&b)
+"\<lbrace>&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0\<rbrace> 
+   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)
    VRT \<guillemotleft>measure (Rep_uexpr (trop If (&r >\<^sub>u &x) (&r) (&x)))\<guillemotright>
    WHILE \<not>(&r =\<^sub>u &x)
    DO
@@ -1381,19 +1379,19 @@ lemma gcd_correct:
     ELSE x :== (&x - &r)
     FI
    OD
- \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
+ \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)\<rbrace>\<^sub>P"
   apply (insert assms)    
-    apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
+    apply vcg_hoare_sp_steps_pp_beautify
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
      
 lemma gcd_correct':
-  assumes "lens_indep_all [a,r, b, x]"
-  assumes "vwb_lens a" "vwb_lens r" "vwb_lens x" "vwb_lens b"
+  assumes "lens_indep_all [r, x]"
+  assumes "vwb_lens r" "vwb_lens x" 
   shows  
-"\<lbrace>&r =\<^sub>u &a \<and> &x =\<^sub>u &b \<and> &b>\<^sub>u 0 \<and> &a>\<^sub>u 0\<rbrace> 
-   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd (&a) (&b)
+"\<lbrace>&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0\<rbrace> 
+   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>
    VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
    WHILE \<not>(&r =\<^sub>u &x)
    DO
@@ -1402,53 +1400,52 @@ lemma gcd_correct':
     ELSE x :== (&x - &r)
     FI
    OD
- \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (&a) (&b)\<rbrace>\<^sub>P"
+ \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms)  
-  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
-     apply (simp add: gcd_diff1_nat)
-   apply (metis gcd.commute gcd_diff1_nat not_le)
+  apply vcg_hoare_sp_steps_pp_beautify
+   apply (simp add: gcd_diff1_nat)
+  apply (metis gcd.commute gcd_diff1_nat not_le)
   done  
     
-
 section {*Arrays*}
   
 subsection {*Array Max program: one-variable loop*}
 
 lemma max_program_correct:
-  assumes "a \<bowtie> i" "a \<bowtie> r" "r \<bowtie> i" 
-  assumes "vwb_lens i" "vwb_lens r" "vwb_lens a"
+  assumes "r \<bowtie> i" 
+  assumes "vwb_lens i" "vwb_lens r" 
   shows  
-  "\<lbrace>uop length (&a)\<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth (&a:: (int list, 'a) uexpr) 0\<rbrace> 
-     INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length (&a) \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) (&a)) 
-     VRT  \<guillemotleft>measure (Rep_uexpr (uop length (&a) - (&i)))\<guillemotright>  
-     WHILE \<not>(&i =\<^sub>u uop length (&a)) 
-     DO 
-        IF &r <\<^sub>u  bop nth (&a) (&i) 
-        THEN r :== bop nth (&a) (&i)
-        ELSE SKIP
-        FI;
-        i :== (&i + 1)
-     OD   
-  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(&a) \<rbrace>\<^sub>P"  
+"\<lbrace>uop length \<guillemotleft>input_val_a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>input_val_a:: int list\<guillemotright> 0\<rbrace> 
+   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length \<guillemotleft>input_val_a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>input_val_a\<guillemotright>) 
+   VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>input_val_a\<guillemotright> - (&i)))\<guillemotright>  
+   WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>input_val_a\<guillemotright>) 
+   DO 
+      IF &r <\<^sub>u  bop nth \<guillemotleft>input_val_a\<guillemotright> (&i) 
+      THEN r :== bop nth \<guillemotleft>input_val_a\<guillemotright> (&i)
+      ELSE SKIP
+      FI;
+      i :== (&i + 1)
+   OD   
+ \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>input_val_a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)    
-  apply (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
-  subgoal for A a'
-    by (cases a'; auto)
-  subgoal for A i a'
+  apply vcg_hoare_sp_steps_pp_beautify
+  subgoal for A 
+    by (cases input_val_a; auto)
+  subgoal for A i                  
     apply (clarsimp simp: take_Suc_conv_app_nth)
     apply (subst Max_insert) by auto
-  subgoal for A i a'
+  subgoal for A i 
     apply (clarsimp simp: take_Suc_conv_app_nth)  
     apply (subst Max_insert) by auto
   done  
     
-
 find_theorems name: "rep_eq" "LENS_GET_TAG (Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
  
 (*
 TODO List for next iteration:
 
-*)    
+*)      
+
 
 end
 
