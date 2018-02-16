@@ -15,9 +15,91 @@
  ******************************************************************************)
 
 theory utp_hoare_ndes_prog
-
-imports "../../AlgebraicLaws/algebraic_laws_prog"
+  imports "../../AlgebraicLaws/algebraic_laws_prog"
+  keywords "lemmata" :: thy_goal
 begin
+
+ML\<open>
+structure Parse_Spec' = struct
+
+local
+
+val loc_element =
+  Parse.$$$ "fixes" |-- Parse.!!! Parse_Spec.locale_fixes >> Element.Fixes ||
+  Parse.$$$ "constrains" |--
+    Parse.!!! (Parse.and_list1 (Parse.name -- (Parse.$$$ "::" |-- Parse.typ)))
+    >> Element.Constrains ||
+  Parse.$$$ "assumes" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.propp))
+    >> Element.Assumes ||
+  Parse.$$$ "defines" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp))
+    >> Element.Defines ||
+  Parse.$$$ "notes" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name "=" -- Parse.thms1))
+    >> (curry Element.Notes "");
+
+fun plus1_unless test scan =
+  scan ::: Scan.repeat (Parse.$$$ "+" |-- Scan.unless test (Parse.!!! scan));
+
+val instance = Parse.where_ |--
+  Parse.and_list1 (Parse.name -- (Parse.$$$ "=" |-- Parse.term)) >> Expression.Named ||
+  Scan.repeat1 (Parse.maybe Parse.term) >> Expression.Positional;
+
+in
+
+val locale_prefix =
+  Scan.optional
+    (Parse.name -- (Scan.option (Parse.$$$ "?") >> is_none) --| Parse.$$$ ":")
+    ("", false);
+
+val locale_keyword =
+  Parse.$$$ "fixes" || Parse.$$$ "constrains" || Parse.$$$ "assumes" ||
+  Parse.$$$ "defines" || Parse.$$$ "notes";
+
+val class_expression = plus1_unless locale_keyword Parse.class;
+
+val locale_expression =
+  let
+    val expr2 = Parse.position Parse.name;
+    val expr1 =
+      locale_prefix -- expr2 --
+      Scan.optional instance (Expression.Named []) >> (fn ((p, l), i) => (l, (p, i)));
+    val expr0 = plus1_unless locale_keyword expr1;
+  in expr0 -- Scan.optional (Parse.$$$ "for" |-- Parse.!!! Parse_Spec.locale_fixes) [] end;
+
+val context_element = Parse.group (fn () => "context element") loc_element;
+
+end;
+
+
+val long_statement =
+  Scan.repeat context_element --
+   (Parse.$$$ "obtains" |-- Parse.!!! Parse_Spec.obtains >> Element.Obtains ||
+    Parse.$$$ "shows" |-- Parse.!!! Parse_Spec.statement >> Element.Shows);
+end
+
+local
+
+val long_keyword =
+  Parse_Spec.includes >> K "" ||
+  Parse_Spec.long_statement_keyword;
+
+val long_statement =
+  Scan.optional (Parse_Spec.opt_thm_name ":" --| Scan.ahead long_keyword) Binding.empty_atts --
+  Scan.optional Parse_Spec.includes [] -- Parse_Spec'.long_statement
+    >> (fn ((binding, includes), (elems, concl)) => (true, binding, includes, elems, concl));
+
+val short_statement =
+  Parse_Spec.statement -- Parse_Spec.if_statement -- Parse.for_fixes
+    >> (fn ((shows, assumes), fixes) =>
+      (false, Binding.empty_atts, [], [Element.Fixes fixes, Element.Assumes assumes],
+        Element.Shows shows));
+
+val _ = Outer_Syntax.commands @{command_keyword lemmata} ""
+ ((long_statement || short_statement) >> 
+  (fn (long, binding, includes, elems, concl) =>
+    [ (@{command_keyword lemma},
+       Toplevel.local_theory_to_proof' NONE NONE
+         (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes elems concl)) ]))
+in end\<close>
 
 section {*Helper*}    
 
