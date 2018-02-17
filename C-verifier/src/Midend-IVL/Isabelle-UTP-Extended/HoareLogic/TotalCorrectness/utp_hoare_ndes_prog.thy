@@ -98,7 +98,19 @@ val _ = Outer_Syntax.commands @{command_keyword lemmata} ""
   (fn (long, binding, includes, elems, concl) =>
     [ (@{command_keyword lemma},
        Toplevel.local_theory_to_proof' NONE NONE
-         (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes elems concl)) ]))
+         (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes elems concl))
+    , (@{command_keyword apply},
+       let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
+                                          [Method.Basic (fn ctxt => Method.insert (Proof_Context.get_thms ctxt "assms"))])
+                   , (Position.none, Position.none)) in
+       (Method.report m; Toplevel.proofs (Proof.apply m))
+       end)
+    , (@{command_keyword apply},
+       let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
+                                          [Method.Source [Token.make_string ("vcg_hoare_sp_steps_pp_beautify", Position.none)]])
+                   , (Position.none, Position.none)) in
+       (Method.report m; Toplevel.proofs (Proof.apply m))
+       end) ]))
 in end\<close>
 
 section {*Helper*}    
@@ -1344,7 +1356,7 @@ subsection {* Through these experiments I want to observe the following problems
 
 *}
 
-lemma increment_method: 
+lemmata increment_method: 
   assumes "lens_indep_all [x, y]"
   assumes "vwb_lens x"  "vwb_lens y"
   shows  
@@ -1354,13 +1366,11 @@ lemma increment_method:
    VRT \<guillemotleft>(measure o Rep_uexpr) (&y - &x)\<guillemotright> 
    WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
  \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
-  apply (insert assms) (*Make this automatic *)
-    apply vcg_hoare_sp_steps_pp_beautify                           
   done
     
 subsection {*even count program*} 
 
-lemma even_count_gen:
+lemmata even_count_gen:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
@@ -1378,12 +1388,10 @@ lemma even_count_gen:
     i :== (&i + 1)
    OD
  \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
-  apply (insert assms)(*Make this automatic*)
-  apply vcg_hoare_sp_steps_pp_beautify
     apply presburger+    
   done   
 
-lemma even_count_gen':
+lemmata even_count_gen':
   assumes "lens_indep_all [i,j, endd]"
   assumes  "vwb_lens i" "vwb_lens j"  
   shows  
@@ -1401,8 +1409,6 @@ lemma even_count_gen':
     i :== (&i + 1)
    OD
  \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
-  apply (insert assms)(*Make this automatic*)
-  apply vcg_hoare_sp_steps_pp_beautify
     apply (simp_all add: zdiv_zadd1_eq)
   done    
     
@@ -1447,7 +1453,7 @@ text {*In the followin we illustrate the effect of domain theory based approach.
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
        the reasoning.*}
   
-lemma gcd_correct:
+lemmata gcd_correct:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   shows  
@@ -1462,13 +1468,11 @@ lemma gcd_correct:
     FI
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)\<rbrace>\<^sub>P"
-  apply (insert assms)    
-    apply vcg_hoare_sp_steps_pp_beautify
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
      
-lemma gcd_correct':
+lemmata gcd_correct':
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   shows  
@@ -1483,8 +1487,6 @@ lemma gcd_correct':
     FI
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>\<rbrace>\<^sub>P"
-  apply (insert assms)  
-  apply vcg_hoare_sp_steps_pp_beautify
    apply (simp add: gcd_diff1_nat)
   apply (metis gcd.commute gcd_diff1_nat not_le)
   done  
@@ -1493,7 +1495,7 @@ section {*Arrays*}
   
 subsection {*Array Max program: one-variable loop*}
 
-lemma max_program_correct:
+lemmata max_program_correct:
   assumes "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" 
   shows  
@@ -1509,8 +1511,6 @@ lemma max_program_correct:
       i :== (&i + 1)
    OD   
  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>input_val_a\<guillemotright>)\<rbrace>\<^sub>P"  
-  apply (insert assms)    
-  apply vcg_hoare_sp_steps_pp_beautify
   subgoal for A 
     by (cases input_val_a; auto)
   subgoal for A i                  
