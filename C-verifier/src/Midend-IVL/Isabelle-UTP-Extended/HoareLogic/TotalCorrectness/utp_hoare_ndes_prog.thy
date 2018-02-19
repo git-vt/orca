@@ -17,63 +17,90 @@
 theory utp_hoare_ndes_prog
   imports "../../AlgebraicLaws/algebraic_laws_prog"
   keywords "lemmata" :: thy_goal
+  and "assumes_utp" "ensures_utp" "prog_utp" :: quasi_command
 begin
 
 ML\<open>
+structure Element' = struct
+
+datatype ('typ, 'term, 'fact) ctxt_stmt =
+  Shows of (Attrib.binding * ('term * 'term list) list) list |
+  Obtains of ('typ, 'term) Element.obtain list |
+  Fixes of (binding * 'typ option * mixfix) list |
+  Constrains of (string * 'typ) list |
+  Assumes of (Attrib.binding * ('term * 'term list) list) list |
+  Defines of (Attrib.binding * ('term * 'term list)) list |
+  Notes of string * (Attrib.binding * ('fact * Token.src list) list) list |
+  Assumes_UTP of 'term |
+  Ensures_UTP of 'term |
+  Prog_UTP of 'term
+type context = (string, string, Facts.ref) ctxt_stmt
+
+fun to_elem_stmt l = 
+  case
+    ( map_filter (fn Shows l => SOME l | _ => NONE) l
+    , map_filter (fn Obtains l => SOME l | _ => NONE) l)
+  of (l_shows, []) =>
+      Element.Shows
+        let val l_shows = List.concat l_shows
+            val escape = map (fn s => "(" ^ YXML.content_of s ^ ")") in
+          case
+            ( map_filter (fn Assumes_UTP t => SOME t | _ => NONE) l
+            , map_filter (fn Ensures_UTP t => SOME t | _ => NONE) l
+            , map_filter (fn Prog_UTP t => SOME t | _ => NONE) l)
+          of (l_ass, l_ens, [t_prog]) =>
+               (Binding.empty_atts,
+                [(String.concatWith
+                    " "
+                    ("hoare_prog_t"
+                     :: (case l_ass of [] => "utrue" | _ => String.concatWith "\<and>" (escape l_ass))
+                     :: escape [t_prog]
+                      @ [case l_ens of [] => "ufalse" | _ => String.concatWith "\<and>" (escape l_ens)]), [])])
+               :: l_shows
+           | _ => ((case l_shows of [] => warning "not yet supported" | _ => ()); l_shows)
+        end
+   | ([], l) => Element.Obtains (List.concat l)
+   | _ => error "shows and obtains are both present"
+
+val to_elem_context_list = 
+  map_filter (fn Fixes l => SOME (Element.Fixes l)
+               | Constrains l => SOME (Element.Constrains l)
+               | Assumes l => SOME (Element.Assumes l)
+               | Defines l => SOME (Element.Defines l)
+               | Notes l => SOME (Element.Notes l)
+               | _ => NONE)
+
+val exists_assumes = List.exists (fn Assumes _ => true | _ => false)
+end
+
 structure Parse_Spec' = struct
 
 local
 
 val loc_element =
-  Parse.$$$ "fixes" |-- Parse.!!! Parse_Spec.locale_fixes >> Element.Fixes ||
+  Parse.$$$ "fixes" |-- Parse.!!! Parse_Spec.locale_fixes >> Element'.Fixes ||
   Parse.$$$ "constrains" |--
     Parse.!!! (Parse.and_list1 (Parse.name -- (Parse.$$$ "::" |-- Parse.typ)))
-    >> Element.Constrains ||
+    >> Element'.Constrains ||
   Parse.$$$ "assumes" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.propp))
-    >> Element.Assumes ||
+    >> Element'.Assumes ||
   Parse.$$$ "defines" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp))
-    >> Element.Defines ||
+    >> Element'.Defines ||
   Parse.$$$ "notes" |-- Parse.!!! (Parse.and_list1 (Parse_Spec.opt_thm_name "=" -- Parse.thms1))
-    >> (curry Element.Notes "");
-
-fun plus1_unless test scan =
-  scan ::: Scan.repeat (Parse.$$$ "+" |-- Scan.unless test (Parse.!!! scan));
-
-val instance = Parse.where_ |--
-  Parse.and_list1 (Parse.name -- (Parse.$$$ "=" |-- Parse.term)) >> Expression.Named ||
-  Scan.repeat1 (Parse.maybe Parse.term) >> Expression.Positional;
+    >> (curry Element'.Notes "") ||
+  Parse.$$$ "obtains" |-- Parse.!!! Parse_Spec.obtains >> Element'.Obtains ||
+  Parse.$$$ "shows" |-- Parse.!!! Parse_Spec.statement >> Element'.Shows ||
+  Parse.$$$ "assumes_utp" |-- Parse.!!! Parse.term >> Element'.Assumes_UTP ||
+  Parse.$$$ "ensures_utp" |-- Parse.!!! Parse.term >> Element'.Ensures_UTP ||
+  Parse.$$$ "prog_utp" |-- Parse.!!! Parse.term >> Element'.Prog_UTP;
 
 in
-
-val locale_prefix =
-  Scan.optional
-    (Parse.name -- (Scan.option (Parse.$$$ "?") >> is_none) --| Parse.$$$ ":")
-    ("", false);
-
-val locale_keyword =
-  Parse.$$$ "fixes" || Parse.$$$ "constrains" || Parse.$$$ "assumes" ||
-  Parse.$$$ "defines" || Parse.$$$ "notes";
-
-val class_expression = plus1_unless locale_keyword Parse.class;
-
-val locale_expression =
-  let
-    val expr2 = Parse.position Parse.name;
-    val expr1 =
-      locale_prefix -- expr2 --
-      Scan.optional instance (Expression.Named []) >> (fn ((p, l), i) => (l, (p, i)));
-    val expr0 = plus1_unless locale_keyword expr1;
-  in expr0 -- Scan.optional (Parse.$$$ "for" |-- Parse.!!! Parse_Spec.locale_fixes) [] end;
 
 val context_element = Parse.group (fn () => "context element") loc_element;
 
 end;
 
-
-val long_statement =
-  Scan.repeat context_element --
-   (Parse.$$$ "obtains" |-- Parse.!!! Parse_Spec.obtains >> Element.Obtains ||
-    Parse.$$$ "shows" |-- Parse.!!! Parse_Spec.statement >> Element.Shows);
+val long_statement = Scan.repeat context_element;
 end
 
 local
@@ -85,32 +112,29 @@ val long_keyword =
 val long_statement =
   Scan.optional (Parse_Spec.opt_thm_name ":" --| Scan.ahead long_keyword) Binding.empty_atts --
   Scan.optional Parse_Spec.includes [] -- Parse_Spec'.long_statement
-    >> (fn ((binding, includes), (elems, concl)) => (true, binding, includes, elems, concl));
-
-val short_statement =
-  Parse_Spec.statement -- Parse_Spec.if_statement -- Parse.for_fixes
-    >> (fn ((shows, assumes), fixes) =>
-      (false, Binding.empty_atts, [], [Element.Fixes fixes, Element.Assumes assumes],
-        Element.Shows shows));
+    >> (fn ((binding, includes), elems) => (true, binding, includes, elems));
 
 val _ = Outer_Syntax.commands @{command_keyword lemmata} ""
- ((long_statement || short_statement) >> 
-  (fn (long, binding, includes, elems, concl) =>
-    [ (@{command_keyword lemma},
-       Toplevel.local_theory_to_proof' NONE NONE
-         (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes elems concl))
-    , (@{command_keyword apply},
-       let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
-                                          [Method.Basic (fn ctxt => Method.insert (Proof_Context.get_thms ctxt "assms"))])
-                   , (Position.none, Position.none)) in
-       (Method.report m; Toplevel.proofs (Proof.apply m))
-       end)
-    , (@{command_keyword apply},
-       let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
-                                          [Method.Source [Token.make_string ("vcg_hoare_sp_steps_pp_beautify", Position.none)]])
-                   , (Position.none, Position.none)) in
-       (Method.report m; Toplevel.proofs (Proof.apply m))
-       end) ]))
+ (long_statement >> 
+  (fn (long, binding, includes, elems) =>
+  List.concat
+    [ [(@{command_keyword lemma},
+        Toplevel.local_theory_to_proof' NONE NONE
+          (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes (Element'.to_elem_context_list elems) (Element'.to_elem_stmt elems)))]
+    , if Element'.exists_assumes elems then
+        [(@{command_keyword apply},
+          let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
+                                             [Method.Basic (fn ctxt => Method.insert (Proof_Context.get_thms ctxt "assms"))])
+                      , (Position.none, Position.none)) in
+          (Method.report m; Toplevel.proofs (Proof.apply m))
+          end)]
+      else []
+    , [(@{command_keyword apply},
+        let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
+                                           [Method.Source [Token.make_string ("vcg_hoare_sp_steps_pp_beautify", Position.none)]])
+                    , (Position.none, Position.none)) in
+        (Method.report m; Toplevel.proofs (Proof.apply m))
+       end) ]]))
 in end\<close>
 
 section {*Helper*}    
