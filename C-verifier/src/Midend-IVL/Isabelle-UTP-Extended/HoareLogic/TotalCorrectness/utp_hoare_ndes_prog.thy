@@ -16,7 +16,7 @@
 
 theory utp_hoare_ndes_prog
   imports "../../AlgebraicLaws/algebraic_laws_prog"
-  keywords "lemmata" :: thy_goal
+  keywords "program_spec" :: thy_goal
   and "assumes_utp" "ensures_utp" "prog_utp" :: quasi_command
 begin
 
@@ -114,7 +114,7 @@ val long_statement =
   Scan.optional Parse_Spec.includes [] -- Parse_Spec'.long_statement
     >> (fn ((binding, includes), elems) => (true, binding, includes, elems));
 
-val _ = Outer_Syntax.commands @{command_keyword lemmata} ""
+val _ = Outer_Syntax.commands @{command_keyword program_spec} ""
  (long_statement >> 
   (fn (long, binding, includes, elems) =>
   List.concat
@@ -1380,7 +1380,7 @@ subsection {* Through these experiments I want to observe the following problems
 
 *}
 
-lemmata increment_method: 
+program_spec increment_method: 
   assumes "lens_indep_all [x, y]"
   assumes "vwb_lens x"  "vwb_lens y"
   assumes_utp "&y >\<^sub>u 0"
@@ -1393,7 +1393,7 @@ lemmata increment_method:
     
 subsection {*even count program*} 
 
-lemmata even_count_gen:
+program_spec even_count_gen:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0"
@@ -1413,7 +1413,7 @@ lemmata even_count_gen:
     apply presburger+    
   done   
 
-lemmata even_count_gen':
+program_spec even_count_gen':
   assumes "lens_indep_all [i,j, endd]"
   assumes  "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0"
@@ -1474,7 +1474,7 @@ text {*In the followin we illustrate the effect of domain theory based approach.
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
        the reasoning.*}
   
-lemmata gcd_correct:
+program_spec gcd_correct:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   assumes_utp "&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0"
@@ -1492,7 +1492,7 @@ lemmata gcd_correct:
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
      
-lemmata gcd_correct':
+program_spec gcd_correct':
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   assumes_utp "&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0"
@@ -1514,7 +1514,7 @@ section {*Arrays*}
   
 subsection {*Array Max program: one-variable loop*}
 
-lemmata max_program_correct:
+program_spec max_program_correct:
   assumes "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" 
   assumes_utp "uop length \<guillemotleft>input_val_a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>input_val_a:: int list\<guillemotright> 0"
