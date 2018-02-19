@@ -1383,13 +1383,12 @@ subsection {* Through these experiments I want to observe the following problems
 lemmata increment_method: 
   assumes "lens_indep_all [x, y]"
   assumes "vwb_lens x"  "vwb_lens y"
-  shows  
-"\<lbrace>&y >\<^sub>u 0\<rbrace>
-   x :== 0 ; 
-   INVAR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
-   VRT \<guillemotleft>(measure o Rep_uexpr) (&y - &x)\<guillemotright> 
-   WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD
- \<lbrace>&y =\<^sub>u &x\<rbrace>\<^sub>P"
+  assumes_utp "&y >\<^sub>u 0"
+  prog_utp    "x :== 0 ; 
+               INVAR &y >\<^sub>u 0 \<and> &y \<ge>\<^sub>u &x 
+               VRT \<guillemotleft>(measure o Rep_uexpr) (&y - &x)\<guillemotright> 
+               WHILE &x <\<^sub>u &y DO x:== (&x + 1) OD"
+  ensures_utp "&y =\<^sub>u &x"
   done
     
 subsection {*even count program*} 
@@ -1397,42 +1396,40 @@ subsection {*even count program*}
 lemmata even_count_gen:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
-  shows  
-"\<lbrace>\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0 \<rbrace>
-   i :== \<guillemotleft>0::int\<guillemotright>;
-   j :== 0 ; 
-   INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
-   VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
-   WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
-   DO
-     IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u 0 
-     THEN j :== (&j + 1)
-     ELSE SKIP 
-     FI;
-    i :== (&i + 1)
-   OD
- \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
+  assumes_utp "\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0"
+  prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
+               j :== 0 ; 
+               INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
+               VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
+               WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
+               DO
+                 IF &i mod \<guillemotleft>2\<guillemotright> =\<^sub>u 0 
+                 THEN j :== (&j + 1)
+                 ELSE SKIP 
+                 FI;
+                i :== (&i + 1)
+               OD"
+  ensures_utp "&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>"
     apply presburger+    
   done   
 
 lemmata even_count_gen':
   assumes "lens_indep_all [i,j, endd]"
   assumes  "vwb_lens i" "vwb_lens j"  
-  shows  
-"\<lbrace>\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0\<rbrace>
-   i :== \<guillemotleft>0::int\<guillemotright>;
-   j :== 0 ; 
-   INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
-   VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
-   WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
-   DO
-     IF &i mod 2 =\<^sub>u 0 
-     THEN j :== (&j + 1)
-     ELSE SKIP 
-     FI;
-    i :== (&i + 1)
-   OD
- \<lbrace>&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
+  assumes_utp "\<guillemotleft>in_val\<guillemotright> >\<^sub>u 0"
+  prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
+               j :== 0 ; 
+               INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>in_val\<guillemotright>) 
+               VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>in_val\<guillemotright> - &i)))\<guillemotright>
+               WHILE &i <\<^sub>u \<guillemotleft>in_val\<guillemotright>
+               DO
+                 IF &i mod 2 =\<^sub>u 0 
+                 THEN j :== (&j + 1)
+                 ELSE SKIP 
+                 FI;
+                i :== (&i + 1)
+               OD" 
+  ensures_utp "&j =\<^sub>u (\<guillemotleft>in_val\<guillemotright> + 1)div 2"
     apply (simp_all add: zdiv_zadd1_eq)
   done    
     
@@ -1480,18 +1477,17 @@ text {*In the followin we illustrate the effect of domain theory based approach.
 lemmata gcd_correct:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
-  shows  
-"\<lbrace>&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0\<rbrace> 
-   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)
-   VRT \<guillemotleft>measure (Rep_uexpr (trop If (&r >\<^sub>u &x) (&r) (&x)))\<guillemotright>
-   WHILE \<not>(&r =\<^sub>u &x)
-   DO
-    IF &r >\<^sub>u &x
-    THEN r :== (&r - &x)
-    ELSE x :== (&x - &r)
-    FI
-   OD
- \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)\<rbrace>\<^sub>P"
+  assumes_utp "&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0"
+  prog_utp    "INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)
+               VRT \<guillemotleft>measure (Rep_uexpr (trop If (&r >\<^sub>u &x) (&r) (&x)))\<guillemotright>
+               WHILE \<not>(&r =\<^sub>u &x)
+               DO
+                IF &r >\<^sub>u &x
+                THEN r :== (&r - &x)
+                ELSE x :== (&x - &r)
+                FI
+               OD"
+  ensures_utp "&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd (\<guillemotleft>input_val_a\<guillemotright>) (\<guillemotleft>input_val_b\<guillemotright>)"
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
@@ -1499,18 +1495,17 @@ lemmata gcd_correct:
 lemmata gcd_correct':
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
-  shows  
-"\<lbrace>&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0\<rbrace> 
-   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>
-   VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
-   WHILE \<not>(&r =\<^sub>u &x)
-   DO
-    IF &r >\<^sub>u &x
-    THEN r :== (&r - &x)
-    ELSE x :== (&x - &r)
-    FI
-   OD
- \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>\<rbrace>\<^sub>P"
+  assumes_utp "&r =\<^sub>u \<guillemotleft>input_val_a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>input_val_b\<guillemotright> \<and> \<guillemotleft>input_val_b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>input_val_a\<guillemotright>>\<^sub>u 0"
+  prog_utp    "INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>
+               VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
+               WHILE \<not>(&r =\<^sub>u &x)
+               DO
+                IF &r >\<^sub>u &x
+                THEN r :== (&r - &x)
+                ELSE x :== (&x - &r)
+                FI
+               OD"
+  ensures_utp "&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>input_val_a\<guillemotright> \<guillemotleft>input_val_b\<guillemotright>"
    apply (simp add: gcd_diff1_nat)
   apply (metis gcd.commute gcd_diff1_nat not_le)
   done  
@@ -1522,19 +1517,18 @@ subsection {*Array Max program: one-variable loop*}
 lemmata max_program_correct:
   assumes "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" 
-  shows  
-"\<lbrace>uop length \<guillemotleft>input_val_a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>input_val_a:: int list\<guillemotright> 0\<rbrace> 
-   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length \<guillemotleft>input_val_a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>input_val_a\<guillemotright>) 
-   VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>input_val_a\<guillemotright> - (&i)))\<guillemotright>  
-   WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>input_val_a\<guillemotright>) 
-   DO 
-      IF &r <\<^sub>u  bop nth \<guillemotleft>input_val_a\<guillemotright> (&i) 
-      THEN r :== bop nth \<guillemotleft>input_val_a\<guillemotright> (&i)
-      ELSE SKIP
-      FI;
-      i :== (&i + 1)
-   OD   
- \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>input_val_a\<guillemotright>)\<rbrace>\<^sub>P"  
+  assumes_utp "uop length \<guillemotleft>input_val_a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>input_val_a:: int list\<guillemotright> 0"
+  prog_utp    "INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u  uop length \<guillemotleft>input_val_a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>input_val_a\<guillemotright>) 
+               VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>input_val_a\<guillemotright> - (&i)))\<guillemotright>  
+               WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>input_val_a\<guillemotright>) 
+               DO 
+                  IF &r <\<^sub>u  bop nth \<guillemotleft>input_val_a\<guillemotright> (&i) 
+                  THEN r :== bop nth \<guillemotleft>input_val_a\<guillemotright> (&i)
+                  ELSE SKIP
+                  FI;
+                  i :== (&i + 1)
+               OD"
+  ensures_utp "&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>input_val_a\<guillemotright>)"
   subgoal for A 
     by (cases input_val_a; auto)
   subgoal for A i                  
