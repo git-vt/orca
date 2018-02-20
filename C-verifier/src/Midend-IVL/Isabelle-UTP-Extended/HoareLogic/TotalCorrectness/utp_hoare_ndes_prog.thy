@@ -101,13 +101,20 @@ val context_element = Parse.group (fn () => "context element") loc_element;
 end;
 
 val long_statement = Scan.repeat context_element;
+
+val long_statement_keyword =
+  Parse.$$$ "fixes" || Parse.$$$ "constrains" || Parse.$$$ "assumes" ||
+  Parse.$$$ "defines" || Parse.$$$ "notes" ||
+  Parse.$$$ "obtains" || Parse.$$$ "shows" ||
+  Parse.$$$ "assumes_utp" || Parse.$$$ "ensures_utp" || Parse.$$$ "prog_utp";
+
 end
 
 local
 
 val long_keyword =
   Parse_Spec.includes >> K "" ||
-  Parse_Spec.long_statement_keyword;
+  Parse_Spec'.long_statement_keyword;
 
 val long_statement =
   Scan.optional (Parse_Spec.opt_thm_name ":" --| Scan.ahead long_keyword) Binding.empty_atts --
