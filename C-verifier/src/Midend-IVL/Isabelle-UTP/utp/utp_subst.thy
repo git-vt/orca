@@ -362,7 +362,18 @@ lemma subst_upd_comp [usubst]:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   shows "\<rho>(x \<mapsto>\<^sub>s v) \<circ> \<sigma> = (\<rho> \<circ> \<sigma>)(x \<mapsto>\<^sub>s \<sigma> \<dagger> v)"
   by (rule ext, simp add:uexpr_defs subst_upd_uvar_def, transfer, simp)
-
+term "(subst_upd \<rho> x v)\<circ> \<sigma> = subst_upd (\<rho> \<circ> \<sigma>) x (subst \<sigma> v)"
+term "subst \<sigma> "
+term "Domain "
+term "dom"
+find_consts  "('a \<Rightarrow> 'b) \<Rightarrow> 'a set"
+term "f(x:= v)"  
+term "(inv \<sigma>) x"  
+ term "\<lambda>s. v (\<sigma> s)" 
+lemma "f(x:= v)o \<sigma> = (f o \<sigma>)(x := v) "
+  
+  
+oops  
 lemma subst_singleton:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "x \<sharp> \<sigma>"
