@@ -53,9 +53,9 @@ fun to_elem_stmt l =
                 [(String.concatWith
                     " "
                     ("hoare_prog_t"
-                     :: (case l_ass of [] => "utrue" | _ => String.concatWith "\<and>" (escape l_ass))
+                     :: (case l_ass of [] => "utrue" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ass) ^ ")")
                      :: escape [t_prog]
-                      @ [case l_ens of [] => "ufalse" | _ => String.concatWith "\<and>" (escape l_ens)]), [])])
+                      @ [case l_ens of [] => "ufalse" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ens) ^ ")"]), [])])
                :: l_shows
            | _ => ((case l_shows of [] => warning "not yet supported" | _ => ()); l_shows)
         end
