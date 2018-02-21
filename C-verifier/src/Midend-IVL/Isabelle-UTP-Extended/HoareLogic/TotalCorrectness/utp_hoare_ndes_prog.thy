@@ -51,15 +51,15 @@ lift_definition hoare_prog_t :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog \<R
 
 declare hoare_prog_t.rep_eq [prog_rep_eq]
 
-lemma hoare_true_assisgns_prog_t[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma hoare_true_assisgns_prog_t: 
   "\<lbrace>p\<rbrace> \<langle>\<sigma>\<rangle>\<^sub>p \<lbrace>true\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
 
-lemma hoare_true_skip_prog_t[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma hoare_true_skip_prog_t: 
   "\<lbrace>p\<rbrace>SKIP\<lbrace>true\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
 
-lemma hoare_false_prog_t[hoare_sp_rules]: 
+lemma hoare_false_prog_t: 
   "\<lbrace>false\<rbrace>C\<lbrace>q\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
 
@@ -111,13 +111,13 @@ lemma skip_prog_hoare_prog_intro:
     
 subsection {*Hoare for assignment*}
 
-lemma assigns_prog_hoare_prog_backward_t[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma assigns_prog_hoare_prog_backward_t: 
   assumes"`p \<Rightarrow> \<sigma> \<dagger> q`" 
   shows  "\<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>p\<lbrace>q\<rbrace>\<^sub>P"
   using assms  
   by (simp add: prog_rep_eq hoare_des)
 
-lemma assigns_prog_hoare_prog_backward_t': 
+lemma assigns_prog_hoare_prog_backward_t'[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
   "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>p\<lbrace>p\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
 
@@ -128,8 +128,26 @@ lemma assigns_prog_floyd_t[hoare_sp_rules]:
   by (simp add: assms prog_rep_eq hoare_des)
 
 subsection {*Hoare for Sequential Composition*}
+lemma seq_hoare_invariant: 
+ "\<lbrakk> \<lbrace>p\<rbrace>Q\<^sub>1\<lbrace>p\<rbrace>\<^sub>P ; \<lbrace>p\<rbrace>Q\<^sub>2\<lbrace>p\<rbrace>\<^sub>P \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<^sub>1 ; Q\<^sub>2\<lbrace>p\<rbrace>\<^sub>P"
 
-lemma seq_hoare_prog[hoare_sp_rules, hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+  apply (simp add: prog_rep_eq ) 
+  apply rel_blast 
+  done
+    
+lemma seq_hoare_stronger_pre_1: 
+  "\<lbrakk> \<lbrace>p \<and> q\<rbrace>Q\<^sub>1\<lbrace>p \<and> q\<rbrace>\<^sub>P ; \<lbrace>p \<and> q\<rbrace>Q\<^sub>2\<lbrace>q\<rbrace>\<^sub>P \<rbrakk> \<Longrightarrow> \<lbrace>p \<and> q\<rbrace>Q\<^sub>1 ; Q\<^sub>2\<lbrace>q\<rbrace>\<^sub>P"
+ apply (simp add: prog_rep_eq ) 
+  apply rel_blast 
+  done
+
+lemma seq_hoare_stronger_pre_2: 
+  "\<lbrakk> \<lbrace>p \<and> q\<rbrace>Q\<^sub>1\<lbrace>p \<and> q\<rbrace>\<^sub>P ; \<lbrace>p \<and> q\<rbrace>Q\<^sub>2\<lbrace>p\<rbrace>\<^sub>P \<rbrakk> \<Longrightarrow> \<lbrace>p \<and> q\<rbrace>Q\<^sub>1 ; Q\<^sub>2\<lbrace>p\<rbrace>\<^sub>P"
+ apply (simp add: prog_rep_eq ) 
+  apply rel_blast 
+  done
+    
+lemma seq_hoare_prog[hoare_wp_rules, hoare_sp_rules]: 
   assumes"\<lbrace>p\<rbrace>C\<^sub>1\<lbrace>s\<rbrace>\<^sub>P" and "\<lbrace>s\<rbrace>C\<^sub>2\<lbrace>r\<rbrace>\<^sub>P" 
   shows"\<lbrace>p\<rbrace>C\<^sub>1 ; C\<^sub>2\<lbrace>r\<rbrace>\<^sub>P"
   using assms
@@ -137,12 +155,19 @@ lemma seq_hoare_prog[hoare_sp_rules, hoare_wp_rules, hoare_wp_proof_annotation_r
 
 subsection {*Hoare for Conditional*}
 
-lemma cond_prog_hoare_prog_t[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma cond_prog_hoare_prog_t: 
   assumes "\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P" and "\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q\<rbrace>\<^sub>P"
   using assms
   by (simp add: prog_rep_eq hoare_des) 
 
+lemma cond_prog_hoare_prog_wp'[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+  assumes "\<lbrace>p'\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P" and "\<lbrace>p''\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>P"
+  shows "\<lbrace>(b \<and> p')\<or> (\<not>b \<and> p'')\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q\<rbrace>\<^sub>P"
+  using assms
+  apply (simp add: prog_rep_eq ) 
+  apply pred_simp
+  done  
     
 lemma cond_prog_hoare_prog_t'[hoare_sp_rules]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>P\<close>
@@ -384,15 +409,14 @@ lemma while_invr_hoare_prog_wp:
                                  OF while_hoare_prog_minimal[OF WF uimp_refl, of _ _ e],
                                  OF consequence_hoare_prog[OF I0' induct_step uimp_refl]])
 
-lemma while_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
+lemma while_invr_vrt_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "`p \<Rightarrow> invar`"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P"                              
+  shows "\<lbrace>invar\<rbrace>INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P"                              
   unfolding while_lfp_invr_vrt_prog_def
-  by (rule consequence_hoare_prog[OF seq_step _ PHI,
+  by (rule consequence_hoare_prog[OF uimp_refl _ PHI,
                                  OF while_hoare_prog_minimal[OF WF uimp_refl, of _ _ e],
                                  OF consequence_hoare_prog[OF I0' induct_step uimp_refl]])
                                 
@@ -514,16 +538,15 @@ lemma from_until_invr_hoare_prog_wp:
   unfolding from_until_lfp_invr_prog_def
   using from_until_hoare_prog_wp [OF WF I0 seq_step PHI I0' induct_step] .
     
-lemma from_until_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
-  assumes WF: "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"    
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+lemma from_until_invr_vrt_hoare_prog_wp:
+  assumes WF: "wf R"   
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar VRT \<guillemotleft>R\<guillemotright> UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding from_until_lfp_invr_vrt_prog_def
-  using from_until_hoare_prog_wp [OF WF I0 seq_step PHI I0' induct_step] .
+  using from_until_hoare_prog_wp [OF WF uimp_refl seq_step PHI I0' induct_step] .
     
 lemma from_until_hoare_prog_sp:
   assumes WF: "wf R"
@@ -640,16 +663,15 @@ lemma do_while_invr_hoare_prog_wp:
   by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
                    while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
-lemma do_while_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
-  assumes WF: "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"   
+lemma do_while_invr_vrt_hoare_prog_wp:
+  assumes WF: "wf R"  
   assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>DO body INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding do_while_lfp_invr_vrt_prog_def do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF uimp_refl]
                    while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma do_while_hoare_prog_sp:
@@ -767,16 +789,15 @@ lemma for_invr_hoare_prog_wp:
   by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
                 while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
-lemma for_invr_vrt_hoare_prog_wp[hoare_wp_rules]:
+lemma for_invr_vrt_hoare_prog_wp:
   assumes WF : "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar VRT \<guillemotleft>R\<guillemotright>DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding for_lfp_invr_vrt_prog_def for_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF uimp_refl]
                 while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
 
 lemma for_hoare_prog_sp:
@@ -819,6 +840,11 @@ lemmas loop_invr_vrt_hoare_prog_sp_instantiated [hoare_sp_rules] =
        do_while_invr_vrt_hoare_prog_sp [where e = "&\<Sigma>"]
        from_until_invr_vrt_hoare_prog_sp[where e = "&\<Sigma>"]
 
+lemmas loop_invr_vrt_hoare_prog_wp_instantiated [hoare_wp_rules] = 
+       while_invr_vrt_hoare_prog_wp [where e = "&\<Sigma>"]
+       for_invr_vrt_hoare_prog_wp [where e = "&\<Sigma>"]
+       do_while_invr_vrt_hoare_prog_wp [where e = "&\<Sigma>"]
+       from_until_invr_vrt_hoare_prog_wp[where e = "&\<Sigma>"]
     
 end
 

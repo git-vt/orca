@@ -430,37 +430,42 @@ method urels_blast      = utp_tac_control urels_defs fast_uexpr_transfer urels_r
 method urels_blast_slow = utp_tac_control urels_defs slow_uexpr_transfer urels_rewrites uexpr_interp_tac utp_blast_tac
  
 subsection \<open>VCG Core Tactics\<close> 
+  
 text \<open>In this section we define the core tactics for the VCG. Namely, tactics for the computational mode
 such as weakest pre-condition and strongest post_condition rules. Also tactics for symbolic execution
 on the generated verification conditions are defined.\<close>  
     
 method hoare_sp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule post_weak_prog_hoare  
 
-method hoare_sp_rule_apply = rule hoare_sp_rules
+method hoare_wp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule pre_str_prog_hoare  
 
+method hoare_sp_rule_apply = rule hoare_sp_rules
+  
 method hoare_wp_rule_apply = rule hoare_wp_rules
 
-method hoare_annotaion_rule_apply = rule hoare_wp_rules  
-  
-named_theorems lens_laws_vcg_simps
-  
-lemmas [lens_laws_vcg_simps] =
-  lens_indep.lens_put_irr1
-  lens_indep.lens_put_irr2
-
-method vcg_step_solver methods solver = 
-       (hoare_sp_rule_apply | solver)
+method vcg_step methods vcg_reasoning_method = 
+       (vcg_reasoning_method | vcg_defer)
 
 text \<open>A one step vcg without post processing nor debugging information. The output of this
       method is: for the goal, on which it is applied to, a upred.\<close>
   
-method  hoare_sp_vcg_step = (hoare_sp_rule_apply | vcg_defer)
-
+method hoare_sp_vcg_step = vcg_step hoare_sp_rule_apply 
+  
+method hoare_wp_vcg_step = vcg_step hoare_wp_rule_apply
+  
 text \<open>A multiple step vcg without post processing nor debugging information. The output of this
       method is proof goals of the form of upreds.\<close>  
   
-method  hoare_sp_vcg_steps = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFERRED_def)
+method sp = hoare_sp_vcg_pre, hoare_sp_vcg_step+ , (unfold DEFERRED_def)
 
+method wp = hoare_wp_vcg_pre, hoare_wp_vcg_step+ , (unfold DEFERRED_def)  
+  
+named_theorems lens_laws_vcg_simps
+
+lemmas [lens_laws_vcg_simps] =
+  lens_indep.lens_put_irr1
+  lens_indep.lens_put_irr2
+  
 method vcg_hol_post_processing_debugger = 
    (upreds_simp)?, (simp only: lens_laws_vcg_simps)?
   
@@ -487,23 +492,28 @@ declare Set.insert_iff[lens_indep_all_simplifier]
 declare Set.empty_iff [lens_indep_all_simplifier]
                
 method hoare_sp_vcg_steps_pp_debugger = 
-    (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
+    (sp; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
                                ((simp only: lens_indep_all_simplifier)+ (*TODO: Substitute with a debug mode version*))?,
                                  clarsimp?, 
                                  (vcg_upreds_post_processing_debugger+)?,
                                  vcg_hol_post_processing_debugger))
- 
-method hoare_sp_vcg_steps_pp = 
-    (hoare_sp_vcg_steps; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
+
+method symbolic_execution =
+  ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
                                ((simp only: lens_indep_all_simplifier)+)?,
                                  clarsimp?,
                                  (vcg_upreds_post_processing+)?,
-                                  vcg_hol_post_processing(*TODO: ADD SOLVING STEP HERE*)))  
+                                  vcg_hol_post_processing(*TODO: ADD SOLVING STEP HERE*))
+                                
+(*method hoare_sp_vcg_steps_pp = 
+    (sp; symbolic_execution)  
 
 method vcg_hoare_sp_steps_pp_beautify = 
-  (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)
+  (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)*)
 
     
+method vcg methods vcg_reasoning_method =
+  (vcg_reasoning_method ; symbolic_execution); get_remover?; (vcg_elim_determ beautify_thms)?
     
 end
 

@@ -42,7 +42,20 @@ lemma increment_method:
    WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD
  \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
-  apply vcg_hoare_sp_steps_pp_beautify                           
+  apply (vcg sp)                           
+  done
+
+lemma increment_method_wp: 
+  assumes "vwb_lens x"
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   x :== 0 ; 
+   INVAR \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
+   VRT \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
+   WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD
+ \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
+  apply (insert assms) (*Make this automatic *)
+  apply (vcg wp)                           
   done
     
 subsection \<open>even count program\<close> 
@@ -66,7 +79,7 @@ lemma even_count_gen:
    OD
  \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
   apply (insert assms)(*Make this automatic*)
-  apply vcg_hoare_sp_steps_pp_beautify
+  apply (vcg sp)    
    apply presburger+    
   done   
 
@@ -89,10 +102,34 @@ lemma even_count_gen':
    OD
  \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
   apply (insert assms)(*Make this automatic*)
-  apply vcg_hoare_sp_steps_pp_beautify
+  apply (vcg sp)    
    apply (simp_all add: zdiv_zadd1_eq)
   done    
     
+ lemma even_count_gen'_wp:
+  assumes "lens_indep_all [i,j]"
+  assumes "vwb_lens i" "vwb_lens j"  
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   i :== \<guillemotleft>0::int\<guillemotright>;
+   j :== 0 ; 
+   INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
+   VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>a\<guillemotright> - &i)))\<guillemotright>
+   WHILE &i <\<^sub>u \<guillemotleft>a\<guillemotright>
+   DO
+     IF &i mod 2 =\<^sub>u 0 
+     THEN j :== (&j + 1)
+     ELSE SKIP 
+     FI;
+    i :== (&i + 1)
+   OD
+ \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
+   apply (insert assms)(*Make this automatic*)
+   apply (vcg wp)    
+     apply simp_all
+   using dvd_imp_mod_0 odd_succ_div_two 
+   apply blast
+   done       
 subsection \<open>sqrt program\<close>
   
 definition Isqrt :: "int \<Rightarrow> int \<Rightarrow> bool" 
@@ -122,7 +159,25 @@ lemma sqrt_prog_correct:
  \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> \<guillemotleft>a\<guillemotright> <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
   apply (insert assms)
   supply Isqrt_aux [simp]
-  apply (vcg_hoare_sp_steps_pp_beautify)
+  apply (vcg sp)    
+  done    
+
+lemma sqrt_prog_correct_wp:
+  assumes "vwb_lens r"
+  shows
+    "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
+   r :== 1 ; 
+   INVAR 0\<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> bop Isqrt \<guillemotleft>a\<guillemotright> (&r)
+   VRT  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>a\<guillemotright> + 1) - &r)))\<guillemotright>
+   WHILE (&r * &r \<le>\<^sub>u \<guillemotleft>a\<guillemotright>)
+   DO 
+    r :== (&r + 1)
+   OD;
+   r :== (&r - 1)
+ \<lbrace>0\<le>\<^sub>u &r \<and> uop power2 (&r) \<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> \<guillemotleft>a\<guillemotright> <\<^sub>u uop power2 (&r + 1)\<rbrace>\<^sub>P" 
+  apply (insert assms)
+  supply Isqrt_aux [simp]
+  apply (vcg wp)    
   done    
     
 subsection \<open>gcd\<close>
@@ -150,7 +205,7 @@ lemma gcd_correct:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms)   
-  apply vcg_hoare_sp_steps_pp_beautify
+  apply (vcg sp)
      apply (auto simp: gcd_diff1_nat)
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
@@ -171,9 +226,32 @@ lemma gcd_correct':
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms)  
-  apply vcg_hoare_sp_steps_pp_beautify
+  apply (vcg sp)    
    apply (simp add: gcd_diff1_nat)
   apply (metis gcd.commute gcd_diff1_nat not_le)
+  done  
+    
+lemma gcd_correct'_wp:
+  assumes "lens_indep_all [r, x]"
+  assumes "vwb_lens r" "vwb_lens x" 
+  shows  
+    "\<lbrace>&r =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> \<guillemotleft>b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright>>\<^sub>u 0\<rbrace> 
+   INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>
+   VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
+   WHILE \<not>(&r =\<^sub>u &x)
+   DO
+    IF &r >\<^sub>u &x
+    THEN r :== (&r - &x)
+    ELSE x :== (&x - &r)
+    FI
+   OD
+ \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
+  apply (insert assms)  
+  apply (vcg wp)    
+   apply (simp_all add: gcd_diff1_nat)
+    apply (metis gcd.commute gcd_diff1_nat not_le)    
+   apply (metis diff_is_0_eq gcd.commute gcd_diff1_nat not_le_minus)
+    apply (metis add_diff_inverse_nat gcd_add2 max.strict_coboundedI1)
   done  
     
 section \<open>Arrays\<close>
@@ -197,7 +275,7 @@ lemma max_program_correct:
    OD   
  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)
-  apply vcg_hoare_sp_steps_pp_beautify    
+  apply (vcg sp)        
   subgoal for A 
     by (cases a; auto)
   subgoal for A i                  
@@ -208,14 +286,50 @@ lemma max_program_correct:
     apply (subst Max_insert) by auto
   done  
     
+lemma max_program_correct_wp:
+  assumes "r \<bowtie> i" 
+  assumes "vwb_lens i" "vwb_lens r" 
+  shows  
+"\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
+   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>a\<guillemotright>) 
+   VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
+   WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
+   DO 
+      IF &r <\<^sub>u  bop nth \<guillemotleft>a\<guillemotright> (&i) 
+      THEN r :== bop nth \<guillemotleft>a\<guillemotright> (&i)
+      ELSE SKIP
+      FI;
+      i :== (&i + 1)
+   OD   
+ \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
+  apply (insert assms)
+  apply (vcg wp)
+  subgoal for A 
+    by (cases a; auto)
+  subgoal for _ i'
+    apply (subst (asm) take_Suc_conv_app_nth)
+     apply simp_all
+    apply (subst (asm) Max_insert) 
+      apply auto
+    done
+  subgoal for _ i' 
+    apply (clarsimp simp: take_Suc_conv_app_nth)  
+    apply (cases a, auto)
+    done
+  subgoal for _ i 
+    by (clarsimp simp: take_Suc_conv_app_nth)  
+  subgoal for _ i   
+    by (clarsimp simp: take_Suc_conv_app_nth)  
+  done  
+    
 find_theorems name: "rep_eq" "(Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
  
 (*
 TODO List for next iteration:
 
 *)    
-  
- 
+
+    
 lemma demo_VAR_BIND:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
@@ -233,7 +347,7 @@ lemma demo_VAR_BIND:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms(1) assms(2))  
-  apply(hoare_sp_vcg_steps_pp; (vcg_elim_determ beautify_thms)?)
+  apply(vcg sp)
     apply (auto simp only: VAR_BIND)
    apply (simp add: gcd_diff1_nat)
   apply (metis gcd.commute gcd_diff1_nat not_le)
