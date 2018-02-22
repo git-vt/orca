@@ -130,6 +130,7 @@ lemma even_count_gen':
    using dvd_imp_mod_0 odd_succ_div_two 
    apply blast
    done       
+     
 subsection \<open>sqrt program\<close>
   
 definition Isqrt :: "int \<Rightarrow> int \<Rightarrow> bool" 
@@ -276,12 +277,12 @@ lemma max_program_correct:
  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)
   apply (vcg sp)        
-  subgoal for A 
+  subgoal for _ 
     by (cases a; auto)
-  subgoal for A i                  
+  subgoal for _ i                  
     apply (clarsimp simp: take_Suc_conv_app_nth)
     apply (subst Max_insert) by auto
-  subgoal for A i 
+  subgoal for _ i 
     apply (clarsimp simp: take_Suc_conv_app_nth)  
     apply (subst Max_insert) by auto
   done  
@@ -304,11 +305,10 @@ lemma max_program_correct_wp:
  \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)
   apply (vcg wp)
-  subgoal for A 
+  subgoal for _ 
     by (cases a; auto)
   subgoal for _ i'
-    apply (subst (asm) take_Suc_conv_app_nth)
-     apply simp_all
+     apply (simp add: take_Suc_conv_app_nth )
     apply (subst (asm) Max_insert) 
       apply auto
     done

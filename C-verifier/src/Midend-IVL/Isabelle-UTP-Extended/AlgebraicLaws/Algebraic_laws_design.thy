@@ -684,24 +684,6 @@ next
   then show ?case  unfolding idempotent_def by (simp add: aext_true seqr_assoc)                       
 qed  
 
-(*
-THIS CANNOT BE PROVEN IN THEORY OF DESIGNS SINCE IT NEEDS H4
-theorem
-  assumes bodyH4:"body is H4" 
-  assumes bodyH1:"body is H1"  
-  shows "  while\<^sub>\<bottom>\<^sub>D true do body od = \<bottom>\<^sub>D"
-  unfolding while_lfp_des_def_alt
- proof (rule design_theory_continuous.weak.LFP_idem [of "(\<lambda>X. bif\<^sub>D true then body ;; X else SKIP\<^sub>D eif)",
-       unfolded if_d_H4_true[OF bodyH4] utp_theory_des_bot_is_true], goal_cases)
-  case 1
-  then show ?case by (simp add: skip_d_is_H1_H2 stronger_if_d_seq_r_H1_H2_closed[OF bodyH1])  
-next
-  case 2
-  then show ?case by (simp add: aext_true seqr_mono utp_theory.Mono_utp_orderI)
-next
-  case 3
-  then show ?case  unfolding idempotent_def apply (simp add: aext_true seqr_assoc)  sorry                     
-qed  *)
       
 subsection \<open>While laws for normal designs\<close>
 

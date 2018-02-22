@@ -172,19 +172,14 @@ where [urel_defs]: "assume_des c \<equiv> (bif\<^sub>D c then SKIP\<^sub>D else 
 definition assert_des :: "'\<alpha> upred \<Rightarrow> ('\<alpha>) hrel_des" ("_\<^sub>\<bottom>\<^sub>D" [999] 999) 
 where [urel_defs]: "assert_des c \<equiv> (bif\<^sub>D c then SKIP\<^sub>D else \<bottom>\<^sub>D eif)"
 
-subsection{*Scoping*}
 
-definition blockD ("bob\<^sub>D INIT (_) BODY /(_) RESTORE /(_) RETURN/(_) eob") 
-where [urel_defs]:
-  "bob\<^sub>D INIT init BODY body RESTORE restore RETURN return eob= 
-    Abs_uexpr (\<lambda>(s, s'). 
-        \<lbrakk>init ;; body ;; 
-         Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
- 
-subsection{*Design iterations*}
 
-(*The generic from_until_loop definition is from the paper called :
-  Loop invariants: analysis, classification, and examples*)
+subsection \<open>Design iterations\<close>
+
+text \<open>We propose a generic scheme fro iterations inspired by eiffel~\url{https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-367.pdf}.
+      The same scheme was used in~url{https://arxiv.org/pdf/1211.4470.pdf}. 
+      Since this iteration scheme is generic all other iterations can be derived from it.\<close>
+
   
 definition from_until_gfp_des :: 
   "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>D _ until _ do _ od") 
@@ -290,9 +285,6 @@ where "for\<^sub>\<bottom>\<^sub>D (init, b, incr) invr invar vrt vari do body o
   
 subsection{*Normal design iterations*}   
 
-(*The generic from_until_loop definition is from the paper called :
-  Loop invariants: analysis, classification, and examples*)
-  
 definition from_until_gfp_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sup>\<top>\<^sup>N _ until _ do _ od") 
   where "from\<^sup>\<top>\<^sup>N init until exit do body od =  
          init ;; (\<nu>\<^sub>N X \<bullet> bif\<^sub>D \<not> exit then (body ;; X) else SKIP\<^sub>D eif)" 
@@ -325,6 +317,10 @@ where "for\<^sub>\<bottom>\<^sub>N (init, b, incr) do body od = from\<^sub>\<bot
     
 text {*Iterations with invariant decoration*}
 
+text \<open>We propose a generic scheme fro iterations inspired by eiffel~\url{https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-367.pdf}.
+      The same scheme was used in~url{https://arxiv.org/pdf/1211.4470.pdf}. 
+      Since this iteration scheme is generic all other iterations can be derived from it.\<close>
+  
 definition from_until_lfp_invr_ndes :: "'\<alpha> hrel_des \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("from\<^sub>\<bottom>\<^sub>N _ invr _ until _ do _ od") 
   where "from\<^sub>\<bottom>\<^sub>N init invr invar until exit do body od =  from\<^sub>\<bottom>\<^sub>N init until exit do body od"
 
@@ -387,8 +383,10 @@ definition for_lfp_invr_vrt_ndes ::
   "'\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" ("for\<^sub>\<bottom>\<^sub>N '(_,_,_') invr _ vrt _ do _ od")
 where "for\<^sub>\<bottom>\<^sub>N (init, b, incr) invr invar vrt vari do body od = from\<^sub>\<bottom>\<^sub>N init until \<not> b do body ;; incr od"
   
-subsection {*Design frame and anti-frame*}
+subsection \<open>Design frame and anti-frame\<close>
 
+text \<open>In UTP scoping feature is expressed using frame and anti-frame construct.\<close>
+  
 definition frame\<^sub>D :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel_des \<Rightarrow> '\<alpha> hrel_des" where
 [urel_defs]: "frame\<^sub>D a P = (true \<turnstile> (\<^bold>\<exists> st \<bullet> P\<lbrakk>\<guillemotleft>st\<guillemotright>/$\<Sigma>\<^sub>D\<acute>\<rbrakk> \<and> $\<Sigma>\<^sub>D\<acute> =\<^sub>u \<guillemotleft>st\<guillemotright> \<oplus> $\<Sigma>\<^sub>D on &a))"
 

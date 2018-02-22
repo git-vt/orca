@@ -365,7 +365,9 @@ method_setup get_disambiguator = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD' 
       rename_tac newnames i st 
     end))\<close>  
     
-(*Frederic's method for removing get functions from the goal*)    
+(*Frederic's method for removing get functions from the goal.
+  Modified by Yakoub.*)    
+  
 method get_remover =
    (match conclusion in 
           "_ (put\<^bsub>x\<^esub> A (get\<^bsub>x\<^esub> _))" for x A \<Rightarrow> \<open>fail\<close>  --{*In case that a proof engineer forget to specify LENS WELL BEHAVED assumptions*}
@@ -504,16 +506,11 @@ method symbolic_execution =
                                  clarsimp?,
                                  (vcg_upreds_post_processing+)?,
                                   vcg_hol_post_processing(*TODO: ADD SOLVING STEP HERE*))
-                                
-(*method hoare_sp_vcg_steps_pp = 
-    (sp; symbolic_execution)  
-
-method vcg_hoare_sp_steps_pp_beautify = 
-  (hoare_sp_vcg_steps_pp; get_remover?; (vcg_elim_determ beautify_thms)?)*)
 
     
 method vcg methods vcg_reasoning_method =
   (vcg_reasoning_method ; symbolic_execution); get_remover?; (vcg_elim_determ beautify_thms)?
-    
+ML {*TRYALL (defer_tac)*}
+ML {*defer_tac*}  
 end
 

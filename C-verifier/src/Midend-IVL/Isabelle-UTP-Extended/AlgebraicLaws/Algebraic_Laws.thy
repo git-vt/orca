@@ -685,76 +685,178 @@ lemma seqr_skip: "II ;; C = C ;; II"
 
 (*The rules SEQ6 SEQ7 related to SEQ and non-deterministic choice are missing for now*)
 
-subsection \<open>While laws\<close>
+subsection \<open>While laws for normal designs\<close>
+
 text \<open>In this section we introduce the algebraic laws of programming related to the while
       statement.\<close>
-
-theorem while_unfold:
-  "while b do P od = ((P ;; while b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  
+lemma while_gfp_rel_def_alt:
+  "(while\<^sup>\<top> b do body od) = (\<nu> X \<bullet> bif b then (body ;; X) else SKIP eif)"
+  unfolding from_until_gfp_rel_def while_gfp_rel_def 
+  by simp 
+    
+lemma while_lfp_rel_def_alt:
+  "(while\<^sub>\<bottom> b do body od) = (\<mu> X \<bullet> bif b then (body ;; X) else SKIP eif)"
+  unfolding from_until_lfp_rel_def while_lfp_rel_def 
+  by simp
+    
+theorem while_gfp_rel_unfold:
+  "while\<^sup>\<top> b do body od = (bif b then (body ;; while\<^sup>\<top> b do body od) else SKIP eif)"
 proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  have m:"mono (\<lambda>X. bif b then (body ;; X) else SKIP eif)"
     by (auto intro: monoI seqr_mono cond_mono)
-  have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (simp add: while_def)
-  also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (subst lfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (simp add: while_def)
+  have "(while\<^sup>\<top> b do body od) = (\<nu> X \<bullet> bif b then (body;; X) else SKIP eif)"
+    by (simp add: while_gfp_rel_def_alt)
+  also have "... = (bif b then (body ;; (\<nu> X \<bullet> bif b then (body ;; X) else SKIP eif)) else SKIP eif)"
+    by (rule lfp_fixpoint[THEN sym, OF m])
+  also have "... = (bif b then (body ;; while\<^sup>\<top> b do body od) else SKIP eif)"
+    by (simp add: while_gfp_rel_def_alt)
   finally show ?thesis .
 qed
-
-lemma while_true:
-  shows "(while true do P od) = false"
-  apply (simp add: while_def alpha)
-  apply (rule antisym)
-  apply (simp_all)
-  apply (rule lfp_lowerbound)
-  apply (simp)
-done
-
-lemma while_false:
-  shows "(while false do P od) = II"
+  
+theorem while_lfp_rel_unfold:
+  "while\<^sub>\<bottom> b do body od = (bif b then (body;; while\<^sub>\<bottom> b do body od) else SKIP eif)"
 proof -
-  have "(while false do P od) = (P ;; while false do P od) \<triangleleft> false \<triangleright>\<^sub>r II"
-    using while_unfold[of _ P] by simp
-  also have "... = II" by (simp add: aext_false)
+  have m:"mono (\<lambda>X. bif b then (body ;; X) else SKIP eif)"
+    by (auto intro: monoI seqr_mono cond_mono)       
+  have "(while\<^sub>\<bottom> b do body od) = (\<mu> X \<bullet> bif b then (body ;; X) else SKIP eif)"
+    by (simp add: while_lfp_rel_def_alt)
+  also have "... = (bif b then (body ;; (\<mu> X \<bullet> bif b then (body ;; X) else SKIP eif)) else SKIP eif)"
+     by (rule gfp_fixpoint[THEN sym, OF m]) 
+  also have "... = (bif b then (body ;; while\<^sub>\<bottom> b do body od) else SKIP eif)"
+    by (simp add: while_lfp_rel_def_alt)
   finally show ?thesis .
 qed
+    
+theorem while_lfp_rel_true: 
+  "while\<^sub>\<bottom> true do body od = (\<mu> X \<bullet> (body;; X))"
+  by (simp add: while_lfp_rel_def_alt alpha)
+ 
+lemma while_lfp_rel_false:
+  "(while\<^sub>\<bottom> false do body od) = SKIP"
+  by (simp add: while_lfp_rel_def_alt alpha gfp_const)
 
-lemma while_inv_unfold:
-  "(while b invr p do P od) = ((P ;; while b invr p do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
-  unfolding while_inv_def using while_unfold
-  by auto
+theorem while_gfp_rel_false: 
+ "while\<^sup>\<top> false do body od = SKIP"
+ by (simp add: while_gfp_rel_def_alt alpha lfp_const)
 
-theorem while_bot_unfold:
-  "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
-proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (auto intro: monoI seqr_mono cond_mono)
-  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (simp add: while_bot_def)
-  also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (subst gfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while\<^sub>\<bottom> b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (simp add: while_bot_def)
-  finally show ?thesis .
+theorem while_gfp_rel_non_termination: (*because of this lemma and the lemma utp_designs.design_top we do not use gfp for capturing termination *)
+  "while\<^sup>\<top> true do SKIP od = false"
+  unfolding while_gfp_rel_def_alt  
+proof (rule lfp_eqI[of "(\<lambda>X. bif true then SKIP ;; X else SKIP eif)"] , goal_cases)
+  case 1
+  then show ?case by (auto intro: monoI seqr_mono cond_mono) 
+next
+  case 2
+  then show ?case by rel_simp  
+next
+  case 3
+  then show ?case by simp                      
 qed
 
-theorem while_bot_false: "while\<^sub>\<bottom> false do P od = II"
-  by (simp add: while_bot_def mu_const alpha)
-
-theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet> P ;; X)"
-  by (simp add: while_bot_def alpha)
+theorem while_lfp_rel_non_termination: 
+  "while\<^sub>\<bottom> true do SKIP od = true"
+  unfolding while_lfp_rel_def_alt
+proof (rule gfp_eqI[of "(\<lambda>X. bif true then SKIP ;; X else SKIP eif)"] , goal_cases)
+  case 1
+  then show ?case by (auto intro: monoI seqr_mono cond_mono) 
+next
+  case 2
+  then show ?case  by rel_simp  
+next
+  case 3
+  then show ?case by simp                       
+qed    
 
 text \<open>An infinite loop with a feasible body corresponds to a program error (non-termination).\<close>
 
-theorem while_infinite: "P ;; true\<^sub>h = true \<Longrightarrow> while\<^sub>\<bottom> true do P od = true"
-  apply (simp add: while_bot_true)
+theorem while_infinite: 
+  assumes is_in_abort_situation: "P ;; true\<^sub>h = true" 
+  shows "while\<^sub>\<bottom> true do P od = true"    
+  apply (simp add: while_lfp_rel_true)
   apply (rule antisym)
   apply (simp)
   apply (rule gfp_upperbound)
-  apply (simp)
-done
+  apply (simp add: assms)
+  done
+    
+subsection \<open>Other Iteration laws for relations\<close>
+  
+theorem from_until_gfp_rel_alt_def:
+  "from\<^sup>\<top> init until exit do body od = init ;; while\<^sup>\<top> \<not> exit do body od"
+  unfolding while_gfp_rel_def_alt from_until_gfp_rel_def 
+  by simp  
+
+lemma from_until_while_gfp_rel:
+  "from\<^sup>\<top> SKIP until exit do body od = while\<^sup>\<top> \<not> exit do body od"
+  unfolding from_until_gfp_rel_alt_def
+  by simp
+    
+theorem from_until_gfp_rel_unfold:
+  "from\<^sup>\<top> init until exit do body od = 
+   init ;; (bif \<not> exit then (body;; while\<^sup>\<top> \<not> exit do body od) else SKIP eif)"
+  unfolding from_until_gfp_rel_alt_def using while_gfp_rel_unfold[of "\<not>exit"]
+  by simp
+    
+theorem from_until_lfp_rel_alt_def:
+  "from\<^sub>\<bottom> init until exit do body od = init ;; while\<^sub>\<bottom> \<not> exit do body od"
+  unfolding while_lfp_rel_def_alt from_until_lfp_rel_def 
+  by simp  
+
+lemma from_until_while_lfp_rel:
+  "from\<^sub>\<bottom> SKIP until exit do body od = while\<^sub>\<bottom> \<not> exit do body od"
+  unfolding from_until_lfp_rel_alt_def
+  by simp
+    
+theorem from_until_lfp_rel_unfold:
+  "from\<^sub>\<bottom> init until exit do body od = 
+   init ;; (bif \<not> exit then (body;; while\<^sub>\<bottom> \<not> exit do body od) else SKIP eif)"
+  unfolding from_until_lfp_rel_alt_def using while_lfp_rel_unfold[of "\<not>exit"]
+  by simp
+
+theorem do_while_gfp_rel_alt_def:
+  "do body while\<^sup>\<top> exit od = body ;; while\<^sup>\<top> exit do body od"
+  unfolding  do_while_gfp_rel_def from_until_gfp_rel_alt_def
+  by simp  
+    
+theorem do_while_gfp_rel_unfold:
+  "do body while\<^sup>\<top> exit od = 
+   body ;; (bif exit then (body;; while\<^sup>\<top> exit do body od) else SKIP eif)"
+  unfolding do_while_gfp_rel_alt_def using while_gfp_rel_unfold[of exit]
+  by simp
+
+theorem do_while_lfp_rel_alt_def:
+  "do body while\<^sub>\<bottom> exit od = body ;; while\<^sub>\<bottom> exit do body od"
+  unfolding  do_while_lfp_rel_def from_until_lfp_rel_alt_def
+  by simp  
+    
+theorem do_while_lfp_rel_unfold:
+  "do body while\<^sub>\<bottom> exit od = 
+   body ;; (bif exit then (body;; while\<^sub>\<bottom> exit do body od) else SKIP eif)"
+  unfolding do_while_lfp_rel_alt_def using while_lfp_rel_unfold[of exit]
+  by simp    
+
+theorem for_gfp_rel_alt_def:
+  "for\<^sup>\<top> (init, exit, incr) do body od = init ;; while\<^sup>\<top> exit do body;;incr od"
+  unfolding  for_gfp_rel_def from_until_gfp_rel_alt_def
+  by simp  
+    
+theorem for_gfp_rel_unfold: 
+  shows "for\<^sup>\<top> (init, exit, incr) do body od = 
+         init ;; (bif exit then (body;;incr;;while\<^sup>\<top> exit do body ;; incr od) else SKIP eif)"
+  unfolding for_gfp_rel_alt_def using while_gfp_rel_unfold 
+  by (metis seqr_assoc)
+
+theorem for_lfp_rel_alt_def:
+ "for\<^sub>\<bottom> (init, exit, incr) do body od = init ;; while\<^sub>\<bottom> exit do body;;incr od"
+  unfolding  for_lfp_rel_def from_until_lfp_rel_alt_def
+  by simp  
+    
+theorem for_lfp_rel_unfold:
+  "for\<^sub>\<bottom> (init, exit, incr) do body od = 
+   init ;; (bif exit then (body;;incr;;while\<^sub>\<bottom> exit do body ;; incr od) else SKIP eif)"
+  unfolding for_lfp_rel_alt_def using while_lfp_rel_unfold 
+  by (metis seqr_assoc)  
 
 subsection \<open>assume and assert laws\<close>
 

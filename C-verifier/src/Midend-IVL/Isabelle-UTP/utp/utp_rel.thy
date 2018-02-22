@@ -26,14 +26,13 @@ consts
   uassigns :: "'a usubst \<Rightarrow> 'b" ("\<langle>_\<rangle>\<^sub>a")
   uskip    :: "'a" ("II")
   
-
-subsection{*Conditional*}
+subsection \<open>Conditional\<close>
 
 abbreviation rcond::"('\<alpha>, '\<beta>) rel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<alpha>, '\<beta>) rel"
                                                           ("(3_ \<triangleleft> _ \<triangleright>\<^sub>r/ _)" [52,0,53] 52)
 where "(P \<triangleleft> b \<triangleright>\<^sub>r Q) \<equiv> (P \<triangleleft> \<lceil>b\<rceil>\<^sub>< \<triangleright> Q)"
 
-subsection{*Sequential composition*}
+subsection \<open>Sequential composition\<close>
 
 lift_definition seqr::"('\<alpha>, '\<beta>) rel \<Rightarrow> ('\<beta>, '\<gamma>) rel \<Rightarrow> ('\<alpha>, '\<gamma>) rel"  is
   "\<lambda> P Q r. r \<in> ({p. P p} O {q. Q q})" .
@@ -53,7 +52,7 @@ lift_definition assigns_r :: "'\<alpha> usubst \<Rightarrow> '\<alpha> hrel"
 adhoc_overloading
   uassigns assigns_r
  
-subsection{*SKIP*}                                                     
+subsection \<open>SKIP\<close>                                                     
 
 definition skip_ra :: "('\<beta>, '\<alpha>) lens \<Rightarrow>'\<alpha> hrel" where
 [urel_defs]: "skip_ra v = ($v\<acute> =\<^sub>u $v)"
@@ -70,22 +69,20 @@ definition skip_r :: "'\<alpha> hrel" where
 adhoc_overloading
   uskip skip_r
   
-subsection{*Assign*}
+subsection \<open>Assign\<close>
 
 definition assigns_ra :: "'\<alpha> usubst \<Rightarrow> ('\<beta>, '\<alpha>) lens \<Rightarrow> '\<alpha> hrel" ("\<langle>_\<rangle>\<^bsub>_\<^esub>") where
 "\<langle>\<sigma>\<rangle>\<^bsub>a\<^esub> = (\<lceil>\<sigma>\<rceil>\<^sub>s \<dagger> II\<^bsub>a\<^esub>)"
 
 abbreviation assign_r :: "('t \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel"  where 
   "assign_r v expr \<equiv> assigns_r [v \<mapsto>\<^sub>s expr]"
-
   
 abbreviation assign_2_r ::
   "('t1 \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t2 \<Longrightarrow> '\<alpha>) \<Rightarrow> ('t1, '\<alpha>) uexpr \<Rightarrow> ('t2, '\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel" where 
   "assign_2_r x y u v \<equiv> assigns_r [x \<mapsto>\<^sub>s u, y \<mapsto>\<^sub>s v]"
 
-
-text {* We set up iterated sequential composition which iterates an indexed predicate over the
-  elements of a list. *}
+text \<open> We set up iterated sequential composition which iterates an indexed predicate over the
+       elements of a list. \<close>
   
 definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Rightarrow> 'b hrel" where
 [urel_defs]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"    
@@ -93,33 +90,6 @@ definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Righ
 abbreviation conv_r :: "('a, '\<alpha> \<times> '\<beta>) uexpr \<Rightarrow> ('a, '\<beta> \<times> '\<alpha>) uexpr" ("_\<^sup>-" [999] 999)
 where "conv_r e \<equiv> e \<oplus>\<^sub>p swap\<^sub>L"
   
-
-
-subsection{*While-loop*}
-text{*In order to specify while loops we need a concept that refers to the result of the execution
-      of body of the loop. We call the result of the execution of the body the next state space.
-      Rel is a function that takes a substitution on a state and apply it on a given init
-      state. The resulting state from the application is the next state.
-      Now we need to reason on the next state space to see if we continue the execution of the body
-      or we skip it.*}
-
-definition while :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sup>\<top> _ do _ od") where
-"while b C =  (\<nu> X \<bullet> (C ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-
-abbreviation while_top :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while _ do _ od") where
-"while b do P od \<equiv> while\<^sup>\<top> b do P od"
-
-definition while_bot :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sub>\<bottom> _ do _ od") where
-"while\<^sub>\<bottom> b do P od = (\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-
-declare while_def [urel_defs]
-
-subsection{*While-loop inv*}
-text {* While loops with invariant decoration *}
-
-definition while_inv :: "'\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while _ invr _ do _ od" 71) where
-"while b invr p do S od = while\<^sup>\<top> b do S od"
-
 subsection{*assert and assume*}
 
 definition rassume :: "'\<alpha> upred \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<top>" [999] 999) where
@@ -154,32 +124,6 @@ text {* The nameset operator can be used to hide a portion of the after-state th
 
 definition nameset :: "('a \<Longrightarrow> '\<alpha>) \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" where
 [urel_defs]: "nameset a P = (P \<restriction>\<^sub>v {$\<Sigma>,$a\<acute>})" 
-
-subsection{*block*}
-text{*Block is used to model scoping. This feature can be used to introduce local variables and 
-      to handle parameter passing in procedures. To model the block we need a feature to abstract
-      over the state-space. This way we can  initialize the value of the variable when we jump inside the block
-      and restore it when we exit the block. This feature is provided implicitly by the type_def
-      used to model UTP expr. It is @{const Abs_uexpr}. The definition of block takes 4 parameters: 
-     \begin{itemize}
-       \<^item> initP: It is used to initialize the values of variables when we jump inside the block.
-       \<^item> body: It contains the body of the block.
-       \<^item> restore : a function used to restore the values of variables when we jump outside the block.
-       \<^item> return : A function used to return a value if the block uses the traditional return 
-                  statement.
-     \end{itemize}
-*}
-
-
-definition block :: "('a, 'c) rel \<Rightarrow> ('c, 'd) rel  \<Rightarrow> ('a \<times> 'b \<Rightarrow> 'd \<times> 'b \<Rightarrow> ('d, 'e) rel) \<Rightarrow> 
-                     ('a \<times> 'b \<Rightarrow> 'd \<times> 'b \<Rightarrow> ('e, 'b) rel) \<Rightarrow> ('a, 'b) rel" where
-[urel_defs]:"block initP body restore return = 
-             Abs_uexpr (\<lambda>(s, s'). 
-             \<lbrakk>initP ;; body ;; 
-             Abs_uexpr (\<lambda>(t, t').\<lbrakk>restore (s, s') (t, t');; return(s, s') (t, t')\<rbrakk>\<^sub>e (t, t'))\<rbrakk>\<^sub>e (s, s'))" 
-
-
-
 
 subsection {* Syntax Translations *}
    

@@ -1,7 +1,7 @@
 section {* UTP variables *}
 
 theory utp_urel_laws
-  imports "utp_rel"
+  imports "../../Isabelle-UTP-Extended/theories/Rel/utp_rel_more"
 begin
 
 subsection {* Unrestriction Laws *}
