@@ -32,7 +32,7 @@ text
 \<close>
 subsection \<open>Increment method\<close>
   
-lemma increment_method: 
+lemma increment_method_sp_H1_H3: 
   assumes "vwb_lens x"
   shows  
     "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
@@ -45,7 +45,7 @@ lemma increment_method:
   apply (vcg sp)                           
   done
 
-lemma increment_method_wp: 
+lemma increment_method_wp_H1_H3: 
   assumes "vwb_lens x"
   shows  
     "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
@@ -57,6 +57,33 @@ lemma increment_method_wp:
   apply (insert assms) (*Make this automatic *)
   apply (vcg wp)                           
   done
+    
+lemma increment_method_sp_rel: 
+  assumes "vwb_lens x"
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   assign_r x  0 ;;
+   invr \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
+   vrt \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
+   while\<^sub>\<bottom> &x <\<^sub>u \<guillemotleft>a\<guillemotright> do assign_r x (&x + 1) od
+ \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
+  apply (insert assms) (*Make this automatic *)
+  apply (vcg sp)                           
+  done
+    
+lemma increment_method_wp_rel: 
+  assumes "vwb_lens x"
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   assign_r x  0 ;;
+   invr \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
+   vrt \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
+   while\<^sub>\<bottom> &x <\<^sub>u \<guillemotleft>a\<guillemotright> do assign_r x (&x + 1) od
+ \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
+  apply (insert assms) (*Make this automatic *)
+  apply (vcg wp)                           
+  done
+    
     
 subsection \<open>even count program\<close> 
 
