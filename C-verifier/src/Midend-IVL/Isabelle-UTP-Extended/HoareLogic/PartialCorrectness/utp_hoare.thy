@@ -101,7 +101,7 @@ lemma assigns_rel_backward_hoare_rel[hoare_wp_rules, hoare_wp_proof_annotation_r
     
 lemma assigns_rel_floyd_hoare_rel[hoare_sp_rules]:
   assumes "vwb_lens x"
-  shows \<open>\<lbrace>p\<rbrace>x :== e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>u\<close>
+  shows \<open>\<lbrace>p\<rbrace>assign_r x e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>u\<close> (*If I use the syntax sugar the rule  does not match because the same syntax sugar is used for H1 and H3 designs *)
   using assms
   apply rel_simp   
   subgoal for a    
@@ -378,9 +378,7 @@ lemma while_gfp_invr_rel_sp_partial:
   by (rule consequence_hoare_rel[OF seq_step _ uimp_refl, 
                                  OF while_gfp_hoare_rel_minimal_partial[OF uimp_refl],
                                  OF consequence_hoare_rel[OF uimp_refl induct_step I0]])
-                             
-(*TODO:Partial correctness rules for the other rules*)
-                             
+                                                          
 lemma while_lfp_hoare_rel_minimal:
   assumes WF: "wf R"
   assumes seq_step: "`p \<Rightarrow> invar`" 
@@ -524,6 +522,7 @@ lemma while_lfp_invr_vrt_hoare_rel_sp:
                                   OF consequence_hoare_rel[OF uimp_refl induct_step I0]])
   
 subsection {*Hoare for from_until_loop*}     
+(*TODO:Partial correctness rules for the other rules*)
 
 lemma from_until_lfp_hoare_rel_minimal:
   assumes WF: "wf R"

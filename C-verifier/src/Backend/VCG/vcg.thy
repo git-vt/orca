@@ -436,10 +436,10 @@ subsection \<open>VCG Core Tactics\<close>
 text \<open>In this section we define the core tactics for the VCG. Namely, tactics for the computational mode
 such as weakest pre-condition and strongest post_condition rules. Also tactics for symbolic execution
 on the generated verification conditions are defined.\<close>  
-    
-method hoare_sp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule post_weak_prog_hoare  
+  
+method hoare_sp_vcg_pre = (simp only: seqr_assoc[symmetric])?, (rule post_weak_prog_hoare  | rule post_weak_hoare_rel)
 
-method hoare_wp_vcg_pre = (simp only: seqr_assoc[symmetric])?, rule pre_str_prog_hoare  
+method hoare_wp_vcg_pre = (simp only: seqr_assoc[symmetric])?, (rule pre_str_prog_hoare | rule pre_str_hoare_rel) 
 
 method hoare_sp_rule_apply = rule hoare_sp_rules
   
