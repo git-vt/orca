@@ -21,10 +21,7 @@ imports "../../utp/utp_rec_total_des"
 begin
 section {*Hoare logic for designs*}  
 named_theorems hoare_des
-subsection {*AUX lemmas*} 
-  
-lemma uimp_refl:"`p \<Rightarrow> p`"
-  by pred_simp  
+ 
     
 subsection {*Hoare triple definition*}
 

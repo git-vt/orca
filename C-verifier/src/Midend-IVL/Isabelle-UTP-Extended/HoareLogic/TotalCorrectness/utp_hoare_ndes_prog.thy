@@ -42,7 +42,6 @@ lemma lens_indep_all_alt:
 
 section {*Hoare logic for programs*}  
 
-named_theorems hoare_sp_rules and hoare_wp_rules and hoare_wp_proof_annotation_rules
 
 subsection {*Hoare triple definition*}
 
@@ -388,24 +387,22 @@ lemma while_invr_vrt_hoare_prog_consequence:
                               
 lemma while_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "`p \<Rightarrow> invar`"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P" 
-  by (rule consequence_hoare_prog[OF seq_step _ PHI,
+  shows "\<lbrace>invar\<rbrace>WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P" 
+  by (rule consequence_hoare_prog[OF uimp_refl _ PHI,
                                   OF while_hoare_prog_minimal[OF WF uimp_refl, of _ _ e],
                                   OF consequence_hoare_prog[OF I0' induct_step uimp_refl]])
 
 lemma while_invr_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes seq_step: "`p \<Rightarrow> invar`"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>INVAR invar WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P"                              
+  shows "\<lbrace>invar\<rbrace>INVAR invar WHILE b DO body OD\<lbrace>q\<rbrace>\<^sub>P"                              
   unfolding while_lfp_invr_prog_def
-  by (rule consequence_hoare_prog[OF seq_step _ PHI,
+  by (rule consequence_hoare_prog[OF uimp_refl _ PHI,
                                  OF while_hoare_prog_minimal[OF WF uimp_refl, of _ _ e],
                                  OF consequence_hoare_prog[OF I0' induct_step uimp_refl]])
 
@@ -516,27 +513,25 @@ lemma from_until_invr_vrt_hoare_prog_consequence:
   using     from_until_hoare_prog_consequence [OF WF seq_step PHI I0' induct_step I0].
  
 lemma from_until_hoare_prog_wp:
-  assumes WF: "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes WF: "wf R" 
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P" 
   unfolding from_until_lfp_prog_def_alt
-  by (simp add: uintro PHI seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
+  by (simp add: uintro PHI seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF uimp_refl]
                        while_hoare_prog_consequence[OF WF uimp_refl _ I0' induct_step uimp_refl])
 
 lemma from_until_invr_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"   
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`exit \<and> invar \<Rightarrow> q`"  
   assumes I0': "\<And>st. `\<not> exit \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding from_until_lfp_invr_prog_def
-  using from_until_hoare_prog_wp [OF WF I0 seq_step PHI I0' induct_step] .
+  using from_until_hoare_prog_wp [OF WF seq_step PHI I0' induct_step] .
     
 lemma from_until_invr_vrt_hoare_prog_wp:
   assumes WF: "wf R"   
@@ -546,7 +541,7 @@ lemma from_until_invr_vrt_hoare_prog_wp:
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P" 
   shows "\<lbrace>p\<rbrace>FROM init INVAR invar VRT \<guillemotleft>R\<guillemotright> UNTIL exit DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding from_until_lfp_invr_vrt_prog_def
-  using from_until_hoare_prog_wp [OF WF uimp_refl seq_step PHI I0' induct_step] .
+  using from_until_hoare_prog_wp [OF WF  seq_step PHI I0' induct_step] .
     
 lemma from_until_hoare_prog_sp:
   assumes WF: "wf R"
@@ -641,38 +636,36 @@ lemma do_while_invr_vrt_hoare_prog_consequence:
     
 lemma do_while_hoare_prog_wp:
   assumes WF: "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>DO body WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
-  unfolding do_while_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
-                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  shows "\<lbrace>invar\<rbrace>DO body WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
+  unfolding do_while_lfp_prog_def_alt 
+  by (simp add: uimp_refl seq_hoare_prog[OF seq_step] 
+                   while_hoare_prog_wp[OF WF PHI I0' induct_step])
 
 lemma do_while_invr_hoare_prog_wp:
   assumes WF: "wf R"
-   assumes I0: "`p \<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>DO body INVAR invar WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
+  shows "\<lbrace>invar\<rbrace>DO body INVAR invar WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
-                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  by (simp add: uimp_refl seq_hoare_prog[OF seq_step]
+                while_hoare_prog_wp[OF WF PHI I0' induct_step])
 
 lemma do_while_invr_vrt_hoare_prog_wp:
   assumes WF: "wf R"  
-  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI : "`\<not>b  \<and> invar \<Rightarrow> q`"
   assumes I0': "\<And>st. `b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"  
   assumes induct_step: "\<And> st. \<lbrace>p' st\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
-  shows "\<lbrace>p\<rbrace>DO body INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
+  shows "\<lbrace>invar\<rbrace>DO body INVAR invar VRT \<guillemotleft>R\<guillemotright> WHILE b OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding do_while_lfp_invr_vrt_prog_def do_while_lfp_invr_prog_def do_while_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF uimp_refl]
-                   while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  by (simp add: seq_hoare_prog[OF seq_step] 
+                while_hoare_prog_wp[OF WF PHI I0' induct_step])
 
 lemma do_while_hoare_prog_sp:
   assumes WF: "wf R"
@@ -684,6 +677,7 @@ lemma do_while_hoare_prog_sp:
   unfolding  do_while_lfp_prog_def_alt
   by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0']
                    while_hoare_prog_sp[OF WF uimp_refl induct_step I0])
+                 
 lemma do_while_invr_hoare_prog_sp:
   assumes WF: "wf R"
   assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>q''\<rbrace>\<^sub>P"
@@ -766,28 +760,26 @@ lemma for_invr_vrt_hoare_prog_consequence:
   by(simp add: from_until_hoare_prog_consequence [OF WF seq_step PHI _ induct_step I0] I0')
     
 lemma for_hoare_prog_wp:
-  assumes WF : "wf R"
-  assumes I0: "`p\<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes WF : "wf R" 
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding for_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
-                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  by (simp add: uimp_refl seq_hoare_prog[OF seq_step]
+                while_hoare_prog_wp[OF WF PHI I0' induct_step])
 
 lemma for_invr_hoare_prog_wp:
   assumes WF : "wf R"
-  assumes I0: "`p \<Rightarrow> p''`"  
-  assumes seq_step: "\<lbrace>p''\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
+  assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>P"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow>q`"  
   assumes I0': "\<And>st. `b \<and> invar \<and> e=\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> p' st`"
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding for_lfp_invr_prog_def for_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF I0]
-                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  by (simp add: uimp_refl seq_hoare_prog[OF seq_step] 
+                while_hoare_prog_wp[OF WF PHI I0' induct_step])
 
 lemma for_invr_vrt_hoare_prog_wp:
   assumes WF : "wf R"
@@ -797,8 +789,8 @@ lemma for_invr_vrt_hoare_prog_wp:
   assumes induct_step: "\<And>st. \<lbrace>p' st\<rbrace>body;incr\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>P"
   shows "\<lbrace>p\<rbrace>FOR (init,b,incr) INVAR invar VRT \<guillemotleft>R\<guillemotright>DO body OD\<lbrace>q\<rbrace>\<^sub>P"
   unfolding for_lfp_invr_vrt_prog_def for_lfp_prog_def_alt
-  by (simp add: uintro uimp_refl seq_hoare_prog[OF seq_step] pre_str_prog_hoare[OF uimp_refl]
-                while_hoare_prog_wp[OF WF uimp_refl PHI I0' induct_step])
+  by (simp add: seq_hoare_prog[OF seq_step]
+                while_hoare_prog_wp[OF WF  PHI I0' induct_step])
 
 lemma for_hoare_prog_sp:
   assumes WF: "wf R"

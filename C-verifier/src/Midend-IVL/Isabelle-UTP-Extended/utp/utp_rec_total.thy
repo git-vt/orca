@@ -30,20 +30,20 @@ section {*Noetherian induction instantiation*}
 (*The following generalization was used by Tobias Nipkow in .. and Peter Lammich  in Refine_Monadic*)
 
 lemma  wf_fixp_uinduct_pure_ueq_gen:     
-  assumes fixp_unfold: "fp B = B (fp B)"
+  assumes fixp_unfold: "fp F = F (fp F)"
   and              WF: "wf R"
   and     induct_step:
-          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (((Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)\<rbrakk>
-               \<Longrightarrow> fp B = f \<Longrightarrow>((Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> (B f)"
-        shows "((Pre \<Rightarrow> Post) \<sqsubseteq> fp B)"  
+          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in>R  \<Longrightarrow> (\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st'\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> f\<rbrakk>
+               \<Longrightarrow> fp F = f \<Longrightarrow>(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (F f)"
+        shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> fp F"  
  proof -  
    { fix st
-    have "((Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> (fp B)" 
+    have "(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (fp F)" 
       using WF
       apply (induction rule: wf_induct_rule)  
       apply (subst fixp_unfold)  
       apply (rule induct_step)  
-      apply pred_blast
+      apply blast
       apply simp  
       done  
      }
@@ -55,7 +55,7 @@ text {*The next lemma shows that using substitution also work. However it is not
        nor practical for proof automation ...*}
 
 lemma refine_usubst_to_ueq:
-  "vwb_lens E \<Longrightarrow>(Pre \<Rightarrow> Post)\<lbrakk>\<guillemotleft>st'\<guillemotright>/$E\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/$E\<rbrakk> = (((Pre \<and> $E =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> Post) \<sqsubseteq> f)"
+  "vwb_lens e \<Longrightarrow>(p \<Rightarrow> q)\<lbrakk>\<guillemotleft>st'\<guillemotright>/$e\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/$e\<rbrakk> = (((p \<and> $e =\<^sub>u \<guillemotleft>st'\<guillemotright>) \<Rightarrow> q) \<sqsubseteq> f)"
   apply rel_auto
   apply (metis vwb_lens_wb wb_lens.get_put)
 done  
@@ -63,63 +63,107 @@ done
 text {*By instantiation of @{thm wf_fixp_uinduct_pure_ueq_gen} with @{term \<mu>}and lifting of the 
        well-founded relation we have ...*}
   
-lemma  rec_total_pure_rule: 
+lemma  mu_rec_total_pure_rule: 
   assumes WF: "wf R"
-  and     M: "mono B"  
-  and     induct_step:
-          "\<And> f st.  \<lbrakk>(Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> f\<rbrakk>
-               \<Longrightarrow> \<mu> B = f \<Longrightarrow>(Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> (B f)"
-        shows "(Pre \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
-  apply (rule  wf_fixp_uinduct_pure_ueq_gen[where fp=\<mu> and Pre=Pre and B=B])    
-  using M apply (rule gfp_unfold)    
-   apply (rule WF)  
-  apply (rule induct_step)
-    apply pred_simp
-   apply assumption
-  done     
-
-(*TODO @Yakoub: the proof of rec_total_utp_rule is totally independent from
-  wf_fixp_uinduct_pure_ueq. Make it dependent to keep the logic reasoning straight*)
-text {*Since @{term "B ((Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post)) \<sqsubseteq> B (\<mu> B)"} and 
-      @{term "mono B"}, thus,  @{thm rec_total_pure_rule} can be expressed as follows*}
-  
-lemma  rec_total_utp_rule: 
-  assumes WF: "wf R"
-    and     M: "mono B"  
+    and     M: "mono F"  
     and     induct_step:
-    "\<And>st. (Pre \<and>\<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> (B ((Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post)))"
-  shows "(Pre \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
+    "\<And> f st. \<lbrakk>(\<lceil>p \<and> (e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> f\<rbrakk> \<Longrightarrow> \<mu> F = f \<Longrightarrow>(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> (F f)"
+  shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> \<mu> F"          
+proof (induction rule:  wf_fixp_uinduct_pure_ueq_gen[where fp=\<mu> and p=p and F=F and e = e and R = R])
+  case 1
+  then show ?case using M by (rule gfp_unfold)    
+next
+  case 2
+  then show ?case using WF .
+next
+  case (3 f st) 
+  then show ?case 
+    apply hypsubst  
+    apply (rule induct_step) 
+     apply pred_simp+  
+    done
+qed
+
+
+text {*Since @{term "F (p \<and> (e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> q) \<sqsubseteq> F (\<mu> F)"} and 
+      @{term "mono F"}, thus,  @{thm mu_rec_total_pure_rule} can be expressed as follows*}
+  
+lemma mu_rec_total_utp_rule: 
+  assumes           WF: "wf R"
+  assumes            M: "mono F"  
+  assumes  induct_step:
+    "\<And>st. (\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<lceil>p \<and> (e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)"
+  shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> \<mu> F"  
 proof -          
   { fix st
-    have "(Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post)\<sqsubseteq> (\<mu> B)" 
+    have "(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> (\<mu> F)" 
       using WF
-      apply (induction rule: wf_induct_rule)  
-      apply (subst gfp_unfold[OF M])
-    proof -
-      fix st
-      assume "(\<And>st'. (st', st) \<in> R \<Longrightarrow> (Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st'\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> \<mu> B)"
-      hence "(Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> \<mu> B"  
-        by (pred_simp)
-      hence 1: "B ((Pre \<and> (\<lceil>E\<rceil>\<^sub><,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> \<Rightarrow> Post)) \<sqsubseteq> B (\<mu> B)"    
+    proof (induction rule: wf_induct_rule)
+      case (less x)
+      hence 0:"(\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow>\<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> (\<mu> F)" 
+        by rel_blast
+      hence 1: "F (\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> F(\<mu> F)" 
         by (rule monoD[OF M])
-      have 2: "(Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> \<dots>" 
-        by (rule induct_step)  
-      show "(Pre \<and> \<lceil>E\<rceil>\<^sub>< =\<^sub>u \<guillemotleft>st\<guillemotright> \<Rightarrow> Post) \<sqsubseteq> B (\<mu> B) "  
-        using order_trans[OF 1 2] .
-    qed  
+      have 2: "(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> ..."
+        by (simp add: induct_step)
+      then show ?case
+        using order_trans [OF 1 2]
+      proof (subst gfp_unfold[OF M], goal_cases)
+        case 1
+        assume 01:"(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)"
+        assume 02:"(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<mu> F)"  
+        show ?case using 01 02 
+          by simp    
+      qed 
+        
+    qed   
   }
   thus ?thesis
     by pred_simp
 qed            
 
+lemma nu_rec_total_utp_rule: 
+  assumes           WF: "wf R"
+  assumes            M: "mono F"  
+  assumes  induct_step:
+    "\<And>st. (\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<lceil>p \<and> (e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)"
+  shows "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> \<nu> F"  
+proof -          
+  { fix st
+    have "(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> (\<nu> F)" 
+      using WF
+    proof (induction rule: wf_induct_rule)
+      case (less x)
+      hence 0:"(\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow>\<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> (\<nu> F)" 
+        by rel_blast
+      hence 1: "F (\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)\<sqsubseteq> F(\<nu> F)" 
+        by (rule monoD[OF M])
+      have 2: "(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> ..."
+        by (simp add: induct_step)
+      then show ?case
+        using order_trans [OF 1 2]
+      proof (subst lfp_unfold[OF M], goal_cases)
+        case 1
+        assume 01:"(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<lceil>p \<and> (e,\<guillemotleft>x\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)"
+        assume 02:"(\<lceil>p \<and> e =\<^sub>u \<guillemotleft>x\<guillemotright>\<rceil>\<^sub>< \<Rightarrow> \<lceil>q\<rceil>\<^sub>>) \<sqsubseteq> F (\<nu> F)"  
+        show ?case using 01 02 
+          by simp    
+      qed 
+        
+    qed   
+  }
+  thus ?thesis
+    by pred_simp
+qed            
+  
 section {*Examples*}
 
 (*The lemma total_rec_utp_test shows how rec_total_utp_rule improves automation wrt
   rec_total_pure_rule which was used for the same example in  total_rec_test*)  
 lemma total_rec_utp_test:
   "vwb_lens x \<Longrightarrow> 
-   (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
-  apply (rule  rec_total_utp_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)" and E = "&\<Sigma>"])  
+   (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"
+  apply (rule mu_rec_total_utp_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)"and e = "&\<Sigma>"]) 
     apply simp
      apply (simp add: cond_mono monoI seqr_mono)
   apply (rule  cond_refine_rel)
@@ -130,7 +174,7 @@ lemma total_rec_utp_test:
 lemma total_rec_test:
   "vwb_lens x \<Longrightarrow> 
    (\<lceil>true\<rceil>\<^sub><\<Rightarrow> \<lceil>&x \<le>\<^sub>u \<guillemotleft>0::int\<guillemotright>\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> R \<bullet> ((x :== (&x - \<guillemotleft>1\<guillemotright>)) ;; R) \<triangleleft> &x >\<^sub>u \<guillemotleft>0::int\<guillemotright> \<triangleright>\<^sub>r II)"    
-  apply (rule   rec_total_pure_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)" and E = "&\<Sigma>"])  
+  apply (rule mu_rec_total_pure_rule[where R="measure (nat o \<lbrakk>&x\<rbrakk>\<^sub>e)" and e = "&\<Sigma>"])  
     apply simp
      apply (simp add: cond_mono monoI seqr_mono)   
   apply (rule  cond_refine_rel)

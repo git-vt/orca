@@ -55,13 +55,13 @@ lemma rcond_false_trel:
 
 lemma while_true_trel:
   assumes "\<sigma> \<dagger> b = true"
-  shows "(\<sigma>, while b do P od) \<rightarrow>\<^sub>u (\<sigma>, P ;; while b do P od)"
-  by (metis assms rcond_true_trel while_unfold)
+  shows "(\<sigma>, while\<^sub>\<bottom> b do P od) \<rightarrow>\<^sub>u (\<sigma>, P ;; while\<^sub>\<bottom> b do P od)"
+  by (metis assms rcond_true_trel while_lfp_rel_unfold)
 
 lemma while_false_trel:
   assumes "\<sigma> \<dagger> b = false"
-  shows "(\<sigma>, while b do P od) \<rightarrow>\<^sub>u (\<sigma>, II)"
-  by (metis assms rcond_false_trel while_unfold)
+  shows "(\<sigma>, while\<^sub>\<bottom> b do P od) \<rightarrow>\<^sub>u (\<sigma>, II)"
+  by (metis assms rcond_false_trel while_lfp_rel_unfold)
 
 declare trel.simps [simp del]
 end

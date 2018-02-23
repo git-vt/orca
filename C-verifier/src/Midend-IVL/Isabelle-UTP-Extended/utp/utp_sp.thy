@@ -67,19 +67,14 @@ lemma so:
 theorem sp_hoare_link:
   "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>u \<longleftrightarrow> (r \<sqsubseteq> p sp Q)"
   by rel_auto   
+                             
 
-lemma while_invr_hoare_r':
-  assumes \<open>`pre \<Rightarrow> p`\<close> and \<open>\<lbrace>p \<and> b\<rbrace>C\<lbrace>p'\<rbrace>\<^sub>u\<close> and \<open>`p' \<Rightarrow> p`\<close>
-  shows \<open>\<lbrace>pre\<rbrace>while b invr p do C od\<lbrace>\<not>b \<and> p\<rbrace>\<^sub>u\<close>
-  by (metis while_inv_def assms hoare_post_weak hoare_pre_str while_hoare_r)
-
- 
 lemma sp_while_r [sp]: 
    assumes \<open>`pre \<Rightarrow> I`\<close> and \<open>\<lbrace>I \<and> b\<rbrace>C\<lbrace>I'\<rbrace>\<^sub>u\<close> and \<open>`I' \<Rightarrow> I`\<close>
-   shows "(pre sp while b invr I do C od) = (\<not>b \<and> I)"
-   unfolding sp_upred_def  
-    
-oops   
+   shows "(pre sp invr I while\<^sub>\<bottom> b  do C od) = (\<not>b \<and> I)"
+   unfolding sp_upred_def     
+   oops   
+     
 theorem sp_eq_intro: "\<lbrakk>\<And>r. r sp P = r sp Q\<rbrakk> \<Longrightarrow> P = Q"
   by (rel_auto robust, fastforce+)  
     

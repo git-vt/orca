@@ -18,10 +18,10 @@ theory utp_rel_more
 imports   "../../../Isabelle-UTP/utp/utp_rel"
 begin
 section \<open>More on Rel programs\<close> 
-subsection \<open>SKIP\<close>  
+subsection \<open>skip\<close>  
   
-abbreviation skip'::"'\<alpha> hrel" ("SKIP")
-  where "SKIP \<equiv> skip_r" 
+abbreviation skip'::"'\<alpha> hrel" ("SKIP\<^sub>r")
+  where "SKIP\<^sub>r \<equiv> skip_r" 
     
 subsection \<open>conditional\<close>  
 
@@ -35,17 +35,17 @@ text \<open>We propose a generic scheme fro iterations inspired by eiffel~\url{h
   
 definition from_until_gfp_rel :: "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("from\<^sup>\<top> _ until _ do _ od") 
   where "from\<^sup>\<top> init until exit do body od =  
-         init ;; (\<nu> X \<bullet> bif \<not> exit then (body ;; X) else SKIP eif)" 
+         init ;; (\<nu> X \<bullet> bif \<not> exit then (body ;; X) else SKIP\<^sub>r eif)" 
   
 definition from_until_lfp_rel :: "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("from\<^sub>\<bottom> _ until _ do _ od") 
   where "from\<^sub>\<bottom> init until exit do body od =  
-         init ;; (\<mu> X \<bullet> bif \<not> exit then (body ;; X) else SKIP eif)" 
+         init ;; (\<mu> X \<bullet> bif \<not> exit then (body ;; X) else SKIP\<^sub>r eif)" 
 
 definition while_gfp_rel :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sup>\<top> _ do _ od")
-where "while\<^sup>\<top> b do body od = from\<^sup>\<top> SKIP until \<not> b do body od"
+where "while\<^sup>\<top> b do body od = from\<^sup>\<top> SKIP\<^sub>r until \<not> b do body od"
 
 definition while_lfp_rel :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sub>\<bottom> _ do _ od") 
-  where "while\<^sub>\<bottom> b do body od =  from\<^sub>\<bottom> SKIP until \<not> b do body od"
+  where "while\<^sub>\<bottom> b do body od =  from\<^sub>\<bottom> SKIP\<^sub>r until \<not> b do body od"
     
 definition do_while_gfp_rel :: 
   "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel" ("do _ while\<^sup>\<top> _ od")

@@ -792,5 +792,9 @@ lemma C7:
   shows "((\<exists> x \<bullet> &x =\<^sub>u &y \<and> P) \<and> (\<exists> x \<bullet> &x =\<^sub>u &y \<and> \<not> P)) = false"
   using assms
   by (pred_simp, simp add: lens_indep_sym)
-
+subsection {*AUX lemmas*} 
+  
+lemma uimp_refl:"`p \<Rightarrow> p`"
+  by pred_simp 
+    
 end
