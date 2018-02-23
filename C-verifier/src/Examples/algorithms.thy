@@ -83,11 +83,10 @@ lemma increment_method_wp_rel:
   apply (insert assms) (*Make this automatic *)
   apply (vcg wp)                           
   done
-    
-    
+       
 subsection \<open>even count program\<close> 
 
-lemma even_count_gen:
+lemma even_count_gen_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
@@ -110,7 +109,7 @@ lemma even_count_gen:
    apply presburger+    
   done   
 
-lemma even_count_gen':
+lemma even_count_gen'_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
@@ -133,7 +132,7 @@ lemma even_count_gen':
    apply (simp_all add: zdiv_zadd1_eq)
   done    
     
- lemma even_count_gen'_wp:
+ lemma even_count_gen'_wp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
@@ -158,6 +157,54 @@ lemma even_count_gen':
    apply blast
    done       
      
+lemma even_count_gen'_sp_rel:
+  assumes "lens_indep_all [i,j]"
+  assumes "vwb_lens i" "vwb_lens j"  
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   assign_r i  \<guillemotleft>0::int\<guillemotright>;;
+   assign_r j 0 ;; 
+   invr  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
+   vrt \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>a\<guillemotright> - &i)))\<guillemotright>
+   while\<^sub>\<bottom> &i <\<^sub>u \<guillemotleft>a\<guillemotright>
+   do
+     bif &i mod 2 =\<^sub>u 0 
+     then assign_r j  (&j + 1)
+     else SKIP\<^sub>r 
+     eif;;
+    assign_r i  (&i + 1)
+   od
+ \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2\<rbrace>\<^sub>u"  
+  apply (insert assms)(*Make this automatic*)
+  apply (vcg sp)    
+   apply (simp_all add: zdiv_zadd1_eq)
+  done    
+    
+lemma even_count_gen'_wp_rel:
+  assumes "lens_indep_all [i,j]"
+  assumes "vwb_lens i" "vwb_lens j"  
+  shows  
+    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+   assign_r i  \<guillemotleft>0::int\<guillemotright>;;
+   assign_r j 0 ;; 
+   invr  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
+   vrt \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>a\<guillemotright> - &i)))\<guillemotright>
+   while\<^sub>\<bottom> &i <\<^sub>u \<guillemotleft>a\<guillemotright>
+   do
+     bif &i mod 2 =\<^sub>u 0 
+     then assign_r j  (&j + 1)
+     else SKIP\<^sub>r 
+     eif;;
+    assign_r i  (&i + 1)
+   od
+ \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2\<rbrace>\<^sub>u"  
+  apply (insert assms)(*Make this automatic*)
+  apply (vcg wp)    
+   apply simp_all
+   using dvd_imp_mod_0 odd_succ_div_two 
+   apply blast
+   done          
+         
 subsection \<open>sqrt program\<close>
   
 definition Isqrt :: "int \<Rightarrow> int \<Rightarrow> bool" 
