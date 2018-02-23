@@ -36,7 +36,7 @@ datatype ('typ, 'term, 'fact) ctxt_stmt =
   Prog_UTP of 'term
 type context = (string, string, Facts.ref) ctxt_stmt
 
-fun to_elem_stmt l = 
+fun to_elem_stmt ctxt l = 
   case
     ( map_filter (fn Shows l => SOME l | _ => NONE) l
     , map_filter (fn Obtains l => SOME l | _ => NONE) l)
@@ -49,14 +49,17 @@ fun to_elem_stmt l =
             , map_filter (fn Ensures_UTP t => SOME t | _ => NONE) l
             , map_filter (fn Prog_UTP t => SOME t | _ => NONE) l)
           of (l_ass, l_ens, [t_prog]) =>
-               (Binding.empty_atts,
-                [(String.concatWith
-                    " "
-                    ("hoare_prog_t"
-                     :: (case l_ass of [] => "utrue" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ass) ^ ")")
-                     :: escape [t_prog]
-                      @ [case l_ens of [] => "ufalse" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ens) ^ ")"]), [])])
-               :: l_shows
+               let val _ = Syntax.read_terms ctxt (t_prog :: l_ass @ l_ens)
+               in
+                 (Binding.empty_atts,
+                  [(String.concatWith
+                      " "
+                      ("hoare_prog_t"
+                       :: (case l_ass of [] => "utrue" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ass) ^ ")")
+                       :: escape [t_prog]
+                        @ [case l_ens of [] => "ufalse" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ens) ^ ")"]), [])])
+                 :: l_shows
+               end
            | _ => ((case l_shows of [] => warning "not yet supported" | _ => ()); l_shows)
         end
    | ([], l) => Element.Obtains (List.concat l)
@@ -127,7 +130,8 @@ val _ = Outer_Syntax.commands @{command_keyword program_spec} ""
   List.concat
     [ [(@{command_keyword lemma},
         Toplevel.local_theory_to_proof' NONE NONE
-          (Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes (Element'.to_elem_context_list elems) (Element'.to_elem_stmt elems)))]
+          (fn b => fn ctxt =>
+            Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes (Element'.to_elem_context_list elems) (Element'.to_elem_stmt ctxt elems) b ctxt))]
     , if Element'.exists_assumes elems then
         [(@{command_keyword apply},
           let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
