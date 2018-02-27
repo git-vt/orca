@@ -20,6 +20,7 @@ theory utp_var
   "../utils/List_lexord_alt"
   "../utils/Monoid_extra"
   utp_parser_utils
+  "../../../Front-End/Syntax_Translation"
 begin
 
 text \<open> In this first UTP theory we set up variable, which are are built on lenses. A large part
