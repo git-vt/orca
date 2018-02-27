@@ -21,6 +21,7 @@ theory utp_var
   "../utils/Monoid_extra"
   utp_parser_utils
   "../../../Front-End/Syntax_Translation"
+  "../../../Front-End/Syntax_Adhoc_Overloading"
 begin
 
 text \<open> In this first UTP theory we set up variable, which are are built on lenses. A large part
