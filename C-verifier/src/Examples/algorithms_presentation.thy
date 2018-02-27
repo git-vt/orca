@@ -19,20 +19,13 @@ theory algorithms_presentation
   imports "../Front-End/Syntax_Interface"
 begin
 
+sledgehammer_params [stop_on_first, parallel_subgoals, join_subgoals]
+  
 section \<open>Simple algorithms\<close>
 
-text 
-\<open>
- Through these experiments I want to observe the following problems:
-     \begin{itemize}
-       \item I want to deal with the problem of nested existential(SOLVED).
-       \item I want to deal with the problem of blow up due to the semantic machinery coming with lenses(SOLVED).
-       \item I want to have modularity(NOT SOLVED).
-     \end{itemize}
-\<close>
 subsection \<open>Increment method\<close>
   
-program_spec increment_method: 
+program_spec increment_method_sp_H1_H3:
   assumes "vwb_lens x"
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "x :== 0 ; 
@@ -40,9 +33,10 @@ program_spec increment_method:
                VRT \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
                WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD"
   ensures_utp "\<guillemotleft>a\<guillemotright> =\<^sub>u &x"
+  vcg_sp
   done
 
-program_spec increment_method_wp: 
+program_spec increment_method_wp_H1_H3:
   assumes "vwb_lens x"
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "x :== 0 ; 
@@ -50,11 +44,12 @@ program_spec increment_method_wp:
                VRT \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
                WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD"
   ensures_utp "\<guillemotleft>a\<guillemotright> =\<^sub>u &x"
+  vcg_wp
   done
     
 subsection \<open>even count program\<close> 
 
-program_spec even_count_gen:
+program_spec even_count_gen_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
@@ -71,10 +66,11 @@ program_spec even_count_gen:
                 i :== (&i + 1)
                OD" 
   ensures_utp "&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>"
-   apply presburger+    
+  vcg_sp
+   apply presburger+
   done   
 
-program_spec even_count_gen':
+program_spec even_count_gen'_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes  "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
@@ -91,7 +87,31 @@ program_spec even_count_gen':
                 i :== (&i + 1)
                OD" 
   ensures_utp "&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2"
-    apply simp+
-    by presburger
-    
+  vcg_sp
+   apply simp
+  by presburger
+
+program_spec even_count_gen'_wp_H1_H3:
+  assumes "lens_indep_all [i,j]"
+  assumes  "vwb_lens i" "vwb_lens j"  
+  assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
+  prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
+               j :== 0 ; 
+               INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
+               VRT \<guillemotleft>measure (nat o (Rep_uexpr (\<guillemotleft>a\<guillemotright> - &i)))\<guillemotright>
+               WHILE &i <\<^sub>u \<guillemotleft>a\<guillemotright>
+               DO
+                 IF &i mod 2 =\<^sub>u 0 
+                 THEN j :== (&j + 1)
+                 ELSE SKIP 
+                 FI;
+                i :== (&i + 1)
+               OD" 
+  ensures_utp "&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2"
+  vcg_wp
+    apply simp_all
+  using dvd_imp_mod_0 odd_succ_div_two
+  apply blast
+  done
+
 end

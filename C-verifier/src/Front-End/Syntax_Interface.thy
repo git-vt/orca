@@ -17,9 +17,9 @@
 theory Syntax_Interface
   imports "../Backend/VCG/vcg"
   keywords "program_spec" :: thy_goal
-  and "assumes_utp" "ensures_utp" "prog_utp" :: quasi_command
+  and "assumes_utp" "ensures_utp" "prog_utp" "vcg_sp" "vcg_wp" :: quasi_command
 begin
-  
+
 method vcg_prog_spec = vcg wp | vcg sp
 
 ML\<open>
@@ -35,7 +35,9 @@ datatype ('typ, 'term, 'fact) ctxt_stmt =
   Notes of string * (Attrib.binding * ('fact * Token.src list) list) list |
   Assumes_UTP of 'term |
   Ensures_UTP of 'term |
-  Prog_UTP of 'term
+  Prog_UTP of 'term |
+  Vcg_sp |
+  Vcg_wp
 type context = (string, string, Facts.ref) ctxt_stmt
 
 fun to_elem_stmt ctxt l = 
@@ -97,7 +99,9 @@ val loc_element =
   Parse.$$$ "shows" |-- Parse.!!! Parse_Spec.statement >> Element'.Shows ||
   Parse.$$$ "assumes_utp" |-- Parse.!!! Parse.term >> Element'.Assumes_UTP ||
   Parse.$$$ "ensures_utp" |-- Parse.!!! Parse.term >> Element'.Ensures_UTP ||
-  Parse.$$$ "prog_utp" |-- Parse.!!! Parse.term >> Element'.Prog_UTP;
+  Parse.$$$ "prog_utp" |-- Parse.!!! Parse.term >> Element'.Prog_UTP ||
+  Parse.$$$ "vcg_sp" >> K Element'.Vcg_sp ||
+  Parse.$$$ "vcg_wp" >> K Element'.Vcg_wp;
 
 in
 
@@ -111,7 +115,8 @@ val long_statement_keyword =
   Parse.$$$ "fixes" || Parse.$$$ "constrains" || Parse.$$$ "assumes" ||
   Parse.$$$ "defines" || Parse.$$$ "notes" ||
   Parse.$$$ "obtains" || Parse.$$$ "shows" ||
-  Parse.$$$ "assumes_utp" || Parse.$$$ "ensures_utp" || Parse.$$$ "prog_utp";
+  Parse.$$$ "assumes_utp" || Parse.$$$ "ensures_utp" || Parse.$$$ "prog_utp" ||
+  Parse.$$$ "vcg_sp" || Parse.$$$ "vcg_wp";
 
 end
 
@@ -143,8 +148,17 @@ val _ = Outer_Syntax.commands @{command_keyword program_spec} ""
           end)]
       else []
     , [(@{command_keyword apply},
-        let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
-                                           [Method.Source [Token.make_string ("vcg_prog_spec", Position.none)]])
+        let val m = ( Method.Combinator
+                        ( Method.no_combinator_info
+                        , Method.Then
+                        , [Method.Source
+                            (case map_filter (fn Element'.Vcg_sp => SOME true
+                                               | Element'.Vcg_wp => SOME false
+                                               | _ => NONE) elems
+                               of [true] => [Token.make_string ("vcg", Position.none), Token.make_string ("sp", Position.none)]
+                                | [false] => [Token.make_string ("vcg", Position.none), Token.make_string ("wp", Position.none)]
+                                | [] => [Token.make_string ("vcg_prog_spec", Position.none)]
+                                | _ => error "Combination of vcg options not yet supported")])
                     , (Position.none, Position.none)) in
         (Method.report m; Toplevel.proofs (Proof.apply m))
        end) ]]))
