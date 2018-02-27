@@ -421,7 +421,7 @@ syntax -- \<open> Polymorphic constructs \<close>
   "_ugcd"       :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("gcd\<^sub>u'(_, _')")
   "_uentries"   :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("entr\<^sub>u'(_,_')")
   
-translations
+translations'
   -- \<open> Pretty printing for adhoc-overloaded constructs \<close>
   "f(x)\<^sub>a"    <= "CONST uapply f x"
   "dom\<^sub>u(f)" <= "CONST udom f"
@@ -481,7 +481,7 @@ syntax -- \<open> Lists / Sequences \<close>
   "_uupt"       :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("\<langle>_..<_\<rangle>")
   "_umap"       :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("map\<^sub>u")
   
-translations
+translations'
   "\<langle>\<rangle>"       == "\<guillemotleft>[]\<guillemotright>"
   "\<langle>x, xs\<rangle>"  == "CONST bop (op #) x \<langle>xs\<rangle>"
   "\<langle>x\<rangle>"      == "CONST bop (op #) x \<guillemotleft>[]\<guillemotright>"

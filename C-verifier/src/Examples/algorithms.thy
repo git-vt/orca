@@ -18,7 +18,24 @@ theory algorithms
 
   imports "../Backend/VCG/vcg"
 begin
+section \<open>setup and makeup!\<close>    
 
+
+sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals]
+  
+no_adhoc_overloading
+  uempty 0 and
+  uapply fun_apply and uapply nth and uapply pfun_app and
+  uapply ffun_app and 
+  uupd pfun_upd and uupd ffun_upd and uupd list_augment and
+  udom Domain and udom pdom and udom fdom and udom seq_dom and
+  udom Range and uran pran and uran set and uran fran  and
+  udomres pdom_res and udomres fdom_res and
+  uranres pran_res and udomres fran_res and
+  ucard card and ucard pcard and ucard length and
+  usums list_sum and usums Sum and usums pfun_sum and
+  uentries pfun_entries and uentries ffun_entries
+  
 section \<open>Simple algorithms\<close>
 
 text 
@@ -35,12 +52,12 @@ subsection \<open>Increment method\<close>
 lemma increment_method_sp_H1_H3: 
   assumes "vwb_lens x"
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    x :== 0 ; 
    INVAR \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
    VRT \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
    WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD
- \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
+  \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
   apply (vcg sp)                           
   done
@@ -48,12 +65,12 @@ lemma increment_method_sp_H1_H3:
 lemma increment_method_wp_H1_H3: 
   assumes "vwb_lens x"
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    x :== 0 ; 
    INVAR \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
    VRT \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
    WHILE &x <\<^sub>u \<guillemotleft>a\<guillemotright> DO x:== (&x + 1) OD
- \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
+  \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>P"
   apply (insert assms) (*Make this automatic *)
   apply (vcg wp)                           
   done
@@ -61,12 +78,12 @@ lemma increment_method_wp_H1_H3:
 lemma increment_method_sp_rel: 
   assumes "vwb_lens x"
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    assign_r x  0 ;;
    invr \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
    vrt \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
    while\<^sub>\<bottom> &x <\<^sub>u \<guillemotleft>a\<guillemotright> do assign_r x (&x + 1) od
- \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
+  \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
   apply (insert assms) (*Make this automatic *)
   apply (vcg sp)                           
   done
@@ -74,12 +91,12 @@ lemma increment_method_sp_rel:
 lemma increment_method_wp_rel: 
   assumes "vwb_lens x"
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    assign_r x  0 ;;
    invr \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
    vrt \<guillemotleft>(measure o Rep_uexpr) (\<guillemotleft>a\<guillemotright> - &x)\<guillemotright> 
    while\<^sub>\<bottom> &x <\<^sub>u \<guillemotleft>a\<guillemotright> do assign_r x (&x + 1) od
- \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
+  \<lbrace>\<guillemotleft>a\<guillemotright> =\<^sub>u &x\<rbrace>\<^sub>u"
   apply (insert assms) (*Make this automatic *)
   apply (vcg wp)                           
   done
@@ -90,7 +107,7 @@ lemma even_count_gen_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<rbrace>
    i :== \<guillemotleft>0::int\<guillemotright>;
    j :== 0 ; 
    INVAR  (&j =\<^sub>u (&i + 1) div \<guillemotleft>2\<guillemotright> \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
@@ -103,7 +120,7 @@ lemma even_count_gen_sp_H1_H3:
      FI;
     i :== (&i + 1)
    OD
- \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
+  \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div \<guillemotleft>2\<guillemotright>\<rbrace>\<^sub>P" 
   apply (insert assms)(*Make this automatic*)
   apply (vcg sp)    
    apply presburger+    
@@ -113,7 +130,7 @@ lemma even_count_gen'_sp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    i :== \<guillemotleft>0::int\<guillemotright>;
    j :== 0 ; 
    INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
@@ -128,15 +145,15 @@ lemma even_count_gen'_sp_H1_H3:
    OD
  \<lbrace>&j =\<^sub>u (\<guillemotleft>a\<guillemotright> + 1)div 2\<rbrace>\<^sub>P"  
   apply (insert assms)(*Make this automatic*)
-  apply (vcg sp)    
+  apply (vcg sp) 
    apply (simp_all add: zdiv_zadd1_eq)
   done    
     
- lemma even_count_gen'_wp_H1_H3:
+lemma even_count_gen'_wp_H1_H3:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    i :== \<guillemotleft>0::int\<guillemotright>;
    j :== 0 ; 
    INVAR  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
@@ -161,7 +178,7 @@ lemma even_count_gen'_sp_rel:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    assign_r i  \<guillemotleft>0::int\<guillemotright>;;
    assign_r j 0 ;; 
    invr  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
@@ -184,7 +201,7 @@ lemma even_count_gen'_wp_rel:
   assumes "lens_indep_all [i,j]"
   assumes "vwb_lens i" "vwb_lens j"  
   shows  
-    "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
+ "\<lbrace>\<guillemotleft>a\<guillemotright> >\<^sub>u 0\<rbrace>
    assign_r i  \<guillemotleft>0::int\<guillemotright>;;
    assign_r j 0 ;; 
    invr  (&j =\<^sub>u (&i + 1) div 2 \<and> &i \<le>\<^sub>u \<guillemotleft>a\<guillemotright>) 
@@ -222,7 +239,7 @@ lemma Isqrt_aux:
 lemma sqrt_prog_correct_sp_H1_H3:
   assumes "vwb_lens r"
   shows
-    "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
+ "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
    r :== 1 ; 
    INVAR 0\<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> bop Isqrt \<guillemotleft>a\<guillemotright> (&r)
    VRT  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>a\<guillemotright> + 1) - &r)))\<guillemotright>
@@ -240,7 +257,7 @@ lemma sqrt_prog_correct_sp_H1_H3:
 lemma sqrt_prog_correct_wp_H1_H3:
   assumes "vwb_lens r"
   shows
-    "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
+ "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
    r :== 1 ; 
    INVAR 0\<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> bop Isqrt \<guillemotleft>a\<guillemotright> (&r)
    VRT  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>a\<guillemotright> + 1) - &r)))\<guillemotright>
@@ -258,7 +275,7 @@ lemma sqrt_prog_correct_wp_H1_H3:
 lemma sqrt_prog_correct_sp_rel:
   assumes "vwb_lens r"
   shows
-    "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
+ "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
    assign_r r 1 ;; 
    invr 0\<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> bop Isqrt \<guillemotleft>a\<guillemotright> (&r)
    vrt  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>a\<guillemotright> + 1) - &r)))\<guillemotright>
@@ -276,7 +293,7 @@ lemma sqrt_prog_correct_sp_rel:
 lemma sqrt_prog_correct_wp_rel:
   assumes "vwb_lens r"
   shows
-    "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
+ "\<lbrace>0 \<le>\<^sub>u \<guillemotleft>a\<guillemotright>\<rbrace>
    assign_r r 1 ;; 
    invr 0\<le>\<^sub>u \<guillemotleft>a\<guillemotright> \<and> bop Isqrt \<guillemotleft>a\<guillemotright> (&r)
    vrt  \<guillemotleft>measure (nat o (Rep_uexpr ((\<guillemotleft>a\<guillemotright> + 1) - &r)))\<guillemotright>
@@ -300,7 +317,7 @@ text \<open>In the followin we illustrate the effect of domain theory based appr
       This leads to a shorter proof since max library contains the necessary lemmas that simplify
       the reasoning.\<close>
   
-lemma gcd_correct_H1_H3:
+lemma gcd_correct_sp_H1_H3:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   shows  
@@ -321,11 +338,11 @@ lemma gcd_correct_H1_H3:
    apply (metis gcd.commute gcd_diff1_nat not_le)+
   done  
      
-lemma gcd_correct'_H1_H3:
+lemma gcd_correct'_sp_H1_H3:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   shows  
-    "\<lbrace>&r =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> \<guillemotleft>b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright>>\<^sub>u 0\<rbrace> 
+ "\<lbrace>&r =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> \<guillemotleft>b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright>>\<^sub>u 0\<rbrace> 
    INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>
    VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
    WHILE \<not>(&r =\<^sub>u &x)
@@ -346,7 +363,7 @@ lemma gcd_correct'_wp_H1_H3:
   assumes "lens_indep_all [r, x]"
   assumes "vwb_lens r" "vwb_lens x" 
   shows  
-    "\<lbrace>&r =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> \<guillemotleft>b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright>>\<^sub>u 0\<rbrace> 
+ "\<lbrace>&r =\<^sub>u \<guillemotleft>a\<guillemotright> \<and> &x =\<^sub>u \<guillemotleft>b\<guillemotright> \<and> \<guillemotleft>b\<guillemotright>>\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright>>\<^sub>u 0\<rbrace> 
    INVAR &r >\<^sub>u0 \<and> &x >\<^sub>u 0 \<and> bop gcd (&r) (&x) =\<^sub>u  bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>
    VRT \<guillemotleft>measure (Rep_uexpr (bop max (&r) (&x)))\<guillemotright>
    WHILE \<not>(&r =\<^sub>u &x)
@@ -358,12 +375,13 @@ lemma gcd_correct'_wp_H1_H3:
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms)  
-  apply (vcg wp)    
-   apply (simp_all add: gcd_diff1_nat)
-    apply (metis gcd.commute gcd_diff1_nat not_le)    
-   apply (metis diff_is_0_eq gcd.commute gcd_diff1_nat not_le_minus)
-    apply (metis add_diff_inverse_nat gcd_add2 max.strict_coboundedI1)
-  done  
+  apply (vcg wp) 
+    using gcd_diff1_nat apply auto[1]
+    apply (metis gcd.commute gcd_diff1_nat not_less)
+    apply (metis diff_is_0_eq gcd.commute gcd_diff1_nat not_le_minus)
+    apply (metis gcd.commute gcd_diff1_nat max.strict_order_iff max_def)
+   apply (simp add: gcd_diff1_nat)
+    done
       
 lemma gcd_correct'_sp_rel:
   assumes "lens_indep_all [r, x]"
@@ -413,12 +431,13 @@ section \<open>Arrays\<close>
   
 subsection \<open>Array Max program: one-variable loop\<close>
 
-lemma max_program_correct_H1_H3:
+  
+lemma max_program_correct_sp_H1_H3:
   assumes "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" 
   shows  
 "\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
-   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>a\<guillemotright>) 
+   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
    VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
    WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
    DO 
@@ -428,7 +447,7 @@ lemma max_program_correct_H1_H3:
       FI;
       i :== (&i + 1)
    OD   
- \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
+ \<lbrace>&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)
   apply (vcg sp)        
   subgoal for _ 
@@ -446,7 +465,7 @@ lemma max_program_correct_wp_H1_H3:
   assumes "vwb_lens i" "vwb_lens r" 
   shows  
 "\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
-   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>a\<guillemotright>) 
+   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
    VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
    WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
    DO 
@@ -456,9 +475,9 @@ lemma max_program_correct_wp_H1_H3:
       FI;
       i :== (&i + 1)
    OD   
- \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
+ \<lbrace>&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
   apply (insert assms)
-  apply (vcg wp)
+  apply (vcg wp)    
   subgoal for _ 
     by (cases a; auto)
   subgoal for _ i'
@@ -476,12 +495,12 @@ lemma max_program_correct_wp_H1_H3:
     by (clarsimp simp: take_Suc_conv_app_nth)  
   done  
     
-lemma max_program_correct_rel:
+lemma max_program_correct_sp_rel:
   assumes "r \<bowtie> i" 
   assumes "vwb_lens i" "vwb_lens r" 
   shows  
 "\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
-   invr  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>a\<guillemotright>) 
+   invr  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
    vrt  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
    while\<^sub>\<bottom> \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
    do 
@@ -491,7 +510,7 @@ lemma max_program_correct_rel:
       eif;;
       assign_r i (&i + 1)
    od   
- \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>u"  
+ \<lbrace>&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>u"  
   apply (insert assms)
   apply (vcg sp)        
   subgoal for _ 
@@ -509,7 +528,7 @@ lemma max_program_correct_wp_rel:
   assumes "vwb_lens i" "vwb_lens r" 
   shows  
 "\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
-   invr  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max ran\<^sub>u(bop take (&i) \<guillemotleft>a\<guillemotright>) 
+   invr  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
    vrt  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
    while\<^sub>\<bottom> \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
    do 
@@ -519,7 +538,7 @@ lemma max_program_correct_wp_rel:
       eif;;
       assign_r i (&i + 1)
    od   
- \<lbrace>&r =\<^sub>uuop Max ran\<^sub>u(\<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>u"  
+ \<lbrace>&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>u"  
   apply (insert assms)
   apply (vcg wp)
   subgoal for _ 
@@ -545,7 +564,6 @@ find_theorems name: "rep_eq" "(Rep_uexpr ?e = ?t)" (*This what pred_simp uses...
 TODO List for next iteration:
 
 *)    
-
     
 lemma demo_VAR_BIND:
   assumes "lens_indep_all [r, x]"
@@ -570,6 +588,6 @@ lemma demo_VAR_BIND:
   apply (metis gcd.commute gcd_diff1_nat not_le)
   done
     
-    
+
 end
 

@@ -490,7 +490,7 @@ text {* Parallel Hoare logic rule. This employs something similar to separating 
   the postcondition, but we explicitly require that the two conjuncts only refer to variables
   on the left and right of the parallel composition explicitly. *}
   
-theorem StateParallel_hoare [hoare]:
+theorem StateParallel_hoare:
   assumes "\<lbrace>c\<rbrace>P\<lbrace>d\<^sub>1\<rbrace>\<^sub>u" "\<lbrace>c\<rbrace>Q\<lbrace>d\<^sub>2\<rbrace>\<^sub>u" "a \<bowtie> b" "a \<natural> d\<^sub>1" "b \<natural> d\<^sub>2"
   shows "\<lbrace>c\<rbrace>P |a|b|\<^sub>\<sigma> Q\<lbrace>d\<^sub>1 \<and> d\<^sub>2\<rbrace>\<^sub>u"
 proof -
@@ -513,12 +513,12 @@ qed
 text {* Specialised version of the above law where an invariant expression referring to variables
   outside the frame is preserved. *}
   
-theorem StateParallel_frame_hoare [hoare]:
+theorem StateParallel_frame_hoare:
   assumes "vwb_lens a" "vwb_lens b" "a \<bowtie> b" "a \<natural> d\<^sub>1" "b \<natural> d\<^sub>2" "a \<sharp> c\<^sub>1" "b \<sharp> c\<^sub>1" "\<lbrace>c\<^sub>1 \<and> c\<^sub>2\<rbrace>P\<lbrace>d\<^sub>1\<rbrace>\<^sub>u" "\<lbrace>c\<^sub>1 \<and> c\<^sub>2\<rbrace>Q\<lbrace>d\<^sub>2\<rbrace>\<^sub>u"
   shows "\<lbrace>c\<^sub>1 \<and> c\<^sub>2\<rbrace>P |a|b|\<^sub>\<sigma> Q\<lbrace>c\<^sub>1 \<and> d\<^sub>1 \<and> d\<^sub>2\<rbrace>\<^sub>u"
 proof -
   have "\<lbrace>c\<^sub>1 \<and> c\<^sub>2\<rbrace>{&a,&b}:[P |a|b|\<^sub>\<sigma> Q]\<lbrace>c\<^sub>1 \<and> d\<^sub>1 \<and> d\<^sub>2\<rbrace>\<^sub>u"
-    by (auto intro!: frame_hoare_r' StateParallel_hoare simp add: assms unrest plus_vwb_lens)
+    by (metis StateParallel_hoare antiframe_hoar_rel_stronger assms plus_vwb_lens pr_var_def unrest_var_comp usedBy_conj usedBy_lens_plus_1 usedBy_lens_plus_2 utp_pred_laws.inf_commute)
   thus ?thesis
     by (simp add: StateParallel_frame assms)
 qed

@@ -98,30 +98,14 @@ text \<open>Iterations with invariant and variant decoration\<close>
 definition from_until_lfp_invr_vrt_rel :: 
   "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("from\<^sub>\<bottom> _ invr _ vrt _ until _ do _ od") 
   where "from\<^sub>\<bottom> init invr invar vrt vari until exit do body od =  from\<^sub>\<bottom> init until exit do body od"
-
-definition from_until_gfp_invr_vrt_rel :: 
-  "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("from\<^sup>\<top> _ invr _ vrt _ until _ do _ od") 
-  where "from\<^sup>\<top> init invr invar vrt vari until exit do body od =  from\<^sup>\<top> init until exit do body od"
     
 definition while_lfp_invr_vrt_rel :: 
   "'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>  '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("invr _ vrt _ while\<^sub>\<bottom> _ do _ od") 
 where "invr invar vrt vari while\<^sub>\<bottom> b do body od = while\<^sub>\<bottom> b do body od"
 
-definition while_gfp_invr_vrt_rel :: 
-  "'\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow>  '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("invr _ vrt _ while\<^sup>\<top> _ do _ od") 
-where "invr invar vrt vari while\<^sup>\<top> b do body od = while\<^sup>\<top> b do body od"
-
-definition do_while_gfp_invr_vrt_rel :: 
-   "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel" ("do _ while\<^sup>\<top> _ invr _ vrt _ od")
-where "do body while\<^sup>\<top> b invr invar vrt vari od = from\<^sup>\<top> body until \<not> b do body od"
-
 definition do_while_lfp_invr_vrt_rel :: 
    "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel" ("do _ while\<^sub>\<bottom> _ invr _ vrt _ od") 
    where "do body while\<^sub>\<bottom> b invr invar vrt vari od = from\<^sub>\<bottom> body until \<not> b do body od"
-     
-definition for_gfp_invr_vrt_rel :: 
-  "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("for\<^sup>\<top> '(_,_,_') invr _ vrt_ do _ od")
-where "for\<^sup>\<top> (init, b, incr) invr invar vrt vari do body od = from\<^sup>\<top> init until \<not> b do body ;; incr od"
 
 definition for_lfp_invr_vrt_rel :: 
   "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> ('t,'\<alpha>) uexpr \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("for\<^sub>\<bottom> '(_,_,_') invr _ vrt _ do _ od")

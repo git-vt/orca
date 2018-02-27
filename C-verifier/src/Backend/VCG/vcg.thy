@@ -49,22 +49,40 @@ method_setup determ = \<open>
     )
 \<close>        
 (*method insert_assms =  tactic \<open>@{context} |>  Assumption.all_prems_of |> (@{context} |>  Method.insert_tac) |> FIRSTGOAL\<close>*)
+    
 
+  
 text \<open>vcg_can_defer is a tactic that succeed if the conclusion of a goal is not Hoare triple
        or if it has no DEFERRED markup\<close>  
   
 definition DEFERRED :: "bool \<Rightarrow> bool" where "DEFERRED P = P"
 lemma DEFERREDD: "DEFERRED P \<Longrightarrow> P" by (auto simp: DEFERRED_def)
-
+(*TODO: FINISH THE PROTOTYPE OF THE DEBUGGER VERSION*)    
+method vcg_can_defer_debugger =
+  (match conclusion 
+      in "DEFERRED _" \<Rightarrow> \<open>print_term \<open>''DEFERRED''\<close>,fail\<close>  -- \<open>Refuse to defer already deferred goals\<close>
+       \<bar>
+         "(\<lbrace>_\<rbrace>a\<lbrace>_\<rbrace>\<^sub>P)" for a \<Rightarrow> \<open>print_term "a",fail\<close>  -- \<open>Refuse to defer Hoare_H1_H3 triples (They are no VCs!)\<close>
+       \<bar>
+         "\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>u" \<Rightarrow> \<open>print_term "''u''",fail\<close>  -- \<open>Refuse to defer Hoare_rel triples (They are no VCs!)\<close>  
+       \<bar> 
+         "_" \<Rightarrow> \<open>print_term "''succeed''",succeed\<close>)
+       
+method vcg_defer_debugger = 
+       (print_term "''vcg_avant''",vcg_can_defer_debugger, print_term "''vcg_apres''",
+        rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)    
+  
 method vcg_can_defer =
   (match conclusion 
-      in "DEFERRED _" \<Rightarrow> fail  -- \<open>Refuse to defer already deferred goals\<close>
+      in "DEFERRED _" \<Rightarrow> \<open>fail\<close>  -- \<open>Refuse to defer already deferred goals\<close>
        \<bar>
-         "\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>P" \<Rightarrow> fail  -- \<open>Refuse to defer Hoare triples (They are no VCs!)\<close>
+         "\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>P" \<Rightarrow> \<open>fail\<close>  -- \<open>Refuse to defer Hoare_H1_H3 triples (They are no VCs!)\<close>
+       \<bar>
+         "\<lbrace>_\<rbrace>_\<lbrace>_\<rbrace>\<^sub>u" \<Rightarrow> \<open>fail\<close>  -- \<open>Refuse to defer Hoare_rel triples (They are no VCs!)\<close>  
        \<bar> 
-         "_" \<Rightarrow> succeed)
+         "_" \<Rightarrow> \<open>succeed\<close>)
        
-method vcg_defer = (vcg_can_defer, rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)    
+method vcg_defer = (vcg_can_defer,rule DEFERREDD, tactic \<open>FIRSTGOAL defer_tac\<close>)    
   
 subsection \<open>VCG Post Processing Tactics\<close> 
   
@@ -266,8 +284,6 @@ lemma WEAK_VAR_DEBUG:
   unfolding WEAK_VAR_TAG_def 
   by blast  
 
-method_setup print_VWB_VAR_DEBUG  = \<open>Scan.succeed (fn ctxt => SIMPLE_METHOD (print_tac ctxt "VWB_VAR_DEBUG is not applied"))\<close>  
-
 method vwb_lens_debugger =
   (match conclusion in 
    "vwb_lens x" for x \<Rightarrow>
@@ -449,7 +465,7 @@ method vcg_step methods vcg_reasoning_method =
        (vcg_reasoning_method | vcg_defer)
 
 text \<open>A one step vcg without post processing nor debugging information. The output of this
-      method is: for the goal, on which it is applied to, a upred.\<close>
+      method is: a upred.\<close>
   
 method hoare_sp_vcg_step = vcg_step hoare_sp_rule_apply 
   
@@ -492,13 +508,6 @@ declare List.list.set[lens_indep_all_simplifier]
 declare Set.ball_simps[lens_indep_all_simplifier]  
 declare Set.insert_iff[lens_indep_all_simplifier] 
 declare Set.empty_iff [lens_indep_all_simplifier]
-               
-method hoare_sp_vcg_steps_pp_debugger = 
-    (sp; ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
-                               ((simp only: lens_indep_all_simplifier)+ (*TODO: Substitute with a debug mode version*))?,
-                                 clarsimp?, 
-                                 (vcg_upreds_post_processing_debugger+)?,
-                                 vcg_hol_post_processing_debugger))
 
 method symbolic_execution =
   ((unfold pr_var_def in_var_def out_var_def)?, (unfold lens_indep_all_alt)?,
@@ -506,11 +515,9 @@ method symbolic_execution =
                                  clarsimp?,
                                  (vcg_upreds_post_processing+)?,
                                   vcg_hol_post_processing(*TODO: ADD SOLVING STEP HERE*))
-
     
 method vcg methods vcg_reasoning_method =
   (vcg_reasoning_method ; symbolic_execution); get_remover?; (vcg_elim_determ beautify_thms)?
-ML {*TRYALL (defer_tac)*}
-ML {*defer_tac*}  
+ 
 end
 

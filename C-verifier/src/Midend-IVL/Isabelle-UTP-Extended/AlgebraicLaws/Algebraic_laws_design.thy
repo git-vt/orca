@@ -24,7 +24,7 @@ text \<open>In this section we introduce the semantic rules related to the diffe
 theory Algebraic_laws_design
   imports Algebraic_laws_design_aux
 begin
-  
+
 section {*Algebraic laws for designs constructs*}
 
 subsection Skip
@@ -802,7 +802,7 @@ next
   case 3
   then show ?case  unfolding idempotent_def by (simp add: aext_true seqr_assoc)                       
 qed    
-      
+  
 lemma abort_situation_left_zero:
   "Q is \<^bold>N \<Longrightarrow> 
     ((\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<and> post\<^sub>D P wp false) \<turnstile>\<^sub>n false) ;; Q =  ((\<lfloor>pre\<^sub>D P\<rfloor>\<^sub>< \<and> post\<^sub>D P wp false) \<turnstile>\<^sub>n false)"  
@@ -1074,18 +1074,18 @@ subsection \<open>Frame and antiframe\<close>
 lemma frame_d_is_H1_H3:
   assumes "P is \<^bold>N" 
   shows "frame\<^sub>D a P is \<^bold>N"
-  using assms unfolding  frame\<^sub>D_def
+  using assms unfolding frame\<^sub>D_def
   by rel_auto  
 
 lemma antiframe_d_is_H1_H3:
   assumes "P is \<^bold>N" 
   shows "antiframe\<^sub>D a P is \<^bold>N"
-  using assms unfolding  frame\<^sub>D_def
+  using assms unfolding frame\<^sub>D_def
   by rel_auto  
     
 lemma frame_d_assign_d_is_H4:
  "frame\<^sub>D a \<langle>\<sigma>\<rangle>\<^sub>D is H4"
-   unfolding  frame\<^sub>D_def 
+   unfolding frame\<^sub>D_def 
    by rel_auto
 end
 

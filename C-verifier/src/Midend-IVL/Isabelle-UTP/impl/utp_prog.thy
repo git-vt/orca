@@ -45,7 +45,7 @@ lift_definition skip     :: "'\<alpha> prog" ("SKIP")is "II\<^sub>D" by (simp ad
 lift_definition pseq     :: "'\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" (infixr ";" 71) is "op ;;" by (simp add: closure)
 lift_definition passigns :: "'\<alpha> usubst \<Rightarrow> '\<alpha> prog" ("\<langle>_\<rangle>\<^sub>p") is "assigns_d" by (simp add: closure)
 lift_definition psubst   :: "'\<alpha> usubst \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" is "\<lambda> \<sigma> P. ((\<sigma> \<oplus>\<^sub>s \<Sigma>\<^sub>D) \<oplus>\<^sub>s in\<alpha>) \<dagger> P" by (simp add: closure)
-    
+
 declare abort.rep_eq [prog_rep_eq]
 declare magic.rep_eq [prog_rep_eq]
 declare skip.rep_eq [prog_rep_eq]

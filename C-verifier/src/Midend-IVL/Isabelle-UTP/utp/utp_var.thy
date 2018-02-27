@@ -265,7 +265,7 @@ text \<open> The functions above turn a representation of a variable (type @{typ
   kinds of variables, such as deep variables with explicit syntax and type information.
 
   Finally, we set up the translations rules. \<close>
-
+translations_params[no_print,equal_as_parse]
 translations
   -- \<open> Identifiers \<close>
   "_svid x" \<rightharpoonup> "x"

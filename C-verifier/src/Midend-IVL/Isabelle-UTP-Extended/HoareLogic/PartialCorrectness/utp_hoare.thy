@@ -29,7 +29,7 @@ definition hoare_r :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow>
 "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>u = ((\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>r\<rceil>\<^sub>>) \<sqsubseteq> Q)"
 
 declare hoare_r_def[upred_defs]
-lemma hoare_true_assisgns_prog_t: 
+lemma assisgns_true_hoare_rel: 
   "\<lbrace>p\<rbrace> \<langle>\<sigma>\<rangle>\<^sub>a \<lbrace>true\<rbrace>\<^sub>u"
   by rel_simp
 
@@ -79,7 +79,7 @@ lemma conj_hoare_rel:
     
 subsection {*Hoare SKIP*}
 
-lemma skip_rel_hoare_rel[hoare_sp_rules, hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma skip_hoare_rel[hoare_sp_rules, hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
   "\<lbrace>p\<rbrace>SKIP\<^sub>r\<lbrace>p\<rbrace>\<^sub>u"
   by rel_simp
     
@@ -89,17 +89,17 @@ lemma skip_rel_hoare_rel_intro:
   
 subsection {*Hoare for assignment*}
 
-lemma assigns_rel_hoare_rel_intro: 
+lemma assigns_hoare_rel_intro: 
   assumes"`p \<Rightarrow> \<sigma> \<dagger> q`" 
   shows  "\<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>q\<rbrace>\<^sub>u"
   using assms  
   by rel_simp
     
-lemma assigns_rel_backward_hoare_rel[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma assigns_backward_hoare_rel[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
   "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>p\<rbrace>\<^sub>u"
   by rel_simp
     
-lemma assigns_rel_floyd_hoare_rel[hoare_sp_rules]:
+lemma assigns_floyd_hoare_rel[hoare_sp_rules]:
   assumes "vwb_lens x"
   shows \<open>\<lbrace>p\<rbrace>assign_r x e\<lbrace>\<^bold>\<exists>v \<bullet> p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> &x =\<^sub>u e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<rbrace>\<^sub>u\<close> (*If I use the syntax sugar the rule  does not match because the same syntax sugar is used for H1 and H3 designs *)
   using assms
@@ -132,19 +132,19 @@ lemma seq_hoare_rel[hoare_wp_rules, hoare_sp_rules]:
     
 subsection {*Hoare for Conditional*}
 
-lemma cond_rel_hoare_rel: 
+lemma cond_hoare_rel: 
   assumes "\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>u" 
   shows "\<lbrace>p\<rbrace> bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q\<rbrace>\<^sub>u"
   using assms
   by pred_simp
     
-lemma cond_rel_hoare_rel_wp[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma cond_hoare_rel_wp[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
   assumes "\<lbrace>p'\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u" and "\<lbrace>p''\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>u"
   shows "\<lbrace>(b \<and> p')\<or> (\<not>b \<and> p'')\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q\<rbrace>\<^sub>u"
   using assms
   by pred_simp
     
-lemma cond_rel_hoare_rel_sp[hoare_sp_rules]:
+lemma cond_hoare_rel_sp[hoare_sp_rules]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>u\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>u\<close>
   shows \<open>\<lbrace>p\<rbrace>bif b then C\<^sub>1 else C\<^sub>2 eif\<lbrace>q \<or> s\<rbrace>\<^sub>u\<close>
   using assms
@@ -152,7 +152,7 @@ lemma cond_rel_hoare_rel_sp[hoare_sp_rules]:
     
 subsection {*Hoare for recursion*}
   
-lemma nu_rel_hoare_rel_partial: 
+lemma nu_hoare_rel_partial: 
   assumes induct_step:
     "\<And> st P. \<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>p\<rbrace>F P\<lbrace>q\<rbrace>\<^sub>u"   
   shows "\<lbrace>p\<rbrace>\<nu> F \<lbrace>q\<rbrace>\<^sub>u"  
@@ -162,7 +162,7 @@ lemma nu_rel_hoare_rel_partial:
     apply simp
   done    
   
-lemma mu_rel_hoare_rel:
+lemma mu_hoare_rel:
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
@@ -175,14 +175,14 @@ proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
   by (rule induct_step[unfolded hoare_r_def], simp)    
 qed
     
-lemma mu_rel_hoare_rel':
+lemma mu_hoare_rel':
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
     "\<And> st P. \<lbrace>p \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace> P \<lbrace>q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>q\<rbrace>\<^sub>u" 
   assumes I0: "`p' \<Rightarrow> p`"  
   shows "\<lbrace>p'\<rbrace>\<mu> F \<lbrace>q\<rbrace>\<^sub>u"
-  by (simp add: pre_str_hoare_rel[OF I0 mu_rel_hoare_rel[OF WF M induct_step]])
+  by (simp add: pre_str_hoare_rel[OF I0 mu_hoare_rel[OF WF M induct_step]])
 
 subsection {*Hoare for frames*}
   
@@ -222,14 +222,7 @@ lemma frame_hoare_rel_stronger:
   using assms 
   by rel_simp
     
-lemma blah1: 
-  assumes "vwb_lens g'" "vwb_lens l"
-  assumes  "l \<bowtie> g'" 
-  shows "vwb_lens  (g' +\<^sub>L l)" 
-  using assms 
-  by (simp add: lens_indep_sym plus_vwb_lens) 
-   
-lemma
+lemma anti_frame_intro:
   assumes 1:"vwb_lens g" 
   assumes 2:"vwb_lens g'" 
   assumes 3:"vwb_lens l"
@@ -292,15 +285,14 @@ lemma if_rel_mono:
   "mono (\<lambda>X. bif b then P ;; X else Q eif)"
   by (auto intro: monoI seqr_mono cond_mono) 
 
-
 lemma while_gfp_hoare_rel_minimal_partial:
   assumes seq_step: "`p \<Rightarrow> invar`"
   assumes induct_step: "\<lbrace>invar\<and> b\<rbrace> C \<lbrace>invar\<rbrace>\<^sub>u"  
   shows "\<lbrace>p\<rbrace>while\<^sup>\<top> b do C od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
   unfolding while_gfp_rel_def_alt
   apply (rule pre_str_hoare_rel[OF seq_step])   
-  apply (rule nu_rel_hoare_rel_partial)
-  apply (rule cond_rel_hoare_rel)  
+  apply (rule nu_hoare_rel_partial)
+  apply (rule cond_hoare_rel)  
    apply (rule seq_hoare_rel[where s="invar"])
   subgoal for st P
     using pre_str_hoare_rel induct_step seq_step
@@ -322,7 +314,7 @@ lemma while_gfp_invr_hoare_rel_minimal_partial:
   unfolding while_gfp_invr_rel_def 
   by (auto intro!: assms while_gfp_hoare_rel_minimal_partial)
     
-lemma while_gfp_rel_consequence_partial:
+lemma while_gfp_hoare_rel_consequence_partial:
   assumes seq_step: "`p\<Rightarrow>invar`"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
   assumes I0': "` invar \<and> b  \<Rightarrow> p'`"
@@ -333,7 +325,7 @@ lemma while_gfp_rel_consequence_partial:
                                  OF while_gfp_hoare_rel_minimal_partial[OF uimp_refl],
                                  OF consequence_hoare_rel[OF I0' induct_step I0]])
 
-lemma while_gfp_invr_rel_consequence_partial:
+lemma while_gfp_invr_hoare_rel_consequence_partial:
   assumes seq_step: "`p\<Rightarrow>invar`"
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
   assumes I0': "` invar \<and> b  \<Rightarrow> p'`"
@@ -341,9 +333,9 @@ lemma while_gfp_invr_rel_consequence_partial:
   assumes I0: "`q' \<Rightarrow> invar`"  
   shows "\<lbrace>p\<rbrace>invr invar while\<^sup>\<top> b do C od\<lbrace>q\<rbrace>\<^sub>u"
   unfolding while_gfp_invr_rel_def 
-  by (auto intro!: assms while_gfp_rel_consequence_partial)  
+  by (auto intro!: assms while_gfp_hoare_rel_consequence_partial)  
 
-lemma while_gfp_rel_wp_partial:
+lemma while_gfp_hoare_rel_wp_partial:
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
   assumes I0': "`invar \<and> b \<Rightarrow> p'`"
   assumes induct_step: "\<lbrace>p'\<rbrace>C \<lbrace>invar\<rbrace>\<^sub>u"  
@@ -352,15 +344,15 @@ lemma while_gfp_rel_wp_partial:
                                  OF while_gfp_hoare_rel_minimal_partial[OF uimp_refl],
                                  OF consequence_hoare_rel[OF I0' induct_step uimp_refl]])    
 
-lemma while_gfp_invr_rel_wp_partial:
+lemma while_gfp_invr_hoare_rel_wp_partial:
   assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
   assumes I0': "`invar \<and> b \<Rightarrow> p'`"
   assumes induct_step: "\<lbrace>p'\<rbrace>C \<lbrace>invar\<rbrace>\<^sub>u"  
   shows "\<lbrace>invar\<rbrace>invr invar while\<^sup>\<top> b do C od\<lbrace>q\<rbrace>\<^sub>u"                             
   unfolding while_gfp_invr_rel_def 
-  by (auto intro!: assms while_gfp_rel_consequence_partial)  
+  by (auto intro!: assms while_gfp_hoare_rel_consequence_partial)  
                            
-lemma while_gfp_rel_sp_partial:
+lemma while_gfp_hoare_rel_sp_partial:
   assumes seq_step: "`p \<Rightarrow> invar`"
   assumes induct_step: "\<lbrace>invar \<and> b\<rbrace>C \<lbrace>q'\<rbrace>\<^sub>u"
   assumes I0: "`q' \<Rightarrow> invar`"  
@@ -369,7 +361,7 @@ lemma while_gfp_rel_sp_partial:
                                  OF while_gfp_hoare_rel_minimal_partial[OF uimp_refl],
                                  OF consequence_hoare_rel[OF uimp_refl induct_step I0]])
 
-lemma while_gfp_invr_rel_sp_partial:
+lemma while_gfp_invr_hoare_rel_sp_partial:
   assumes seq_step: "`p \<Rightarrow> invar`"
   assumes induct_step: "\<lbrace>invar \<and> b\<rbrace>C \<lbrace>q'\<rbrace>\<^sub>u"
   assumes I0: "`q' \<Rightarrow> invar`"  
@@ -385,7 +377,7 @@ lemma while_lfp_hoare_rel_minimal:
   assumes induct_step:"\<And>st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>u"    
   shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do body od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
   unfolding while_lfp_rel_def_alt
-proof (rule pre_str_hoare_rel[OF seq_step mu_rel_hoare_rel[OF WF if_rel_mono cond_rel_hoare_rel, of _ e]], goal_cases)
+proof (rule pre_str_hoare_rel[OF seq_step mu_hoare_rel[OF WF if_rel_mono cond_hoare_rel, of _ e]], goal_cases)
   case (1 st X)
   assume *: "\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>X\<lbrace>\<not> b \<and> invar\<rbrace>\<^sub>u"  
   show ?case 
@@ -428,8 +420,8 @@ lemma while_lfp_hoare_rel_consequence:
   assumes  I0: "\<And> st. `q' st \<Rightarrow> invar \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright> `"
   shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do body od\<lbrace>q\<rbrace>\<^sub>u" 
   by (rule consequence_hoare_rel[OF seq_step _ PHI, 
-                                  OF while_lfp_hoare_rel_minimal[OF WF uimp_refl, of _ _ e],
-                                  OF consequence_hoare_rel[OF I0' induct_step I0]])
+                                 OF while_lfp_hoare_rel_minimal[OF WF uimp_refl, of _ _ e],
+                                 OF consequence_hoare_rel[OF I0' induct_step I0]])
 
 lemma while_lfp_invr_hoare_rel_consequence:
   assumes WF: "wf R"
@@ -441,8 +433,8 @@ lemma while_lfp_invr_hoare_rel_consequence:
   shows "\<lbrace>p\<rbrace>invr invar while\<^sub>\<bottom> b do body od\<lbrace>q\<rbrace>\<^sub>u" 
   unfolding while_lfp_invr_rel_def
   by (rule consequence_hoare_rel[OF seq_step _ PHI, 
-                                  OF while_lfp_hoare_rel_minimal[OF WF uimp_refl, of _ _ e],
-                                  OF consequence_hoare_rel[OF I0' induct_step I0]])
+                                 OF while_lfp_hoare_rel_minimal[OF WF uimp_refl, of _ _ e],
+                                 OF consequence_hoare_rel[OF I0' induct_step I0]])
 
 lemma while_lfp_invr_vrt_hoare_rel_consequence:
   assumes WF: "wf R"
@@ -521,9 +513,108 @@ lemma while_lfp_invr_vrt_hoare_rel_sp:
                                   OF while_lfp_hoare_rel_minimal[OF WF uimp_refl, of _ _ e],
                                   OF consequence_hoare_rel[OF uimp_refl induct_step I0]])
   
-subsection {*Hoare for from_until_loop*}     
-(*TODO:Partial correctness rules for the other rules*)
+subsection {*Hoare for from_until_loop*}  
+  
+lemma from_until_lfp_hoare_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>\<not> exit \<and> invar\<rbrace> body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init until exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+  unfolding from_until_gfp_rel_alt_def
+  proof -
+    have induct_step': "\<lbrace>invar \<and> \<not> exit\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+      by (metis assms(2) utp_pred_laws.inf.commute)
+    have "`\<not> \<not> exit \<and> invar \<Rightarrow> invar \<and> exit`"
+      by (simp add: utp_pred_laws.inf.commute)
+    then have "\<lbrace>invar\<rbrace>while\<^sup>\<top> \<not> exit do body od\<lbrace>invar \<and> exit\<rbrace>\<^sub>u"
+      using induct_step' by (metis (no_types) p_imp_p taut_true while_gfp_hoare_rel_wp_partial)
+    then show "\<lbrace>p\<rbrace>init ;; while\<^sup>\<top> \<not> exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+      by (metis (no_types) seq_hoare_rel seq_step utp_pred_laws.inf.commute)
+  qed
 
+lemma from_until_lfp_invr_hoare_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>\<not> exit \<and> invar\<rbrace> body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init invr invar until exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+  unfolding from_until_gfp_invr_rel_def
+  by (auto intro!: assms from_until_lfp_hoare_rel_minimal_partial)  
+
+lemma from_until_gfp_hoare_rel_consequence_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q `"
+  assumes I0': "`invar \<and> \<not> exit \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace> body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init until exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding from_until_gfp_rel_alt_def
+  proof -
+    have PHI': "`\<not> \<not> exit \<and> invar \<Rightarrow> q`"
+      by (metis PHI utp_pred_laws.double_compl)
+    have "`invar \<Rightarrow> invar`"
+      by (metis uimp_refl)
+    then have "\<lbrace>invar\<rbrace>while\<^sup>\<top> \<not> exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+      using PHI' I0 I0' induct_step while_gfp_hoare_rel_consequence_partial by blast
+    then show "\<lbrace>p\<rbrace>init ;; while\<^sup>\<top> \<not> exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+      using seq_hoare_rel seq_step by blast
+  qed
+
+lemma from_until_gfp_invr_hoare_rel_consequence_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q `"
+  assumes I0': "`invar \<and> \<not> exit \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace> body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init invr invar until exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding from_until_gfp_invr_rel_def
+  by (auto intro!: assms from_until_gfp_hoare_rel_consequence_partial)  
+
+lemma from_until_gfp_hoare_rel_wp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q`" 
+  assumes I0': "`invar \<and> \<not> exit \<Rightarrow> p'`"  
+  assumes induct_step:"\<lbrace>p'\<rbrace> body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init until exit do body od\<lbrace>q\<rbrace>\<^sub>u"  
+  unfolding from_until_gfp_rel_alt_def
+proof -
+  have "\<lbrace>invar\<rbrace>while\<^sup>\<top> \<not> exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+    by (metis (no_types) I0' PHI induct_step utp_pred_laws.double_compl while_gfp_hoare_rel_wp_partial)
+  then show "\<lbrace>p\<rbrace>init ;; while\<^sup>\<top> \<not> exit do body od\<lbrace>q\<rbrace>\<^sub>u"
+    using seq_hoare_rel seq_step by blast
+qed 
+
+lemma from_until_gfp_invr_hoare_rel_wp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q`" 
+  assumes I0': "`invar \<and> \<not> exit \<Rightarrow> p'`"  
+  assumes induct_step:"\<lbrace>p'\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init invr invar until exit do body od\<lbrace>q\<rbrace>\<^sub>u"  
+  unfolding from_until_gfp_invr_rel_def
+  by (auto intro!: assms from_until_gfp_hoare_rel_wp_partial)  
+
+lemma from_until_gfp_hoare_rel_sp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q`"
+  assumes induct_step: "\<lbrace>invar \<and> \<not> exit\<rbrace> body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init until exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+  unfolding from_until_gfp_rel_alt_def
+proof -
+  have "\<lbrace>invar\<rbrace>while\<^sup>\<top> \<not> exit do body od\<lbrace>\<not> \<not> exit \<and> invar\<rbrace>\<^sub>u"
+    by (metis I0 induct_step uimp_refl while_gfp_hoare_rel_sp_partial)
+  then have "\<lbrace>invar\<rbrace>while\<^sup>\<top> \<not> exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+    by (metis double_negation)
+  then show "\<lbrace>p\<rbrace>init ;; while\<^sup>\<top> \<not> exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+    by (metis seq_hoare_rel seq_step)
+qed
+
+lemma from_until_gfp_invr_hoare_rel_sp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`exit \<and> invar \<Rightarrow> q`"
+  assumes induct_step: "\<lbrace>invar \<and> \<not> exit\<rbrace> body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>from\<^sup>\<top> init invr invar until exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
+  unfolding  from_until_gfp_invr_rel_def
+  by (auto intro!: assms from_until_gfp_hoare_rel_sp_partial)
+    
 lemma from_until_lfp_hoare_rel_minimal:
   assumes WF: "wf R"
   assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
@@ -531,8 +622,8 @@ lemma from_until_lfp_hoare_rel_minimal:
   shows "\<lbrace>p\<rbrace>from\<^sub>\<bottom> init until exit do body od\<lbrace>exit \<and> invar\<rbrace>\<^sub>u"
   unfolding from_until_lfp_rel_alt_def while_lfp_rel_def_alt
   by (rule seq_hoare_rel[OF seq_step, 
-                          OF mu_rel_hoare_rel[OF WF if_rel_mono cond_rel_hoare_rel, of _ e],
-                          OF seq_hoare_rel[OF induct_step], OF _ skip_rel_hoare_rel_intro],                             
+                         OF mu_hoare_rel[OF WF if_rel_mono cond_hoare_rel, of _ e],
+                         OF seq_hoare_rel[OF induct_step], OF _ skip_rel_hoare_rel_intro],                             
       rel_auto+)
 
 lemma from_until_lfp_invr_hoare_rel_minimal:
@@ -649,11 +740,102 @@ lemma from_until_lfp_invr_vrt_hoare_rel_sp:
 
 subsection {*Hoare for do_while_loop*}     
 
+lemma do_while_gfp_hoare_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_rel_alt_def
+  proof -
+    have "\<lbrace>invar\<rbrace>while\<^sup>\<top> b do body od\<lbrace>invar \<and> \<not> b\<rbrace>\<^sub>u"
+      by (metis (no_types) assms(2) conj_comm p_imp_p taut_true while_gfp_hoare_rel_wp_partial)
+    then show "\<lbrace>p\<rbrace>body ;; while\<^sup>\<top> b do body od\<lbrace>\<not> b \<and> invar\<rbrace>\<^sub>u"
+      by (metis (no_types) conj_comm seq_hoare_rel seq_step)
+  qed    
+
+lemma do_while_gfp_invr_hoare_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b invr invar od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_invr_rel_def
+  by (simp add: from_until_lfp_hoare_rel_minimal_partial induct_step seq_step)
+
+lemma do_while_gfp_hoare_rel_consequence_partial:
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"
+  assumes induct_step: "\<lbrace>p'\<rbrace>body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b od\<lbrace>q\<rbrace>\<^sub>u"
+proof -
+  have "`invar \<and> \<not> \<not> b \<Rightarrow> p'`"
+    by (simp add: I0' utp_pred_laws.inf_commute)
+  then have "\<lbrace>p\<rbrace>from\<^sup>\<top> body until \<not> b do body od\<lbrace>q\<rbrace>\<^sub>u"
+    using I0 PHI from_until_gfp_hoare_rel_consequence_partial induct_step seq_step by blast
+  then show ?thesis
+    by (metis do_while_gfp_rel_def)
+qed  
+ 
+lemma do_while_gfp_invr_hoare_rel_consequence_partial:
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"
+  assumes induct_step: "\<lbrace>p'\<rbrace>body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b invr invar od\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_invr_rel_def
+  proof -
+    have "`invar \<and> \<not> \<not> b \<Rightarrow> p'`"
+      by (simp add: I0' utp_pred_laws.inf_commute)
+    then show "\<lbrace>p\<rbrace>from\<^sup>\<top> body until \<not> b do body od\<lbrace>q\<rbrace>\<^sub>u"
+      using I0 PHI from_until_gfp_hoare_rel_consequence_partial induct_step seq_step by blast
+  qed
+
+lemma do_while_gfp_hoare_rel_wp_partial:
+  assumes seq_step: "\<lbrace>invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  shows "\<lbrace>invar\<rbrace>do body while\<^sup>\<top> b od\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_rel_alt_def
+  using PHI reverse_impl_refine seq_hoare_rel seq_step utp_pred_laws.inf.cobounded2 
+        while_gfp_hoare_rel_wp_partial 
+  by fastforce
+
+lemma do_while_gfp_invr_hoare_rel_wp_partial:
+  assumes seq_step: "\<lbrace>invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  shows "\<lbrace>invar\<rbrace>do body while\<^sup>\<top> b invr invar od\<lbrace>q\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_invr_rel_def
+  using PHI from_until_gfp_hoare_rel_wp_partial reverse_impl_refine seq_step utp_pred_laws.inf_le1 
+  by blast
+      
+lemma do_while_gfp_hoare_rel_sp_partial:
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_rel_alt_def
+  proof -
+    have "\<lbrace>invar \<and> b\<rbrace>body\<lbrace>q'\<rbrace>\<^sub>u"
+      by (metis conj_comm induct_step)
+    then show "\<lbrace>p\<rbrace>body ;; while\<^sup>\<top> b do body od\<lbrace>\<not> b \<and> invar\<rbrace>\<^sub>u"
+      by (meson I0 seq_hoare_rel seq_step uimp_refl while_gfp_hoare_rel_sp_partial)
+  qed
+      
+lemma do_while_gfp_invr_hoare_rel_sp_partial:
+  assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q' \<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sup>\<top> b invr invar od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  unfolding do_while_gfp_rel_alt_def
+  using I0 do_while_gfp_invr_hoare_rel_minimal_partial induct_step post_weak_hoare_rel seq_step 
+  by blast
+    
 lemma do_while_lfp_hoare_rel_minimal:
   assumes WF: "wf R"
   assumes seq_step: "\<lbrace>p\<rbrace>body\<lbrace>invar\<rbrace>\<^sub>u"  
   assumes induct_step: "\<And> st. \<lbrace>b \<and> invar \<and>  e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body\<lbrace>invar \<and> (e, \<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>u"
-  shows" \<lbrace>p\<rbrace>do body while\<^sub>\<bottom> b od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>do body while\<^sub>\<bottom> b od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"  
   unfolding do_while_lfp_rel_alt_def
   by (rule seq_hoare_rel[OF seq_step while_lfp_hoare_rel_minimal[OF WF uimp_refl induct_step]])  
 
@@ -770,8 +952,87 @@ lemma do_while_lfp_invr_vrt_hoare_rel_sp:
   by (auto intro!: assms from_until_lfp_hoare_rel_sp)
            
 subsection {*Hoare for for_loop*}     
+
+lemma for_hoare_gfp_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body;;incr\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) do body od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  unfolding for_gfp_rel_alt_def
+proof -
+  have "\<lbrace>invar\<rbrace>while\<^sup>\<top> b do body ;; incr od\<lbrace>invar \<and> \<not> b\<rbrace>\<^sub>u"
+    by (metis (no_types) assms(2) p_imp_p taut_true utp_pred_laws.inf_commute while_gfp_hoare_rel_wp_partial)
+  then show "\<lbrace>p\<rbrace>init ;; while\<^sup>\<top> b do body ;; incr od\<lbrace>\<not> b \<and> invar\<rbrace>\<^sub>u"
+    by (metis (no_types) seq_hoare_rel seq_step utp_pred_laws.inf_commute)
+qed
+  
+lemma for_gfp_invr_hoare_rel_minimal_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body;;incr\<lbrace>invar\<rbrace>\<^sub>u"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) invr invar do body od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  by (simp add: for_gfp_invr_rel_def from_until_lfp_hoare_rel_minimal_partial induct_step seq_step) 
+         
+lemma for_gfp_hoare_rel_consequence_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace>body;;incr\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q'\<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) do body od\<lbrace>q\<rbrace>\<^sub>u"
+proof -
+  have "`invar \<and> \<not> \<not> b \<Rightarrow> p'`"
+    by (metis I0' conj_comm double_negation)
+  then have "\<lbrace>p\<rbrace>from\<^sup>\<top> init until \<not> b do body ;; incr od\<lbrace>q\<rbrace>\<^sub>u"
+    by (meson I0 PHI from_until_gfp_hoare_rel_consequence_partial induct_step seq_step)
+  then show ?thesis
+    by (metis for_gfp_rel_def)
+qed    
+
+lemma for_gfp_invr_hoare_rel_consequence_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace>body;;incr\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q'\<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) invr invar  do body od\<lbrace>q\<rbrace>\<^sub>u"
+  using I0 I0' PHI consequence_hoare_rel for_gfp_invr_hoare_rel_minimal_partial induct_step 
+        post_weak_hoare_rel seq_step 
+  by blast   
+  
+lemma for_gfp_hoare_rel_wp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace>body;;incr\<lbrace>invar\<rbrace>\<^sub>u" 
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) do body od\<lbrace>q\<rbrace>\<^sub>u"
+  using I0' PHI for_gfp_hoare_rel_consequence_partial induct_step seq_step uimp_refl 
+  by blast
     
-lemma for_hoare_lfp_rel_minimal:
+lemma for_gfp_invr_hoare_rel_wp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
+  assumes PHI: "`\<not>b \<and> invar \<Rightarrow> q`"  
+  assumes I0': "`b \<and> invar \<Rightarrow> p'`"  
+  assumes induct_step: "\<lbrace>p'\<rbrace>body;;incr\<lbrace>invar\<rbrace>\<^sub>u" 
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) invr invar do body od\<lbrace>q\<rbrace>\<^sub>u"
+  using I0' PHI for_gfp_invr_hoare_rel_consequence_partial induct_step seq_step uimp_refl 
+  by blast
+    
+lemma for_gfp_hoare_rel_sp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u" 
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body;;incr\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q'\<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) do body od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  using I0 for_hoare_gfp_rel_minimal_partial induct_step post_weak_hoare_rel seq_step 
+  by blast    
+    
+lemma for_gfp_invr_hoare_rel_sp_partial:
+  assumes seq_step:"\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u" 
+  assumes induct_step: "\<lbrace>b \<and> invar\<rbrace>body;;incr\<lbrace>q'\<rbrace>\<^sub>u"
+  assumes I0: "`q'\<Rightarrow> invar`"  
+  shows "\<lbrace>p\<rbrace>for\<^sup>\<top> (init, b, incr) invr invar do body od\<lbrace>\<not>b \<and> invar\<rbrace>\<^sub>u"
+  using I0 for_gfp_invr_hoare_rel_minimal_partial induct_step post_weak_hoare_rel seq_step 
+  by blast 
+    
+lemma for_lfp_hoare_rel_minimal:
   assumes WF: "wf R"
   assumes seq_step: "\<lbrace>p\<rbrace>init\<lbrace>invar\<rbrace>\<^sub>u"
   assumes induct_step: "\<And>st. \<lbrace>b \<and> invar \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace>body ;; incr\<lbrace>invar \<and> (e,\<guillemotleft>st\<guillemotright>)\<^sub>u \<in>\<^sub>u \<guillemotleft>R\<guillemotright>\<rbrace>\<^sub>u" 
