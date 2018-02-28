@@ -244,9 +244,11 @@ fun adhoc_overloading_cmd raw_args lthy =
       lthy
       |> Local_Theory.background_theory_result
            (fn thy => (Data_adhoc_cmd.get thy, Data_adhoc_cmd.put [] thy))
-      |> uncurry (fold (fn args => fn lthy =>
-           lthy |> Local_Theory.declaration {syntax = true, pervasive = false}
-                     (adhoc_overloading_cmd' false args)))
+      |> uncurry (fn l =>
+         l |> tap (fn [] => warning "empty adhoc overloaded entities" | _ => ())
+           |> fold (fn args => fn lthy =>
+              lthy |> Local_Theory.declaration {syntax = true, pervasive = false}
+                        (adhoc_overloading_cmd' false args)))
     else
       let
         val args =

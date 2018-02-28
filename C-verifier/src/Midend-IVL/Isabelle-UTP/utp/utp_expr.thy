@@ -341,7 +341,7 @@ definition ffun_entries :: "'k set \<Rightarrow> ('k \<Rightarrow> 'v) \<Rightar
 
 text \<open> We then set up the overloading for a number of useful constructs for various collections. \<close>
   
-adhoc_overloading
+adhoc_overloading'
   uempty 0 and
   uapply fun_apply and uapply nth and uapply pfun_app and
   uapply ffun_app and
