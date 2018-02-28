@@ -183,6 +183,9 @@ fun extract_params mode default_params override_params =
     val print = lookup_bool "print"
     val equal_as_parse = lookup_bool "equal_as_parse"
     val equal_as_print = lookup_bool "equal_as_print"
+    val _ = if equal_as_parse andalso equal_as_print then
+              error "Combination of options not yet supported"
+            else ()
   in
     {parse = parse, print = print, equal_as_parse = equal_as_parse, equal_as_print = equal_as_print}
   end
