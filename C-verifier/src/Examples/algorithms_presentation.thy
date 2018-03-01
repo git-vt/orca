@@ -22,20 +22,9 @@ section \<open>setup and makeup!\<close>
 
 
 sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals]
-  
-no_adhoc_overloading
-  uempty 0 and
-  uapply fun_apply and uapply nth and uapply pfun_app and
-  uapply ffun_app and 
-  uupd pfun_upd and uupd ffun_upd and uupd list_augment and
-  udom Domain and udom pdom and udom fdom and udom seq_dom and
-  udom Range and uran pran and uran set and uran fran  and
-  udomres pdom_res and udomres fdom_res and
-  uranres pran_res and udomres fran_res and
-  ucard card and ucard pcard and ucard length and
-  usums list_sum and usums Sum and usums pfun_sum and
-  uentries pfun_entries and uentries ffun_entries
-  
+
+no_adhoc_overloading'_all
+
 section \<open>Simple algorithms\<close>
 
 subsection \<open>Increment method\<close>
