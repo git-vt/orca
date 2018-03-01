@@ -24,6 +24,34 @@ begin
 
 named_theorems algebraic_laws_prog  
 
+lemma fun_apply_rep_prog:
+  "\<lbrakk>f X\<rbrakk>\<^sub>p = (Rep_prog \<circ> f \<circ> Abs_prog) \<lbrakk>X\<rbrakk>\<^sub>p"
+  by (simp add: Rep_prog_inverse)  
+    
+subsection \<open>Monotonic laws\<close>
+  lemma Mono_progI:
+  "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
+    apply ptransfer
+  apply (rule Mono_utp_orderI)
+  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if comp_apply)
+  done
+   
+lemma Mono_progD:
+  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y"
+  apply ptransfer
+  apply (drule Mono_utp_orderD)
+      unfolding fun_apply_rep_prog mono_prog_def
+     apply simp_all
+   apply (metis Healthy_def' Healthy_if Rep_prog_H1_H3_closed ndes_hcond_def)+
+  done
+
+lemma Mono_progE:
+  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (f x \<sqsubseteq> f y \<Longrightarrow> thesis) \<Longrightarrow> thesis"
+  apply ptransfer
+  unfolding fun_apply_rep_prog mono_prog_def
+  using Mono_utp_orderD Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns
+  by blast
+    
 subsection Skip
 
 text \<open>In this section we introduce the algebraic laws of programming related to the SKIP
@@ -294,53 +322,7 @@ subsection \<open>While laws for programs\<close>
   
 text \<open>In this section we introduce the algebraic laws of programming related to the while
       statement.\<close>
-
-lemma fun_prog_fun_hrel_des_eq:
-  "( Rep_prog \<circ> (\<lambda>x . body)  \<circ> \<H>\<^bsub>NDES\<^esub>) = (Rep_prog \<circ> (\<lambda>X.  body) \<circ> Abs_prog \<circ> \<H>\<^bsub>NDES\<^esub>)" 
-  by (simp add: comp_def prog_rep_eq Abs_prog_Rep_prog_Ncarrier)
-
-lemma seq_prog_seq_hrel_des_eq:
-  "((op ;;) \<lbrakk>body\<rbrakk>\<^sub>p \<circ> \<H>\<^bsub>NDES\<^esub>) = (Rep_prog \<circ> op ; body \<circ> Abs_prog \<circ> \<H>\<^bsub>NDES\<^esub>)" 
-  by (simp add: comp_def prog_rep_eq Abs_prog_Rep_prog_Ncarrier)
-
-lemma if_prog_if_hrel_des_eq:
-  "((\<lambda>X . bif\<^sub>D b then \<lbrakk>body\<rbrakk>\<^sub>p ;; X else SKIP\<^sub>D eif) \<circ> \<H>\<^bsub>NDES\<^esub>) = 
-   (Rep_prog \<circ> (\<lambda>X. IF b THEN body ; X ELSE SKIP FI) \<circ> Abs_prog \<circ> \<H>\<^bsub>NDES\<^esub>)" 
-  by (simp add: comp_def prog_rep_eq Abs_prog_Rep_prog_Ncarrier)
-
-definition 
-  "mono_prog f = Mono\<^bsub>uthy_order NDES\<^esub> (Rep_prog \<circ> f \<circ> Abs_prog)"
-definition
-  "idem_prog f = Idem\<^bsub>uthy_order NDES\<^esub> (Rep_prog \<circ> f \<circ> Abs_prog)"
-
-lemma fun_apply_rep_prog:"\<lbrakk>f X\<rbrakk>\<^sub>p = (Rep_prog \<circ> f \<circ> Abs_prog) \<lbrakk>X\<rbrakk>\<^sub>p"
-  by (simp add: Rep_prog_inverse)  
-
-lemma Mono_progI:
-  "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
-  unfolding mono_prog_def
-  apply (rule Mono_utp_orderI)
-  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if Rep_prog_refine comp_apply)
-  done
-   
-lemma Mono_progD:
-  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y"
-  apply ptransfer
-  unfolding fun_apply_rep_prog mono_prog_def
-  apply (drule Mono_utp_orderD)
-     apply simp_all
-   apply (metis Healthy_def' Healthy_if Rep_prog_H1_H3_closed ndes_hcond_def)+
-  done
-
-lemma Mono_progE:
-  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (f x \<sqsubseteq> f y \<Longrightarrow> thesis) \<Longrightarrow> thesis"
-  apply ptransfer
-  unfolding fun_apply_rep_prog mono_prog_def
-  apply (metis (mono_tags, hide_lams) Mono_progD Rep_prog_refine fun_apply_rep_prog mono_prog_def)
-  done
-    
-(*TODO : basic lemmas for Idempotent*)  
-    
+        
 lemma lfp_prog_unfold: 
   assumes M:"mono_prog f"  
   shows "\<mu>\<^sub>p f = f (\<mu>\<^sub>p f)"
@@ -350,14 +332,12 @@ proof -
     unfolding fun_apply_rep_prog  prec_lfp_prog.rep_eq 
     apply (subst (1) normal_design_theory_continuous.LFP_healthy_comp) 
     apply (subst (2) normal_design_theory_continuous.LFP_healthy_comp)    
-    using M unfolding mono_prog_def
-    by (metis (mono_tags, lifting) Pi_I Rep_prog comp_apply comp_def 
-              normal_design_theory_continuous.LFP_healthy_comp 
-              normal_design_theory_continuous.LFP_unfold)
+    using M 
+      by (metis (mono_tags, lifting) Pi_I Rep_prog mono_prog.rep_eq normal_design_theory_continuous.LFP_healthy_comp normal_design_theory_continuous.LFP_unfold o_def)
 qed
   
 lemma lfp_prog_const: "\<mu>\<^sub>p (\<lambda>x. t) = t"
-  by (simp add: mono_prog_def lfp_prog_unfold utp_theory.Mono_utp_orderI)
+  by (simp add: mono_prog.rep_eq lfp_prog_unfold utp_theory.Mono_utp_orderI)
 
 lemma lfp_prog_idem:
   "mono_prog f \<Longrightarrow> idem_prog f \<Longrightarrow> \<mu>\<^sub>p f = f ABORT"
@@ -368,10 +348,10 @@ proof (ptransfer,
   then show ?case using Rep_prog by fastforce
 next
   case 2
-  then show ?case unfolding mono_prog_def by simp 
+  then show ?case  by simp 
 next
   case 3
-  then show ?case unfolding idem_prog_def by simp 
+  then show ?case by simp 
 next
   case 4
   then show ?case unfolding fun_apply_rep_prog by (simp add: abort.rep_eq)
@@ -386,9 +366,25 @@ next
   case 2
   then show ?case unfolding fun_apply_rep_prog by simp
 qed 
+
+lemma lfp_prog_greatest:
+ "(\<And>u. f u \<sqsubseteq> u \<Longrightarrow> A \<sqsubseteq> u) \<Longrightarrow> A \<sqsubseteq>  \<mu>\<^sub>p f"   
+proof(ptransfer, rule normal_design_theory_continuous.weak.LFP_greatest, goal_cases)
+  case 1
+  then show ?case by (simp add: Rep_prog_H1_H3_closed)
+next
+  case 2
+  then show ?case unfolding fun_apply_rep_prog by (metis Abs_prog_Rep_prog_ndesign Healthy_def)
+qed 
   
-lemma lfp_prog_least_fixed_point:
-   "f x = x \<Longrightarrow> mono_prog f \<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq> x"
+lemma lfp_prog_mono:
+  "(\<And>u. f u \<sqsubseteq> g u)\<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq>  \<mu>\<^sub>p g"
+  apply (rule lfp_prog_lowerbound[THEN lfp_prog_greatest])
+  apply (blast intro: order_trans)  
+  done
+    
+lemma lfp_prog_fixed_point:
+   "f x = x \<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq> x"
    by (simp add: lfp_prog_lowerbound)
     
 lemma while_lfp_prog_mu_prog:
@@ -423,7 +419,7 @@ lemma while_lfp_prog_false:
 lemma while_lfp_prog_non_termination:
   "WHILE true DO SKIP OD = ABORT"
   unfolding while_lfp_prog_mu_prog if_prog_true 
-  by (auto simp add: lfp_prog_idem Mono_progI Rep_prog_inverse idem_prog_def idempotent_def)
+  by (auto simp add: lfp_prog_idem Mono_progI Rep_prog_inverse idem_prog.rep_eq idempotent_def)
     
 subsection \<open>Iteration laws\<close>
     

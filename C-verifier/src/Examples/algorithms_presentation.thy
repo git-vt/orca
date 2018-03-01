@@ -18,8 +18,23 @@ theory algorithms_presentation
 
   imports "../Front-End/Syntax_Interface"
 begin
+section \<open>setup and makeup!\<close>    
 
-sledgehammer_params [stop_on_first, parallel_subgoals, join_subgoals]
+
+sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals]
+  
+no_adhoc_overloading
+  uempty 0 and
+  uapply fun_apply and uapply nth and uapply pfun_app and
+  uapply ffun_app and 
+  uupd pfun_upd and uupd ffun_upd and uupd list_augment and
+  udom Domain and udom pdom and udom fdom and udom seq_dom and
+  udom Range and uran pran and uran set and uran fran  and
+  udomres pdom_res and udomres fdom_res and
+  uranres pran_res and udomres fran_res and
+  ucard card and ucard pcard and ucard length and
+  usums list_sum and usums Sum and usums pfun_sum and
+  uentries pfun_entries and uentries ffun_entries
   
 section \<open>Simple algorithms\<close>
 
@@ -113,5 +128,39 @@ program_spec even_count_gen'_wp_H1_H3:
   using dvd_imp_mod_0 odd_succ_div_two
   apply blast
   done
-
+ 
+program_spec max_program_correct:
+  assumes "r \<bowtie> i" 
+  assumes "vwb_lens i" "vwb_lens r" 
+  assumes_utp  "uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0"
+  ensures_utp "&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>) "  
+  prog_utp  
+        "INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
+         VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
+         WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
+         DO 
+            IF &r <\<^sub>u  bop nth \<guillemotleft>a\<guillemotright> (&i) 
+            THEN r :== bop nth \<guillemotleft>a\<guillemotright> (&i)
+            ELSE SKIP
+            FI;
+            i :== (&i + 1)
+         OD"  
+      vcg_wp   
+  subgoal for _ 
+    by (cases a; auto)
+  subgoal for _ i'
+     apply (simp add: take_Suc_conv_app_nth )
+    apply (subst (asm) Max_insert) 
+      apply auto
+    done
+  subgoal for _ i' 
+    apply (clarsimp simp: take_Suc_conv_app_nth)  
+    apply (cases a, auto)
+    done
+  subgoal for _ i 
+    by (clarsimp simp: take_Suc_conv_app_nth)  
+  subgoal for _ i   
+    by (clarsimp simp: take_Suc_conv_app_nth)  
+  done   
+    
 end

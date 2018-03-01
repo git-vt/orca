@@ -161,6 +161,72 @@ translations
   "_frame (_salphaset (_salphamk x)) P" <= "CONST pframe_prog x P"
   "_antiframe x P" => "CONST pantiframe_prog x P"
   "_antiframe (_salphaset (_salphamk x)) P" <= "CONST pantiframe_prog x P"
+  
+subsection \<open>monotonicity for PROG\<close>
+
+lift_definition mono_prog::  "('a prog \<Rightarrow> 'a prog) \<Rightarrow> bool" 
+ is "Mono\<^bsub>uthy_order NDES\<^esub>"    
+proof -
+  fix fun1 :: "'a hrel_des \<Rightarrow> 'a hrel_des" and fun2 :: "'a hrel_des \<Rightarrow> 'a hrel_des"
+  assume a1: "\<And>x. x is \<^bold>N \<Longrightarrow> (fun1 x is \<^bold>N) \<and> fun1 x = fun2 x"
+  have f2: "\<forall>f fa. (\<exists>u ua. (((u::('a des, _) rel) is f) \<and> (ua is f) \<and> u \<sqsubseteq> ua) \<and> \<not> fa u \<sqsubseteq> fa ua) \<or> Mono\<^bsub>utp_order f\<^esub> fa"
+    by (meson Algebraic_laws_design_aux.Mono_utp_orderI)
+  obtain uu :: "('a hrel_des \<Rightarrow> 'a hrel_des) \<Rightarrow> ('a hrel_des \<Rightarrow> 'a hrel_des) \<Rightarrow> 'a hrel_des" and uua :: "('a hrel_des \<Rightarrow> 'a hrel_des) \<Rightarrow> ('a hrel_des \<Rightarrow> 'a hrel_des) \<Rightarrow> 'a hrel_des" where
+    "\<forall>x0 x1. (\<exists>v2 v3. ((v2 is x1) \<and> (v3 is x1) \<and> v2 \<sqsubseteq> v3) \<and> \<not> x0 v2 \<sqsubseteq> x0 v3) = (((uu x0 x1 is x1) \<and> (uua x0 x1 is x1) \<and> uu x0 x1 \<sqsubseteq> uua x0 x1) \<and> \<not> x0 (uu x0 x1) \<sqsubseteq> x0 (uua x0 x1))"
+    by moura
+  then have f3: "\<forall>f fa. (uu fa f is f) \<and> (uua fa f is f) \<and> uu fa f \<sqsubseteq> uua fa f \<and> \<not> fa (uu fa f) \<sqsubseteq> fa (uua fa f) \<or> Mono\<^bsub>utp_order f\<^esub> fa"
+    using f2 by presburger
+  have f4: "\<forall>u. \<not> (u is \<^bold>N) \<or> (fun1 u is \<^bold>N) \<and> fun1 u = fun2 u"
+    using a1 by blast
+  have "\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun2 \<longrightarrow> uua fun2 \<H>\<^bsub>NDES\<^esub> is \<^bold>N"
+    using f3 by (metis is_Ncarrier_is_ndesigns)
+  then have f5: "\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun2 \<longrightarrow> (fun1 (uua fun2 \<H>\<^bsub>NDES\<^esub>) is \<^bold>N) \<and> fun1 (uua fun2 \<H>\<^bsub>NDES\<^esub>) = fun2 (uua fun2 \<H>\<^bsub>NDES\<^esub>)"
+    using f4 by meson
+  have "\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun2 \<longrightarrow> uu fun2 \<H>\<^bsub>NDES\<^esub> is \<^bold>N"
+    using f3 by (metis is_Ncarrier_is_ndesigns)
+  then have f6: "\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun2 \<longrightarrow> \<not> fun1 (uu fun2 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun1 (uua fun2 \<H>\<^bsub>NDES\<^esub>)"
+    using f5 f4 f3 by auto
+  { assume "fun2 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun2 (uua fun1 \<H>\<^bsub>NDES\<^esub>)"
+    moreover
+    { assume "\<not> (fun2 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun2 (uua fun1 \<H>\<^bsub>NDES\<^esub>)) = (fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun1 (uua fun1 \<H>\<^bsub>NDES\<^esub>))"
+      moreover
+      { assume "\<not> (fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) is \<^bold>N) \<or> \<not> fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) = fun2 (uu fun1 \<H>\<^bsub>NDES\<^esub>)"
+        then have "\<not> (uu fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> (uua fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> uu fun1 \<H>\<^bsub>NDES\<^esub> \<sqsubseteq> uua fun1 \<H>\<^bsub>NDES\<^esub> \<or> fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun1 (uua fun1 \<H>\<^bsub>NDES\<^esub>)"
+          using f4 by (metis is_Ncarrier_is_ndesigns) }
+      ultimately have "\<not> (uu fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> (uua fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> uu fun1 \<H>\<^bsub>NDES\<^esub> \<sqsubseteq> uua fun1 \<H>\<^bsub>NDES\<^esub> \<or> fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun1 (uua fun1 \<H>\<^bsub>NDES\<^esub>)"
+        using f4 by (metis (no_types) is_Ncarrier_is_ndesigns) }
+    ultimately have "\<not> (uu fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> (uua fun1 \<H>\<^bsub>NDES\<^esub> is \<H>\<^bsub>NDES\<^esub>) \<or> \<not> uu fun1 \<H>\<^bsub>NDES\<^esub> \<sqsubseteq> uua fun1 \<H>\<^bsub>NDES\<^esub> \<or> fun1 (uu fun1 \<H>\<^bsub>NDES\<^esub>) \<sqsubseteq> fun1 (uua fun1 \<H>\<^bsub>NDES\<^esub>)"
+      by meson }
+  then have "\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun2 \<or> \<not> (\<not> Mono\<^bsub>uthy_order NDES\<^esub> fun1) = Mono\<^bsub>uthy_order NDES\<^esub> fun2"
+    using f3 Mono_utp_orderD by blast
+  then show "Mono\<^bsub>uthy_order NDES\<^esub> fun1 = Mono\<^bsub>uthy_order NDES\<^esub> fun2"
+    using f6 f3 Mono_utp_orderD by blast
+qed
+  
+lift_definition idem_prog::  "('a prog \<Rightarrow> 'a prog) \<Rightarrow> bool" 
+ is "Idem\<^bsub>uthy_order NDES\<^esub>"
+proof -
+  fix fun1 :: "'a hrel_des \<Rightarrow> 'a hrel_des" and fun2 :: "'a hrel_des \<Rightarrow> 'a hrel_des"
+  assume a1: "\<And>x. x is \<^bold>N \<Longrightarrow> (fun1 x is \<^bold>N) \<and> fun1 x = fun2 x"
+  obtain uu :: "('a hrel_des \<Rightarrow> 'a hrel_des) \<Rightarrow> 'a hrel_des gorder \<Rightarrow> 'a hrel_des" where
+    "\<forall>x0 x1. (\<exists>v2. v2 \<in> carrier x1 \<and> \<not> x0 (x0 v2) .=\<^bsub>x1\<^esub> x0 v2) = (uu x0 x1 \<in> carrier x1 \<and> \<not> x0 (x0 (uu x0 x1)) .=\<^bsub>x1\<^esub> x0 (uu x0 x1))"
+    by moura
+  then have f2: "\<forall>p f. (\<not> Idem\<^bsub>p\<^esub> f \<or> (\<forall>u. \<not> u \<in> carrier p \<or> f (f u) .=\<^bsub>p\<^esub> f u)) \<and> (Idem\<^bsub>p\<^esub> f \<or> uu f p \<in> carrier p \<and> \<not> f (f (uu f p)) .=\<^bsub>p\<^esub> f (uu f p))"
+    by (metis (no_types) idempotent_def)
+  have f3: "\<lbrakk>\<H>\<^bsub>NDES::(NDES, 'a des) uthy\<^esub>\<rbrakk>\<^sub>H = carrier (uthy_order NDES)"
+    by simp
+  moreover
+  { assume "\<not> Idem\<^bsub>uthy_order NDES\<^esub> fun2"
+    then have "\<not> Idem\<^bsub>uthy_order NDES\<^esub> fun2 \<and> \<not> fun2 (fun2 (uu fun2 (uthy_order NDES))) .=\<^bsub>uthy_order NDES\<^esub> fun2 (uu fun2 (uthy_order NDES))"
+      using f2 by meson
+    then have "\<not> (\<not> Idem\<^bsub>uthy_order NDES\<^esub> fun1) = Idem\<^bsub>uthy_order NDES\<^esub> fun2"
+      using f3 f2 a1 by (metis is_Ncarrier_is_ndesigns mem_Collect_eq) }
+  ultimately show "Idem\<^bsub>uthy_order NDES\<^esub> fun1 = Idem\<^bsub>uthy_order NDES\<^esub> fun2"
+    using f2 a1 by (metis is_Ncarrier_is_ndesigns mem_Collect_eq)
+qed
+declare mono_prog.rep_eq[prog_rep_eq]
+declare idem_prog.rep_eq[prog_rep_eq]  
+  
  
 subsection{*Rep Abs and normal designs*}   
 

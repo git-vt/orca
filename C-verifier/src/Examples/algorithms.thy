@@ -363,7 +363,7 @@ lemma gcd_correct'_wp_H1_H3:
     FI
    OD
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
-  apply (insert assms)  
+  apply (insert assms)      
   apply (vcg wp) 
     using gcd_diff1_nat apply auto[1]
     apply (metis gcd.commute gcd_diff1_nat not_less)
