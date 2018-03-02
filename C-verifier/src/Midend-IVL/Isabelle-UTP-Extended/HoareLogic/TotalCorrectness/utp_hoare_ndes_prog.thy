@@ -160,7 +160,7 @@ lemma cond_prog_hoare_prog_t:
   using assms
   by (simp add: prog_rep_eq hoare_des) 
 
-lemma cond_prog_hoare_prog_wp'[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
+lemma cond_prog_hoare_prog_wp[hoare_wp_rules, hoare_wp_proof_annotation_rules]: 
   assumes "\<lbrace>p'\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P" and "\<lbrace>p''\<rbrace>C\<^sub>2\<lbrace>q\<rbrace>\<^sub>P"
   shows "\<lbrace>(b \<and> p')\<or> (\<not>b \<and> p'')\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q\<rbrace>\<^sub>P"
   using assms
@@ -168,7 +168,7 @@ lemma cond_prog_hoare_prog_wp'[hoare_wp_rules, hoare_wp_proof_annotation_rules]:
   apply pred_simp
   done  
     
-lemma cond_prog_hoare_prog_t'[hoare_sp_rules]:
+lemma cond_prog_hoare_prog_sp[hoare_sp_rules]:
   assumes \<open>\<lbrace>b \<and> p\<rbrace>C\<^sub>1\<lbrace>q\<rbrace>\<^sub>P\<close> and \<open>\<lbrace>\<not>b \<and> p\<rbrace>C\<^sub>2\<lbrace>s\<rbrace>\<^sub>P\<close>
   shows \<open>\<lbrace>p\<rbrace>IF b THEN C\<^sub>1 ELSE C\<^sub>2 FI\<lbrace>q \<or> s\<rbrace>\<^sub>P\<close>
   using assms
@@ -176,27 +176,24 @@ lemma cond_prog_hoare_prog_t'[hoare_sp_rules]:
     
 subsection {*Hoare for recursion*}
 
-lemma mono_Monotone_prog: (*This can be used to generate lemmas automatically*)
-  assumes M:"mono F" 
-  shows "Mono\<^bsub>uthy_order NDES\<^esub> (Rep_prog \<circ> F \<circ> Abs_prog \<circ> \<H>\<^bsub>NDES\<^esub>)"
-  by (metis (no_types, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_def M Mono_utp_orderI comp_apply less_eq_prog.rep_eq monoD)
 
-lemma N_prog_funcset: (*This can be used to generate lemmas automatically*)
-  "Rep_prog \<circ> F \<circ> Abs_prog \<circ> \<H>\<^bsub>NDES\<^esub> \<in> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
-  using Rep_prog by auto
-   
+
 lemma mu_prog_hoare_prog:
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
     "\<And> st P. \<lbrace>p \<and>(e,\<guillemotleft>st\<guillemotright>)\<^sub>u\<in>\<^sub>u\<guillemotleft>R\<guillemotright>\<rbrace> P \<lbrace>q\<rbrace>\<^sub>P \<Longrightarrow> \<lbrace>p \<and> e =\<^sub>u \<guillemotleft>st\<guillemotright>\<rbrace> F P \<lbrace>q\<rbrace>\<^sub>P"   
-  shows "\<lbrace>p\<rbrace>\<mu>\<^sub>p F \<lbrace>q\<rbrace>\<^sub>P"
+  shows "\<lbrace>p\<rbrace>\<mu>\<^sub>p F \<lbrace>q\<rbrace>\<^sub>P"   
   apply (simp add: prog_rep_eq)
-  apply (subst normal_design_theory_continuous.LFP_healthy_comp)  
-  apply (rule mu_ndes_hoare_ndes[OF N_prog_funcset WF  mono_Monotone_prog[OF M] , 
-                                    simplified, OF induct_step[unfolded prog_rep_eq]])
-  apply (simp add: Abs_prog_Rep_prog_Ncarrier)   
-  apply (simp add: Healthy_if is_Ncarrier_is_ndesigns)
+  apply (rule mu_ndes_hoare_ndes[OF _ WF]) 
+    apply (rule Pi_I)
+  using Rep_prog 
+    apply auto[]
+  using M mono_Monotone_prog mono_prog.rep_eq 
+   apply blast
+  apply (simp add: Abs_prog_Rep_prog_Ncarrier)      
+  apply (rule induct_step[unfolded prog_rep_eq])
+  apply (simp add: Abs_prog_inverse)
   done
     
 lemma mu_prog_hoare_prog':

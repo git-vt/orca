@@ -50,8 +50,6 @@ lemma sp_assigns_r [sp]:
   apply (metis vwb_lens.put_eq)
 done
 
-
-
 lemma it_is_post_condition:
   "\<lbrace>p\<rbrace>C\<lbrace>p sp C\<rbrace>\<^sub>u"
   by rel_blast
@@ -66,8 +64,7 @@ lemma so:
     
 theorem sp_hoare_link:
   "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>\<^sub>u \<longleftrightarrow> (r \<sqsubseteq> p sp Q)"
-  by rel_auto   
-                             
+  by rel_auto                               
 
 lemma sp_while_r [sp]: 
    assumes \<open>`pre \<Rightarrow> I`\<close> and \<open>\<lbrace>I \<and> b\<rbrace>C\<lbrace>I'\<rbrace>\<^sub>u\<close> and \<open>`I' \<Rightarrow> I`\<close>
@@ -75,21 +72,26 @@ lemma sp_while_r [sp]:
    unfolding sp_upred_def     
    oops   
      
-theorem sp_eq_intro: "\<lbrakk>\<And>r. r sp P = r sp Q\<rbrakk> \<Longrightarrow> P = Q"
+theorem sp_eq_intro: 
+  "\<lbrakk>\<And>r. r sp P = r sp Q\<rbrakk> \<Longrightarrow> P = Q"
   by (rel_auto robust, fastforce+)  
     
 lemma wp_sp_sym:
   "`prog wp (true sp prog)`"
   by rel_auto
      
-lemma it_is_pre_condition:"\<lbrace>C wp Q\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+lemma it_is_pre_condition:
+  "\<lbrace>C wp Q\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast    
 
-lemma it_is_the_weakest_pre:"`P \<Rightarrow> C wp Q` = \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+lemma it_is_the_weakest_pre:
+  "`P \<Rightarrow> C wp Q` \<Longrightarrow> \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast  
 
-lemma s_pre:"`P \<Rightarrow> C wp Q`=\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
-  by rel_blast     
+lemma so':
+  "`P \<Rightarrow> C wp Q`=\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+  by rel_blast
+    
 end  
   
 

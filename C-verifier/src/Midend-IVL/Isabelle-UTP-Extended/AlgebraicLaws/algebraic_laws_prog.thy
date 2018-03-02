@@ -29,22 +29,23 @@ lemma fun_apply_rep_prog:
   by (simp add: Rep_prog_inverse)  
     
 subsection \<open>Monotonic laws\<close>
-  lemma Mono_progI:
+  
+lemma Mono_progI:
   "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
-    apply ptransfer
+  apply ptransfer
   apply (rule Mono_utp_orderI)
   apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if comp_apply)
   done
-   
+    
 lemma Mono_progD:
   "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y"
   apply ptransfer
   apply (drule Mono_utp_orderD)
-      unfolding fun_apply_rep_prog mono_prog_def
+  unfolding fun_apply_rep_prog mono_prog_def
      apply simp_all
    apply (metis Healthy_def' Healthy_if Rep_prog_H1_H3_closed ndes_hcond_def)+
   done
-
+    
 lemma Mono_progE:
   "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (f x \<sqsubseteq> f y \<Longrightarrow> thesis) \<Longrightarrow> thesis"
   apply ptransfer
@@ -52,6 +53,11 @@ lemma Mono_progE:
   using Mono_utp_orderD Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns
   by blast
     
+lemma mono_Monotone_prog: 
+  assumes M:"mono F"
+  shows "mono_prog F"
+  by (simp add: Mono_progI assms monoD) 
+     
 subsection Skip
 
 text \<open>In this section we introduce the algebraic laws of programming related to the SKIP
@@ -335,7 +341,7 @@ proof -
     using M 
       by (metis (mono_tags, lifting) Pi_I Rep_prog mono_prog.rep_eq normal_design_theory_continuous.LFP_healthy_comp normal_design_theory_continuous.LFP_unfold o_def)
 qed
-  
+
 lemma lfp_prog_const: "\<mu>\<^sub>p (\<lambda>x. t) = t"
   by (simp add: mono_prog.rep_eq lfp_prog_unfold utp_theory.Mono_utp_orderI)
 
