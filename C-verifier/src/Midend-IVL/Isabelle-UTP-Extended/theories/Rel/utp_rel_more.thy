@@ -15,7 +15,7 @@
  ******************************************************************************)
 
 theory utp_rel_more
-imports   "../../../Isabelle-UTP/utp/utp_rel"
+imports UTP.utp_rel
 begin
 section \<open>More on Rel programs\<close> 
 subsection \<open>skip\<close>  
@@ -40,12 +40,6 @@ definition from_until_gfp_rel :: "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<R
 definition from_until_lfp_rel :: "'\<alpha> hrel \<Rightarrow>'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("from\<^sub>\<bottom> _ until _ do _ od") 
   where "from\<^sub>\<bottom> init until exit do body od =  
          init ;; (\<mu> X \<bullet> bif \<not> exit then (body ;; X) else SKIP\<^sub>r eif)" 
-
-definition while_gfp_rel :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sup>\<top> _ do _ od")
-where "while\<^sup>\<top> b do body od = from\<^sup>\<top> SKIP\<^sub>r until \<not> b do body od"
-
-definition while_lfp_rel :: "'\<alpha> cond \<Rightarrow> '\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("while\<^sub>\<bottom> _ do _ od") 
-  where "while\<^sub>\<bottom> b do body od =  from\<^sub>\<bottom> SKIP\<^sub>r until \<not> b do body od"
     
 definition do_while_gfp_rel :: 
   "'\<alpha> hrel \<Rightarrow> '\<alpha> cond \<Rightarrow> '\<alpha> hrel" ("do _ while\<^sup>\<top> _ od")
