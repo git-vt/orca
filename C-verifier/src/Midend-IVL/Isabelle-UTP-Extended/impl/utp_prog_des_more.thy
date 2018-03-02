@@ -21,9 +21,9 @@ theory utp_prog_des_more
     "../../Isabelle-UTP/impl/utp_prog"
 begin
 
-section {*More Operators *}
+section \<open>More Operators\<close>
 
-subsection{*Conditional*}
+subsection \<open>Conditional\<close>
  
 lift_definition pcond_prog :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" ("IF (_)/ THEN (_) ELSE (_) FI") 
   is "IfD" 
@@ -31,7 +31,7 @@ lift_definition pcond_prog :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog \<Rig
     
 declare pcond_prog.rep_eq [prog_rep_eq]
   
-subsection{*assert and assume*}
+subsection \<open>assert and assume\<close>
 
 abbreviation passume_prog :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog" ("_\<^sup>\<top>\<^sup>P")  
   where "passume_prog c \<equiv> (IF c THEN SKIP ELSE magic FI)"
@@ -39,15 +39,38 @@ abbreviation passume_prog :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog" ("_\<
 abbreviation passert_prog :: "'\<alpha> upred \<Rightarrow> '\<alpha> prog" ("_\<^sub>\<bottom>\<^sub>P")
   where "passert_prog c \<equiv> (IF c THEN SKIP ELSE abort FI)"
     
-subsection{*Scoping*}
- 
-lift_definition pblock_prog ::
-  "'\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> ('\<alpha> des  \<times> '\<alpha>  des \<Rightarrow> '\<alpha> des \<times> '\<alpha> des  \<Rightarrow> '\<alpha> prog) \<Rightarrow>
-      ('\<alpha> des  \<times> '\<alpha> des  \<Rightarrow> '\<alpha> des  \<times> '\<alpha> des \<Rightarrow> '\<alpha> prog) \<Rightarrow> '\<alpha> prog" 
-is blockD oops
+subsection \<open>Recursion\<close>    
 
-subsection{*Recursion*}    
- 
+lift_definition inf_prog :: "('\<alpha> prog) set \<Rightarrow> '\<alpha> prog" ("\<Sqinter>\<^sub>p_" [900] 900)
+  is "inf (uthy_order NDES)"  
+  by (simp add: subsetI)
+
+lift_definition sup_prog  :: "('\<alpha> prog) set \<Rightarrow> '\<alpha> prog" ("\<Squnion>\<^sub>p_" [900] 900)
+  is "sup (uthy_order NDES)"
+  by (simp add: subsetI)
+term "meet (uthy_order NDES)"
+term "utp_meet"
+term " ss \<sqinter> ss"  
+find_theorems name:"normal_design_theory_continuous.weak.sup"
+    
+declare inf_prog.rep_eq [prog_rep_eq]  
+declare sup_prog.rep_eq [prog_rep_eq]   
+lemma sup_prog_least:
+  "(\<And>x. x \<in> A \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> \<Squnion>\<^sub>p A \<sqsubseteq> z" 
+  apply (simp only: prog_rep_eq)
+  apply (rule normal_design_theory_continuous.weak.sup_least)
+  using  Rep_prog
+    apply (auto)  
+  done
+
+lift_definition utp_meet_prog:: "'\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" (infixl "\<sqinter>\<^sub>p" 70)
+  is "meet (uthy_order NDES)"
+  by (simp add: closure)
+  
+lift_definition utp_join_prog:: "'\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" (infixl "\<squnion>\<^sub>p" 65)
+  is "join (uthy_order NDES)"
+  by (simp add: closure)
+find_theorems name:"normal_design_theory_continuous.weak.meet"        
 lift_definition prec_lfp_prog :: "('\<alpha> prog \<Rightarrow> '\<alpha> prog) \<Rightarrow> '\<alpha> prog" 
   is "ndesign_lfp" 
   apply (simp)
