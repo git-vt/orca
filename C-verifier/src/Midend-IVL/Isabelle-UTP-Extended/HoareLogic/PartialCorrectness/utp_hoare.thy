@@ -154,7 +154,7 @@ subsection {*Hoare for recursion*}
   
 lemma nu_hoare_rel_partial: 
   assumes induct_step:
-    "\<And> st P. \<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>p\<rbrace>F P\<lbrace>q\<rbrace>\<^sub>u"   
+    "\<And> P. \<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>\<^sub>u \<Longrightarrow> \<lbrace>p\<rbrace>F P\<lbrace>q\<rbrace>\<^sub>u"   
   shows "\<lbrace>p\<rbrace>\<nu> F \<lbrace>q\<rbrace>\<^sub>u"  
   unfolding hoare_r_def
   apply (rule lfp_lowerbound)
@@ -294,15 +294,15 @@ lemma while_gfp_hoare_rel_minimal_partial:
   apply (rule nu_hoare_rel_partial)
   apply (rule cond_hoare_rel)  
    apply (rule seq_hoare_rel[where s="invar"])
-  subgoal for st P
+  subgoal for st 
     using pre_str_hoare_rel induct_step seq_step
     unfolding hoare_r_def
     apply pred_simp
     done
-  subgoal for st P
+  subgoal for st 
     apply assumption
     done
-  subgoal for st P
+  subgoal for st 
     apply pred_simp
     done
   done          
