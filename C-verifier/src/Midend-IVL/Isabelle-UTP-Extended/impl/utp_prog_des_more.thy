@@ -69,14 +69,16 @@ declare least_prog.rep_eq    [prog_rep_eq]
 declare greatest_prog.rep_eq [prog_rep_eq]   
 declare inf_prog.rep_eq      [prog_rep_eq]  
 declare sup_prog.rep_eq      [prog_rep_eq]
-
+term "SOME x . least_prog x (Upper_prog A)"
+term "SOME x . greatest_prog x (Lower_prog A)"
+  
 lemma sup_prog_empty:
   "\<Squnion>\<^sub>p{} = ABORT"  
   by (simp add: prog_rep_eq utp_theory_ndes_bot_is_true)
 
 lemma sup_prog_univ:
   "\<Squnion>\<^sub>pUNIV = MAGIC"    
-  apply (simp add: prog_rep_eq sup_def  least_def Upper_def) 
+  apply (simp add: prog_rep_eq sup_def least_def Upper_def)    
   apply (rule someI2_ex)
    apply (rule exI[where x = "(\<not> $ok)"])
    apply auto[]
@@ -87,7 +89,7 @@ lemma sup_prog_univ:
   apply (metis (no_types, hide_lams) H1_below_top Healthy_if antisym_conv des_top_ndes_def 
          magic.rep_eq ndes_hcond_def ndesign_is_healthy_NDES range_eqI)     
   done
-
+    
 lemma inf_prog_empty:
   "\<Sqinter>\<^sub>p{} = MAGIC"  
   by (simp add: prog_rep_eq utp_theory_ndes_top_is_not_ok)  
@@ -115,6 +117,45 @@ lemma sup_prog_upper:
   apply (metis (mono_tags, lifting) Rep_prog ball_imageD image_subsetI normal_design_theory_continuous.sup_upper)
   done
     
+lemma sup_H1_H3_in_Upper:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Squnion>\<^bsub>NDES\<^esub>A \<in> Upper (uthy_order NDES) A" 
+  unfolding Upper_def
+  apply auto
+   apply (rule normal_design_theory_continuous.sup_upper )  
+    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
+  done
+    
+lemma sup_prog_in_Upper_prog:
+  "(\<Squnion>\<^sub>p A) \<in> (Upper_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog_def imageE image_eqI map_fun_def 
+                                 o_def sup_H1_H3_in_Upper sup_prog_def)
+
+sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals]
+
+lemma sup_H1_H3_is_least_Upper:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> least (uthy_order NDES) (\<^bold>\<Squnion>\<^bsub>NDES\<^esub> A) (Upper (uthy_order NDES) A)"
+  unfolding least_def
+  apply (auto simp add: is_Ncarrier_is_ndesigns)        
+    apply (metis Upper_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
+  using sup_H1_H3_in_Upper apply auto[1]
+  apply (rule normal_design_theory_continuous.weak.sup_least)
+    apply (auto simp add: Upper_def is_Ncarrier_is_ndesigns )
+  done   
+    
+lemma sup_prog_is_least_Upper_prog:
+  "least_prog (\<Squnion>\<^sub>p A) (Upper_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog.rep_eq imageE least_prog.rep_eq 
+                                 sup_H1_H3_is_least_Upper sup_prog.rep_eq)
+
+lemma sup_prog_alt_def:
+  "(\<Squnion>\<^sub>p A) = (SOME x. least_prog x (Upper_prog A))" 
+  apply (rule someI2_ex)
+  using sup_prog_is_least_Upper_prog 
+   apply blast
+  apply (simp only: prog_rep_eq)   
+  apply (metis Upper_prog.rep_eq least_prog.rep_eq ndes_utp_theory.least_unique sup_prog.rep_eq sup_prog_is_least_Upper_prog)
+  done
+    
 lemma inf_prog_greatest:
   "(\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x ) \<Longrightarrow> z \<sqsubseteq> \<Sqinter>\<^sub>p A" 
   apply (simp only: prog_rep_eq)
@@ -127,6 +168,43 @@ lemma inf_prog_lower:
   "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
   apply (simp only: prog_rep_eq) 
   apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
+  done
+    
+lemma inf_H1_H3_in_Lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A \<in> Lower (uthy_order NDES) A" 
+  unfolding Lower_def
+  apply auto
+   apply (rule normal_design_theory_continuous.inf_lower )  
+    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
+  done
+    
+lemma inf_prog_in_Lower_prog:
+  "(\<Sqinter>\<^sub>p A) \<in> (Lower_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog_def imageE image_eqI map_fun_def 
+                                 o_def inf_H1_H3_in_Lower inf_prog_def)
+
+lemma inf_H1_H3_is_greatest_Lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> greatest (uthy_order NDES) (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A) (Lower (uthy_order NDES) A)"
+  unfolding greatest_def
+  apply (auto simp add: is_Ncarrier_is_ndesigns)        
+    apply (metis Lower_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
+  using inf_H1_H3_in_Lower apply auto[1]
+  apply (rule normal_design_theory_continuous.weak.inf_greatest)
+    apply (auto simp add: Lower_def is_Ncarrier_is_ndesigns )
+  done   
+    
+lemma inf_prog_is_greatest_Lower_prog:
+  "greatest_prog (\<Sqinter>\<^sub>p A) (Lower_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog.rep_eq imageE greatest_prog.rep_eq 
+                                 inf_H1_H3_is_greatest_Lower inf_prog.rep_eq)
+
+lemma inf_prog_alt_def:
+  "(\<Sqinter>\<^sub>p A) = (SOME x. greatest_prog x (Lower_prog A))" 
+  apply (rule someI2_ex)
+  using inf_prog_is_greatest_Lower_prog 
+   apply blast
+  apply (simp only: prog_rep_eq)   
+  apply (metis Lower_prog.rep_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique inf_prog.rep_eq inf_prog_is_greatest_Lower_prog)
   done
     
 lift_definition utp_meet_prog:: "'\<alpha> prog \<Rightarrow> '\<alpha> prog \<Rightarrow> '\<alpha> prog" (infixl "\<sqinter>\<^sub>p" 70)
