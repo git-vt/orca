@@ -44,23 +44,23 @@ lemma slp_true [slp]: "q \<noteq> false \<Longrightarrow> q slp true = true"
   by (rel_auto) 
     
 lemma slp_is_post_condition:
-  "\<lbrace>p\<rbrace>C\<lbrace>p slp C\<rbrace>\<^sub>u"
+  "\<lbrace>p\<rbrace>prog\<lbrace>p slp prog\<rbrace>\<^sub>u"
   by rel_blast
     
 lemma slp_is_the_strongest_post:
-  "`p slp C \<Rightarrow> Q`\<Longrightarrow>\<lbrace>p\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+  "`p slp prog \<Rightarrow> Q`\<Longrightarrow>\<lbrace>p\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast
     
 lemma slp_is_the_strongest_post':
-  "(Q \<sqsubseteq> p slp C) \<Longrightarrow>\<lbrace>p\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+  "(Q \<sqsubseteq> p slp prog) \<Longrightarrow>\<lbrace>p\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_auto
     
 lemma hoare_r_slp_eq:
-  " \<lbrace>p\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u = `p slp C \<Rightarrow> Q` "
+  " \<lbrace>p\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u = `p slp prog \<Rightarrow> Q` "
   by rel_blast
     
 theorem hoare_r_slp_eq':
-  "\<lbrace>p\<rbrace>Q\<lbrace>q\<rbrace>\<^sub>u \<longleftrightarrow> (q \<sqsubseteq> p slp Q)"
+  "\<lbrace>p\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u \<longleftrightarrow> (Q \<sqsubseteq> p slp prog)"
   by rel_auto                               
      
 theorem slp_eq_intro: 
@@ -71,20 +71,20 @@ lemma wlp_slp_sym:
   "`prog wp (true slp prog)`"
   by rel_auto
      
-lemma slp_is_pre_condition:
-  "\<lbrace>C wp Q\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+lemma wlp_is_pre_condition:
+  "\<lbrace>prog wp Q\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast    
 
 lemma wlp_is_the_weakest_pre:
-  "`P \<Rightarrow> C wp Q` \<Longrightarrow> \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+  "`P \<Rightarrow> prog wp Q` \<Longrightarrow> \<lbrace>P\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast  
     
 lemma wlp_is_the_weakest_pre':
-  "(C wp Q) \<sqsubseteq> P \<Longrightarrow> \<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u"
+  "(prog wp Q) \<sqsubseteq> P \<Longrightarrow> \<lbrace>P\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u"
   by rel_blast 
     
 lemma hoare_r_wlp_eq:
-  "\<lbrace>P\<rbrace>C\<lbrace>Q\<rbrace>\<^sub>u = `P \<Rightarrow> C wp Q`"
+  "\<lbrace>P\<rbrace>prog\<lbrace>Q\<rbrace>\<^sub>u = `P \<Rightarrow> prog wp Q`"
   by rel_blast
  
 lemma skip_r_slp:
@@ -144,7 +144,7 @@ lemma gfp_rel_slp [slp]:
   done
     
 lemma gfp_rel_wlp [wp]:
-  "mono F \<Longrightarrow> P slp \<nu> F =  P slp F(\<nu> F)"
+  "mono F \<Longrightarrow> \<nu> F wp Q  =  F(\<nu> F) wp Q"
   apply (subst lfp_unfold)
    apply simp_all
   done
