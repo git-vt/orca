@@ -20,9 +20,9 @@ theory algebraic_laws_prog
   imports "../impl/utp_prog_des_more"
 begin
 
-(* TODO: add laws for assigns when composed with try catch... *)
+(* TODO: add laws for assigns when composed with try catch... 
   
-sledgehammer_params[(*stop_on_first,*)parallel_subgoals, join_subgoals]
+sledgehammer_params[(*stop_on_first,*)parallel_subgoals, join_subgoals]*)
 
 named_theorems algebraic_laws_prog  
 
@@ -35,228 +35,7 @@ lemmas Abs_prog_Rep_prog_Ncarrier=
 lemma fun_apply_rep_prog:
   "\<lbrakk>f X\<rbrakk>\<^sub>p = (Rep_prog \<circ> f \<circ> Abs_prog) \<lbrakk>X\<rbrakk>\<^sub>p"
   by (simp add: Rep_prog_inverse)  
-    
-subsection \<open>Monotonic laws\<close>
-  
-lemma Mono_progI:
-  "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
-  apply ptransfer
-  apply (rule Mono_utp_orderI)
-  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if comp_apply)
-  done
-    
-lemma Mono_progD:
-  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y"
-  apply ptransfer
-  apply (drule Mono_utp_orderD)
-  unfolding fun_apply_rep_prog mono_prog_def
-     apply simp_all
-   apply (metis Healthy_def' Healthy_if Rep_prog_H1_H3_closed ndes_hcond_def)+
-  done
-    
-lemma Mono_progE:
-  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (f x \<sqsubseteq> f y \<Longrightarrow> thesis) \<Longrightarrow> thesis"
-  apply ptransfer
-  unfolding fun_apply_rep_prog mono_prog_def
-  using Mono_utp_orderD Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns
-  by blast
-    
-lemma mono_Monotone_prog: 
-  assumes M:"mono F"
-  shows "mono_prog F"
-  by (simp add: Mono_progI assms monoD) 
-
-subsection \<open>Lattices laws\<close> 
-
-lemma sup_prog_empty:
-  "\<Squnion>\<^sub>p{} = ABORT"  
-  by (simp add: prog_rep_eq utp_theory_ndes_bot_is_true)
-
-lemma sup_prog_univ:
-  "\<Squnion>\<^sub>pUNIV = MAGIC"    
-  apply (simp add: prog_rep_eq sup_def least_def Upper_def)    
-  apply (rule someI2_ex)
-   apply (rule exI[where x = "(\<not> $ok)"])
-   apply auto[]
-     apply (metis H1_below_top Healthy_if ndes_hcond_def)
-    apply rel_simp
-   apply (metis des_top_is_H1_H3 is_Ncarrier_is_ndesigns magic.rep_eq range_eqI)
-  apply auto[]
-  apply (metis (no_types, hide_lams) H1_below_top Healthy_if antisym_conv des_top_ndes_def 
-         magic.rep_eq ndes_hcond_def ndesign_is_healthy_NDES range_eqI)     
-  done
-    
-lemma inf_prog_empty:
-  "\<Sqinter>\<^sub>p{} = MAGIC"  
-  by (simp add: prog_rep_eq utp_theory_ndes_top_is_not_ok)  
-    
-lemma inf_prog_univ:
-  "\<Sqinter>\<^sub>pUNIV = ABORT"    
-  apply (simp add: prog_rep_eq )
-  by (metis (no_types, lifting)  Rep_prog UNIV_I image_empty image_subsetI 
-      image_subset_iff normal_design_theory_continuous.bottom_lower 
-      normal_design_theory_continuous.inf_closed normal_design_theory_continuous.inf_lower 
-      normal_design_theory_continuous.weak_sup_empty order_antisym_conv order_refl 
-      sup_prog.rep_eq utp_theory_ndes_bot_is_true)
-      
-lemma sup_prog_least:
-  "(\<And>x. x \<in> A \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> \<Squnion>\<^sub>p A \<sqsubseteq> z" 
-  apply (simp only: prog_rep_eq)
-  apply (rule normal_design_theory_continuous.weak.sup_least)
-  using  Rep_prog
-    apply auto  
-  done
-    
-lemma sup_prog_upper:
-  "x \<in> A \<Longrightarrow> x \<sqsubseteq> \<Squnion>\<^sub>p A " 
-  apply (simp only: prog_rep_eq)
-  apply (metis (mono_tags, lifting) Rep_prog ball_imageD image_subsetI normal_design_theory_continuous.sup_upper)
-  done
-    
-lemma sup_H1_H3_in_Upper:
-  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Squnion>\<^bsub>NDES\<^esub>A \<in> Upper (uthy_order NDES) A" 
-  unfolding Upper_def
-  apply auto
-   apply (rule normal_design_theory_continuous.sup_upper )  
-    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
-  done
-    
-lemma sup_prog_in_Upper_prog:
-  "(\<Squnion>\<^sub>p A) \<in> (Upper_prog A)"
-  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog_def imageE image_eqI map_fun_def 
-                                 o_def sup_H1_H3_in_Upper sup_prog_def)
-
-
-lemma sup_H1_H3_is_least_Upper:
-  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> least (uthy_order NDES) (\<^bold>\<Squnion>\<^bsub>NDES\<^esub> A) (Upper (uthy_order NDES) A)"
-  unfolding least_def
-  apply (auto simp add: is_Ncarrier_is_ndesigns)        
-    apply (metis Upper_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
-  using sup_H1_H3_in_Upper apply auto[1]
-  apply (rule normal_design_theory_continuous.weak.sup_least)
-    apply (auto simp add: Upper_def is_Ncarrier_is_ndesigns )
-  done   
-    
-lemma sup_prog_is_least_Upper_prog:
-  "least_prog (\<Squnion>\<^sub>p A) (Upper_prog A)"
-  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog.rep_eq imageE least_prog.rep_eq 
-                                 sup_H1_H3_is_least_Upper sup_prog.rep_eq)
-
-lemma sup_prog_alt_def:
-  "(\<Squnion>\<^sub>p A) = (SOME x. least_prog x (Upper_prog A))" 
-  apply (rule someI2_ex)
-  using sup_prog_is_least_Upper_prog 
-   apply blast
-  apply (simp only: prog_rep_eq)   
-  apply (metis Upper_prog.rep_eq least_prog.rep_eq ndes_utp_theory.least_unique sup_prog.rep_eq sup_prog_is_least_Upper_prog)
-  done
-    
-lemma inf_prog_greatest:
-  "(\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x ) \<Longrightarrow> z \<sqsubseteq> \<Sqinter>\<^sub>p A" 
-  apply (simp only: prog_rep_eq)
-  apply (rule normal_design_theory_continuous.weak.inf_greatest)
-  using  Rep_prog
-    apply auto  
-  done
-    
-lemma inf_prog_lower:
-  "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
-  apply (simp only: prog_rep_eq) 
-  apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
-  done
-    
-lemma inf_H1_H3_in_Lower:
-  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A \<in> Lower (uthy_order NDES) A" 
-  unfolding Lower_def
-  apply auto
-   apply (rule normal_design_theory_continuous.inf_lower )  
-    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
-  done
-    
-lemma inf_prog_in_Lower_prog:
-  "(\<Sqinter>\<^sub>p A) \<in> (Lower_prog A)"
-  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog_def imageE image_eqI map_fun_def 
-                                 o_def inf_H1_H3_in_Lower inf_prog_def)
-
-lemma inf_H1_H3_is_greatest_Lower:
-  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> greatest (uthy_order NDES) (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A) (Lower (uthy_order NDES) A)"
-  unfolding greatest_def
-  apply (auto simp add: is_Ncarrier_is_ndesigns)        
-    apply (metis Lower_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
-  using inf_H1_H3_in_Lower apply auto[1]
-  apply (rule normal_design_theory_continuous.weak.inf_greatest)
-    apply (auto simp add: Lower_def is_Ncarrier_is_ndesigns )
-  done   
-    
-lemma inf_prog_is_greatest_Lower_prog:
-  "greatest_prog (\<Sqinter>\<^sub>p A) (Lower_prog A)"
-  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog.rep_eq imageE greatest_prog.rep_eq 
-                                 inf_H1_H3_is_greatest_Lower inf_prog.rep_eq)
-
-lemma inf_prog_alt_def:
-  "(\<Sqinter>\<^sub>p A) = (SOME x. greatest_prog x (Lower_prog A))" 
-  apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-  apply (simp only: prog_rep_eq)   
-  apply (metis Lower_prog.rep_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique inf_prog.rep_eq inf_prog_is_greatest_Lower_prog)
-  done
-   
-lemma meet_prog_alt_def:
-  "a \<sqinter>\<^sub>p b = \<Sqinter>\<^sub>p{a, b}"
-  by (simp add: prog_rep_eq meet_def)
-
-lemma utp_join_prog_alt_def:
-  "a \<squnion>\<^sub>p b = \<Squnion>\<^sub>p{a, b}"
-  by (simp add: prog_rep_eq join_def) 
-
-lemma gfp_prog_alt_def:
-  "\<nu>\<^sub>p F = \<Squnion>\<^sub>p{x. x \<sqsubseteq> F x}"
-  apply (simp only: prog_rep_eq)
-  unfolding GFP_def sup_def image_def
-  apply auto
-  apply (rule someI2_ex)
-   apply (rule exI[where x = "\<^bold>\<Squnion>\<^bsub>NDES\<^esub> {y. \<exists>x. \<lbrakk>x\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>F x\<rbrakk>\<^sub>p \<and> y = \<lbrakk>x\<rbrakk>\<^sub>p}"])
-    (*Test Timeout bug of sledgehammer para*)
-   apply (rule sup_H1_H3_is_least_Upper)
-  using Rep_prog 
-   apply fastforce
-  apply (rule someI2_ex)
-   apply (rule exI[where x = "\<^bold>\<Squnion>\<^bsub>NDES\<^esub> {u. (u is \<H>\<^bsub>NDES\<^esub>) \<and> u \<sqsubseteq> \<lbrakk>F (Abs_prog u)\<rbrakk>\<^sub>p}"])
-   apply (rule sup_H1_H3_is_least_Upper)
-   apply (simp add: is_Ncarrier_is_ndesigns)
-  apply (rule ndes_utp_theory.least_unique)
-   apply auto
-  unfolding least_def Upper_def
-  apply auto
-   apply (simp add: Rep_prog_inverse)
-  unfolding Ball_def
-  apply auto
-  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if)
-  done
-    
-lemma lfp_prog_alt_def:
-  "\<mu>\<^sub>p F = \<Sqinter>\<^sub>p{x. F x \<sqsubseteq> x}"      
-  apply (simp only: prog_rep_eq)
-  unfolding LFP_def inf_def image_def
-  apply auto
-  apply (rule someI2_ex)
-   apply (rule exI[where x = "\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{y. \<exists>x. \<lbrakk>F x\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>x\<rbrakk>\<^sub>p \<and> y = \<lbrakk>x\<rbrakk>\<^sub>p}"])
-   apply (rule inf_H1_H3_is_greatest_Lower)
-  using Rep_prog 
-   apply fastforce
-  apply (rule someI2_ex)
-   apply (rule exI[where x="\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{u. (u is \<H>\<^bsub>NDES\<^esub>) \<and> \<lbrakk>F (Abs_prog u)\<rbrakk>\<^sub>p \<sqsubseteq> u}"])
-   apply (rule inf_H1_H3_is_greatest_Lower)
-   apply (simp add: is_Ncarrier_is_ndesigns)
-  apply (rule  ndes_utp_theory.greatest_unique)
-   apply auto
-  unfolding greatest_def Lower_def Ball_def
-  apply auto
-   apply (simp add: Rep_prog_inverse)
-  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if)
-  done
-    
+        
 subsection Skip
 
 text \<open>In this section we introduce the algebraic laws of programming related to the SKIP
@@ -522,15 +301,232 @@ lemma seq_psubst_prog:
         
 lemma seq_prog_assoc: "P ; (Q ; R) = (P ; Q) ; R"
   by (simp add: prog_rep_eq seqr_assoc)
-    
-subsection \<open>While laws for programs\<close>
+subsection \<open>Monotonic laws\<close>
   
-text \<open>In this section we introduce the algebraic laws of programming related to the while
-      statement.\<close>
-        
+lemma Mono_progI:
+  "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
+  apply ptransfer
+  apply (rule Mono_utp_orderI)
+  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if comp_apply)
+  done
+    
+lemma Mono_progD:
+  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y"
+  apply ptransfer
+  apply (drule Mono_utp_orderD)
+  unfolding fun_apply_rep_prog mono_prog_def
+     apply simp_all
+   apply (metis Healthy_def' Healthy_if Rep_prog_H1_H3_closed ndes_hcond_def)+
+  done
+    
+lemma Mono_progE:
+  "mono_prog f \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> (f x \<sqsubseteq> f y \<Longrightarrow> thesis) \<Longrightarrow> thesis"
+  apply ptransfer
+  unfolding fun_apply_rep_prog mono_prog_def
+  using Mono_utp_orderD Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns
+  by blast
+    
+lemma mono_Monotone_prog: 
+  assumes M:"mono F"
+  shows "mono_prog F"
+  by (simp add: Mono_progI assms monoD) 
+
+subsection \<open>Lattices laws\<close> 
+
+lemma sup_prog_empty:
+  "\<Squnion>\<^sub>p{} = ABORT"  
+  by (simp add: prog_rep_eq utp_theory_ndes_bot_is_true)
+
+lemma sup_prog_univ:
+  "\<Squnion>\<^sub>pUNIV = MAGIC"    
+  apply (simp add: prog_rep_eq sup_def least_def Upper_def)    
+  apply (rule someI2_ex)
+   apply (rule exI[where x = "(\<not> $ok)"])
+   apply auto[]
+     apply (metis H1_below_top Healthy_if ndes_hcond_def)
+    apply rel_simp
+   apply (metis des_top_is_H1_H3 is_Ncarrier_is_ndesigns magic.rep_eq range_eqI)
+  apply auto[]
+  apply (metis (no_types, hide_lams) H1_below_top Healthy_if antisym_conv des_top_ndes_def 
+         magic.rep_eq ndes_hcond_def ndesign_is_healthy_NDES range_eqI)     
+  done
+    
+lemma inf_prog_empty:
+  "\<Sqinter>\<^sub>p{} = MAGIC"  
+  by (simp add: prog_rep_eq utp_theory_ndes_top_is_not_ok)  
+    
+lemma inf_prog_univ:
+  "\<Sqinter>\<^sub>pUNIV = ABORT"    
+  apply (simp add: prog_rep_eq )
+  by (metis (no_types, lifting)  Rep_prog UNIV_I image_empty image_subsetI 
+      image_subset_iff normal_design_theory_continuous.bottom_lower 
+      normal_design_theory_continuous.inf_closed normal_design_theory_continuous.inf_lower 
+      normal_design_theory_continuous.weak_sup_empty order_antisym_conv order_refl 
+      sup_prog.rep_eq utp_theory_ndes_bot_is_true)
+      
+lemma sup_prog_least:
+  "(\<And>x. x \<in> A \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> \<Squnion>\<^sub>p A \<sqsubseteq> z" 
+  apply (simp only: prog_rep_eq)
+  apply (rule normal_design_theory_continuous.weak.sup_least)
+  using  Rep_prog
+    apply auto  
+  done
+    
+lemma sup_prog_upper:
+  "x \<in> A \<Longrightarrow> x \<sqsubseteq> \<Squnion>\<^sub>p A " 
+  apply (simp only: prog_rep_eq)
+  apply (metis (mono_tags, lifting) Rep_prog ball_imageD image_subsetI normal_design_theory_continuous.sup_upper)
+  done
+    
+lemma sup_H1_H3_in_Upper:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Squnion>\<^bsub>NDES\<^esub>A \<in> Upper (uthy_order NDES) A" 
+  unfolding Upper_def
+  apply auto
+   apply (rule normal_design_theory_continuous.sup_upper )  
+    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
+  done
+    
+lemma sup_prog_in_Upper_prog:
+  "(\<Squnion>\<^sub>p A) \<in> (Upper_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog_def imageE image_eqI map_fun_def 
+                                 o_def sup_H1_H3_in_Upper sup_prog_def)
+
+
+lemma sup_H1_H3_is_least_Upper:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> least (uthy_order NDES) (\<^bold>\<Squnion>\<^bsub>NDES\<^esub> A) (Upper (uthy_order NDES) A)"
+  unfolding least_def
+  apply (auto simp add: is_Ncarrier_is_ndesigns)        
+    apply (metis Upper_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
+  using sup_H1_H3_in_Upper apply auto[1]
+  apply (rule normal_design_theory_continuous.weak.sup_least)
+    apply (auto simp add: Upper_def is_Ncarrier_is_ndesigns )
+  done   
+    
+lemma sup_prog_is_least_Upper_prog:
+  "least_prog (\<Squnion>\<^sub>p A) (Upper_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Upper_prog.rep_eq imageE least_prog.rep_eq 
+                                 sup_H1_H3_is_least_Upper sup_prog.rep_eq)
+
+lemma sup_prog_alt_def:
+  "(\<Squnion>\<^sub>p A) = (SOME x. least_prog x (Upper_prog A))" 
+  apply (rule someI2_ex)
+  using sup_prog_is_least_Upper_prog 
+   apply blast
+  apply (simp only: prog_rep_eq)   
+  apply (metis Upper_prog.rep_eq least_prog.rep_eq ndes_utp_theory.least_unique sup_prog.rep_eq sup_prog_is_least_Upper_prog)
+  done
+    
+lemma inf_prog_greatest:
+  "(\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x ) \<Longrightarrow> z \<sqsubseteq> \<Sqinter>\<^sub>p A" 
+  apply (simp only: prog_rep_eq)
+  apply (rule normal_design_theory_continuous.weak.inf_greatest)
+  using  Rep_prog
+    apply auto  
+  done
+    
+lemma inf_prog_lower:
+  "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
+  apply (simp only: prog_rep_eq) 
+  apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
+  done
+    
+lemma inf_H1_H3_in_Lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A \<in> Lower (uthy_order NDES) A" 
+  unfolding Lower_def
+  apply auto
+   apply (rule normal_design_theory_continuous.inf_lower )  
+    apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
+  done
+    
+lemma inf_prog_in_Lower_prog:
+  "(\<Sqinter>\<^sub>p A) \<in> (Lower_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog_def imageE image_eqI map_fun_def 
+                                 o_def inf_H1_H3_in_Lower inf_prog_def)
+
+lemma inf_H1_H3_is_greatest_Lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> greatest (uthy_order NDES) (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A) (Lower (uthy_order NDES) A)"
+  unfolding greatest_def
+  apply (auto simp add: is_Ncarrier_is_ndesigns)        
+    apply (metis Lower_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
+  using inf_H1_H3_in_Lower apply auto[1]
+  apply (rule normal_design_theory_continuous.weak.inf_greatest)
+    apply (auto simp add: Lower_def is_Ncarrier_is_ndesigns )
+  done   
+    
+lemma inf_prog_is_greatest_Lower_prog:
+  "greatest_prog (\<Sqinter>\<^sub>p A) (Lower_prog A)"
+  by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog.rep_eq imageE greatest_prog.rep_eq 
+                                 inf_H1_H3_is_greatest_Lower inf_prog.rep_eq)
+
+lemma inf_prog_alt_def:
+  "(\<Sqinter>\<^sub>p A) = (SOME x. greatest_prog x (Lower_prog A))" 
+  apply (rule someI2_ex)
+  using inf_prog_is_greatest_Lower_prog 
+   apply blast
+  apply (simp only: prog_rep_eq)   
+  apply (metis Lower_prog.rep_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique inf_prog.rep_eq inf_prog_is_greatest_Lower_prog)
+  done
+   
+lemma meet_prog_alt_def:
+  "a \<sqinter>\<^sub>p b = \<Sqinter>\<^sub>p{a, b}"
+  by (simp add: prog_rep_eq meet_def)
+
+lemma utp_join_prog_alt_def:
+  "a \<squnion>\<^sub>p b = \<Squnion>\<^sub>p{a, b}"
+  by (simp add: prog_rep_eq join_def) 
+
+subsection \<open>Fixed points laws\<close>   
+  
+lemma gfp_prog_alt_def:
+  "\<nu>\<^sub>p F = \<Squnion>\<^sub>p{x. x \<sqsubseteq> F x}"
+  apply (simp only: prog_rep_eq)
+  unfolding GFP_def sup_def image_def
+  apply auto
+  apply (rule someI2_ex)
+   apply (rule exI[where x = "\<^bold>\<Squnion>\<^bsub>NDES\<^esub> {y. \<exists>x. \<lbrakk>x\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>F x\<rbrakk>\<^sub>p \<and> y = \<lbrakk>x\<rbrakk>\<^sub>p}"])
+    (*Test Timeout bug of sledgehammer para*)
+   apply (rule sup_H1_H3_is_least_Upper)
+  using Rep_prog 
+   apply fastforce
+  apply (rule someI2_ex)
+   apply (rule exI[where x = "\<^bold>\<Squnion>\<^bsub>NDES\<^esub> {u. (u is \<H>\<^bsub>NDES\<^esub>) \<and> u \<sqsubseteq> \<lbrakk>F (Abs_prog u)\<rbrakk>\<^sub>p}"])
+   apply (rule sup_H1_H3_is_least_Upper)
+   apply (simp add: is_Ncarrier_is_ndesigns)
+  apply (rule ndes_utp_theory.least_unique)
+   apply auto
+  unfolding least_def Upper_def
+  apply auto
+   apply (simp add: Rep_prog_inverse)
+  unfolding Ball_def
+  apply auto
+  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if)
+  done
+    
+lemma lfp_prog_alt_def:
+  "\<mu>\<^sub>p F = \<Sqinter>\<^sub>p{x. F x \<sqsubseteq> x}"      
+  apply (simp only: prog_rep_eq)
+  unfolding LFP_def inf_def image_def
+  apply auto
+  apply (rule someI2_ex)
+   apply (rule exI[where x = "\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{y. \<exists>x. \<lbrakk>F x\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>x\<rbrakk>\<^sub>p \<and> y = \<lbrakk>x\<rbrakk>\<^sub>p}"])
+   apply (rule inf_H1_H3_is_greatest_Lower)
+  using Rep_prog 
+   apply fastforce
+  apply (rule someI2_ex)
+   apply (rule exI[where x="\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{u. (u is \<H>\<^bsub>NDES\<^esub>) \<and> \<lbrakk>F (Abs_prog u)\<rbrakk>\<^sub>p \<sqsubseteq> u}"])
+   apply (rule inf_H1_H3_is_greatest_Lower)
+   apply (simp add: is_Ncarrier_is_ndesigns)
+  apply (rule  ndes_utp_theory.greatest_unique)
+   apply auto
+  unfolding greatest_def Lower_def Ball_def
+  apply auto
+   apply (simp add: Rep_prog_inverse)
+  apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if)
+  done
+    
 lemma lfp_prog_unfold: 
-  assumes M:"mono_prog f"  
-  shows "\<mu>\<^sub>p f = f (\<mu>\<^sub>p f)"
+  assumes M:"mono_prog F"  
+  shows "\<mu>\<^sub>p F = F (\<mu>\<^sub>p F)"
 proof -
     show ?thesis  
     apply (simp only: prog_rep_eq)
@@ -541,11 +537,26 @@ proof -
       by (metis (mono_tags, lifting) Pi_I Rep_prog mono_prog.rep_eq normal_design_theory_continuous.LFP_healthy_comp normal_design_theory_continuous.LFP_unfold o_def)
 qed
 
+lemma gfp_prog_unfold:
+  assumes M : "mono_prog F"
+  shows "\<nu>\<^sub>p F = F (\<nu>\<^sub>p F)"
+  apply (simp only: prog_rep_eq) 
+  unfolding fun_apply_rep_prog prec_gfp_prog.rep_eq
+      apply (subst (1) normal_design_theory_continuous.GFP_healthy_comp) 
+  apply (subst (2) normal_design_theory_continuous.GFP_healthy_comp)  
+  using M
+  apply (metis (mono_tags, lifting) Pi_I Rep_prog mono_prog.rep_eq normal_design_theory_continuous.GFP_healthy_comp normal_design_theory_continuous.GFP_unfold o_def)
+  done
+    
 lemma lfp_prog_const: "\<mu>\<^sub>p (\<lambda>x. t) = t"
   by (simp add: mono_prog.rep_eq lfp_prog_unfold utp_theory.Mono_utp_orderI)
 
+lemma gfp_prog_const:
+  "\<nu>\<^sub>p (\<lambda>x. t) = t"
+  by (simp add: Mono_progI gfp_prog_unfold)
+
 lemma lfp_prog_idem:
-  "mono_prog f \<Longrightarrow> idem_prog f \<Longrightarrow> \<mu>\<^sub>p f = f ABORT"
+  "mono_prog F \<Longrightarrow> idem_prog F \<Longrightarrow> \<mu>\<^sub>p F = F ABORT"
 proof (ptransfer,
        subst normal_design_theory_continuous.weak.LFP_idem[unfolded utp_theory_ndes_bot_is_true],
        goal_cases)
@@ -553,7 +564,7 @@ proof (ptransfer,
   then show ?case using Rep_prog by fastforce
 next
   case 2
-  then show ?case  by simp 
+  then show ?case by simp 
 next
   case 3
   then show ?case by simp 
@@ -562,35 +573,65 @@ next
   then show ?case unfolding fun_apply_rep_prog by (simp add: abort.rep_eq)
 qed
 
+lemma gfp_prog_idem:
+  "mono_prog F \<Longrightarrow> idem_prog F \<Longrightarrow> \<nu>\<^sub>p F = F MAGIC"
+proof (ptransfer, 
+       subst normal_design_theory_continuous.weak.GFP_idem[unfolded utp_theory_ndes_top_is_not_ok],
+       goal_cases)
+  case 1
+  then show ?case using Rep_prog by fastforce
+next
+  case 2
+  then show ?case by simp
+next
+  case 3
+  then show ?case by simp
+next
+  case 4
+  then show ?case  unfolding fun_apply_rep_prog by (simp add: magic.rep_eq)
+qed
+       
 lemma lfp_prog_lowerbound:
-  "f x \<sqsubseteq> x \<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq> x"
-proof(ptransfer, rule normal_design_theory_continuous.weak.LFP_lowerbound, goal_cases)
-  case 1
-  then show ?case by (simp add: Rep_prog_H1_H3_closed)
-next
-  case 2
-  then show ?case unfolding fun_apply_rep_prog by simp
-qed 
-
+  "F x \<sqsubseteq> x \<Longrightarrow> \<mu>\<^sub>p F \<sqsubseteq> x"
+  by (simp add: inf_prog_lower lfp_prog_alt_def)
+ 
+lemma gfp_prog_upperbound:
+  "x \<sqsubseteq> F x \<Longrightarrow> x \<sqsubseteq> \<nu>\<^sub>p F"
+  by (simp add: gfp_prog_alt_def sup_prog_upper)
+    
 lemma lfp_prog_greatest:
- "(\<And>u. f u \<sqsubseteq> u \<Longrightarrow> A \<sqsubseteq> u) \<Longrightarrow> A \<sqsubseteq>  \<mu>\<^sub>p f"   
-proof(ptransfer, rule normal_design_theory_continuous.weak.LFP_greatest, goal_cases)
-  case 1
-  then show ?case by (simp add: Rep_prog_H1_H3_closed)
-next
-  case 2
-  then show ?case unfolding fun_apply_rep_prog by (metis Abs_prog_Rep_prog_ndesign Healthy_def)
-qed 
+  "(\<And>z. F z \<sqsubseteq> z \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> x \<sqsubseteq> \<mu>\<^sub>p F"   
+  by (metis (full_types) CollectD inf_prog_greatest lfp_prog_alt_def)
+
+lemma gfp_prog_least:
+  "(\<And>z.  z \<sqsubseteq> F z \<Longrightarrow> z \<sqsubseteq> x ) \<Longrightarrow> \<nu>\<^sub>p F \<sqsubseteq> x"
+  by (metis (no_types, lifting) CollectD gfp_prog_alt_def sup_prog_least)
   
 lemma lfp_prog_mono:
-  "(\<And>u. f u \<sqsubseteq> g u)\<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq>  \<mu>\<^sub>p g"
+  "(\<And>x. F x \<sqsubseteq> G x)\<Longrightarrow> \<mu>\<^sub>p F \<sqsubseteq> \<mu>\<^sub>p G"
   apply (rule lfp_prog_lowerbound[THEN lfp_prog_greatest])
   apply (blast intro: order_trans)  
   done
     
+lemma gfp_prog_mono:
+  "(\<And>x. F x \<sqsubseteq> G x) \<Longrightarrow> \<nu>\<^sub>p F \<sqsubseteq> \<nu>\<^sub>p G"
+  apply (rule gfp_prog_upperbound[THEN gfp_prog_least])
+    apply (blast intro: order_trans)  
+  done
+    
 lemma lfp_prog_fixed_point:
-   "f x = x \<Longrightarrow> \<mu>\<^sub>p f \<sqsubseteq> x"
+   "F x = x \<Longrightarrow> \<mu>\<^sub>p F \<sqsubseteq> x"
    by (simp add: lfp_prog_lowerbound)
+    
+lemma gfp_prog_ficed_point:
+  "x = F x \<Longrightarrow> x \<sqsubseteq> \<nu>\<^sub>p F"
+  by (simp add: gfp_prog_upperbound)
+    
+subsection \<open>While laws for programs\<close>
+  
+text \<open>In this section we introduce the algebraic laws of programming related to the while
+      statement.\<close>
+        
     
 lemma while_lfp_prog_mu_prog:
   "WHILE b DO body OD = (\<mu>\<^sub>p X \<bullet> IF b THEN body ; X ELSE SKIP FI)"
