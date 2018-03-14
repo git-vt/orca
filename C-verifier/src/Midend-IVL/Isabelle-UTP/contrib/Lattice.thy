@@ -58,7 +58,6 @@ definition
   GFP:: "('a, 'b) gorder_scheme \<Rightarrow> ('a \<Rightarrow> 'a) \<Rightarrow> 'a" ("\<nu>\<index>") where
   "GFP L f = \<Squnion>\<^bsub>L\<^esub> {u \<in> carrier L. u \<sqsubseteq>\<^bsub>L\<^esub> f u}"    --\<open>greatest fixed point\<close>
 
-
 subsection \<open>Dual operators\<close>
 
 lemma sup_dual [simp]: 

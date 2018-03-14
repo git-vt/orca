@@ -393,10 +393,7 @@ method get_remover =
          \<bar>"_ (get\<^bsub>x\<^esub> A)" for x A \<Rightarrow> \<open>rule GET_REMOVER[where L= x and s= A], simp only:\<close>)+,
   get_disambiguator,
   vcg_elim_determ thin_rl[of "lens_get _ _ = _"] thin_rl[of "LVAR _ _"]
- 
-method get_remover_auto = get_remover, (auto simp: gcd_diff1_nat) []
-method get_remover_metis = get_remover, metis gcd.commute gcd_diff1_nat not_le
-        
+         
 named_theorems beautify_thms     
 lemma thin_vwb_lens[beautify_thms]: "vwb_lens l \<Longrightarrow> P \<Longrightarrow> P" . 
 lemma thin_weak_lens[beautify_thms]: "weak_lens l \<Longrightarrow> P \<Longrightarrow> P" .    
@@ -518,6 +515,6 @@ method symbolic_execution =
     
 method vcg methods vcg_reasoning_method =
   (vcg_reasoning_method ; symbolic_execution); get_remover?; (vcg_elim_determ beautify_thms)?
- 
+
 end
 
