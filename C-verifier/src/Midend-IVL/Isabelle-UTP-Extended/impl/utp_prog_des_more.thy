@@ -258,6 +258,7 @@ proof -
   ultimately show "Idem\<^bsub>uthy_order NDES\<^esub> fun1 = Idem\<^bsub>uthy_order NDES\<^esub> fun2"
     using f2 a1 by (metis is_Ncarrier_is_ndesigns mem_Collect_eq)
 qed
+  
 declare mono_prog.rep_eq[prog_rep_eq]
 declare idem_prog.rep_eq[prog_rep_eq]  
 
