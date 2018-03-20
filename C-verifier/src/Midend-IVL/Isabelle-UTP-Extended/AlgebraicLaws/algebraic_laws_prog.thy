@@ -301,8 +301,9 @@ lemma seq_psubst_prog:
         
 lemma seq_prog_assoc: "P ; (Q ; R) = (P ; Q) ; R"
   by (simp add: prog_rep_eq seqr_assoc)
+    
 subsection \<open>Monotonic laws\<close>
-  
+ 
 lemma Mono_progI:
   "(\<And>x y .x \<sqsubseteq> y \<Longrightarrow> f x \<sqsubseteq> f y) \<Longrightarrow> mono_prog f"
   apply ptransfer
@@ -329,9 +330,30 @@ lemma Mono_progE:
 lemma mono_Monotone_prog: 
   assumes M:"mono F"
   shows "mono_prog F"
-  by (simp add: Mono_progI assms monoD) 
+  by (simp add: Mono_progI assms monoD)
 
 subsection \<open>Lattices laws\<close> 
+  
+lemma Lower_prog_alt_def: 
+  "Lower_prog A = {l. (ALL x. x \<in> A \<longrightarrow> l \<sqsubseteq> x)}"  
+  unfolding   prog_rep_eq Lower_def image_def Ball_def Lower_prog_def
+  apply auto
+   apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+  apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
+  done
+    
+lemma greatest_prog_alt_def: 
+ "greatest_prog g A =  (g \<in> A \<and> (ALL x : A. x \<sqsubseteq> g))"
+  unfolding  prog_rep_eq greatest_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+    
+lemma greatest_prog_unique:
+ "greatest_prog y A\<Longrightarrow> greatest_prog x A \<Longrightarrow> x = y"
+  by (simp add: Rep_prog_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique)
+    
+lemma least_prog_unique:
+  "least_prog y A\<Longrightarrow> least_prog x A \<Longrightarrow> x = y"
+  by (simp add: Rep_prog_eq least_prog.rep_eq ndes_utp_theory.least_unique)
 
 lemma sup_prog_empty:
   "\<Squnion>\<^sub>p{} = ABORT"  
@@ -433,7 +455,7 @@ lemma inf_prog_lower:
 lemma inf_H1_H3_in_Lower:
   "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A \<in> Lower (uthy_order NDES) A" 
   unfolding Lower_def
-  apply auto
+  apply auto                                               
    apply (rule normal_design_theory_continuous.inf_lower )  
     apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
   done
@@ -474,6 +496,7 @@ lemma meet_prog_alt_def:
 lemma utp_join_prog_alt_def:
   "a \<squnion>\<^sub>p b = \<Squnion>\<^sub>p{a, b}"
   by (simp add: prog_rep_eq join_def) 
+    
 
 subsection \<open>Fixed points laws\<close>   
   
@@ -523,7 +546,7 @@ lemma lfp_prog_alt_def:
    apply (simp add: Rep_prog_inverse)
   apply (metis Abs_prog_Rep_prog_Ncarrier Healthy_if)
   done
-    
+
 lemma lfp_prog_unfold: 
   assumes M:"mono_prog F"  
   shows "\<mu>\<^sub>p F = F (\<mu>\<^sub>p F)"
