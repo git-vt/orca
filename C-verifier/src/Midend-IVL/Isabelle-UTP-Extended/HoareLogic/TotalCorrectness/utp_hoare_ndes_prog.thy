@@ -50,6 +50,13 @@ lift_definition hoare_prog_t :: "'\<alpha> cond \<Rightarrow> '\<alpha> prog \<R
 
 declare hoare_prog_t.rep_eq [prog_rep_eq]
 
+lemma hoare_prog_alt_def:  
+  " \<lbrace>p\<rbrace>prog\<lbrace>q\<rbrace>\<^sub>P = (Abs_prog ((p \<turnstile>\<^sub>n \<lceil>q\<rceil>\<^sub>>)) \<sqsubseteq> prog)"
+  apply (simp only: prog_rep_eq hoare_d_def)
+  using utp_designs.ndesign_H1_H3[of p "\<lceil>q\<rceil>\<^sub>>"] Abs_prog_inverse[of "(p \<turnstile>\<^sub>n \<lceil>q\<rceil>\<^sub>>)"]
+  apply simp
+  done  
+
 lemma hoare_true_assisgns_prog_t: 
   "\<lbrace>p\<rbrace> \<langle>\<sigma>\<rangle>\<^sub>p \<lbrace>true\<rbrace>\<^sub>P"
   by (simp add: prog_rep_eq hoare_des)
