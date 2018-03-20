@@ -156,14 +156,15 @@ translations
 subsection \<open>Throw\<close>
 
 definition  throw_abr:: "'a abr_prog" ("THROW")
-where [urel_defs]: "throw_abr  =  passigns (subst_upd id abrupt true)"
+where [urel_defs]: "throw_abr  =  abrh (passigns (subst_upd id abrupt (\<not>(&abrupt))))"
 
 subsection \<open>Sequential composition\<close>
   
 text  \<open>It does not need a definition. We get it by type inference.\<close>  
   
 subsection \<open>Conditional composition\<close>
-  
+find_theorems "(_ \<triangleleft> _ \<triangleright>\<^sub>D _)"  
+    
 no_notation pcond_prog ("IF (_)/ THEN (_) ELSE (_) FI") 
   
 definition if_abr :: "'a upred \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog" ("IF (_)/ THEN (_) ELSE (_) FI")
@@ -174,32 +175,234 @@ subsection \<open>Recursion\<close>
 definition mu_abr:: "('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog"
 where [urel_defs]: "mu_abr P = (\<mu>\<^sub>p X \<bullet> P (abrh X))"
   
-syntax
-  "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
 
-notation mu_abr ("\<mu>\<^sub>a")
 
-translations
-  "\<mu>\<^sub>a X \<bullet> P" == "CONST mu_abr (\<lambda> X. P)"
-term "mu_abr F"
-term "\<forall>x. abrh x = x"  
-thm normal_design_theory_continuous.LFP_healthy_comp  
 lemma abrh_idem[simp]:"(abrh (abrh X)) = (abrh X)"  
   unfolding abrh_def
   by (simp add: if_prog_L6)
 
+definition                                                            
+  "greatest_abr g A \<longleftrightarrow> A \<subseteq> {P. abrh P = P} \<and> greatest_prog g A"  
+
+lemma greatest_abr_alt_def: 
+ "greatest_abr g A =  (A \<subseteq> {P. abrh P = P} \<and>  g \<in> A \<and> (ALL x : A. x \<sqsubseteq> g))"
+  unfolding greatest_abr_def  prog_rep_eq greatest_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+
+definition
+  "Lower_abr A = ((Lower_prog (A\<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})  "
+sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals, timeout = 60]
+  
+lemma Lower_abr_alt_def: 
+  "Lower_abr A = {l. (ALL x. x \<in> (A \<inter> {P. abrh P = P}) --> l \<sqsubseteq> x)} \<inter> {P. abrh P = P}"  
+  unfolding Lower_abr_def  prog_rep_eq Lower_def image_def Ball_def Lower_prog_def
+  apply (simp only: Int_Collect)
+  apply auto
+   apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+  apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
+  done
+
+    
+lemma inf_prog_is_abrh:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
+     \<Sqinter>\<^sub>p(A\<inter> {P. abrh P = P}) = \<Sqinter>\<^sub>p A"
+  apply (simp add: prog_rep_eq)
+  unfolding inf_def  image_def Ball_def 
+  apply (rule someI2_ex)
+   apply (rule exI[where x="(\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{y. \<exists>x\<in>A. y = \<lbrakk>x\<rbrakk>\<^sub>p})"])
+   apply (smt CollectD Collect_mono Rep_prog normal_design_theory_continuous.inf_glb)
+  apply (rule ndes_utp_theory.greatest_unique)
+    defer
+   apply auto[1]
+  apply (smt Collect_cong Int_Collect tfl_some)
+  done
+
+lemma abrh_image_subset:
+  "abrh ` A \<subseteq> {P. abrh P = P}"
+  by (simp add: image_subsetI)
+    
+thm normal_design_theory_continuous.inf_closed    
+
+lemma abr_abrh_closed: 
+  "(abrh P) \<in> {P. abrh P = P}"
+  by simp
+    
+lemma inf_abrh_greatest:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh z \<sqsubseteq> abrh x) \<Longrightarrow>  abrh z \<sqsubseteq> \<Sqinter>\<^sub>p (abrh ` A)" 
+  by (metis (mono_tags, lifting) imageE inf_prog_greatest)
+
+lemma inf_abrh_lower:
+  "x \<in>  A \<Longrightarrow> \<Sqinter>\<^sub>p (abrh ` A) \<sqsubseteq> abrh x"
+  by (simp add: inf_prog_lower)  
+lemma 
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh (\<Sqinter>\<^sub>p A) = \<Sqinter>\<^sub>p(abrh ` A)"
+  
+  thm mem_Collect_eq
+  thm subsetI    
+  oops 
+  find_theorems "_ \<sqsubseteq> _ \<Longrightarrow> _ \<sqsubseteq> _ \<Longrightarrow> _ = _"  
+lemma "x \<sqsubseteq> y \<Longrightarrow> y \<sqsubseteq> x \<Longrightarrow> x = y" 
+oops  
+thm HOL.no_atp(10)  
+lemma 
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
+     (\<Sqinter>\<^sub>p (abrh ` A)) = abrh (\<Sqinter>\<^sub>p (abrh ` A))"
+  (*TODO: see healthy_inf*)
+  
+  unfolding inf_prog_alt_def
+  apply (rule someI2_ex)
+
+  using inf_prog_is_greatest_Lower_prog apply auto[1]
+  apply (rule someI2_ex)
+    
+    using inf_prog_is_greatest_Lower_prog apply auto[1]
+  unfolding Lower_prog_alt_def greatest_prog_alt_def
+   apply auto
+  apply (rule HOL.no_atp(10))
+   thm normal_design_theory_continuous.inf_closed
+   thm greatest_prog_alt_def 
+  oops
+    
+ lemma inf_abrh_in_Lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x ) \<Longrightarrow>  
+   (\<Sqinter>\<^sub>p (abrh ` A)) \<in> ((Lower_prog (abrh ` (A \<inter> {P. abrh P = P}))) \<inter> {P. abrh P = P})"
+   unfolding Lower_prog_alt_def
+   apply auto
+    
+   using inf_abrh_lower apply force
+     apply ()
+     (*see the extensionality proofs*)
+     
+  oops
+   
+thm inf_prog.rep_eq
+lemma "(\<And>x. x \<in> A \<Longrightarrow> (\<^bold>N x) = x) \<Longrightarrow> \<^bold>N (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A) =  (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A)"
+  by (metis (no_types, lifting) Healthy_def mem_Collect_eq normal_design_theory_continuous.inf_closed subsetI)
+
+    
+lemma inf_abr_lower:
+  "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
+  apply (simp only: prog_rep_eq) 
+  apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
+  done
+    
+lemma inf_prog_abrh_in_Lower_abr:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> (\<Sqinter>\<^sub>a A) \<in> Lower_prog A" 
+  unfolding Lower_prog_alt_def inf_abr_def 
+  apply auto
+    thm inf_prog_lower
+     apply (rule inf_prog_lower)  
+     apply simp
+                
+        oops
+          thm is_Ncarrier_is_ndesigns
+ term "Rep_prog (Abs_prog c)"      
+lemma inf_abrh_is_greatest_Lower_abr:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> greatest_abr (\<Sqinter>\<^sub>p A) (Lower_abr A)" 
+  unfolding greatest_abr_def   
+  apply auto
+      apply (simp add: prog_rep_eq greatest_def)
+  apply auto
+    apply (simp add: Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+    
+    apply (simp add: Lower_abr_alt_def)
+    
+  oops
+lemma inf_prog_is_greatest_Lower_prog:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> greatest_abr (\<Sqinter>\<^sub>a A) (Lower_abr A)" 
+  unfolding greatest_abr_alt_def  Lower_abr_alt_def
+  apply auto
+  oops
+    
+lemma 
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> abrh (\<Sqinter>\<^sub>aA ) = \<Sqinter>\<^sub>a A"
+  unfolding inf_abr_def greatest_abr_def Lower_abr_def
+  apply auto
+     apply (rule someI2_ex)
+    defer apply (metis (mono_tags, lifting) Int_Collect greatest_abr_alt_def greatest_abr_def semilattice_inf_class.inf_le2)
+  apply (rule exI[where x= "\<Sqinter>\<^sub>p (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"])
+    
+  unfolding  abrh_def  
+    
+oops  
+  
+lemma inf_abr_alt_def:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
+   \<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p (abrh ` A )"
+  unfolding inf_abr_def inf_prog_alt_def  Lower_abr_def  greatest_abr_def
+  apply (auto )
+      apply (rule someI2_ex)
+  using inf_prog_is_greatest_Lower_prog apply auto[1]
+     
+  apply (rule someI2_ex)
+   
+    
+   apply (rule exI[where x="(\<Sqinter>\<^sub>p (abrh ` A))"])
+   
+  unfolding inf_def prog_rep_eq Lower_def image_def Ball_def Lower_prog_def greatest_def
+   apply auto
+   
+     apply (simp add: Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)  
+    apply (rule someI2_ex)
+     apply auto
+    
+
+  oops
+definition LFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
+  where "LFP_abr F = \<Sqinter>\<^sub>a {x. F x \<sqsubseteq> x}" 
+    
+syntax
+  "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
+
+notation LFP_abr ("\<mu>\<^sub>a")
+
+translations
+  "\<mu>\<^sub>a X \<bullet> P" == "CONST LFP_abr (\<lambda> X. P)"
+
+
+lemma inf_abr_lower:
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>aA \<sqsubseteq> x"  
+  unfolding inf_abr_def   greatest_abr_def Lower_abr_def
+  
+  oops  
+
 lemma lfp_abr_healthy_comp:
   "\<mu>\<^sub>a F = \<mu>\<^sub>a (F \<circ> abrh)" 
-  unfolding mu_abr_def
+  
+  unfolding LFP_abr_def inf_abr_def comp_def
+  apply (rule someI2_ex)
+      using inf_prog_is_greatest_Lower_prog apply auto[1]
+
+
   by simp
+    
 lemma "(abrh (\<mu>\<^sub>a fun1) = (\<mu>\<^sub>a fun1))"
   unfolding mu_abr_def abrh_def
      apply (simp only: prog_rep_eq)
-  oops 
-  term "\<Sqinter>\<^bsub>L\<^esub> {u \<in> carrier L. f u \<sqsubseteq>\<^bsub>L\<^esub> u}"    
- (*I need to re-define LFP such that LFP F = \<Sqinter> {u \<in> {P. abrh P = P}. F u \<sqsubseteq> u}
+  oops     
+thm LFP_def
+  term "LFP"
+term "Order.le"    
+term "a \<sqsubseteq> s"    
+term "{u \<in> carrier L. f u \<sqsubseteq>\<^bsub>L\<^esub> u}"    
+ (*I need to re-define LFP such that LFP F = \<Sqinter> {u \<in> {P. abrh P = P \<or> P = throw_abr}. F u \<sqsubseteq> u}
    To have such a definition I need to lift \<Sqinter> to prog*)   
-lemma "mono_prog F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P} \<Longrightarrow> LFP_def = (\<mu>\<^sub>p X \<bullet> P (abrh X))"
+lemma "mono_prog F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P} \<Longrightarrow> 
+  LFP_abr F = (\<mu>\<^sub>p X \<bullet> F (abrh X))"
+  unfolding LFP_abr_def inf_abr_def mu_abr_def lfp_prog_alt_def inf_prog_alt_def greatest_abr_def Lower_abr_def
+  apply auto
+  apply (rule someI2_ex)
+  using inf_prog_is_greatest_Lower_prog apply auto[1]
+  apply (rule someI2_ex)
+   
+                                                                          
+   apply (rule exI[where x = "\<Sqinter>\<^sub>p(({x. F x \<sqsubseteq> x} \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"])
+   defer
+   apply (rule greatest_prog_unique)
+    apply auto
+   apply (drule Pi_mem)
+    apply auto
+    thm Pi_I
   oops
 lemma "\<And>fun1 fun2. (\<And>x. abrh x = x \<Longrightarrow> (abrh (fun1 x) = (fun1 x)) \<and> fun1 x = fun2 x) \<Longrightarrow> (abrh (\<mu>\<^sub>a fun1) = (\<mu>\<^sub>a fun1)) \<and> \<mu>\<^sub>a fun1 = \<mu>\<^sub>a fun2"
  oops 
