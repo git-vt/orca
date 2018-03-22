@@ -190,7 +190,8 @@ lemma greatest_abr_alt_def:
   by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
 
 definition
-  "Lower_abr A = ((Lower_prog (A\<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})  "
+  "Lower_abr A = ((Lower_prog (A\<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
+  
 sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals, timeout = 60]
   
 lemma Lower_abr_alt_def: 
@@ -201,7 +202,6 @@ lemma Lower_abr_alt_def:
    apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
   apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
   done
-
     
 lemma inf_prog_is_abrh:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
@@ -233,44 +233,114 @@ lemma inf_abrh_greatest:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh z \<sqsubseteq> abrh x) \<Longrightarrow>  abrh z \<sqsubseteq> \<Sqinter>\<^sub>p (abrh ` A)" 
   by (metis (mono_tags, lifting) imageE inf_prog_greatest)
     
- lemma inf_abrh_lower:
+lemma inf_abrh_lower:
   "x \<in>  A \<Longrightarrow> \<Sqinter>\<^sub>p (abrh ` A) \<sqsubseteq> abrh x"
   by (simp add: inf_prog_lower)   
-lemma 
+
+lemma inf_prog_abrh_in_Lower_prog_Int_abrh:
+  "abrh (\<Sqinter>\<^sub>pA) \<in> Lower_prog (A \<inter> {P. abrh P = P})" 
+   unfolding inf_prog_alt_def 
+    apply (rule someI2_ex)    
+   using inf_prog_is_greatest_Lower_prog 
+    apply blast
+    apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
+    apply auto
+    apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
+  done
+
+lemma Lower_abr_subset_Lower_prog:
+  "Lower_abr (A \<inter> {P. abrh P = P}) \<subseteq> Lower_prog (A \<inter> {P. abrh P = P})"
+  by (simp add: Lower_abr_def)
+    
+lemma inf_abr_in_Lower_abr:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+  (SOME x. greatest_abr x (Lower_abr A)) \<in> Lower_abr (A \<inter> {P. abrh P = P})"
+   unfolding greatest_abr_def
+   apply (subst Lower_abr_def)
+      apply (subst Lower_abr_def)
+  apply auto
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"]) 
+   apply (simp add:  prog_rep_eq image_def greatest_def Bex_def)
+   apply auto
+     apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
+    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])
+    apply auto[]
+    apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq inf_prog_abrh_in_Lower_prog_Int_abrh)
+   apply (simp only:   inf_prog_alt_def Bex_def)
+   apply (rule someI2_ex)   
+  using inf_prog_is_greatest_Lower_prog apply blast
+   apply (metis (no_types, lifting) Rep_prog_inject abrh_def cond_mono greatest_def 
+                                    greatest_prog.rep_eq image_eqI order_refl 
+                                    pcond_prog.rep_eq semilattice_inf_class.inf.orderE utp_order_le)
+   apply (simp add: Lower_abr_def greatest_prog_alt_def)
+  done
+
+lemma inf_abr_in_Lower_prog:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+  (SOME x. greatest_abr x (Lower_abr A)) \<in> Lower_prog (A \<inter> {P. abrh P = P})"
+  by (metis (mono_tags) Int_iff Lower_abr_def inf_abr_in_Lower_abr semilattice_inf_class.inf.right_idem)
+
+lemma inf_abr_greatest:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow>  z \<sqsubseteq>  x) \<Longrightarrow>  
    z \<sqsubseteq> (SOME x. greatest_abr x (Lower_abr A))"
   (*The KEY proof for the rest of the theory*)
   unfolding greatest_abr_def Lower_abr_def
   apply auto
-  apply (rule someI2_ex)
-
-            apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>p( A))"])
-
-     apply (simp add:  prog_rep_eq image_def greatest_def Bex_def)
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
+   apply (simp add:  prog_rep_eq image_def greatest_def Bex_def)
    apply auto
-    
-    apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
+     apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
     apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])
-    apply auto[]   (*The KEY proof for the rest of the theory*)
+    apply auto[]   
+      apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq inf_prog_abrh_in_Lower_prog_Int_abrh)
+  unfolding inf_prog_alt_def 
+   defer
+   apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
+   apply auto
+  apply (rule someI2_ex)
+  using inf_prog_is_greatest_Lower_prog apply auto[1]
+  apply (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono 
+                                   greatest_prog_alt_def order_refl pcond_prog.rep_eq 
+                                   semilattice_inf_class.inf.orderE)
+  done 
 
-      unfolding inf_prog_alt_def 
-        apply (rule someI2_ex)    
-      using inf_prog_is_greatest_Lower_prog apply blast
-        apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
-        apply auto
-        apply (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
-       defer
-       apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
-       apply auto
-      apply (rule someI2_ex)
-        
-      using inf_prog_is_greatest_Lower_prog apply auto[1]
-        by (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono greatest_prog_alt_def order_refl pcond_prog.rep_eq semilattice_inf_class.inf.orderE)
- 
-  
-find_theorems "\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>_"
+lemma inf_prog_abrh_is_greatest_lower:
+  " A \<subseteq> {P. abrh P = P} \<Longrightarrow> greatest_prog (abrh (\<Sqinter>\<^sub>pA)) (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"
+  unfolding inf_prog_alt_def 
+  apply (rule someI2_ex)    
+  using inf_prog_is_greatest_Lower_prog 
+   apply blast
+  apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
+  apply auto
+   apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
+  unfolding abrh_def
+  apply (metis (mono_tags, lifting) if_prog_monoI mem_Collect_eq order_refl subsetCE)
+  done
+    
+lemma inf_abr_lower:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  x \<in> A \<Longrightarrow>
+    (SOME x. greatest_abr x (Lower_abr A)) \<sqsubseteq> x" 
+  unfolding greatest_abr_def Lower_abr_def
+  apply auto
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
+   apply (simp add: inf_prog_abrh_is_greatest_lower)
+  apply (metis (no_types, lifting) Int_lower1 dual_order.trans greatest_prog_alt_def 
+                                   inf_prog_is_greatest_Lower_prog inf_prog_lower 
+                                   semilattice_inf_class.inf.orderE subsetCE)
+  done
+     
+lemma inf_abr_is_abrh:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
+   abrh (SOME x. greatest_abr x (Lower_abr A)) = (SOME x. greatest_abr x (Lower_abr A))"
+  using Lower_abr_def inf_abr_in_Lower_abr 
+  by blast    
+    
 lemma inf_prog_abrh_in_Lower_abr:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> (\<Sqinter>\<^sub>p (abrh ` A)) \<in> Lower_prog A" 
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
+   (\<Sqinter>\<^sub>p (abrh ` A)) \<in> Lower_prog A" 
   unfolding inf_prog_alt_def 
   apply (rule someI2_ex)    
   using inf_prog_is_greatest_Lower_prog 
@@ -278,8 +348,16 @@ lemma inf_prog_abrh_in_Lower_abr:
   unfolding greatest_prog_alt_def Lower_prog_alt_def
   apply auto
   done
+    
 thm normal_design_theory_continuous.weak.inf_greatest
 lemma 
+<<<<<<< .mine
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow> finite A \<Longrightarrow>
+     abrh (\<Sqinter>\<^sub>p (abrh ` A)) =  (\<Sqinter>\<^sub>p (abrh ` A))"
+||||||| .r487
+  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
+     (\<Sqinter>\<^sub>p (abrh ` A)) = abrh (\<Sqinter>\<^sub>p (abrh ` A))"
+=======
  "greatest_abr (SOME x. greatest_abr x (Lower_abr A)) (Lower_abr A)"  
   unfolding greatest_abr_alt_def Lower_abr_alt_def
   apply auto
@@ -427,8 +505,35 @@ qed
 lemma 
   "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
      (\<Sqinter>\<^sub>p (abrh ` (A \<inter> {P. abrh P = P}))) = abrh (\<Sqinter>\<^sub>p (abrh ` A))"
+>>>>>>> .r488
   (*TODO: see healthy_inf*)
   
+<<<<<<< .mine
+  unfolding inf_prog_alt_def
+  apply (rule someI2_ex)
+
+  using inf_prog_is_greatest_Lower_prog apply auto[1]  
+
+  unfolding Lower_prog_alt_def greatest_prog_alt_def
+   
+  apply (rule HOL.no_atp(10))
+   thm normal_design_theory_continuous.inf_closed
+   thm greatest_prog_alt_def 
+||||||| .r487
+  unfolding inf_prog_alt_def
+  apply (rule someI2_ex)
+
+  using inf_prog_is_greatest_Lower_prog apply auto[1]
+  apply (rule someI2_ex)
+    
+    using inf_prog_is_greatest_Lower_prog apply auto[1]
+  unfolding Lower_prog_alt_def greatest_prog_alt_def
+   apply auto
+  apply (rule HOL.no_atp(10))
+   thm normal_design_theory_continuous.inf_closed
+   thm greatest_prog_alt_def 
+=======
+>>>>>>> .r488
   oops
      
  lemma inf_abrh_in_Lower:
