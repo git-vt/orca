@@ -189,10 +189,18 @@ lemma greatest_abr_alt_def:
   unfolding greatest_abr_def  prog_rep_eq greatest_def image_def Ball_def
   by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
 
+definition                                                            
+  "least_abr g A \<longleftrightarrow> A \<subseteq> {P. abrh P = P} \<and> least_prog g A"  
+
+lemma least_abr_alt_def: 
+ "least_abr l A =  (A \<subseteq> {P. abrh P = P} \<and> l \<in> A \<and> (ALL x : A. l \<sqsubseteq> x))"
+  unfolding least_abr_def  prog_rep_eq least_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+
 definition
   "Lower_abr A = ((Lower_prog (A\<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
   
-sledgehammer_params[stop_on_first,parallel_subgoals, join_subgoals, timeout = 60]
+sledgehammer_params[stop_on_first, parallel_subgoals, join_subgoals, timeout = 60]
   
 lemma Lower_abr_alt_def: 
   "Lower_abr A = {l. (ALL x. x \<in> (A \<inter> {P. abrh P = P}) \<longrightarrow> l \<sqsubseteq> x)} \<inter> {P. abrh P = P}"  
@@ -202,12 +210,25 @@ lemma Lower_abr_alt_def:
    apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
   apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
   done
+
+definition
+  "Upper_abr A = ((Upper_prog (A \<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
     
-lemma inf_prog_is_abrh:
+lemma Upper_abr_alt_def:
+  "Upper_abr A = {u. (ALL x. x \<in> (A \<inter> {P. abrh P = P}) \<longrightarrow> x \<sqsubseteq> u)} \<inter> {P. abrh P = P}"  
+  unfolding Upper_abr_def prog_rep_eq Upper_def image_def Ball_def Upper_prog_def
+  apply (simp only: Int_Collect)
+  apply auto
+   apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect 
+                                     Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+  apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
+  done
+    
+lemma inf_prog_Int_abrh:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
      \<Sqinter>\<^sub>p(A\<inter> {P. abrh P = P}) = \<Sqinter>\<^sub>p A"
   apply (simp add: prog_rep_eq)
-  unfolding inf_def  image_def Ball_def 
+  unfolding inf_def image_def Ball_def 
   apply (rule someI2_ex)
    apply (rule exI[where x="(\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{y. \<exists>x\<in>A. y = \<lbrakk>x\<rbrakk>\<^sub>p})"])
    apply (smt CollectD Collect_mono Rep_prog normal_design_theory_continuous.inf_glb)
@@ -216,7 +237,9 @@ lemma inf_prog_is_abrh:
    apply auto[1]
   apply (smt Collect_cong Int_Collect tfl_some)
   done
-lemma abrh_subset_member: "\<lbrakk> A \<subseteq> {P. abrh P = P}; P \<in> A \<rbrakk> \<Longrightarrow> abrh(P) = P"
+    
+lemma abrh_subset_member: 
+  "\<lbrakk>A \<subseteq> {P. abrh P = P}; P \<in> A \<rbrakk> \<Longrightarrow> abrh(P) = P"
   by (meson Ball_Collect ) 
     
 lemma abrh_image_subset:
@@ -233,9 +256,9 @@ lemma inf_abrh_greatest:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh z \<sqsubseteq> abrh x) \<Longrightarrow>  abrh z \<sqsubseteq> \<Sqinter>\<^sub>p (abrh ` A)" 
   by (metis (mono_tags, lifting) imageE inf_prog_greatest)
     
-lemma inf_abrh_lower:
-  "x \<in>  A \<Longrightarrow> \<Sqinter>\<^sub>p (abrh ` A) \<sqsubseteq> abrh x"
-  by (simp add: inf_prog_lower)   
+lemma inf_abrh_image_lower:
+  "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p (abrh ` A) \<sqsubseteq> abrh x"
+  by (simp add: inf_prog_Lower)   
 
 lemma inf_prog_abrh_in_Lower_prog_Int_abrh:
   "abrh (\<Sqinter>\<^sub>pA) \<in> Lower_prog (A \<inter> {P. abrh P = P})" 
@@ -261,19 +284,19 @@ lemma inf_abr_in_Lower_abr:
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"]) 
-   apply (simp add:  prog_rep_eq image_def greatest_def Bex_def)
+   apply (simp add:prog_rep_eq image_def greatest_def Bex_def)
    apply auto
      apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
     apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])
     apply auto[]
     apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq inf_prog_abrh_in_Lower_prog_Int_abrh)
-   apply (simp only:   inf_prog_alt_def Bex_def)
+   apply (simp only:inf_prog_alt_def Bex_def)
    apply (rule someI2_ex)   
   using inf_prog_is_greatest_Lower_prog apply blast
    apply (metis (no_types, lifting) Rep_prog_inject abrh_def cond_mono greatest_def 
                                     greatest_prog.rep_eq image_eqI order_refl 
                                     pcond_prog.rep_eq semilattice_inf_class.inf.orderE utp_order_le)
-   apply (simp add: Lower_abr_def greatest_prog_alt_def)
+   apply (simp add:Lower_abr_def greatest_prog_alt_def)
   done
 
 lemma inf_abr_in_Lower_prog:
@@ -282,14 +305,14 @@ lemma inf_abr_in_Lower_prog:
   by (metis (mono_tags) Int_iff Lower_abr_def inf_abr_in_Lower_abr semilattice_inf_class.inf.right_idem)
 
 lemma inf_abr_greatest:
-  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow>  z \<sqsubseteq>  x) \<Longrightarrow>  
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x) \<Longrightarrow>  
    z \<sqsubseteq> (SOME x. greatest_abr x (Lower_abr A))"
   (*The KEY proof for the rest of the theory*)
   unfolding greatest_abr_def Lower_abr_def
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
-   apply (simp add:  prog_rep_eq image_def greatest_def Bex_def)
+   apply (simp add: prog_rep_eq image_def greatest_def Bex_def)
    apply auto
      apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
     apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])
@@ -300,14 +323,16 @@ lemma inf_abr_greatest:
    apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
    apply auto
   apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog apply auto[1]
+  using inf_prog_is_greatest_Lower_prog 
+   apply auto[1]
   apply (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono 
                                    greatest_prog_alt_def order_refl pcond_prog.rep_eq 
                                    semilattice_inf_class.inf.orderE)
   done 
-
+  
 lemma inf_prog_abrh_is_greatest_lower:
-  " A \<subseteq> {P. abrh P = P} \<Longrightarrow> greatest_prog (abrh (\<Sqinter>\<^sub>pA)) (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+   greatest_prog (abrh (\<Sqinter>\<^sub>pA)) (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"
   unfolding inf_prog_alt_def 
   apply (rule someI2_ex)    
   using inf_prog_is_greatest_Lower_prog 
@@ -328,7 +353,7 @@ lemma inf_abr_lower:
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
    apply (simp add: inf_prog_abrh_is_greatest_lower)
   apply (metis (no_types, lifting) Int_lower1 dual_order.trans greatest_prog_alt_def 
-                                   inf_prog_is_greatest_Lower_prog inf_prog_lower 
+                                   inf_prog_is_greatest_Lower_prog inf_prog_Lower 
                                    semilattice_inf_class.inf.orderE subsetCE)
   done
      
@@ -337,6 +362,111 @@ lemma inf_abr_is_abrh:
    abrh (SOME x. greatest_abr x (Lower_abr A)) = (SOME x. greatest_abr x (Lower_abr A))"
   using Lower_abr_def inf_abr_in_Lower_abr 
   by blast    
+     
+lemma sup_prog_abrh_in_Upper_prog_Int_abrh:
+  "abrh (\<Squnion>\<^sub>pA) \<in> Upper_prog (A \<inter> {P. abrh P = P})" 
+  unfolding sup_prog_alt_def 
+  apply (rule someI2_ex)
+  using sup_prog_is_least_Upper_prog 
+   apply auto[1]
+  apply (simp only: least_prog_alt_def Upper_prog_alt_def)
+  apply auto
+  apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
+  done
+
+lemma Upper_abr_subset_Upper_prog:
+  "Upper_abr (A \<inter> {P. abrh P = P}) \<subseteq> Upper_prog (A \<inter> {P. abrh P = P})"
+  by (simp add: Upper_abr_def)
+
+thm greatest_abr_def
+  
+lemma sup_abr_in_Upper_abr:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+  (SOME x. least_abr x (Upper_abr A)) \<in> Upper_abr (A \<inter> {P. abrh P = P})"
+   unfolding least_abr_def
+   apply (subst Upper_abr_def)
+      apply (subst Upper_abr_def)
+  apply auto
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"]) 
+   apply (simp add:  prog_rep_eq image_def least_def Bex_def)
+   apply auto
+     apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
+    apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])
+    apply auto[]
+    apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq sup_prog_abrh_in_Upper_prog_Int_abrh)
+   apply (simp only: sup_prog_alt_def Bex_def)
+   apply (rule someI2_ex)   
+  using sup_prog_is_least_Upper_prog apply blast
+   apply (metis (no_types, lifting) Rep_prog_inject abrh_def cond_mono least_def 
+                                    least_prog.rep_eq image_eqI order_refl 
+                                    pcond_prog.rep_eq semilattice_inf_class.inf.orderE utp_order_le)
+   apply (simp add: Upper_abr_def least_prog_alt_def)
+  done
+
+lemma sup_abr_in_Upper_prog:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+  (SOME x. least_abr x (Upper_abr A)) \<in> Upper_prog (A \<inter> {P. abrh P = P})"
+  by (metis (mono_tags) Int_iff Upper_abr_def sup_abr_in_Upper_abr semilattice_inf_class.inf.right_idem)
+
+lemma sup_abr_least:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow>  x \<sqsubseteq> z ) \<Longrightarrow>  
+   (SOME x. least_abr x (Upper_abr A)) \<sqsubseteq> z"
+  (*The KEY proof for the rest of the theory*)
+  unfolding least_abr_def Upper_abr_def
+  apply auto
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])    
+   apply (simp add:  prog_rep_eq image_def least_def Bex_def)
+   apply auto
+     apply (metis Healthy_def Rep_prog_H1_H3_closed ndes_hcond_def)
+    apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])
+    apply auto[]   
+      apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq sup_prog_abrh_in_Upper_prog_Int_abrh)
+  unfolding sup_prog_alt_def 
+   defer
+   apply (simp only: least_prog_alt_def Upper_prog_alt_def)
+   apply auto
+  apply (rule someI2_ex)
+  using sup_prog_is_least_Upper_prog 
+    apply auto[1]
+  apply (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono 
+                                   least_prog_alt_def order_refl pcond_prog.rep_eq 
+                                   semilattice_inf_class.inf.orderE)
+  done 
+  
+lemma sup_prog_abrh_is_least_Upper:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
+   least_prog (abrh (\<Squnion>\<^sub>pA)) (Upper_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"
+  unfolding sup_prog_alt_def 
+  apply (rule someI2_ex)    
+  using sup_prog_is_least_Upper_prog 
+   apply blast
+  apply (simp only: least_prog_alt_def Upper_prog_alt_def)
+  apply auto
+   apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
+  unfolding abrh_def
+  apply (metis (mono_tags, lifting) if_prog_monoI mem_Collect_eq order_refl subsetCE)
+  done
+
+lemma sup_abr_Upper:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  x \<in> A \<Longrightarrow>
+    x \<sqsubseteq> (SOME x. least_abr x (Upper_abr A))" 
+  unfolding least_abr_def Upper_abr_def
+  apply auto
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])    
+   apply (simp add: sup_prog_abrh_is_least_Upper)
+  apply (metis (no_types, lifting) Int_lower1 dual_order.trans least_prog_alt_def 
+                                   sup_prog_is_least_Upper_prog sup_prog_Upper 
+                                   semilattice_inf_class.inf.orderE subsetCE)
+  done
+     
+lemma sup_abr_is_abrh:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
+   abrh (SOME x. least_abr x (Upper_abr A)) = (SOME x. least_abr x (Upper_abr A))"
+  using Upper_abr_def sup_abr_in_Upper_abr 
+  by blast        
     
 lemma inf_prog_abrh_in_Lower_abr:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 

@@ -365,7 +365,7 @@ lemma gcd_correct'_wp_H1_H3:
  \<lbrace>&r =\<^sub>u &x \<and> &r =\<^sub>u bop gcd \<guillemotleft>a\<guillemotright> \<guillemotleft>b\<guillemotright>\<rbrace>\<^sub>P"
   apply (insert assms)      
   apply (vcg wp) 
-    using gcd_diff1_nat apply auto[1]
+  using gcd_diff1_nat apply auto[1]
     apply (metis gcd.commute gcd_diff1_nat not_less)
     apply (metis diff_is_0_eq gcd.commute gcd_diff1_nat not_le_minus)
     apply (metis gcd.commute gcd_diff1_nat max.strict_order_iff max_def)
@@ -549,31 +549,8 @@ lemma max_program_correct_wp_rel:
     
 find_theorems name: "rep_eq" "(Rep_uexpr ?e = ?t)" (*This what pred_simp uses...*)
 
-lemma max_program_correct_wp_H1_H3_step:
-  assumes "r \<bowtie> i" 
-  assumes "vwb_lens i" "vwb_lens r" 
-  shows  
-"\<lbrace>uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0\<rbrace> 
-   INVAR  0 <\<^sub>u &i \<and> &i \<le>\<^sub>u uop length \<guillemotleft>a\<guillemotright> \<and> &r =\<^sub>u uop Max (uop set (bop take (&i) \<guillemotleft>a\<guillemotright>)) 
-   VRT  \<guillemotleft>measure (Rep_uexpr (uop length \<guillemotleft>a\<guillemotright> - (&i)))\<guillemotright>  
-   WHILE \<not>(&i =\<^sub>u uop length \<guillemotleft>a\<guillemotright>) 
-   DO 
-      IF &r <\<^sub>u  bop nth \<guillemotleft>a\<guillemotright> (&i) 
-      THEN r :== bop nth \<guillemotleft>a\<guillemotright> (&i)
-      ELSE SKIP
-      FI;
-      i :== (&i + 1)
-   OD   
- \<lbrace>&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>)\<rbrace>\<^sub>P"  
-  apply (insert assms)
-  apply (rule pre_str_prog_hoare)
-   defer
-   apply (rule loop_invr_vrt_hoare_prog_wp_instantiated)
-      defer
-      defer
-      defer
-    oops
-    
+
+  
  
     
 (*

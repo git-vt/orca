@@ -333,6 +333,19 @@ lemma mono_Monotone_prog:
   by (simp add: Mono_progI assms monoD)
 
 subsection \<open>Lattices laws\<close> 
+lemma least_prog_alt_def: 
+  "least_prog l A = (l \<in> A \<and> (ALL x : A. l \<sqsubseteq> x))"
+  unfolding  prog_rep_eq least_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+    
+lemma Upper_prog_alt_def: 
+  "Upper_prog A = {u. (ALL x. x \<in> A \<longrightarrow> x \<sqsubseteq> u)}"  
+  unfolding   prog_rep_eq Upper_def image_def Ball_def Upper_prog_def
+  apply auto
+   apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if 
+                                     Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+  apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
+  done  
   
 lemma Lower_prog_alt_def: 
   "Lower_prog A = {l. (ALL x. x \<in> A \<longrightarrow> l \<sqsubseteq> x)}"  
@@ -394,7 +407,7 @@ lemma sup_prog_least:
     apply auto  
   done
     
-lemma sup_prog_upper:
+lemma sup_prog_Upper:
   "x \<in> A \<Longrightarrow> x \<sqsubseteq> \<Squnion>\<^sub>p A " 
   apply (simp only: prog_rep_eq)
   apply (metis (mono_tags, lifting) Rep_prog ball_imageD image_subsetI normal_design_theory_continuous.sup_upper)
@@ -446,7 +459,7 @@ lemma inf_prog_greatest:
     apply auto  
   done
     
-lemma inf_prog_lower:
+lemma inf_prog_Lower:
   "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
   apply (simp only: prog_rep_eq) 
   apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
@@ -616,11 +629,11 @@ qed
        
 lemma lfp_prog_lowerbound:
   "F x \<sqsubseteq> x \<Longrightarrow> \<mu>\<^sub>p F \<sqsubseteq> x"
-  by (simp add: inf_prog_lower lfp_prog_alt_def)
+  by (simp add: inf_prog_Lower lfp_prog_alt_def)
  
 lemma gfp_prog_upperbound:
   "x \<sqsubseteq> F x \<Longrightarrow> x \<sqsubseteq> \<nu>\<^sub>p F"
-  by (simp add: gfp_prog_alt_def sup_prog_upper)
+  by (simp add: gfp_prog_alt_def sup_prog_Upper)
     
 lemma lfp_prog_greatest:
   "(\<And>z. F z \<sqsubseteq> z \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> x \<sqsubseteq> \<mu>\<^sub>p F"   
