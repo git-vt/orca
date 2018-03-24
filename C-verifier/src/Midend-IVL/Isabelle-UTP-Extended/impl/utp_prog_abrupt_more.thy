@@ -130,6 +130,10 @@ subsection \<open>Healthiness conditions\<close>
 definition abrh_def [upred_defs]: 
   "abrh(P) = (IF &abrupt THEN SKIP ELSE  P FI)"
 
+lemma abrh_idem[simp]:"(abrh (abrh X)) = (abrh X)"  
+  unfolding abrh_def
+  by (simp add: if_prog_L6)
+    
 section \<open>Control flow statements\<close>
   
 subsection \<open>SKIP\<close>
@@ -163,42 +167,57 @@ subsection \<open>Sequential composition\<close>
 text  \<open>It does not need a definition. We get it by type inference.\<close>  
   
 subsection \<open>Conditional composition\<close>
-find_theorems "(_ \<triangleleft> _ \<triangleright>\<^sub>D _)"  
     
 no_notation pcond_prog ("IF (_)/ THEN (_) ELSE (_) FI") 
   
-definition if_abr :: "'a upred \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog" ("IF (_)/ THEN (_) ELSE (_) FI")
-where [urel_defs]: "if_abr b P Q = pcond_prog (b \<oplus>\<^sub>p \<Sigma>\<^sub>A\<^sub>B\<^sub>R) P Q"
+definition if_abr :: "'a upred \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog \<Rightarrow> 'a abr_prog" 
+  where [urel_defs]: "if_abr b P Q = pcond_prog (b \<oplus>\<^sub>p \<Sigma>\<^sub>A\<^sub>B\<^sub>R) P Q"
+    
+definition try_catch_abr:
+  "try_catch_abr P Q = 
+   abrh (P ;  if_abr (&abrupt) (passigns (subst_upd id abrupt (\<not> &abrupt)) ; abrh(Q)) SKIP )"
 
-subsection \<open>Recursion\<close>
-
-definition mu_abr:: "('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog"
-where [urel_defs]: "mu_abr P = (\<mu>\<^sub>p X \<bullet> P (abrh X))"
-  
-
-
-lemma abrh_idem[simp]:"(abrh (abrh X)) = (abrh X)"  
-  unfolding abrh_def
-  by (simp add: if_prog_L6)
+subsection \<open>Lattices\<close>
 
 definition                                                            
   "greatest_abr g A \<longleftrightarrow> A \<subseteq> {P. abrh P = P} \<and> greatest_prog g A"  
-
-lemma greatest_abr_alt_def: 
- "greatest_abr g A =  (A \<subseteq> {P. abrh P = P} \<and>  g \<in> A \<and> (ALL x : A. x \<sqsubseteq> g))"
-  unfolding greatest_abr_def  prog_rep_eq greatest_def image_def Ball_def
-  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
-
+  
 definition                                                            
-  "least_abr g A \<longleftrightarrow> A \<subseteq> {P. abrh P = P} \<and> least_prog g A"  
-
-lemma least_abr_alt_def: 
- "least_abr l A =  (A \<subseteq> {P. abrh P = P} \<and> l \<in> A \<and> (ALL x : A. l \<sqsubseteq> x))"
-  unfolding least_abr_def  prog_rep_eq least_def image_def Ball_def
-  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+  "least_abr g A \<longleftrightarrow> A \<subseteq> {P. abrh P = P} \<and> least_prog g A" 
 
 definition
   "Lower_abr A = ((Lower_prog (A\<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
+
+definition
+  "Upper_abr A = ((Upper_prog (A \<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
+  
+definition inf_abr :: "'a abr_prog set \<Rightarrow> 'a abr_prog" ("\<^bold>\<Sqinter>\<^sub>a_" [900] 900)
+where "inf_abr A = (SOME x. greatest_abr x (Lower_abr A))"  
+
+definition sup_abr :: "'a abr_prog set \<Rightarrow> 'a abr_prog" ("\<^bold>\<Squnion>\<^sub>a_" [900] 900)
+where "sup_abr A = (SOME x. least_abr x (Upper_abr A))"  
+    
+lemma abrh_below_top_abr:
+  "x \<in> {P. abrh P = P} \<Longrightarrow> x \<sqsubseteq> abrh MAGIC"  
+  apply (simp add: abrh_def  prog_rep_eq   )
+  apply (metis H1_below_top Healthy_def Rep_prog_H1_H3_closed cond_mono order_refl)
+  done
+    
+lemma bottom_abrh_lower:
+  "x \<in> {P. abrh P = P} \<Longrightarrow> abrh (ABORT) \<sqsubseteq> x"
+  apply (simp add: abrh_def  prog_rep_eq   )
+  apply (metis cond_mono order_refl utp_pred_laws.top_greatest)
+  done  
+   
+lemma greatest_abr_alt_def: 
+ "greatest_abr g A = (A \<subseteq> {P. abrh P = P} \<and> g \<in> A \<and> (ALL x : A. x \<sqsubseteq> g))"
+  unfolding greatest_abr_def  prog_rep_eq greatest_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+
+lemma least_abr_alt_def: 
+ "least_abr l A = (A \<subseteq> {P. abrh P = P} \<and> l \<in> A \<and> (ALL x : A. l \<sqsubseteq> x))"
+  unfolding least_abr_def  prog_rep_eq least_def image_def Ball_def
+  by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
   
 sledgehammer_params[stop_on_first, parallel_subgoals, join_subgoals, timeout = 60]
   
@@ -210,9 +229,6 @@ lemma Lower_abr_alt_def:
    apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
   apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
   done
-
-definition
-  "Upper_abr A = ((Upper_prog (A \<inter> {P. abrh P = P})) \<inter> {P. abrh P = P})"
     
 lemma Upper_abr_alt_def:
   "Upper_abr A = {u. (ALL x. x \<in> (A \<inter> {P. abrh P = P}) \<longrightarrow> x \<sqsubseteq> u)} \<inter> {P. abrh P = P}"  
@@ -226,7 +242,7 @@ lemma Upper_abr_alt_def:
     
 lemma inf_prog_Int_abrh:
   "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
-     \<Sqinter>\<^sub>p(A\<inter> {P. abrh P = P}) = \<Sqinter>\<^sub>p A"
+     \<Sqinter>\<^sub>p(A \<inter> {P. abrh P = P}) = \<Sqinter>\<^sub>p A"
   apply (simp add: prog_rep_eq)
   unfolding inf_def image_def Ball_def 
   apply (rule someI2_ex)
@@ -277,8 +293,8 @@ lemma Lower_abr_subset_Lower_prog:
     
 lemma inf_abr_in_Lower_abr:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
-  (SOME x. greatest_abr x (Lower_abr A)) \<in> Lower_abr (A \<inter> {P. abrh P = P})"
-   unfolding greatest_abr_def
+  (\<^bold>\<Sqinter>\<^sub>aA) \<in> Lower_abr (A \<inter> {P. abrh P = P})"
+   unfolding greatest_abr_def inf_abr_def
    apply (subst Lower_abr_def)
       apply (subst Lower_abr_def)
   apply auto
@@ -301,14 +317,14 @@ lemma inf_abr_in_Lower_abr:
 
 lemma inf_abr_in_Lower_prog:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
-  (SOME x. greatest_abr x (Lower_abr A)) \<in> Lower_prog (A \<inter> {P. abrh P = P})"
+  (\<^bold>\<Sqinter>\<^sub>aA) \<in> Lower_prog (A \<inter> {P. abrh P = P})"
   by (metis (mono_tags) Int_iff Lower_abr_def inf_abr_in_Lower_abr semilattice_inf_class.inf.right_idem)
 
 lemma inf_abr_greatest:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x) \<Longrightarrow>  
-   z \<sqsubseteq> (SOME x. greatest_abr x (Lower_abr A))"
+   z \<sqsubseteq> (\<^bold>\<Sqinter>\<^sub>aA)"
   (*The KEY proof for the rest of the theory*)
-  unfolding greatest_abr_def Lower_abr_def
+  unfolding greatest_abr_def Lower_abr_def inf_abr_def
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
@@ -342,12 +358,12 @@ lemma inf_prog_abrh_is_greatest_lower:
    apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono order_refl pcond_prog.rep_eq)
   unfolding abrh_def
   apply (metis (mono_tags, lifting) if_prog_monoI mem_Collect_eq order_refl subsetCE)
-  done
-    
+  done 
+     
 lemma inf_abr_lower:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  x \<in> A \<Longrightarrow>
-    (SOME x. greatest_abr x (Lower_abr A)) \<sqsubseteq> x" 
-  unfolding greatest_abr_def Lower_abr_def
+    (\<^bold>\<Sqinter>\<^sub>aA) \<sqsubseteq> x" 
+  unfolding greatest_abr_def Lower_abr_def inf_abr_def
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
@@ -359,10 +375,44 @@ lemma inf_abr_lower:
      
 lemma inf_abr_is_abrh:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
-   abrh (SOME x. greatest_abr x (Lower_abr A)) = (SOME x. greatest_abr x (Lower_abr A))"
+   abrh (\<^bold>\<Sqinter>\<^sub>aA) = (\<^bold>\<Sqinter>\<^sub>aA)"
   using Lower_abr_def inf_abr_in_Lower_abr 
   by blast    
-     
+    
+lemma inf_abr_empty:
+  "(\<^bold>\<Sqinter>\<^sub>a {}) = abrh (MAGIC)"
+  unfolding inf_abr_def
+  apply (rule someI2_ex)    
+   apply (metis (no_types, lifting) Ball_Collect Lower_abr_def empty_iff greatest_abr_def inf_prog_abrh_is_greatest_lower semilattice_inf_class.inf_le2)
+  apply (metis (no_types, lifting) Lower_abr_def greatest_abr_def greatest_prog_unique inf_prog_abrh_is_greatest_lower inf_prog_empty order_bot_class.bot.extremum)
+  done 
+    
+lemma inf_abr_is_greatest_abr_Lower_abr:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> greatest_abr (\<^bold>\<Sqinter>\<^sub>a A) (Lower_abr A)"
+  unfolding greatest_abr_def 
+  apply auto
+   apply (simp add: Lower_abr_def)
+  unfolding  greatest_prog_alt_def
+  apply auto
+   apply (metis (mono_tags, lifting) inf_abr_in_Lower_abr semilattice_inf_class.inf.orderE)
+  apply (rule inf_abr_greatest)
+    apply auto   
+  using Lower_abr_def apply auto[1]
+  using Lower_abr_alt_def apply auto
+  done
+ 
+lemma inf_abr_univ:
+  "(\<^bold>\<Sqinter>\<^sub>a {P. abrh P = P}) = abrh (ABORT)"
+  unfolding inf_abr_def
+  apply (rule someI2_ex)    
+   apply (rule exI[where x = "(\<^bold>\<Sqinter>\<^sub>a {P. abrh P = P})"])
+   apply (rule inf_abr_is_greatest_abr_Lower_abr)
+   apply simp
+  unfolding greatest_abr_alt_def Lower_abr_alt_def
+  apply auto
+  apply (simp add: bottom_abrh_lower dual_order.antisym)
+  done
+    
 lemma sup_prog_abrh_in_Upper_prog_Int_abrh:
   "abrh (\<Squnion>\<^sub>pA) \<in> Upper_prog (A \<inter> {P. abrh P = P})" 
   unfolding sup_prog_alt_def 
@@ -377,13 +427,11 @@ lemma sup_prog_abrh_in_Upper_prog_Int_abrh:
 lemma Upper_abr_subset_Upper_prog:
   "Upper_abr (A \<inter> {P. abrh P = P}) \<subseteq> Upper_prog (A \<inter> {P. abrh P = P})"
   by (simp add: Upper_abr_def)
-
-thm greatest_abr_def
   
 lemma sup_abr_in_Upper_abr:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
-  (SOME x. least_abr x (Upper_abr A)) \<in> Upper_abr (A \<inter> {P. abrh P = P})"
-   unfolding least_abr_def
+  (\<^bold>\<Squnion>\<^sub>a A) \<in> Upper_abr (A \<inter> {P. abrh P = P})"
+   unfolding least_abr_def sup_abr_def
    apply (subst Upper_abr_def)
       apply (subst Upper_abr_def)
   apply auto
@@ -397,7 +445,8 @@ lemma sup_abr_in_Upper_abr:
     apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq sup_prog_abrh_in_Upper_prog_Int_abrh)
    apply (simp only: sup_prog_alt_def Bex_def)
    apply (rule someI2_ex)   
-  using sup_prog_is_least_Upper_prog apply blast
+   using sup_prog_is_least_Upper_prog 
+     apply blast
    apply (metis (no_types, lifting) Rep_prog_inject abrh_def cond_mono least_def 
                                     least_prog.rep_eq image_eqI order_refl 
                                     pcond_prog.rep_eq semilattice_inf_class.inf.orderE utp_order_le)
@@ -406,14 +455,13 @@ lemma sup_abr_in_Upper_abr:
 
 lemma sup_abr_in_Upper_prog:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
-  (SOME x. least_abr x (Upper_abr A)) \<in> Upper_prog (A \<inter> {P. abrh P = P})"
+  \<^bold>\<Squnion>\<^sub>a A \<in> Upper_prog (A \<inter> {P. abrh P = P})"
   by (metis (mono_tags) Int_iff Upper_abr_def sup_abr_in_Upper_abr semilattice_inf_class.inf.right_idem)
 
 lemma sup_abr_least:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow>  x \<sqsubseteq> z ) \<Longrightarrow>  
-   (SOME x. least_abr x (Upper_abr A)) \<sqsubseteq> z"
-  (*The KEY proof for the rest of the theory*)
-  unfolding least_abr_def Upper_abr_def
+   \<^bold>\<Squnion>\<^sub>a A \<sqsubseteq> z"
+  unfolding least_abr_def Upper_abr_def sup_abr_def
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])    
@@ -451,8 +499,8 @@ lemma sup_prog_abrh_is_least_Upper:
 
 lemma sup_abr_Upper:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  x \<in> A \<Longrightarrow>
-    x \<sqsubseteq> (SOME x. least_abr x (Upper_abr A))" 
-  unfolding least_abr_def Upper_abr_def
+    x \<sqsubseteq> \<^bold>\<Squnion>\<^sub>a A" 
+  unfolding least_abr_def Upper_abr_def sup_abr_def
   apply auto
   apply (rule someI2_ex)    
    apply (rule exI[where x = "abrh (\<Squnion>\<^sub>pA)"])    
@@ -464,285 +512,48 @@ lemma sup_abr_Upper:
      
 lemma sup_abr_is_abrh:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
-   abrh (SOME x. least_abr x (Upper_abr A)) = (SOME x. least_abr x (Upper_abr A))"
+   abrh (\<^bold>\<Squnion>\<^sub>a A) = \<^bold>\<Squnion>\<^sub>a A"
   using Upper_abr_def sup_abr_in_Upper_abr 
-  by blast        
+  by blast       
     
-lemma inf_prog_abrh_in_Lower_abr:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
-   (\<Sqinter>\<^sub>p (abrh ` A)) \<in> Lower_prog A" 
-  unfolding inf_prog_alt_def 
+lemma sup_prog_empty:
+  "\<^bold>\<Squnion>\<^sub>a {} = abrh ABORT"
+  unfolding sup_abr_def
   apply (rule someI2_ex)    
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-  unfolding greatest_prog_alt_def Lower_prog_alt_def
-  apply auto
+   apply (rule exI[where x = "abrh ABORT"])
+   apply (metis (no_types, lifting) Upper_abr_def empty_subsetI least_abr_def semilattice_inf_class.inf_le2 sup_prog_abrh_is_least_Upper sup_prog_empty)
+  apply (metis (no_types, lifting) Upper_abr_def empty_subsetI least_abr_def least_prog_unique sup_prog_abrh_is_least_Upper sup_prog_empty)
   done
     
-thm normal_design_theory_continuous.weak.inf_greatest
-lemma 
-<<<<<<< .mine
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow> finite A \<Longrightarrow>
-     abrh (\<Sqinter>\<^sub>p (abrh ` A)) =  (\<Sqinter>\<^sub>p (abrh ` A))"
-||||||| .r487
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
-     (\<Sqinter>\<^sub>p (abrh ` A)) = abrh (\<Sqinter>\<^sub>p (abrh ` A))"
-=======
- "greatest_abr (SOME x. greatest_abr x (Lower_abr A)) (Lower_abr A)"  
-  unfolding greatest_abr_alt_def Lower_abr_alt_def
-  apply auto
-    apply (rule someI2_ex)
-    apply auto    
-        apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>p(abrh ` A))"])
-    apply auto
-         apply (simp only: abrh_def prog_rep_eq)
-    
-    apply (metis (no_types, lifting) Rep_prog_refine abrh_def cond_mono inf_abrh_lower inf_prog.rep_eq order_refl pcond_prog.rep_eq skip.rep_eq)
-    apply (simp only: abrh_def prog_rep_eq image_def) 
-    apply (simp)
-     using inf_abrh_lower
-    apply (simp add: inf_prog_lower)
-     apply (rule someI2_ex)  
-      unfolding greatest_abr_alt_def Lower_abr_alt_def
-          apply auto
-        apply (rule exI[where x = "abrh MAGIC"])
-        apply auto    
-         apply (simp only: abrh_def prog_rep_eq)
-        
-         apply (simp only: abrh_def prog_rep_eq)
-         
-  oops  
-lemma 
-  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
-   abrh (SOME x. greatest_abr x (Lower_abr A)) = (SOME x. greatest_abr x (Lower_abr A))"
- 
-   unfolding inf_prog_alt_def 
-   apply (rule someI2_ex)  
-     
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-  unfolding greatest_prog_alt_def Lower_prog_alt_def
-  apply auto
-    oops
-lemma 
-  "\<And>x. x \<in> A \<Longrightarrow> abrh x = x \<Longrightarrow> abrh (\<Sqinter>\<^sub>pA) = \<Sqinter>\<^sub>pA"
-    unfolding inf_prog_alt_def 
-    apply (rule someI2_ex)    
-      using inf_prog_is_greatest_Lower_prog 
-       apply blast
-        unfolding greatest_prog_alt_def Lower_prog_alt_def
-        apply auto
-          
-          oops
-lemma 
-  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh (\<Sqinter>\<^sub>p(abrh ` A)) = abrh(\<Sqinter>\<^sub>p( A))"
-  unfolding inf_prog_alt_def 
+lemma sup_abr_univ:
+  "\<^bold>\<Squnion>\<^sub>a {P. abrh P = P} = abrh MAGIC"
+  unfolding sup_abr_def
   apply (rule someI2_ex)    
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-  apply (rule someI2_ex)      
-  using inf_prog_is_greatest_Lower_prog apply blast
-  unfolding greatest_prog_alt_def Lower_prog_alt_def
+   apply (rule exI[where x = "abrh MAGIC"])
+   apply(simp_all add: least_abr_alt_def Upper_abr_alt_def)
+   apply (metis UNIV_I abrh_def cond_mono dual_order.refl less_eq_prog.rep_eq  
+                pcond_prog.rep_eq skip.rep_eq sup_prog_Upper sup_prog_univ)
+  unfolding least_abr_def Upper_abr_def
   apply auto
-proof -
-  fix x :: "'a abr_prog" and xa :: "'a abr_prog"
-  assume a1: "A \<subseteq> {P. abrh P = P}"
-  assume a2: "\<forall>xa. xa \<in> A \<longrightarrow> x \<sqsubseteq> xa"
-  assume a3: "\<forall>xa. (\<forall>x. x \<in> A \<longrightarrow> xa \<sqsubseteq> x) \<longrightarrow> xa \<sqsubseteq> x"
-  assume a4: "\<forall>x. (\<forall>xa. xa \<in> abrh ` A \<longrightarrow> x \<sqsubseteq> xa) \<longrightarrow> x \<sqsubseteq> xa"
-  assume a5: "\<forall>x. x \<in> abrh ` A \<longrightarrow> xa \<sqsubseteq> x"
-  have f6: "\<And>p. \<not> p \<in> A \<or> abrh p = p"
-    using a1 by blast
-  then have "xa \<sqsubseteq> x"
-    using a5 a3 by (metis (no_types) image_eqI)
-  then show "abrh xa = abrh x"
-    using f6 a4 a2 by (metis (no_types) dual_order.antisym imageE)
-qed
-
-  lemma 
-  "A \<subseteq> {P. abrh P = P} \<Longrightarrow>   (\<Sqinter>\<^sub>p (abrh ` A)) = ( \<Sqinter>\<^sub>p(A ))"
- 
-   unfolding inf_prog_alt_def 
-  apply (rule someI2_ex)    
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-      apply (rule someI2_ex)      
-  using inf_prog_is_greatest_Lower_prog apply blast
-  unfolding greatest_prog_alt_def Lower_prog_alt_def
-  apply auto
-    
-  proof -
-    fix x :: "'a abr_prog" and xa :: "'a abr_prog"
-    assume a1: "A \<subseteq> {P. abrh P = P}"
-    assume a2: "\<forall>xa. xa \<in> A \<longrightarrow> x \<sqsubseteq> xa"
-    assume a3: "\<forall>xa. (\<forall>x. x \<in> A \<longrightarrow> xa \<sqsubseteq> x) \<longrightarrow> xa \<sqsubseteq> x"
-    assume a4: "\<forall>x. x \<in> abrh ` A \<longrightarrow> xa \<sqsubseteq> x"
-    { fix pp :: "'a abr_prog \<Rightarrow> 'a abr_prog" and ppa :: "'a abr_prog \<Rightarrow> 'a abr_prog"
-      obtain ppb :: "'a abr_prog \<Rightarrow> ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog set \<Rightarrow> 'a abr_prog" where
-        ff1: "\<And>p f P. (\<not> p \<in> f ` P \<or> ppb p f P \<in> P) \<and> (\<not> p \<in> f ` P \<or> f (ppb p f P) = p)"
-        by moura
-      { assume "x \<sqsubseteq> xa"
-        moreover
-        { assume "\<not> xa \<sqsubseteq> x"
-          moreover
-          { assume "\<exists>p. \<not> p \<sqsubseteq> x \<and> \<not> xa \<sqsubseteq> ppa p"
-            moreover
-            { assume "\<exists>p. p \<in> A \<and> \<not> xa \<sqsubseteq> p"
-              then have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-                using a4 a1 by (metis (no_types) abrh_subset_member) }
-            ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-              by blast }
-          ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-            by blast }
-      ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-      by fastforce }
-  moreover
-  { assume "\<not> x \<sqsubseteq> xa"
-    moreover
-    { assume "\<exists>p. \<not> x \<sqsubseteq> pp p"
-      then have "(\<exists>p. \<not> ppb (pp p) abrh A = pp p) \<or> (\<exists>p. \<not> x \<sqsubseteq> ppb (pp p) abrh A)"
-          by metis
-        moreover
-        { assume "\<exists>p. \<not> x \<sqsubseteq> ppb (pp p) abrh A"
-          then have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-            using ff1 a2 by (metis (no_types)) }
-        moreover
-        { assume "\<exists>p. \<not> ppb (pp p) abrh A = pp p"
-          then have "(\<exists>p. \<not> abrh (ppb (pp p) abrh A) = ppb (pp p) abrh A) \<or> (\<exists>p. \<not> abrh (ppb (pp p) abrh A) = pp p)"
-            by (metis (lifting))
-          moreover
-          { assume "\<exists>p. \<not> abrh (ppb (pp p) abrh A) = pp p"
-            then have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-              using ff1 by (metis (lifting)) }
-          moreover
-          { assume "\<exists>p. \<not> abrh (ppb (pp p) abrh A) = ppb (pp p) abrh A"
-            then have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-              using ff1 a1 by (metis (no_types) abrh_subset_member) }
-          ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-            by blast }
-        ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-          by blast }
-      ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-        by blast }
-    ultimately have "\<exists>p pa pb pc pd P f. xa = x \<or> \<not> pp p \<in> abrh ` A \<or> \<not> pa \<sqsubseteq> x \<and> \<not> ppa pa \<in> A \<or> pa \<sqsubseteq> ppa pa \<and> \<not> pa \<sqsubseteq> x \<or> p \<sqsubseteq> pp p \<and> \<not> p \<sqsubseteq> xa \<or> (pc::'a abr_prog) \<sqsubseteq> pb \<and> pb \<sqsubseteq> pc \<and> \<not> pb = pc \<or> (pd::'a abr_prog) \<in> P \<and> \<not> (f pd::'a abr_prog) \<in> f ` P"
-      by blast }
-  then have "\<exists>p. \<forall>pa pb. \<exists>pc pd pe pf P f. xa = x \<or> \<not> pa \<in> abrh ` A \<or> \<not> pc \<sqsubseteq> x \<and> \<not> pb \<in> A \<or> pc \<sqsubseteq> pb \<and> \<not> pc \<sqsubseteq> x \<or> p \<sqsubseteq> pa \<and> \<not> p \<sqsubseteq> xa \<or> (pe::'a abr_prog) \<sqsubseteq> pd \<and> pd \<sqsubseteq> pe \<and> \<not> pd = pe \<or> (pf::'a abr_prog) \<in> P \<and> \<not> (f pf::'a abr_prog) \<in> f ` P"
-    by (metis (full_types))
-  then show "xa = x"
-    using a3 apply auto  by (metis (lifting) dual_order.antisym image_eqI) (* > 1.0 s, timed out *)
-qed
-
-lemma 
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> A \<noteq> {} \<Longrightarrow>
-     (\<Sqinter>\<^sub>p (abrh ` (A \<inter> {P. abrh P = P}))) = abrh (\<Sqinter>\<^sub>p (abrh ` A))"
->>>>>>> .r488
-  (*TODO: see healthy_inf*)
-  
-<<<<<<< .mine
-  unfolding inf_prog_alt_def
-  apply (rule someI2_ex)
-
-  using inf_prog_is_greatest_Lower_prog apply auto[1]  
-
-  unfolding Lower_prog_alt_def greatest_prog_alt_def
-   
-  apply (rule HOL.no_atp(10))
-   thm normal_design_theory_continuous.inf_closed
-   thm greatest_prog_alt_def 
-||||||| .r487
-  unfolding inf_prog_alt_def
-  apply (rule someI2_ex)
-
-  using inf_prog_is_greatest_Lower_prog apply auto[1]
-  apply (rule someI2_ex)
-    
-    using inf_prog_is_greatest_Lower_prog apply auto[1]
-  unfolding Lower_prog_alt_def greatest_prog_alt_def
-   apply auto
-  apply (rule HOL.no_atp(10))
-   thm normal_design_theory_continuous.inf_closed
-   thm greatest_prog_alt_def 
-=======
->>>>>>> .r488
-  oops
-     
- lemma inf_abrh_in_Lower:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x ) \<Longrightarrow>  
-   (abrh(\<Sqinter>\<^sub>p (abrh ` A))) \<in> ((Lower_prog (abrh ` (A \<inter> {P. abrh P = P}))) \<inter> {P. abrh P = P})"
-  unfolding inf_prog_alt_def 
-   apply (rule someI2_ex)    
-  using inf_prog_is_greatest_Lower_prog 
-   apply blast
-    
-  unfolding greatest_prog_alt_def Lower_prog_alt_def
-  apply auto
-  oops
-    
-  thm inf_prog.rep_eq
-    
-lemma "(\<And>x. x \<in> A \<Longrightarrow> (\<^bold>N x) = x) \<Longrightarrow> \<^bold>N (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A) =  (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A)"
-  by (metis (no_types, lifting) Healthy_def mem_Collect_eq normal_design_theory_continuous.inf_closed subsetI)
-    
-lemma inf_abr_lower:
-  "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
-  apply (simp only: prog_rep_eq) 
-  apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
+    apply (simp add: abrh_below_top_abr dual_order.antisym)
   done
 
-    
-lemma inf_abrh_is_greatest_Lower_abr:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> greatest_abr (\<Sqinter>\<^sub>p A) (Lower_abr A)" 
-  unfolding greatest_abr_def   
+lemma sup_abr_is_least_abr_Upper_abr:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> least_abr (\<^bold>\<Squnion>\<^sub>a A) (Upper_abr A)"
+  unfolding least_abr_def 
   apply auto
-      apply (simp add: prog_rep_eq greatest_def)
+   apply (simp add: Upper_abr_def)
+  unfolding least_prog_alt_def
   apply auto
-    apply (simp add: Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
+    apply (metis (mono_tags) semilattice_inf_class.inf.orderE sup_abr_in_Upper_abr)
+    apply (rule sup_abr_least)
+    apply (auto simp: Upper_abr_alt_def)  
+  done
     
-    apply (simp add: Lower_abr_alt_def)
-    
-  oops
-lemma inf_prog_is_greatest_Lower_prog:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> greatest_abr (\<Sqinter>\<^sub>a A) (Lower_abr A)" 
-  unfolding greatest_abr_alt_def  Lower_abr_alt_def
-  apply auto
-  oops
-    
-lemma 
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> abrh (\<Sqinter>\<^sub>aA ) = \<Sqinter>\<^sub>a A"
-  unfolding inf_abr_def greatest_abr_def Lower_abr_def
-  apply auto
-     apply (rule someI2_ex)
-    defer apply (metis (mono_tags, lifting) Int_Collect greatest_abr_alt_def greatest_abr_def semilattice_inf_class.inf_le2)
-  apply (rule exI[where x= "\<Sqinter>\<^sub>p (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"])
-    
-  unfolding  abrh_def  
-    
-oops  
-  
-lemma inf_abr_alt_def:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> 
-   \<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p (abrh ` A )"
-  unfolding inf_abr_def inf_prog_alt_def  Lower_abr_def  greatest_abr_def
-  apply (auto )
-      apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog apply auto[1]
-     
-  apply (rule someI2_ex)
-   
-    
-   apply (rule exI[where x="(\<Sqinter>\<^sub>p (abrh ` A))"])
-   
-  unfolding inf_def prog_rep_eq Lower_def image_def Ball_def Lower_prog_def greatest_def
-   apply auto
-   
-     apply (simp add: Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)  
-    apply (rule someI2_ex)
-     apply auto
-    
+subsection \<open>Fixed points\<close>
 
-  oops
 definition LFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
-  where "LFP_abr F = \<Sqinter>\<^sub>a {x. F x \<sqsubseteq> x}" 
+  where "LFP_abr F = \<^bold>\<Sqinter>\<^sub>a {x. F x \<sqsubseteq> x}" 
     
 syntax
   "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
@@ -752,12 +563,6 @@ notation LFP_abr ("\<mu>\<^sub>a")
 translations
   "\<mu>\<^sub>a X \<bullet> P" == "CONST LFP_abr (\<lambda> X. P)"
 
-
-lemma inf_abr_lower:
-  "(\<And>x. x \<in> A \<Longrightarrow> abrh x = x) \<Longrightarrow> x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>aA \<sqsubseteq> x"  
-  unfolding inf_abr_def   greatest_abr_def Lower_abr_def
-  
-  oops  
 
 lemma lfp_abr_healthy_comp:
   "\<mu>\<^sub>a F = \<mu>\<^sub>a (F \<circ> abrh)" 
@@ -812,9 +617,6 @@ while_abr_def [urel_defs]: "while_abr b I C  = INVR I  WHILE (b \<oplus>\<^sub>p
   
 subsection {*Try catch*}
 term "passigns (subst_upd id abrupt (\<not> &abrupt))"
-definition  try_catch_abr_def [urel_defs]:
-  "try_catch_abr P Q = 
-   abrh (P ;  IF &abrupt THEN (passigns (subst_upd id abrupt (\<not> &abrupt)) ; abrh(Q)) ELSE SKIP FI)"
 
 section {*algebraic laws*} 
 
