@@ -553,10 +553,10 @@ lemma sup_abr_is_least_abr_Upper_abr:
 subsection \<open>Fixed points\<close>
 
 definition LFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
-  where "LFP_abr F = \<^bold>\<Sqinter>\<^sub>a {x. F x \<sqsubseteq> x}" 
+  where "LFP_abr F = \<^bold>\<Sqinter>\<^sub>a {x \<in> {P. abrh P = P} . F x \<sqsubseteq> x}" 
     
 definition GFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
-  where "GFP_abr F = \<^bold>\<Squnion>\<^sub>a {x. x \<sqsubseteq> F x}"
+  where "GFP_abr F = \<^bold>\<Squnion>\<^sub>a {x \<in> {P. abrh P = P} . x \<sqsubseteq> F x}"
     
 syntax
   "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<^bold>\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
@@ -569,68 +569,173 @@ notation GFP_abr ("\<^bold>\<nu>\<^sub>a")
 translations
   "\<^bold>\<mu>\<^sub>a X \<bullet> P" == "CONST LFP_abr (\<lambda> X. P)"
   
-find_theorems "LFP _ _ = _"
-thm normal_design_theory_continuous.LFP_healthy_comp  
+translations
+  "\<^bold>\<nu>\<^sub>a X \<bullet> P" == "CONST GFP_abr (\<lambda> X. P)"
+  
 lemma lfp_abr_healthy_comp:
-  "mono F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow>{P. abrh P = P} \<Longrightarrow> \<^bold>\<mu>\<^sub>a F = \<^bold>\<mu>\<^sub>a (F \<circ> abrh)"   
-  unfolding LFP_abr_def inf_abr_def comp_def
-  apply (rule someI2_ex)
-   apply (rule exI[where x="\<^bold>\<Sqinter>\<^sub>a {x. F (abrh x) \<sqsubseteq> x}"])
-    
-  unfolding greatest_abr_alt_def Lower_abr_alt_def
-   apply auto
-     apply (rule inf_abr_lower)
-    apply auto
-     apply (subst (asm) Pi_I)
-      apply simp
-    using inf_prog_is_greatest_Lower_prog 
-oops
-    
-lemma "(abrh (\<mu>\<^sub>a fun1) = (\<mu>\<^sub>a fun1))"
-  unfolding mu_abr_def abrh_def
-     apply (simp only: prog_rep_eq)
-  oops     
-thm LFP_def
-  term "LFP"
-term "Order.le"    
-term "a \<sqsubseteq> s"    
-term "{u \<in> carrier L. f u \<sqsubseteq>\<^bsub>L\<^esub> u}"    
- (*I need to re-define LFP such that LFP F = \<Sqinter> {u \<in> {P. abrh P = P \<or> P = throw_abr}. F u \<sqsubseteq> u}
-   To have such a definition I need to lift \<Sqinter> to prog*)   
-lemma "mono_prog F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P} \<Longrightarrow> 
-  LFP_abr F = (\<mu>\<^sub>p X \<bullet> F (abrh X))"
-  unfolding LFP_abr_def inf_abr_def mu_abr_def lfp_prog_alt_def inf_prog_alt_def greatest_abr_def Lower_abr_def
-  apply auto
-  apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog apply auto[1]
-  apply (rule someI2_ex)
-   
-                                                                          
-   apply (rule exI[where x = "\<Sqinter>\<^sub>p(({x. F x \<sqsubseteq> x} \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"])
-   defer
-   apply (rule greatest_prog_unique)
-    apply auto
-   apply (drule Pi_mem)
-    apply auto
-    thm Pi_I
-  oops
-lemma "\<And>fun1 fun2. (\<And>x. abrh x = x \<Longrightarrow> (abrh (fun1 x) = (fun1 x)) \<and> fun1 x = fun2 x) \<Longrightarrow> (abrh (\<mu>\<^sub>a fun1) = (\<mu>\<^sub>a fun1)) \<and> \<mu>\<^sub>a fun1 = \<mu>\<^sub>a fun2"
- oops 
-lemma "mono_prog F \<Longrightarrow> \<mu>\<^sub>a F = F(\<mu>\<^sub>a F)" 
-  apply  mu_abr_def 
-  apply (subst lfp_prog_unfold)
-    
-    thm lfp_prog_unfold[THEN ext]
-       
-subsection \<open>Iterations\<close>
+  "\<^bold>\<mu>\<^sub>a F = \<^bold>\<mu>\<^sub>a (F \<circ> abrh)" 
+proof -
+  have "{P. (abrh P = P) \<and> F P \<sqsubseteq> P} = {P. (abrh P = P) \<and> F (abrh P) \<sqsubseteq> P}"
+    by auto
+  thus ?thesis
+    unfolding LFP_abr_def  
+    by simp
+qed
   
-definition  
-while_abr_def [urel_defs]: "while_abr b I C  = INVR I  WHILE (b \<oplus>\<^sub>p \<Sigma>\<^sub>A\<^sub>B\<^sub>R) \<and> \<not>&abrupt DO C OD"
+lemma gfp_abr_healthy_comp:
+  "\<^bold>\<nu>\<^sub>a F = \<^bold>\<nu>\<^sub>a (F \<circ> abrh)" 
+proof -
+  have "{P. (abrh P = P) \<and> P \<sqsubseteq> F P } = {P. (abrh P = P) \<and>  P \<sqsubseteq> F (abrh P) }"
+    by auto
+  thus ?thesis
+    unfolding GFP_abr_def  
+    by simp
+qed
   
-subsection {*Try catch*}
-term "passigns (subst_upd id abrupt (\<not> &abrupt))"
+type_synonym '\<alpha> prog_health = "'\<alpha> prog \<Rightarrow> '\<alpha> prog"
+  
+consts
+  prog_hcond :: "('\<T>, '\<alpha>) uthy \<Rightarrow> '\<alpha> prog_health" ("\<H>\<P>\<index>")  
+  
+definition prog_order :: "'\<alpha> prog_health \<Rightarrow> '\<alpha> prog gorder" where
+"prog_order H = \<lparr> carrier = {P. P = H P}, eq = (op =), le = op \<sqsubseteq> \<rparr>"
 
-section {*algebraic laws*} 
+
+typedecl ABRH
+
+abbreviation "ABRH \<equiv> UTHY(ABRH,  '\<alpha> abr)"  
+
+  definition abrh_hcond :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> ('\<alpha> abr) prog_health" where
+             "abrh_hcond t = abrh"
+  definition abrh_unit :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> '\<alpha> abr_prog" where
+  [upred_defs]: "abrh_unit t = abrh SKIP"  
+
+definition
+  "mono_abr_prog F = Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F"  
+
+lemma mono_abr_prog_alt_def: 
+  "Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F = 
+   mono_prog (F o abrh) \<and> weak_partial_order (prog_order (abrh_hcond ABRH))"
+  apply (simp only : isotone_def prog_rep_eq prog_order_def weak_partial_order_def abrh_hcond_def)
+  apply auto
+  using ndes_utp_theory.equivalence_axioms apply auto[1]
+  using ndes_utp_theory.weak_partial_order_axioms weak_partial_order_def apply auto[1]
+           apply (simp add: ndes_utp_theory.equivalence_axioms)
+  using ndes_utp_theory.weak_partial_order_axioms weak_partial_order_def apply blast
+         apply (metis (no_types, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if abrh_def abrh_idem cond_mono eq_iff pcond_prog.rep_eq)
+        apply (rule equivalence.intro)
+          prefer 3
+          apply (subst (asm) equivalence.intro)
+            prefer 5
+            apply (subst (asm) equivalence.intro)
+               prefer 7
+               apply (subst (asm) weak_partial_order_axioms.intro)
+                   prefer 9   
+                   apply auto
+      apply (subst weak_partial_order_axioms.intro)
+          apply auto
+      apply (subst (asm) equivalence.intro)
+         apply auto
+      apply (subst (asm) weak_partial_order_axioms.intro)
+          apply auto
+      defer
+      apply (subst equivalence.intro)
+         apply auto
+     apply (subst (asm) equivalence.intro)
+        apply auto
+     apply (subst (asm) weak_partial_order_axioms.intro)
+         apply auto
+     defer 
+     apply (subst equivalence.intro)
+        apply auto
+    apply (subst weak_partial_order_axioms.intro)
+        apply auto
+    apply (simp add: Rep_prog_eq)
+   apply (simp add: Rep_prog_inject)
+  apply (metis Rep_prog_H1_H3_closed Rep_prog_inverse is_Ncarrier_is_ndesigns)
+  done
+
+lemma lfp_abr_unfold:
+   assumes M:"mono_abr_prog F"
+   assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"
+   shows " F (\<^bold>\<mu>\<^sub>a F) = \<^bold>\<mu>\<^sub>a F"
+     thm lfp_abr_healthy_comp
+     apply (subst lfp_abr_healthy_comp) 
+       apply (subst (2) lfp_abr_healthy_comp) 
+  unfolding LFP_abr_def
+    
+  apply (rule order_antisym)
+   apply (rule inf_abr_lower)
+    apply auto[1]
+  thm Pi_mem[OF H]
+    apply (insert H)
+   apply (subst (asm) Pi_I)
+    apply auto
+
+  using H apply auto[1]
+    apply (smt CollectI Collect_mono H PiE abrh_subset_member inf_abr_is_abrh)
+  defer
+       apply (rule inf_abr_greatest)
+
+oops                   
+lemma lfp_abrupt_unfold: 
+  assumes M:"mono_abr_prog F"
+  assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"  
+  shows "\<^bold>\<mu>\<^sub>a F = F (\<^bold>\<mu>\<^sub>a F)"  
+    thm lfp_unfold
+oops     
+
+  
+definition Idempotent :: "'\<alpha> prog_health \<Rightarrow> bool" where
+  "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
+
+abbreviation Monotonic :: "'\<alpha> prog_health \<Rightarrow> bool" where
+  "Monotonic(H) \<equiv> mono H"
+    
+locale prog_theory =
+  fixes \<T> :: "('\<T>, '\<alpha>) uthy" (structure)
+  assumes PHCond_Idem: " \<H>\<P>( \<H>\<P>(P)) =  \<H>\<P>(P)"
+begin
+
+  lemma uthy_simp:
+    "uthy = \<T>"
+    by blast
+
+  text {* A UTP theory fixes @{term "\<T>"}, the structural element denoting the UTP theory. All
+    constants associated with UTP theories can then be resolved by the type system. *}
+
+  lemma HCond_Idempotent [closure,intro]: "Idempotent  \<H>\<P>"
+    by (simp add: Idempotent_def PHCond_Idem)
+
+  sublocale partial_order "prog_thy_order \<T>"
+    by (unfold_locales, simp_all add: prog_order_def)
+end
+  
+interpretation ndes_utp_theory: prog_theory ABRH
+  apply (simp add:   abrh_hcond_def utp_theory.intro)
+
+
+(*interpretation ndes_unital: utp_theory_unital NDES
+  apply (unfold_locales, simp_all add: ndes_hcond_def ndes_unit_def)
+  using seq_r_H1_H3_closed apply blast
+  apply (metis H1_rdesign H3_def Healthy_def' design_skip_idem skip_d_def)
+  apply (metis H1_idem H1_left_unit Healthy_def')
+  apply (metis H1_H3_commute H3_def H3_idem Healthy_def')
+done
+
+
+
+interpretation normal_design_theory_continuous: utp_theory_continuous NDES
+  rewrites "\<And> P. P \<in> carrier (uthy_order NDES) \<longleftrightarrow> P is \<^bold>N"
+  and "carrier (uthy_order NDES) \<rightarrow> carrier (uthy_order NDES) \<equiv> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"
+  and "le (uthy_order NDES) = op \<sqsubseteq>"
+  and "A \<subseteq> carrier (uthy_order NDES) \<longleftrightarrow> A \<subseteq> \<lbrakk>\<^bold>N\<rbrakk>\<^sub>H"  
+  and "eq (uthy_order NDES) = op ="  
+  by (unfold_locales, simp_all add: ndes_hcond_def H1_H3_Continuous utp_order_def)*)
+
+  
+     
+(*section {*algebraic laws*} 
 
 lemma [algebraic_laws_prog]:"IF b THEN P ELSE P FI = P"
   by (simp add: prog_rep_eq Algebraic_Laws.cond_idem)
@@ -687,5 +792,6 @@ lemma "abrh(P) ; abrh (throw_abr ;  IF &abrupt THEN (passigns (subst_upd id abru
     apply rel_simp
      apply metis
     apply (smt abr_vars.select_convs(2))
-done 
+done *)
+    
 end
