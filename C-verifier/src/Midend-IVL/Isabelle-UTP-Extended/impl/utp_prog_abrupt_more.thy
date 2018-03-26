@@ -555,24 +555,36 @@ subsection \<open>Fixed points\<close>
 definition LFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
   where "LFP_abr F = \<^bold>\<Sqinter>\<^sub>a {x. F x \<sqsubseteq> x}" 
     
+definition GFP_abr :: " ('a abr_prog \<Rightarrow> 'a abr_prog) \<Rightarrow> 'a abr_prog" 
+  where "GFP_abr F = \<^bold>\<Squnion>\<^sub>a {x. x \<sqsubseteq> F x}"
+    
 syntax
-  "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
+  "_amu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<^bold>\<mu>\<^sub>a _ \<bullet> _" [0, 10] 10)
+  "_anu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<^bold>\<nu>\<^sub>a _ \<bullet> _" [0, 10] 10)
 
-notation LFP_abr ("\<mu>\<^sub>a")
+notation LFP_abr ("\<^bold>\<mu>\<^sub>a")
 
-translations
-  "\<mu>\<^sub>a X \<bullet> P" == "CONST LFP_abr (\<lambda> X. P)"
-
-
-lemma lfp_abr_healthy_comp:
-  "\<mu>\<^sub>a F = \<mu>\<^sub>a (F \<circ> abrh)" 
+notation GFP_abr ("\<^bold>\<nu>\<^sub>a")
   
+translations
+  "\<^bold>\<mu>\<^sub>a X \<bullet> P" == "CONST LFP_abr (\<lambda> X. P)"
+  
+find_theorems "LFP _ _ = _"
+thm normal_design_theory_continuous.LFP_healthy_comp  
+lemma lfp_abr_healthy_comp:
+  "mono F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow>{P. abrh P = P} \<Longrightarrow> \<^bold>\<mu>\<^sub>a F = \<^bold>\<mu>\<^sub>a (F \<circ> abrh)"   
   unfolding LFP_abr_def inf_abr_def comp_def
   apply (rule someI2_ex)
-      using inf_prog_is_greatest_Lower_prog apply auto[1]
-
-
-  by simp
+   apply (rule exI[where x="\<^bold>\<Sqinter>\<^sub>a {x. F (abrh x) \<sqsubseteq> x}"])
+    
+  unfolding greatest_abr_alt_def Lower_abr_alt_def
+   apply auto
+     apply (rule inf_abr_lower)
+    apply auto
+     apply (subst (asm) Pi_I)
+      apply simp
+    using inf_prog_is_greatest_Lower_prog 
+oops
     
 lemma "(abrh (\<mu>\<^sub>a fun1) = (\<mu>\<^sub>a fun1))"
   unfolding mu_abr_def abrh_def
