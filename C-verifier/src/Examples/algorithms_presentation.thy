@@ -30,7 +30,6 @@ section \<open>Simple algorithms\<close>
 subsection \<open>Increment method\<close>
   
 program_spec increment_method_sp_H1_H3:
-  assumes "vwb_lens x"
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "x :== 0 ; 
                INVAR \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
@@ -41,7 +40,6 @@ program_spec increment_method_sp_H1_H3:
   done
 
 program_spec increment_method_wp_H1_H3:
-  assumes "vwb_lens x"
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "x :== 0 ; 
                INVAR \<guillemotleft>a\<guillemotright> >\<^sub>u 0 \<and> \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u &x 
@@ -54,8 +52,6 @@ program_spec increment_method_wp_H1_H3:
 subsection \<open>even count program\<close> 
 
 program_spec even_count_gen_sp_H1_H3:
-  assumes "lens_indep_all [i,j]"
-  assumes "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
                j :== 0 ; 
@@ -75,8 +71,6 @@ program_spec even_count_gen_sp_H1_H3:
   done   
 
 program_spec even_count_gen'_sp_H1_H3:
-  assumes "lens_indep_all [i,j]"
-  assumes  "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
                j :== 0 ; 
@@ -96,8 +90,6 @@ program_spec even_count_gen'_sp_H1_H3:
   by presburger
 
 program_spec even_count_gen'_wp_H1_H3:
-  assumes "lens_indep_all [i,j]"
-  assumes  "vwb_lens i" "vwb_lens j"  
   assumes_utp "\<guillemotleft>a\<guillemotright> >\<^sub>u 0"
   prog_utp    "i :== \<guillemotleft>0::int\<guillemotright>;
                j :== 0 ; 
@@ -119,8 +111,6 @@ program_spec even_count_gen'_wp_H1_H3:
   done
  
 program_spec max_program_correct:
-  assumes "r \<bowtie> i" 
-  assumes "vwb_lens i" "vwb_lens r" 
   assumes_utp  "uop length \<guillemotleft>a\<guillemotright> \<ge>\<^sub>u1 \<and> &i =\<^sub>u 1 \<and> &r =\<^sub>u bop nth \<guillemotleft>a:: int list\<guillemotright> 0"
   ensures_utp "&r =\<^sub>uuop Max (uop set \<guillemotleft>a\<guillemotright>) "  
   prog_utp  

@@ -40,33 +40,31 @@ datatype ('typ, 'term, 'fact) ctxt_stmt =
   Vcg_wp
 type context = (string, string, Facts.ref) ctxt_stmt
 
-fun to_elem_stmt ctxt l = 
+fun to_elem_stmt l = 
   case
     ( map_filter (fn Shows l => SOME l | _ => NONE) l
     , map_filter (fn Obtains l => SOME l | _ => NONE) l)
   of (l_shows, []) =>
-      Element.Shows
-        let val l_shows = List.concat l_shows
-            val escape = map (fn s => "(" ^ YXML.content_of s ^ ")") in
-          case
-            ( map_filter (fn Assumes_UTP t => SOME t | _ => NONE) l
-            , map_filter (fn Ensures_UTP t => SOME t | _ => NONE) l
-            , map_filter (fn Prog_UTP t => SOME t | _ => NONE) l)
-          of (l_ass, l_ens, [t_prog]) =>
-               let val _ = Syntax.read_terms ctxt (t_prog :: l_ass @ l_ens)
-               in
-                 (Binding.empty_atts,
+      let val l_shows = List.concat l_shows
+          val escape = map (fn s => "(" ^ YXML.content_of s ^ ")") in
+        case
+          ( map_filter (fn Assumes_UTP t => SOME t | _ => NONE) l
+          , map_filter (fn Ensures_UTP t => SOME t | _ => NONE) l
+          , map_filter (fn Prog_UTP t => SOME t | _ => NONE) l)
+        of (l_ass, l_ens, [t_prog]) =>
+             ( SOME (l_ass, l_ens, t_prog)
+             , Element.Shows
+                 ((Binding.empty_atts,
                   [(String.concatWith
                       " "
                       ("hoare_prog_t"
                        :: (case l_ass of [] => "utrue" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ass) ^ ")")
                        :: escape [t_prog]
                         @ [case l_ens of [] => "ufalse" | _ => "(" ^ String.concatWith "\<and>\<^sub>p" (escape l_ens) ^ ")"]), [])])
-                 :: l_shows
-               end
-           | _ => ((case l_shows of [] => warning "not yet supported" | _ => ()); l_shows)
-        end
-   | ([], l) => Element.Obtains (List.concat l)
+                 :: l_shows))
+         | _ => (NONE, Element.Shows ((case l_shows of [] => warning "not yet supported" | _ => ()); l_shows))
+      end
+   | ([], l) => (NONE, Element.Obtains (List.concat l))
    | _ => error "shows and obtains are both present"
 
 val to_elem_context_list = 
@@ -138,15 +136,37 @@ val _ = Outer_Syntax.commands @{command_keyword program_spec} ""
     [ [(@{command_keyword lemma},
         Toplevel.local_theory_to_proof' NONE NONE
           (fn b => fn ctxt =>
-            Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes (Element'.to_elem_context_list elems) (Element'.to_elem_stmt ctxt elems) b ctxt))]
-    , if Element'.exists_assumes elems then
-        [(@{command_keyword apply},
-          let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
-                                             [Method.Basic (fn ctxt => Method.insert (Proof_Context.get_thms ctxt "assms"))])
-                      , (Position.none, Position.none)) in
-          (Method.report m; Toplevel.proofs (Proof.apply m))
-          end)]
-      else []
+            let val (assumes, shows) =
+                  case Element'.to_elem_stmt elems of
+                    (SOME (l_ass, l_ens, t_prog), shows) =>
+                      let val (t_prog :: _) = Syntax.read_terms ctxt (t_prog :: l_ass @ l_ens)
+                          fun get_vars acc t =
+                            (fn Const (@{const_name passigns}, _)
+                                $ ( Const (@{const_name subst_upd_uvar}, _)
+                                  $ Const (@{const_name id}, _)
+                                  $ ( Const (@{const_name pr_var}, _)
+                                    $ Free (s, _))
+                                  $ _) => s :: acc
+                              | Abs (_, _, t) => get_vars acc t
+                              | op $ (t1, t2) => get_vars (get_vars acc t1) t2
+                              | _ => acc) t
+                          fun f_bowtie acc l = case l of x :: xs => f_bowtie (map (pair x) xs :: acc) xs
+                                                       | [] => acc
+                          val assign_vars = get_vars [] t_prog |> Symtab.make_set |> Symtab.keys in
+                      ( map (fn x => Element.Assumes [(Binding.empty_atts, [(@{const_name vwb_lens} ^ " " ^ x, [])])]) assign_vars
+                        @
+                        map (fn (x1, x2) => Element.Assumes [(Binding.empty_atts, [(@{const_name lens_indep} ^ " " ^ x1 ^ " " ^ x2, [])])])
+                            (List.concat (f_bowtie [] assign_vars))
+                      , shows)
+                      end
+                  | (NONE, shows) => ([], shows) in
+            Specification.theorem_cmd long Thm.theoremK NONE (K I) binding includes (assumes @ Element'.to_elem_context_list elems) shows b ctxt end))]
+    , [(@{command_keyword apply},
+        let val m = ( Method.Combinator (Method.no_combinator_info, Method.Then,
+                                           [Method.Basic (fn ctxt => Method.insert (Proof_Context.get_thms ctxt "assms" handle ERROR _ => []))])
+                    , (Position.none, Position.none)) in
+        (Method.report m; Toplevel.proofs (Proof.apply m))
+        end)]
     , [(@{command_keyword apply},
         let val m = ( Method.Combinator
                         ( Method.no_combinator_info
