@@ -219,7 +219,7 @@ lemma least_abr_alt_def:
   unfolding least_abr_def  prog_rep_eq least_def image_def Ball_def
   by (auto simp add: Rep_prog_inject Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
   
-sledgehammer_params[stop_on_first, parallel_subgoals, join_subgoals, timeout = 60]
+sledgehammer_params[stop_on_first, parallel_subgoals, join_subgoals, timeout = 90]
   
 lemma Lower_abr_alt_def: 
   "Lower_abr A = {l. (ALL x. x \<in> (A \<inter> {P. abrh P = P}) \<longrightarrow> l \<sqsubseteq> x)} \<inter> {P. abrh P = P}"  
@@ -227,7 +227,9 @@ lemma Lower_abr_alt_def:
   apply (simp only: Int_Collect)
   apply auto
    apply (metis (mono_tags, lifting) Abs_prog_Rep_prog_Ncarrier Healthy_if Int_Collect Rep_prog_H1_H3_closed is_Ncarrier_is_ndesigns)
-  apply (smt IntE IntI Rep_prog Rep_prog_inverse is_Ncarrier_is_ndesigns mem_Collect_eq)
+  unfolding Bex_def
+  apply auto
+  apply (metis Rep_prog_H1_H3_closed Rep_prog_inverse is_Ncarrier_is_ndesigns)
   done
     
 lemma Upper_abr_alt_def:
@@ -599,22 +601,19 @@ proof -
     by simp
 qed
   
-type_synonym '\<alpha> prog_health = "'\<alpha> prog \<Rightarrow> '\<alpha> prog"
-  
-consts
-  prog_hcond :: "('\<T>, '\<alpha>) uthy \<Rightarrow> '\<alpha> prog_health" ("\<H>\<P>\<index>")  
+type_synonym '\<alpha> prog_health = "'\<alpha> prog \<Rightarrow> '\<alpha> prog" 
   
 definition prog_order :: "'\<alpha> prog_health \<Rightarrow> '\<alpha> prog gorder" where
 "prog_order H = \<lparr> carrier = {P. P = H P}, eq = (op =), le = op \<sqsubseteq> \<rparr>"
-
 
 typedecl ABRH
 
 abbreviation "ABRH \<equiv> UTHY(ABRH,  '\<alpha> abr)"  
 
-  definition abrh_hcond :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> ('\<alpha> abr) prog_health" where
-             "abrh_hcond t = abrh"
-  definition abrh_unit :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> '\<alpha> abr_prog" where
+definition abrh_hcond :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> ('\<alpha> abr) prog_health" where
+  "abrh_hcond t = abrh"
+  
+definition abrh_unit :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> '\<alpha> abr_prog" where
   [upred_defs]: "abrh_unit t = abrh SKIP"  
 
 abbreviation
@@ -661,8 +660,6 @@ lemma mono_abr_prog_alt_def:
    apply (simp add: Rep_prog_inject)
   apply (metis Rep_prog_H1_H3_closed Rep_prog_inverse is_Ncarrier_is_ndesigns)
   done
-thm lfp_unfold
-find_theorems " _ \<Longrightarrow> Mono\<^bsub>_\<^esub> _ "
   
 lemma mono_Monotone_prog_order:
   "mono F \<Longrightarrow> Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F" 
@@ -712,7 +709,7 @@ lemma weak_order_prog_monoE:
 lemma lfp_abr_prog_lowerbound:
   "abrh x = x \<Longrightarrow> F x \<sqsubseteq> x \<Longrightarrow> \<^bold>\<mu>\<^sub>a F \<sqsubseteq> x"
   by (simp add: Collect_mono_iff LFP_abr_def inf_abr_lower)
-     
+    
 lemma lfp_abr_prog_greatest:
   "abrh x = x \<Longrightarrow> (\<And>z. abrh z = z \<Longrightarrow> F z \<sqsubseteq> z \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> x \<sqsubseteq> \<^bold>\<mu>\<^sub>a F"   
   by (metis (mono_tags, lifting) Collect_mono LFP_abr_def inf_abr_greatest mem_Collect_eq)
@@ -720,44 +717,7 @@ lemma lfp_abr_prog_greatest:
 lemma mem_collectP:
  "x \<in> {P. abrh P = P} = (abrh x = x)"
   by auto
-find_theorems
-   " _ (\<mu>\<^sub>N x \<bullet> _) \<sqsubseteq> (\<mu>\<^sub>N x \<bullet> _)"
- 
-
-find_theorems
-   " _ (gfp _) \<sqsubseteq> (gfp _ )"   
-lemma 
-  "mono F \<Longrightarrow>   F (\<mu> F) \<sqsubseteq> \<mu> F"
-  
-  by (simp add: def_gfp_unfold order.order_iff_strict) 
-    
-lemma healthy_inf_cont:
-    assumes "A \<subseteq> {P. abrh P = P}" "A \<noteq> {}"
-    shows "\<^bold>\<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p A"
-  proof -
-    have "\<^bold>\<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p (abrh`A)"
-      unfolding inf_abr_def inf_prog_alt_def 
-       apply (insert assms)
-       apply (rule someI2_ex)    
-       apply (rule exI[where x = " (\<Sqinter>\<^sub>p(abrh`A))"])
-       apply (simp only: greatest_prog_alt_def Ball_def Lower_prog_alt_def image_def Bex_def)
-       apply auto[]
-        
-        apply (metis image_def inf_abrh_image_lower)
-       apply (simp only:  inf_prog_alt_def)
-               apply (rule someI2_ex)    
-             
-      using inf_prog_is_greatest_lower_prog apply auto[1]
-   apply (simp add:prog_rep_eq image_def greatest_def Bex_def Lower_prog_alt_def)               
-       apply blast
-        apply (rule someI2_ex)    
-      using inf_abr_is_greatest_abr_Lower_abr apply auto[1]
-           apply (simp add: prog_rep_eq image_def greatest_abr_def Lower_abr_def greatest_def Bex_def Lower_prog_alt_def)               
-      unfolding abrh_def
-      apply (rule antisym)
-       apply auto
-      oops
-        
+       
 lemma lfp_abr_fixed_point:
   assumes M:"mono_abr_prog F"
   assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"
@@ -843,7 +803,7 @@ proof (rule antisym)
       apply auto[]
      apply (simp add: Collect_mono inf_abr_is_abrh)
     apply (simp add: inf_abr_def)
-    apply (rule someI2_ex)            
+    apply (rule someI2_ex)   
      apply (metis (no_types, lifting) Collect_mono_iff inf_abr_is_greatest_abr_Lower_abr)
     unfolding greatest_abr_alt_def Lower_abr_alt_def Ball_def abrh_def 
     apply auto
@@ -853,117 +813,71 @@ proof (rule antisym)
     apply (simp add: abrh_def abrh_hcond_def weak_order_prog_monoD)
     done 
 qed
-    
-lemma lfp_lemma2:
-   assumes M:"mono_abr_prog F"
-   assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"
-   shows " F (\<^bold>\<mu>\<^sub>a F) \<sqsubseteq> \<^bold>\<mu>\<^sub>a F"   
-     
-     
-    proof (rule antisym)
-    have ne: "{P. (P is \<H>) \<and> F P \<sqsubseteq> P} \<noteq> {}"
-    proof -
-      have "F \<^bold>\<top> \<sqsubseteq> \<^bold>\<top>"
-        using assms(2) utp_top weak.top_closed by force
-      thus ?thesis
-        by (auto, rule_tac x="\<^bold>\<top>" in exI, auto simp add: top_healthy)
-    qed
-    show "\<^bold>\<mu> F \<sqsubseteq> (\<mu> X \<bullet> F (\<H> X))"
-    proof -
-      have "\<Sqinter>{P. (P is \<H>) \<and> F(P) \<sqsubseteq> P} \<sqsubseteq> \<Sqinter>{P. F(\<H>(P)) \<sqsubseteq> P}"
-      proof -
-        have 1: "\<And> P. F(\<H>(P)) = \<H>(F(\<H>(P)))"
-          by (metis HCond_Idem Healthy_def assms(2) funcset_mem mem_Collect_eq)
-        show ?thesis
-        proof (rule Sup_least, auto)
-          fix P
-          assume a: "F (\<H> P) \<sqsubseteq> P"
-          hence F: "(F (\<H> P)) \<sqsubseteq> (\<H> P)"
-            by (metis 1 HCond_Mono mono_def)
-          show "\<Sqinter>{P. (P is \<H>) \<and> F P \<sqsubseteq> P} \<sqsubseteq> P"
-          proof (rule Sup_upper2[of "F (\<H> P)"])
-            show "F (\<H> P) \<in> {P. (P is \<H>) \<and> F P \<sqsubseteq> P}"
-            proof (auto)
-              show "F (\<H> P) is \<H>"
-                by (metis 1 Healthy_def)
-              show "F (F (\<H> P)) \<sqsubseteq> F (\<H> P)"
-                using F mono_def assms(1) by blast
-            qed
-            show "F (\<H> P) \<sqsubseteq> P"
-              by (simp add: a)
-          qed
-        qed
-      qed
-      
-           thm inf_abr_greatest
-        proof (rule inf_abr_greatest, auto)
-          fix P
-          assume a: "F (abrh P) \<sqsubseteq> P"
-          hence F: "(F (abrh P)) \<sqsubseteq> (abrh P)"
-            by (metis "1" abrh_def cond_mono dual_order.refl less_eq_prog.rep_eq pcond_prog.rep_eq)  
-           
-          show "  \<^bold>\<Sqinter>\<^sub>a{P. abrh P = P \<and> F P \<sqsubseteq> P} \<sqsubseteq> P"
-            thm inf_abr_lower[of _ "F (abrh P)"]
-          proof (rule inf_abr_lower2[of _ "F (abrh P)"])
-            show "F (abrh P) \<in> {P. (abrh P = P) \<and> F P \<sqsubseteq> P}"
-            proof (auto)
-              show "abrh (F (abrh P)) = F (abrh P)"
-                by (metis 1)
-              show "F (F (abrh P)) \<sqsubseteq> F (abrh P)"
-                 by (metis "1" F abrh_hcond_def abrh_idem assms(1) weak_order_prog_monoE)
-            qed
-            show "F (abrh P) \<sqsubseteq> P"
-              by (simp add: a)
-            show aham:"{P. abrh P = P \<and> F P \<sqsubseteq> P} \<subseteq> {P. abrh P = P}"
-              by auto 
-          qed
-          have "{P. F (abrh P) \<sqsubseteq> P} \<subseteq> {P. abrh P = P \<and> F P \<sqsubseteq> P}"
-              apply auto 
-        qed
-      qed 
-     thm lfp_abr_healthy_comp
-     apply (subst lfp_abr_healthy_comp) 
-       apply (subst (2) lfp_abr_healthy_comp) 
-  unfolding LFP_abr_def
-    
-  apply (rule order_antisym)
-   apply (rule inf_abr_lower)
-    apply auto[1]
-  thm Pi_mem[OF H]
-    apply (insert H)
-   apply (subst (asm) Pi_I)
-    apply auto
-
-  using H apply auto[1]
-    apply (smt CollectI Collect_mono H PiE abrh_subset_member inf_abr_is_abrh)
-  defer
-       apply (rule inf_abr_greatest)
-     apply auto[1]
-    
-    apply (smt Collect_mono_iff PiE inf_abr_is_abrh mem_Collect_eq)
-  thm LFP_abr_def
-    apply (subst mem_collectP[THEN sym])
-   apply (subst LFP_abr_def[THEN sym])
-    sledgehammer
-    apply (subst lfp_abr_prog_lowerbound)
-    (*Preuve goal 1: on sais que F est monotonic et on sait que lfp is lower bound*)
-    (*Preuve goal 2: on sait que F est monotonic*)
-    thm design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
-oops                   
-lemma lfp_abrupt_unfold: 
+                       
+lemma lfp_abr_prog_unfold: 
   assumes M:"mono_abr_prog F"
   assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"  
   shows "\<^bold>\<mu>\<^sub>a F = F (\<^bold>\<mu>\<^sub>a F)"  
-    thm lfp_unfold
-oops     
+  by (simp add: H M lfp_abr_fixed_point)
+       
+lemma lfp_abrupt_const: 
+  "abrh t = t \<Longrightarrow> \<^bold>\<mu>\<^sub>a (\<lambda> x . t) = t"
+  apply (rule lfp_abr_prog_unfold)
+   apply (rule weak_order_prog_monoI)
+   apply simp_all
+  done
 
-  
+lemma lfp_abr_eqI:
+  "mono_abr_prog F \<Longrightarrow> F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P} \<Longrightarrow> abrh x = x \<Longrightarrow> F x = x \<Longrightarrow>
+   (\<And>z. F z = z \<Longrightarrow> x \<sqsubseteq> z ) \<Longrightarrow> \<^bold>\<mu>\<^sub>a F = x"  
+  by (rule antisym) (simp_all add: lfp_abr_prog_lowerbound lfp_abr_prog_unfold[symmetric])
+    
+lemma lfp_abr_is_abrh:
+   "abrh (\<^bold>\<mu>\<^sub>a F) = \<^bold>\<mu>\<^sub>a F"
+   by (metis (mono_tags, lifting) CollectD Collect_mono LFP_abr_def inf_abr_is_abrh)
+ thm lfp_ordinal_induct
+lemma lfp_ordinal_induct [case_names mono step union]:
+  fixes f :: "'a::complete_lattice \<Rightarrow> 'a"
+  assumes mono: "mono f"
+    and P_f: "\<And>S. P S \<Longrightarrow> S \<le> lfp f \<Longrightarrow> P (f S)"
+    and P_Union: "\<And>M. \<forall>S\<in>M. P S \<Longrightarrow> P (Sup M)"
+  shows "P (lfp f)"
+proof -
+  let ?M = "{S. S \<le> lfp f \<and> P S}"
+  from P_Union have "P (Sup ?M)" by simp
+  also have "Sup ?M = lfp f"
+  proof (rule antisym)
+    show "Sup ?M \<le> lfp f"
+      by (blast intro: Sup_least)
+    then have "f (Sup ?M) \<le> f (lfp f)"
+      by (rule mono [THEN monoD])
+    then have "f (Sup ?M) \<le> lfp f"
+      using mono [THEN lfp_unfold] by simp
+    then have "f (Sup ?M) \<in> ?M"
+      using P_Union by simp (intro P_f Sup_least, auto)
+    then have "f (Sup ?M) \<le> Sup ?M"
+      by (rule Sup_upper)
+    then show "lfp f \<le> Sup ?M"
+      by (rule lfp_lowerbound)
+  qed
+  finally show ?thesis .
+qed
+ 
+find_theorems name: normal_design_theory_continuous.LFP_
+thm lfp_unfold 
+thm lfp_eqI    
+thm normal_design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
+
 definition Idempotent :: "'\<alpha> prog_health \<Rightarrow> bool" where
   "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
 
 abbreviation Monotonic :: "'\<alpha> prog_health \<Rightarrow> bool" where
   "Monotonic(H) \<equiv> mono H"
-    
+  
+section \<open>generalisation to any healthiness condition\<close>  
+consts
+  prog_hcond :: "('\<T>, '\<alpha>) uthy \<Rightarrow> '\<alpha> prog_health" ("\<H>\<P>\<index>") 
+  
 locale prog_theory =
   fixes \<T> :: "('\<T>, '\<alpha>) uthy" (structure)
   assumes PHCond_Idem: " \<H>\<P>( \<H>\<P>(P)) =  \<H>\<P>(P)"
@@ -978,11 +892,10 @@ begin
 
   lemma HCond_Idempotent [closure,intro]: "Idempotent  \<H>\<P>"
     by (simp add: Idempotent_def PHCond_Idem)
-
-  sublocale partial_order "prog_thy_order \<T>"
+  sublocale partial_order "prog_order (prog_hcond \<T>)"
     by (unfold_locales, simp_all add: prog_order_def)
 end
-  
+ term "utp_thy_order" 
 interpretation ndes_utp_theory: prog_theory ABRH
   apply (simp add:   abrh_hcond_def utp_theory.intro)
 
