@@ -459,13 +459,17 @@ lemma inf_prog_greatest:
     apply auto  
   done
     
-lemma inf_prog_Lower:
+lemma inf_prog_lower:
   "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p A \<sqsubseteq> x" 
   apply (simp only: prog_rep_eq) 
   apply (meson Rep_prog image_eqI image_subsetI normal_design_theory_continuous.inf_lower)
   done
     
-lemma inf_H1_H3_in_Lower:
+lemma inf_prog_lower2:
+  "u \<in> A \<Longrightarrow> u \<sqsubseteq> v \<Longrightarrow> (\<Sqinter>\<^sub>p A) \<sqsubseteq> v"
+  using inf_prog_lower [of u A] by auto
+    
+lemma inf_H1_H3_in_lower:
   "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N ) \<Longrightarrow> \<^bold>\<Sqinter>\<^bsub>NDES\<^esub>A \<in> Lower (uthy_order NDES) A" 
   unfolding Lower_def
   apply auto                                               
@@ -473,33 +477,33 @@ lemma inf_H1_H3_in_Lower:
     apply (simp_all add: is_Ncarrier_is_ndesigns subsetI)
   done
     
-lemma inf_prog_in_Lower_prog:
+lemma inf_prog_in_lower_prog:
   "(\<Sqinter>\<^sub>p A) \<in> (Lower_prog A)"
   by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog_def imageE image_eqI map_fun_def 
-                                 o_def inf_H1_H3_in_Lower inf_prog_def)
+                                 o_def inf_H1_H3_in_lower inf_prog_def)
 
-lemma inf_H1_H3_is_greatest_Lower:
+lemma inf_H1_H3_is_greatest_lower:
   "(\<And>x. x \<in> A \<Longrightarrow> x is \<^bold>N) \<Longrightarrow> greatest (uthy_order NDES) (\<^bold>\<Sqinter>\<^bsub>NDES\<^esub> A) (Lower (uthy_order NDES) A)"
   unfolding greatest_def
   apply (auto simp add: is_Ncarrier_is_ndesigns)        
     apply (metis Lower_closed is_Healthy_subset_member is_Ncarrier_is_ndesigns utp_order_carrier)
-  using inf_H1_H3_in_Lower apply auto[1]
+  using inf_H1_H3_in_lower apply auto[1]
   apply (rule normal_design_theory_continuous.weak.inf_greatest)
     apply (auto simp add: Lower_def is_Ncarrier_is_ndesigns )
   done   
     
-lemma inf_prog_is_greatest_Lower_prog:
+lemma inf_prog_is_greatest_lower_prog:
   "greatest_prog (\<Sqinter>\<^sub>p A) (Lower_prog A)"
   by (metis (mono_tags, lifting) Rep_prog_H1_H3_closed Lower_prog.rep_eq imageE greatest_prog.rep_eq 
-                                 inf_H1_H3_is_greatest_Lower inf_prog.rep_eq)
+                                 inf_H1_H3_is_greatest_lower inf_prog.rep_eq)
 
 lemma inf_prog_alt_def:
   "(\<Sqinter>\<^sub>p A) = (SOME x. greatest_prog x (Lower_prog A))" 
   apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog 
+  using inf_prog_is_greatest_lower_prog 
    apply blast
   apply (simp only: prog_rep_eq)   
-  apply (metis Lower_prog.rep_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique inf_prog.rep_eq inf_prog_is_greatest_Lower_prog)
+  apply (metis Lower_prog.rep_eq greatest_prog.rep_eq ndes_utp_theory.greatest_unique inf_prog.rep_eq inf_prog_is_greatest_lower_prog)
   done
    
 lemma meet_prog_alt_def:
@@ -545,12 +549,12 @@ lemma lfp_prog_alt_def:
   apply auto
   apply (rule someI2_ex)
    apply (rule exI[where x = "\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{y. \<exists>x. \<lbrakk>F x\<rbrakk>\<^sub>p \<sqsubseteq> \<lbrakk>x\<rbrakk>\<^sub>p \<and> y = \<lbrakk>x\<rbrakk>\<^sub>p}"])
-   apply (rule inf_H1_H3_is_greatest_Lower)
+   apply (rule inf_H1_H3_is_greatest_lower)
   using Rep_prog 
    apply fastforce
   apply (rule someI2_ex)
    apply (rule exI[where x="\<^bold>\<Sqinter>\<^bsub>NDES\<^esub>{u. (u is \<H>\<^bsub>NDES\<^esub>) \<and> \<lbrakk>F (Abs_prog u)\<rbrakk>\<^sub>p \<sqsubseteq> u}"])
-   apply (rule inf_H1_H3_is_greatest_Lower)
+   apply (rule inf_H1_H3_is_greatest_lower)
    apply (simp add: is_Ncarrier_is_ndesigns)
   apply (rule  ndes_utp_theory.greatest_unique)
    apply auto
@@ -629,7 +633,7 @@ qed
        
 lemma lfp_prog_lowerbound:
   "F x \<sqsubseteq> x \<Longrightarrow> \<mu>\<^sub>p F \<sqsubseteq> x"
-  by (simp add: inf_prog_Lower lfp_prog_alt_def)
+  by (simp add: inf_prog_lower lfp_prog_alt_def)
  
 lemma gfp_prog_upperbound:
   "x \<sqsubseteq> F x \<Longrightarrow> x \<sqsubseteq> \<nu>\<^sub>p F"
@@ -667,8 +671,7 @@ subsection \<open>While laws for programs\<close>
   
 text \<open>In this section we introduce the algebraic laws of programming related to the while
       statement.\<close>
-        
-    
+            
 lemma while_lfp_prog_mu_prog:
   "WHILE b DO body OD = (\<mu>\<^sub>p X \<bullet> IF b THEN body ; X ELSE SKIP FI)"
   unfolding  while_lfp_prog_def from_until_lfp_prog_def skip_prog_left_unit
