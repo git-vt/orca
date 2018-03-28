@@ -274,13 +274,13 @@ lemma inf_abrh_greatest:
     
 lemma inf_abrh_image_lower:
   "x \<in> A \<Longrightarrow> \<Sqinter>\<^sub>p (abrh ` A) \<sqsubseteq> abrh x"
-  by (simp add: inf_prog_Lower)   
+  by (simp add: inf_prog_lower)   
 
 lemma inf_prog_abrh_in_Lower_prog_Int_abrh:
   "abrh (\<Sqinter>\<^sub>pA) \<in> Lower_prog (A \<inter> {P. abrh P = P})" 
    unfolding inf_prog_alt_def 
     apply (rule someI2_ex)    
-   using inf_prog_is_greatest_Lower_prog 
+   using inf_prog_is_greatest_lower_prog 
     apply blast
     apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
     apply auto
@@ -308,7 +308,7 @@ lemma inf_abr_in_Lower_abr:
     apply (metis (mono_tags, lifting) Collect_cong Rep_prog_eq inf_prog_abrh_in_Lower_prog_Int_abrh)
    apply (simp only:inf_prog_alt_def Bex_def)
    apply (rule someI2_ex)   
-  using inf_prog_is_greatest_Lower_prog apply blast
+  using inf_prog_is_greatest_lower_prog apply blast
    apply (metis (no_types, lifting) Rep_prog_inject abrh_def cond_mono greatest_def 
                                     greatest_prog.rep_eq image_eqI order_refl 
                                     pcond_prog.rep_eq semilattice_inf_class.inf.orderE utp_order_le)
@@ -319,6 +319,8 @@ lemma inf_abr_in_Lower_prog:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> 
   (\<^bold>\<Sqinter>\<^sub>aA) \<in> Lower_prog (A \<inter> {P. abrh P = P})"
   by (metis (mono_tags) Int_iff Lower_abr_def inf_abr_in_Lower_abr semilattice_inf_class.inf.right_idem)
+find_theorems
+   " _ (\<mu>\<^sub>N x \<bullet> _) \<sqsubseteq> (\<mu>\<^sub>N x \<bullet> _)"
 
 lemma inf_abr_greatest:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow> abrh z = z \<Longrightarrow> (\<And>x. x \<in> A \<Longrightarrow> z \<sqsubseteq> x) \<Longrightarrow>  
@@ -339,7 +341,7 @@ lemma inf_abr_greatest:
    apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
    apply auto
   apply (rule someI2_ex)
-  using inf_prog_is_greatest_Lower_prog 
+  using inf_prog_is_greatest_lower_prog 
    apply auto[1]
   apply (metis (no_types, lifting) Rep_prog_eq Rep_prog_refine abrh_def cond_mono 
                                    greatest_prog_alt_def order_refl pcond_prog.rep_eq 
@@ -351,7 +353,7 @@ lemma inf_prog_abrh_is_greatest_lower:
    greatest_prog (abrh (\<Sqinter>\<^sub>pA)) (Lower_prog (A \<inter> {P. abrh P = P}) \<inter> {P. abrh P = P})"
   unfolding inf_prog_alt_def 
   apply (rule someI2_ex)    
-  using inf_prog_is_greatest_Lower_prog 
+  using inf_prog_is_greatest_lower_prog 
    apply blast
   apply (simp only: greatest_prog_alt_def Lower_prog_alt_def)
   apply auto
@@ -369,9 +371,14 @@ lemma inf_abr_lower:
    apply (rule exI[where x = "abrh (\<Sqinter>\<^sub>pA)"])    
    apply (simp add: inf_prog_abrh_is_greatest_lower)
   apply (metis (no_types, lifting) Int_lower1 dual_order.trans greatest_prog_alt_def 
-                                   inf_prog_is_greatest_Lower_prog inf_prog_Lower 
+                                   inf_prog_is_greatest_lower_prog inf_prog_lower 
                                    semilattice_inf_class.inf.orderE subsetCE)
   done
+ 
+lemma inf_abr_lower2:
+  "A \<subseteq> {P. abrh P = P} \<Longrightarrow> u \<in> A \<Longrightarrow>  u \<sqsubseteq> v \<Longrightarrow> (\<^bold>\<Sqinter>\<^sub>aA) \<sqsubseteq> v"  
+  using inf_abr_lower [of A u ] 
+  by auto
      
 lemma inf_abr_is_abrh:
   "A \<subseteq> {P. abrh P = P} \<Longrightarrow>  
@@ -610,8 +617,8 @@ abbreviation "ABRH \<equiv> UTHY(ABRH,  '\<alpha> abr)"
   definition abrh_unit :: "(ABRH, '\<alpha> abr) uthy \<Rightarrow> '\<alpha> abr_prog" where
   [upred_defs]: "abrh_unit t = abrh SKIP"  
 
-definition
-  "mono_abr_prog F = Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F"  
+abbreviation
+  "mono_abr_prog F \<equiv> Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F"  
 
 lemma mono_abr_prog_alt_def: 
   "Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F = 
@@ -654,11 +661,266 @@ lemma mono_abr_prog_alt_def:
    apply (simp add: Rep_prog_inject)
   apply (metis Rep_prog_H1_H3_closed Rep_prog_inverse is_Ncarrier_is_ndesigns)
   done
+thm lfp_unfold
+find_theorems " _ \<Longrightarrow> Mono\<^bsub>_\<^esub> _ "
+  
+lemma mono_Monotone_prog_order:
+  "mono F \<Longrightarrow> Mono\<^bsub>(prog_order (abrh_hcond ABRH))\<^esub> F" 
+  apply (auto simp add: isotone_def)
+   apply (simp add: mono_abr_prog_alt_def)
+  apply (simp add: mono_def prog_order_def)
+  done   
+    
+ lemma prog_order_carrier [simp]:
+  "carrier (prog_order H) = {P. H P =P}"
+  by (auto simp add: prog_order_def)
 
-lemma lfp_abr_unfold:
+lemma prog_order_eq [simp]:
+  "eq (prog_order T) = op ="
+  by (simp add: prog_order_def)
+
+lemma prog_order_le [simp]:
+  "le (prog_order T) = op \<sqsubseteq>"
+  by (simp add: prog_order_def)
+
+lemma prog_partial_order: 
+  "partial_order (prog_order T)"
+  by (unfold_locales, simp_all)
+
+lemma prog_weak_partial_order: "weak_partial_order (prog_order T)"
+  by (unfold_locales, simp_all)   
+
+lemma weak_order_prog_monoI:
+  shows "(\<And>x y. H x = x  \<Longrightarrow>  H y = y  \<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> F x \<sqsubseteq> F y) \<Longrightarrow> Mono\<^bsub>prog_order H\<^esub> F"    
+  unfolding isotone_def prog_order_def using prog_weak_partial_order 
+  by (auto intro!: equivalence.intro weak_partial_order_axioms.intro weak_partial_order.intro)
+
+lemma weak_order_prog_monoD:
+  assumes "Mono\<^bsub>prog_order H\<^esub> F"
+    and    "H x = x"
+    and    "H y = y"
+    and    "y \<sqsubseteq> x"    
+  shows   "(F y) \<sqsubseteq> (F x)"
+  using assms prog_weak_partial_order unfolding isotone_def prog_order_def 
+  by (auto intro!: equivalence.intro weak_partial_order_axioms.intro weak_partial_order.intro)
+
+lemma weak_order_prog_monoE:
+  "Mono\<^bsub>prog_order H\<^esub> F \<Longrightarrow> H x = x \<Longrightarrow> H y = y\<Longrightarrow> x \<sqsubseteq> y \<Longrightarrow> 
+   (H x = x \<Longrightarrow> H y = y \<Longrightarrow> F x \<sqsubseteq> F y \<Longrightarrow> thesis) \<Longrightarrow> thesis"    
+  by (simp add: weak_order_prog_monoD) 
+
+lemma lfp_abr_prog_lowerbound:
+  "abrh x = x \<Longrightarrow> F x \<sqsubseteq> x \<Longrightarrow> \<^bold>\<mu>\<^sub>a F \<sqsubseteq> x"
+  by (simp add: Collect_mono_iff LFP_abr_def inf_abr_lower)
+     
+lemma lfp_abr_prog_greatest:
+  "abrh x = x \<Longrightarrow> (\<And>z. abrh z = z \<Longrightarrow> F z \<sqsubseteq> z \<Longrightarrow> x \<sqsubseteq> z) \<Longrightarrow> x \<sqsubseteq> \<^bold>\<mu>\<^sub>a F"   
+  by (metis (mono_tags, lifting) Collect_mono LFP_abr_def inf_abr_greatest mem_Collect_eq)
+
+lemma mem_collectP:
+ "x \<in> {P. abrh P = P} = (abrh x = x)"
+  by auto
+find_theorems
+   " _ (\<mu>\<^sub>N x \<bullet> _) \<sqsubseteq> (\<mu>\<^sub>N x \<bullet> _)"
+ 
+
+find_theorems
+   " _ (gfp _) \<sqsubseteq> (gfp _ )"   
+lemma 
+  "mono F \<Longrightarrow>   F (\<mu> F) \<sqsubseteq> \<mu> F"
+  
+  by (simp add: def_gfp_unfold order.order_iff_strict) 
+    
+lemma healthy_inf_cont:
+    assumes "A \<subseteq> {P. abrh P = P}" "A \<noteq> {}"
+    shows "\<^bold>\<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p A"
+  proof -
+    have "\<^bold>\<Sqinter>\<^sub>a A = \<Sqinter>\<^sub>p (abrh`A)"
+      unfolding inf_abr_def inf_prog_alt_def 
+       apply (insert assms)
+       apply (rule someI2_ex)    
+       apply (rule exI[where x = " (\<Sqinter>\<^sub>p(abrh`A))"])
+       apply (simp only: greatest_prog_alt_def Ball_def Lower_prog_alt_def image_def Bex_def)
+       apply auto[]
+        
+        apply (metis image_def inf_abrh_image_lower)
+       apply (simp only:  inf_prog_alt_def)
+               apply (rule someI2_ex)    
+             
+      using inf_prog_is_greatest_lower_prog apply auto[1]
+   apply (simp add:prog_rep_eq image_def greatest_def Bex_def Lower_prog_alt_def)               
+       apply blast
+        apply (rule someI2_ex)    
+      using inf_abr_is_greatest_abr_Lower_abr apply auto[1]
+           apply (simp add: prog_rep_eq image_def greatest_abr_def Lower_abr_def greatest_def Bex_def Lower_prog_alt_def)               
+      unfolding abrh_def
+      apply (rule antisym)
+       apply auto
+      oops
+        
+lemma lfp_abr_fixed_point:
+  assumes M:"mono_abr_prog F"
+  assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"
+  shows " F (\<^bold>\<mu>\<^sub>a F) = \<^bold>\<mu>\<^sub>a F"    
+proof (rule antisym)
+  have ne: "{P. (abrh P = P) \<and> F P \<sqsubseteq> P} \<noteq> {}"
+  proof -
+    have "F (abrh MAGIC) \<sqsubseteq>  (abrh MAGIC)"
+      using H abrh_below_top_abr by force
+    thus ?thesis       
+      by (auto, rule_tac x="(abrh MAGIC)" in exI, auto)
+  qed
+  show "\<^bold>\<mu>\<^sub>a F \<sqsubseteq> F (\<^bold>\<mu>\<^sub>a F)"
+  proof -
+    have "\<^bold>\<Sqinter>\<^sub>a{P. (abrh P = P) \<and> F(P) \<sqsubseteq> P} \<sqsubseteq> \<^bold>\<Sqinter>\<^sub>a{P. (abrh P = P) \<and> F (abrh(P)) \<sqsubseteq> P}"
+    proof -
+      have 1: "\<And> P.  F (abrh(P)) = abrh(F (abrh(P)))" 
+      proof -
+        fix P :: "'a abr_prog"
+        have "abrh P \<in> {p. abrh p = p}"
+          by (metis abr_abrh_closed)
+        then have "F (abrh P) \<in> {p. abrh p = p}"
+          using H by blast
+        then show "F (abrh P) = abrh (F (abrh P))"
+          by auto
+      qed
+      show ?thesis
+        apply (rule inf_abr_greatest)
+          apply auto[]
+         defer
+         apply (rule inf_abr_lower2[of _ "F (abrh _)"])
+           apply simp_all
+           apply auto 
+          apply (metis "1")
+         apply (metis "1" abrh_hcond_def assms(1) weak_order_prog_monoD)
+        apply  (simp add: Collect_mono inf_abr_is_abrh)
+        done
+    qed
+    have 1: "\<And> P.  F (abrh(P)) = abrh(F (abrh(P)))" 
+    proof -
+      fix P :: "'a abr_prog"
+      have "abrh P \<in> {p. abrh p = p}"
+        by (metis abr_abrh_closed)
+      then have "F (abrh P) \<in> {p. abrh p = p}"
+        using H by blast
+      then show "F (abrh P) = abrh (F (abrh P))"
+        by auto
+    qed
+    with ne show ?thesis
+      apply (simp add: LFP_abr_def)
+      apply (rule inf_abr_lower)
+       apply auto[]
+      apply (rule CollectI)
+      apply auto        
+       apply (metis (no_types, lifting) Collect_mono_iff inf_abr_is_abrh)        
+      apply (rule weak_order_prog_monoD[where F= F and 
+            y ="(F (\<^bold>\<Sqinter>\<^sub>a{x. abrh x = x \<and> F x \<sqsubseteq> x}))" and
+            x = "(\<^bold>\<Sqinter>\<^sub>a{x. abrh x = x \<and> F x \<sqsubseteq> x})"])
+      using M
+         apply simp        
+        apply (simp add: Collect_mono abrh_hcond_def inf_abr_is_abrh)        
+       apply (metis (no_types, lifting) Collect_mono abrh_hcond_def inf_abr_is_abrh)
+      apply (rule inf_abr_greatest)
+        apply auto     
+       apply (metis (no_types, lifting) Collect_mono_iff inf_abr_is_abrh)
+      apply (simp add: inf_abr_def)
+      apply (rule someI2_ex)            
+       apply (metis (no_types, lifting) Collect_mono_iff inf_abr_is_greatest_abr_Lower_abr)
+      unfolding greatest_abr_alt_def Lower_abr_alt_def Ball_def abrh_def 
+      apply auto
+      apply (rule order_trans[OF weak_order_prog_monoD])
+          apply auto
+       apply (simp add: weak_order_prog_monoI)
+      apply (metis abrh_def abrh_hcond_def assms(1) weak_order_prog_monoE)
+      done 
+  qed 
+  from ne show " F (\<^bold>\<mu>\<^sub>a F) \<sqsubseteq> \<^bold>\<mu>\<^sub>a F"
+    apply (insert H M)
+    apply (simp add: LFP_abr_def)
+    apply (rule inf_abr_greatest)
+      apply auto   
+     apply (erule PiE)
+      apply auto[]
+     apply (simp add: Collect_mono inf_abr_is_abrh)
+    apply (simp add: inf_abr_def)
+    apply (rule someI2_ex)            
+     apply (metis (no_types, lifting) Collect_mono_iff inf_abr_is_greatest_abr_Lower_abr)
+    unfolding greatest_abr_alt_def Lower_abr_alt_def Ball_def abrh_def 
+    apply auto
+    apply (rule order_trans[OF weak_order_prog_monoD])
+        apply auto
+     apply (simp add: weak_order_prog_monoI)        
+    apply (simp add: abrh_def abrh_hcond_def weak_order_prog_monoD)
+    done 
+qed
+    
+lemma lfp_lemma2:
    assumes M:"mono_abr_prog F"
    assumes H: "F \<in> {P. abrh P = P} \<rightarrow> {P. abrh P = P}"
-   shows " F (\<^bold>\<mu>\<^sub>a F) = \<^bold>\<mu>\<^sub>a F"
+   shows " F (\<^bold>\<mu>\<^sub>a F) \<sqsubseteq> \<^bold>\<mu>\<^sub>a F"   
+     
+     
+    proof (rule antisym)
+    have ne: "{P. (P is \<H>) \<and> F P \<sqsubseteq> P} \<noteq> {}"
+    proof -
+      have "F \<^bold>\<top> \<sqsubseteq> \<^bold>\<top>"
+        using assms(2) utp_top weak.top_closed by force
+      thus ?thesis
+        by (auto, rule_tac x="\<^bold>\<top>" in exI, auto simp add: top_healthy)
+    qed
+    show "\<^bold>\<mu> F \<sqsubseteq> (\<mu> X \<bullet> F (\<H> X))"
+    proof -
+      have "\<Sqinter>{P. (P is \<H>) \<and> F(P) \<sqsubseteq> P} \<sqsubseteq> \<Sqinter>{P. F(\<H>(P)) \<sqsubseteq> P}"
+      proof -
+        have 1: "\<And> P. F(\<H>(P)) = \<H>(F(\<H>(P)))"
+          by (metis HCond_Idem Healthy_def assms(2) funcset_mem mem_Collect_eq)
+        show ?thesis
+        proof (rule Sup_least, auto)
+          fix P
+          assume a: "F (\<H> P) \<sqsubseteq> P"
+          hence F: "(F (\<H> P)) \<sqsubseteq> (\<H> P)"
+            by (metis 1 HCond_Mono mono_def)
+          show "\<Sqinter>{P. (P is \<H>) \<and> F P \<sqsubseteq> P} \<sqsubseteq> P"
+          proof (rule Sup_upper2[of "F (\<H> P)"])
+            show "F (\<H> P) \<in> {P. (P is \<H>) \<and> F P \<sqsubseteq> P}"
+            proof (auto)
+              show "F (\<H> P) is \<H>"
+                by (metis 1 Healthy_def)
+              show "F (F (\<H> P)) \<sqsubseteq> F (\<H> P)"
+                using F mono_def assms(1) by blast
+            qed
+            show "F (\<H> P) \<sqsubseteq> P"
+              by (simp add: a)
+          qed
+        qed
+      qed
+      
+           thm inf_abr_greatest
+        proof (rule inf_abr_greatest, auto)
+          fix P
+          assume a: "F (abrh P) \<sqsubseteq> P"
+          hence F: "(F (abrh P)) \<sqsubseteq> (abrh P)"
+            by (metis "1" abrh_def cond_mono dual_order.refl less_eq_prog.rep_eq pcond_prog.rep_eq)  
+           
+          show "  \<^bold>\<Sqinter>\<^sub>a{P. abrh P = P \<and> F P \<sqsubseteq> P} \<sqsubseteq> P"
+            thm inf_abr_lower[of _ "F (abrh P)"]
+          proof (rule inf_abr_lower2[of _ "F (abrh P)"])
+            show "F (abrh P) \<in> {P. (abrh P = P) \<and> F P \<sqsubseteq> P}"
+            proof (auto)
+              show "abrh (F (abrh P)) = F (abrh P)"
+                by (metis 1)
+              show "F (F (abrh P)) \<sqsubseteq> F (abrh P)"
+                 by (metis "1" F abrh_hcond_def abrh_idem assms(1) weak_order_prog_monoE)
+            qed
+            show "F (abrh P) \<sqsubseteq> P"
+              by (simp add: a)
+            show aham:"{P. abrh P = P \<and> F P \<sqsubseteq> P} \<subseteq> {P. abrh P = P}"
+              by auto 
+          qed
+          have "{P. F (abrh P) \<sqsubseteq> P} \<subseteq> {P. abrh P = P \<and> F P \<sqsubseteq> P}"
+              apply auto 
+        qed
+      qed 
      thm lfp_abr_healthy_comp
      apply (subst lfp_abr_healthy_comp) 
        apply (subst (2) lfp_abr_healthy_comp) 
@@ -676,7 +938,17 @@ lemma lfp_abr_unfold:
     apply (smt CollectI Collect_mono H PiE abrh_subset_member inf_abr_is_abrh)
   defer
        apply (rule inf_abr_greatest)
-
+     apply auto[1]
+    
+    apply (smt Collect_mono_iff PiE inf_abr_is_abrh mem_Collect_eq)
+  thm LFP_abr_def
+    apply (subst mem_collectP[THEN sym])
+   apply (subst LFP_abr_def[THEN sym])
+    sledgehammer
+    apply (subst lfp_abr_prog_lowerbound)
+    (*Preuve goal 1: on sais que F est monotonic et on sait que lfp is lower bound*)
+    (*Preuve goal 2: on sait que F est monotonic*)
+    thm design_theory_continuous.LFP_lemma3 mono_Monotone_utp_order
 oops                   
 lemma lfp_abrupt_unfold: 
   assumes M:"mono_abr_prog F"
